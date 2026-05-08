@@ -1,3 +1,4 @@
 pyinstaller
 pystray
 pillow
+pygetwindow

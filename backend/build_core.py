@@ -134,8 +134,6 @@ def build_executable(build_ver:str = None):
 
     # 图标路径
     icon_path = PROJECT_DIR / "assets/icon.ico"
-
-    # PyInstaller 命令
     cmd = [
         # sys.executable, "-m", "pyinstaller",
         "pyinstaller",
@@ -150,6 +148,10 @@ def build_executable(build_ver:str = None):
         "--hidden-import", "psutil",
         "--hidden-import", "PIL",
         "--hidden-import", "PIL.Image",
+        "--hidden-import", "pygetwindow",
+        "--hidden-import", "win32gui",
+        "--hidden-import", "win32con",
+        "--hidden-import", "win32api",
         "--hidden-import", "actions.configs",
         "--hidden-import", "actions.et_core",
         "--hidden-import", "actions.monitor",
