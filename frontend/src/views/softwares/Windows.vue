@@ -12,8 +12,7 @@
         </div>
       </div>
       <div class="version-info">
-        <var-cell>当前使用界面的Windows版本</var-cell>
-        <var-cell>集成当前EasyTier内核、配置，解压启动后启动服务即可组网</var-cell>
+        <var-cell>集成当前配置、EasyTier内核，解压启动后启动服务即可组网</var-cell>
         <var-cell>
           <var-link type="primary" underline="none" href="https://github.com/710850609/EasyTier-Lite/releases" target="_blank"><img src="https://img.shields.io/github/v/release/710850609/EasyTier-Lite?color=blue&logo=github" /></var-link>
         </var-cell>

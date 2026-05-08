@@ -233,7 +233,7 @@ const handleClick = (key) => {
   display: flex;
   flex-direction: column;
   border-right: 1px solid var(--color-outline);
-  width: 240px;
+  width: 200px;
   transition: width 0.3s ease;
 }
 
