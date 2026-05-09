@@ -208,7 +208,7 @@ build_fpk() {
         ./fnpack.sh build --directory EasyTier-Lite || { echo "打包失败"; exit 1; }
     fi 
 
-    fpk_name="EasyTier-Lite-${arch}-${fpk_version}.fpk"
+    fpk_name="EasyTier-Lite-fnos-${arch}-${fpk_version}.fpk"
     rm -f "${fpk_name}"
     mv EasyTier-Lite.fpk "${fpk_name}"
     echo "打包完成: ${fpk_name}"
