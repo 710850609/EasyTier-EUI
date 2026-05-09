@@ -21,6 +21,43 @@
     <!-- 统计标题栏 -->
     <var-paper class="stats-bar" :elevation="1">
       <div class="stats-content">
+        <div class="config-section">
+          <var-select
+            variant="outlined"
+            class="config-select"
+            size="small"
+            v-model="selectedConfig"
+            @change="handleConfigChange"
+            placeholder="选择配置"
+          >
+            <var-option
+              v-for="cfg in configList"
+              :key="cfg.profile"
+              :label="cfg.name"
+              :value="cfg.profile"
+            >
+              <div class="config-option">
+                <span>{{ cfg.name }}</span>
+                <var-icon
+                  :name="cfg.running ? 'check-circle-outline' : 'minus-circle'"
+                  :color="cfg.running ? 'var(--color-success)' : 'var(--color-text-disabled)'"
+                  size="16"
+                />
+              </div>
+            </var-option>
+          </var-select>
+          <div class="service-actions">
+            <var-loading type="circle" v-if="serviceOperating" />
+            <var-icon name="play-circle" size="24" @click="startService" color="var(--color-success)" v-if="!serviceRunning && !serviceOperating" :style="{ cursor: 'pointer' }"/>
+            <var-icon name="radio-marked" size="24" @click="stopService" color="var(--color-danger)" v-if="serviceRunning && !serviceOperating"  :style="{ cursor: 'pointer' }"/>
+          </div>
+          <div class="service-status" v-if="selectedConfig">
+            <span class="status-text" :style="{ color: serviceOperating ? 'var(--color-text-disabled)' : (serviceRunning ? 'var(--color-success)' : 'var(--color-danger)') }">
+              {{ serviceOperating ? (serviceRunning ? '停止中...' : '启动中...') : serviceRunning ? '运行中' : '已停止' }}
+            </span>
+          </div>
+        </div>
+        <!-- <div class="divider"></div> -->
         <div class="stat-item">
           <var-icon name="server" size="20" color="var(--color-primary)" />
           <span class="stat-label">普通节点</span>
@@ -206,6 +243,12 @@ const showServiceError = ref(false)
 const closeShowServiceError = ref(false)
 const serviceErrorMessage = ref(false)
 
+const configList = ref([])
+const selectedConfig = ref('')
+const serviceRunning = ref(false)
+const serviceOperating = ref(false)
+const pendingAction = ref('')
+
 
 // 从 localStorage 加载设置
 const loadSettings = () => {
@@ -383,7 +426,11 @@ const fetchNodes = async () => {
   if (dataLoading.value) return
   dataLoading.value = true
   try {
-    const data = await api.monitor.getList();
+    const params = {}
+    if (selectedConfig.value) {
+      params.profile = selectedConfig.value
+    }
+    const data = await api.monitor.getList(params);
     let peersData = []
     if (Array.isArray(data)) {
       peersData = data
@@ -412,7 +459,7 @@ const fetchNodes = async () => {
     showServiceError.value = false
   } catch (error) {
     console.error('获取组网信息失败:', error)
-    const status = await api.services.status()
+    const status = await api.services.status(selectedConfig.value)
     showServiceError.value = true
     if (!status.data.running) {
       serviceErrorMessage.value = 'EasyTier核心服务未运行，请检查服务是否正常启动'
@@ -432,7 +479,8 @@ const openConfigView = (isFastConfig) => {
 const restartService = () => {
   return new Promise((resolve, reject) => {
     try {
-      api.services.restart().then(() => {
+      // const profile = getProfileFromConfig(selectedConfig.value)
+      api.services.restart(selectedConfig.value).then(() => {
         toast.success('服务重启成功')
         resolve()
       }).catch(e => reject(e))
@@ -443,9 +491,72 @@ const restartService = () => {
   })
 }
 
+const loadConfigs = async () => {
+  try {
+    const res = await api.configs.list()
+    configList.value = res.data || []
+    if (configList.value.length > 0 && !selectedConfig.value) {
+      selectedConfig.value = configList.value[0].profile
+      updateServiceStatus()
+    }
+  } catch (error) {
+    console.error('加载配置列表失败:', error)
+  }
+}
+
+const updateServiceStatus = () => {
+  const cfg = configList.value.find(c => c.profile === selectedConfig.value)
+  serviceRunning.value = cfg ? cfg.running : false
+}
+
+const handleConfigChange = () => {
+  updateServiceStatus()
+  fetchNodes()
+  allNodes.value = []
+}
+
+const startService = async () => {
+  if (serviceOperating.value) return
+  serviceOperating.value = true
+  pendingAction.value = 'start'
+  try {
+    allNodes.value = []
+    await api.services.start(selectedConfig.value)
+    toast.success('服务启动成功')
+    serviceRunning.value = true
+    const cfg = configList.value.find(c => c.profile === selectedConfig.value)
+    if (cfg) cfg.running = true
+    fetchNodes()
+  } catch (error) {
+    toast.error('服务启动失败: ' + error.message)
+  } finally {
+    serviceOperating.value = false
+    pendingAction.value = ''
+  }
+}
+
+const stopService = async () => {
+  if (serviceOperating.value) return
+  serviceOperating.value = true
+  pendingAction.value = 'stop'
+  try {
+    await api.services.stop(selectedConfig.value)
+    toast.success('服务已停止')
+    serviceRunning.value = false
+    const cfg = configList.value.find(c => c.profile === selectedConfig.value)
+    if (cfg) cfg.running = false
+  } catch (error) {
+    toast.error('服务停止失败: ' + error.message)
+  } finally {
+    serviceOperating.value = false
+    pendingAction.value = ''
+  }
+}
+
 // 实际项目中这里调用 HTTP API
 onMounted(async () => {
   loadSettings()
+  await loadConfigs()
   try {
     const needSetting = await api.configs.needSetting();
     if (needSetting.data.needConfig) {
@@ -488,6 +599,44 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 24px;
+  flex-wrap: wrap;
+}
+
+.config-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.config-select {
+  min-width: 160px;
+  max-width: 200px;
+}
+
+.config-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 8px;
+}
+
+.service-status {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.status-text {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.service-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .stat-item {

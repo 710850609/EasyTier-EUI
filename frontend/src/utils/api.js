@@ -116,7 +116,7 @@ export function del(url, options = {}, otherOptions = {}) {
 export const api = {
   // 节点相关
   monitor: {
-    getList: () => get('/monitor/list', {}, {toastError: false}),
+    getList: (params = {}) => get('/monitor/list', params, {toastError: false}),
   },
   
   // 配置相关
@@ -126,7 +126,8 @@ export const api = {
     saveToml: (data) => post('/configs/save_toml', {toml: data}),
     get: () => get('/configs/get'),
     getToml: () => get('/configs/get_toml'),
-    getDownloadUrl: () => getFullUrl('/configs/download')
+    getDownloadUrl: () => getFullUrl('/configs/download'),
+    list: () => get('/configs/list_configs', {}, {toastError: false}),
   },
   peers: {
     checkPeers: () => get('/peers/check_peers'),
@@ -134,8 +135,10 @@ export const api = {
   },
   // 服务相关
   services: {
-    status: () => get('/services/status'),
-    restart: () => get('/services/restart'),
+    status: (profile) => get('/services/status', profile ? { profile } : {}),
+    restart: (profile) => get('/services/restart', profile ? { profile } : {}),
+    start: (profile) => get('/services/start', profile ? { profile } : {}),
+    stop: (profile) => get('/services/stop', profile ? { profile } : {}),
   },
   
   // 窗口相关
