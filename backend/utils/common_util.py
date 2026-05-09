@@ -6,7 +6,7 @@ import shutil
 import subprocess
 
 
-def run_cmd(command, *args, shell=False):
+def run_cmd(command, *args, shell=False) -> str:
     """
     执行命令并返回 JSON 格式结果
     

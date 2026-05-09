@@ -26,8 +26,10 @@ def get_available_port(start_port=15888, end_port=65535):
     """获取可用端口(选定范围)"""
     for port in range(start_port, end_port + 1):
         try:
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                s.bind(('127.0.0.1', port))
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s1:
+                s1.bind(('0.0.0.0', port))
+                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s2:
+                    s2.bind(('127.0.0.1', port))
                 return port
         except OSError:
             continue

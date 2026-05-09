@@ -10,6 +10,7 @@ import os
 import sys
 from pathlib import Path
 from urllib.parse import quote
+from urllib.parse import unquote
 
 
 class HttpException(Exception):
@@ -46,7 +47,7 @@ class HttpRequest:
             for param in self.query_string.split('&'):
                 if '=' in param:
                     key, value = param.split('=', 1)
-                    query_params[key] = value
+                    query_params[unquote(key)] = unquote(value)
             if fun_params is None:
                 fun_params = query_params
             else:

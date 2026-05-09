@@ -11,6 +11,7 @@ from http_dispatcher.dispatcher import HttpResponse
 from http_dispatcher.dispatcher import HttpException
 from utils import run_configs
 from actions import et_core
+from actions import services
 
 
 def need_setting(*kwargs):
@@ -22,6 +23,28 @@ def need_setting(*kwargs):
 
     config_files = run_configs.et_config_files()
     return { "needConfig": len(config_files) == 0 }
+
+def list_configs(*kwargs):
+    config_files = run_configs.et_config_files()
+    result = []
+    for profile in config_files:
+        name = Path(profile).stem
+        try:
+            running = services.status({'profile': profile})
+        except Exception:
+            running = False
+        result.append({
+            'name': name,
+            'profile': profile,
+            'running': running or False
+        })
+    if not result:
+        result.append({
+            'name': 'default',
+            'profile': 'default.toml',
+            'running': False
+        })
+    return result
 
 def save(data, *kwargs):
     et_config_file = run_configs.et_config_file()

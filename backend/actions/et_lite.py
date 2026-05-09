@@ -33,7 +33,7 @@ def _get_et_lite_latest_version():
     return github_util.get_latest_version(api_url)
 
 def _get_et_lite_package(platform:str, arch:str, et_lite_version: str, download_dir: str):
-    support_platforms = ['windows', 'linux', 'macos']
+    support_platforms = ['windows', 'linux', 'macos', 'fnos']
     if platform not in support_platforms:
         raise HttpResponse(f"当前不支持 {platform} 平台下载，仅支持 {support_platforms}")
     support_arches = ['x86_64', 'aarch64', 'riscv64']

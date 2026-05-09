@@ -94,8 +94,8 @@ def download_file(url: str, output_path: str, desc: str = ""):
         
         logging.info(f"下载成功: {output_path}")        
     except Exception as e:
-        logging.error(f"下载失败: {e}")
+        logging.exception(f"下载失败")
         if output_path.exists():
             output_path.unlink()
-        raise Exception(f"命令执行异常") from e
+        raise Exception(f"下载失败：{e}") from e
     
