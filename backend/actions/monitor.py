@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import json
+import logging
 import os
 import sys
 
-from http_dispatcher.dispatcher import HttpException
+from http_dispatcher.dispatcher import HttpException, HttpResponse
 from utils import common_util, et_run_info
 from utils import run_configs
 
@@ -22,6 +23,12 @@ def list(params, *kwargs):
         raise HttpException(f"unknown rpc profile {profile}")
     _ext = ".exe" if sys.platform == "win32" else ""
     cmd = f"{os.path.join(run_configs.core_dir(), 'easytier-cli')}{_ext} -o json --rpc-portal {info.rpc_portal} peer"
-    result = common_util.run_cmd(cmd)
-    peer_list = json.loads(result)
-    return peer_list
+    try:
+        result = common_util.run_cmd(cmd)
+        peer_list = json.loads(result)
+        return peer_list
+    except Exception as e:
+        if str(e).find('failed to connect to server') > 0:
+            logging.debug(str(e))
+            return []
+        raise e

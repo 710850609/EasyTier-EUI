@@ -567,18 +567,36 @@ const saveConfig = async (start = false) => {
     if (data.flags.enable_encryption === undefined) data.flags.enable_encryption = true
     api.configs.save(data).then(res => {
       toast.success('保存配置成功')
-      const restartLoading = toast.loading('服务重启中...')
-      api.services.restart(selectedConfig.value).then(() => {
-        toast.success('服务重启成功')
-        if (fastSettingMode.value) {
-          toast.info('退出引导设置模式')
-          fastSettingMode.value = false
+      // 先检查服务状态，只有运行中才重启
+      api.services.status(selectedConfig.value).then(isRunning => {
+        if (isRunning) {
+          const restartLoading = toast.loading('服务重启中...')
+          api.services.restart(selectedConfig.value).then(() => {
+            toast.success('服务重启成功')
+            if (fastSettingMode.value) {
+              toast.info('退出引导设置模式')
+              fastSettingMode.value = false
+            }
+          }).finally(() => {
+            restartLoading.clear()
+            resolve()
+          })
+        } else {
+          // 服务未运行，跳过重启
+          if (fastSettingMode.value) {
+            toast.info('退出引导设置模式')
+            fastSettingMode.value = false
+          }
+          resolve()
         }
-      }).finally(() => {
-        restartLoading.clear()
+      }).catch(e => {
+        console.error('检查服务状态失败:', e)
         resolve()
       })
-    }).catch(e => reject(e))
+    }).catch(e => {
+      toast.error('保存配置失败: ' + e.message)
+      reject(e)
+    })
   })
 }
 
@@ -600,12 +618,26 @@ const openCodePage = () => {
 const saveToml = () => {
   return new Promise((resolve, reject) => {
     api.configs.saveToml({ toml: configToml.value, _profile: selectedConfig.value }).then(res => {
-      const restartLoading = toast.loading('保存成功，服务重启中...')
-      api.services.restart(selectedConfig.value).then(() => {
-        toast.success('服务重启成功')
+      toast.success('保存配置成功')
+      // 先检查服务状态，只有运行中才重启
+      api.services.status(selectedConfig.value).then(isRunning => {
+        if (isRunning) {
+          const restartLoading = toast.loading('服务重启中...')
+          api.services.restart(selectedConfig.value).then(() => {
+            toast.success('服务重启成功')
+            loadConfig(selectedConfig.value)
+          }).finally(() => {
+            restartLoading.clear()
+            resolve()
+          })
+        } else {
+          // 服务未运行，跳过重启
+          loadConfig(selectedConfig.value)
+          resolve()
+        }
+      }).catch(e => {
+        console.error('检查服务状态失败:', e)
         loadConfig(selectedConfig.value)
-      }).finally(() => {
-        restartLoading.clear()
         resolve()
       })
     }).catch(e => reject(e))
@@ -788,7 +820,6 @@ const handleSwitchChange = async (cfg, field, val) => {
       toast.success(val ? '已开启开机自启' : '已关闭开机自启')
     } catch (error) {
       cfg[field] = !val
-      toast.error('操作失败: ' + error.message)
     }
   }
 }

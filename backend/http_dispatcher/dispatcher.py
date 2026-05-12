@@ -60,7 +60,7 @@ class HttpResponse(Exception):
             raise AssertionError(f"不能同时存在data和file")
         self.code = code
         self.status_code = status_code
-        self.headers = headers
+        self.headers = headers or {}
         self.data = data
         self.json = {'code': self.code, 'data': self.data} if file is None else None
         self.file = file
@@ -94,6 +94,13 @@ class HttpResponse(Exception):
     def fill_headers(self):
         if self.headers is None:
             self.headers = {}
+        
+        # 添加 CORS 头
+        self.headers['Access-Control-Allow-Origin'] = '*'
+        self.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+        self.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Requested-With'
+        self.headers['Access-Control-Max-Age'] = '86400'
+        
         if self.file:
             mime_type = self.mime_type
             if not mime_type:
@@ -209,6 +216,21 @@ def get_request(base_uri="", body_data=None, cgi_module=True) -> HttpRequest:
 def http_handle(base_uri="/", body_data=None, cgi_module=True) -> HttpResponse:
     response = HttpResponse()
     try:
+        # 首先处理 OPTIONS 请求（CORS 预检）
+        method = os.environ.get('REQUEST_METHOD', '') if cgi_module else None
+        if not method and hasattr(os.environ, 'get'):
+            method = os.environ.get('REQUEST_METHOD', '')
+        # 直接检查环境变量
+        if cgi_module:
+            method = os.environ.get('REQUEST_METHOD', '')
+            if method == 'OPTIONS':
+                logging.info("处理 OPTIONS 预检请求")
+                response = HttpResponse(data="ok", status_code=200)
+                response.fill_headers()
+                if cgi_module:
+                    response.output_cgi()
+                return response
+        
         request = get_request(base_uri, body_data, cgi_module)
         req_msg = f"{request.method} {request.request_uri}"
         req_msg += '' if not request.request_body else '\n' + request.request_body
@@ -219,13 +241,14 @@ def http_handle(base_uri="/", body_data=None, cgi_module=True) -> HttpResponse:
         if not module_name and not function_name:
             resource_uri = request.resource_uri
             if '..' in resource_uri:
+                logging.warning(f"检测到路径遍历尝试: {request.request_uri}")
                 raise HttpException(status_code=403, message=f"不允许访问资源： {request.request_uri}")
             frontend_path = os.environ.get('FRONTEND_PATH', '')
             if len(resource_uri) == 0:
                 resource_uri = 'index.html'
             resource_path = Path(frontend_path).joinpath(resource_uri).absolute()
             if not resource_path.exists() or resource_path.is_dir():
-                logging.error(f"访问资源不存在： {resource_path}")
+                logging.warning(f"访问资源不存在: {resource_path}")
                 raise HttpException(status_code=404, message=f"资源不存在： {request.request_uri}")
             response = HttpResponse(file=str(resource_path))
         else:
@@ -236,13 +259,20 @@ def http_handle(base_uri="/", body_data=None, cgi_module=True) -> HttpResponse:
             response = func(function_params)
             if not isinstance(response, HttpResponse):
                 response = HttpResponse(data=response)
+    except HttpException as e:
+        logging.warning(f"HTTP 异常: {e.status_code} - {e.message}")
+        response = HttpResponse(code=1, status_code=e.status_code, data=e.message, headers=e.headers)
+    except ImportError as e:
+        logging.error(f"模块导入失败: {str(e)}", exc_info=True)
+        response = HttpResponse(code=1, status_code=500, data="模块加载失败")
+    except AttributeError as e:
+        logging.error(f"函数不存在: {str(e)}", exc_info=True)
+        response = HttpResponse(code=1, status_code=404, data="接口不存在")
     except Exception as e:
-        if isinstance(e, HttpException):
-            logging.exception(e)
-            response = HttpResponse(code=1, status_code=e.status_code, data=e.message, headers=e.headers)
-        else:
-            logging.exception("服务异常")
-            response = HttpResponse(code=1, data=str(e))
+        logging.exception(f"服务异常: {str(e)}")
+        # 生产环境不暴露详细错误信息
+        safe_error_msg = str(e) or "服务器内部错误，请稍后重试"
+        response = HttpResponse(code=1, status_code=500, data=safe_error_msg)
     finally:
         response.fill_headers()
         resp_msg = ''

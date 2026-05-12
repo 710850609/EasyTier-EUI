@@ -1,23 +1,5 @@
 <template>
-  <div class="nodes-page">    
-    <var-sticky v-if="showServiceError && !closeShowServiceError">
-        <var-alert
-          :message="serviceErrorMessage"
-          closeable
-          type="warning"
-          elevation="true"          
-        >
-          <template #default>
-            {{ serviceErrorMessage }}
-            <var-button type="primary" text="true" auto-loading @click="restartService">
-              尝试重启
-            </var-button>
-          </template>
-          <template #close-icon>
-            <var-icon name="close-circle" @click="closeShowServiceError = true"/> 
-          </template>
-        </var-alert>
-    </var-sticky>
+  <div class="nodes-page">
     <!-- 统计标题栏 -->
     <var-paper class="stats-bar" :elevation="1">
       <div class="stats-content">
@@ -230,7 +212,7 @@
 
 <script setup>
 import { copyToClipboard } from '../utils/clipboard.js'
-import { api } from '../utils/api.js'
+import { api, cancelAllRequests } from '../utils/api.js'
 import toast from '../components/toast.js'
 import { Poller } from '../utils/poller.js'
 import { NODES_SELECTED_COLUMNS_KEY, NODES_SELECTED_NODE_TYPES_KEY, NODES_REFRESH_STEP_KEY } from '../config/storage-keys.js'
@@ -241,6 +223,7 @@ import SvgIcon from '@jamescoyle/vue-icon'
 const setActiveMenu = inject('setActiveMenu')
 const fastSettingMode = inject('fastSettingMode')
 const showFastSettingTip = ref(false)
+const isFirstLoadConfigs = ref(true)
 
 const showFilterMenu = ref(false)
 const dataLoading = ref(false)
@@ -257,9 +240,6 @@ const selectedNodeTypes = ref(['normal'])
 const refreshStep = ref(3)
 // 节点数据
 const allNodes = ref([])
-const showServiceError = ref(false)
-const closeShowServiceError = ref(false)
-const serviceErrorMessage = ref(false)
 
 const configList = ref([])
 const selectedConfig = ref('')
@@ -303,17 +283,25 @@ watch(selectedNodeTypes, (newVal) => {
   localStorage.setItem(NODES_SELECTED_NODE_TYPES_KEY, JSON.stringify(newVal))
 }, { deep: true })
 
-// 创建轮询器实例
+// 创建节点列表轮询器实例
 const nodesPoller = new Poller({
   interval: refreshStep.value * 1000,
   immediate: false,
   onError: (error) => console.error('获取节点列表失败:', error)
 })
 
+// 创建配置状态轮询器实例（每10秒刷新一次）
+const configStatusPoller = new Poller({
+  interval: refreshStep.value * 1000,
+  immediate: false,
+  onError: (error) => console.error('获取配置状态失败:', error)
+})
+
 // 监听刷新间隔变化，更新轮询器
 watch(refreshStep, (newVal) => {
   localStorage.setItem(NODES_REFRESH_STEP_KEY, newVal.toString())
   nodesPoller.setInterval(newVal * 1000)
+  configStatusPoller.setInterval(newVal * 1000)
 })
 
 const refreshStepList = [
@@ -475,18 +463,9 @@ const fetchNodes = async () => {
         peer.type = 'normal'
       }
     })
-    showServiceError.value = false
   } catch (error) {
     if (isUnmounted.value) return
     console.error('获取组网信息失败:', error)
-    const status = await api.services.status(selectedConfig.value)
-    if (isUnmounted.value) return
-    showServiceError.value = true
-    if (!status.data.running) {
-    //   serviceErrorMessage.value = 'EasyTier核心服务未运行，请检查服务是否正常启动'
-    // } else {
-      serviceErrorMessage.value = `EasyTier核心服务异常 -> ${error.message}`
-    }
   } finally {
     dataLoading.value = false
   }
@@ -515,16 +494,13 @@ const loadConfigs = async () => {
   try {
     const res = await api.configs.listConfigStatus()
     configList.value = res.data || []
-    for (const cfg of configList.value) {
-      if (cfg.running || false) {
-        selectedConfig.value = cfg.profile
-        updateServiceStatus()
-        return
+    updateServiceStatus()
+    if (isFirstLoadConfigs.value && configList.value.length > 0 && !selectedConfig.value) {
+      isFirstLoadConfigs.value = false
+      selectedConfig.value = configList.value.filter(e => e.running || false)?.[0]?.profile
+      if (!selectedConfig.value) {
+        selectedConfig.value = configList.value[0].profile
       }
-    }
-    if (configList.value.length > 0 && !selectedConfig.value) {
-      selectedConfig.value = configList.value[0].profile
-      updateServiceStatus()
     }
   } catch (error) {
     console.error('加载配置列表失败:', error)
@@ -536,10 +512,20 @@ const updateServiceStatus = () => {
   serviceRunning.value = cfg ? cfg.running : false
 }
 
-const handleConfigChange = () => {
+const handleConfigChange = async () => {
   updateServiceStatus()
-  fetchNodes()
   allNodes.value = []
+  nodesPoller.stop()
+  cancelAllRequests()
+  console.log('serviceRunning.value', serviceRunning.value)
+  if (serviceRunning.value) {
+    loadingSkeleton.value = true
+    dataLoading.value = false
+    isUnmounted.value = false
+    await fetchNodes()
+    loadingSkeleton.value = false
+  }
+  nodesPoller.start(fetchNodes)
 }
 
 const startService = async () => {
@@ -596,16 +582,20 @@ onMounted(async () => {
   try {
     await fetchNodes()
     loadingSkeleton.value = false
+    // 启动配置状态轮询
+    configStatusPoller.start(loadConfigs)
     nodesPoller.start(fetchNodes)
   } catch (error) {
     console.error('获取节点列表失败:', error)
   }
 })
 
-// 页面销毁时清除定时器
+// 页面销毁时清除定时器和取消请求
 onUnmounted(() => {
   isUnmounted.value = true
   nodesPoller.stop()
+  configStatusPoller.stop()
+  cancelAllRequests()
 })
 
 </script>
