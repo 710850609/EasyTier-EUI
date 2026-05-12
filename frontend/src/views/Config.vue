@@ -86,6 +86,10 @@
                 <svg-icon type="mdi" :path="mdiHomeEdit" width="24" height="24" color="var(--color-primary)" />
                 <span class="section-title">{{ fastSettingMode ? '快速设置' : '基础设置' }}</span>
               </div>
+              <div>
+                <span style="font-size: 12px; color: var(--color-warning); margin-top: 8px;">填写网络名称和密码，后点击即可 -></span>
+                <var-button type="primary" size="small" @click="saveConfig(true)" auto-loading v-if="fastSettingMode">保存并启动</var-button>
+              </div>
             </div>
 
             <var-skeleton :loading="isLoadingConfig">
@@ -181,7 +185,7 @@
               </var-cell>
               <var-cell v-if="fastSettingMode">
                 <p>
-                  <span style="font-size: 14px; color: var(--color-warning); margin-top: 8px;">默认使用动态社区节点用于发现组网节点。如不想用，请刷新页面重新选择正常模式进行配置</span>
+                  <span style="font-size: 12px; color: var(--color-warning); margin-top: 8px;">默认使用动态社区节点用于发现组网节点。如不想用，请刷新页面重新选择正常模式进行配置</span>
                 </p>
               </var-cell>
             </var-skeleton>
