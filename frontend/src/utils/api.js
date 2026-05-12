@@ -29,7 +29,7 @@ function getFullUrl(url, data) {
  * @returns {Promise} - 返回响应数据
  */
 async function request(url, options = {}, otherOptions = {}) {
-  const toastError = (otherOptions.toastError === undefined || otherOptions.toastError == null) ? true : options.toastError
+  const toastError = (otherOptions.toastError === undefined || otherOptions.toastError == null) ? true : otherOptions.toastError
   const fullUrl = getFullUrl(url)
   const defaultOptions = {
     headers: {
@@ -121,13 +121,15 @@ export const api = {
   
   // 配置相关
   configs: {
-    needSetting: () => get('/configs/need_setting'),
     save: (data) => post('/configs/save', data),
-    saveToml: (data) => post('/configs/save_toml', {toml: data}),
-    get: () => get('/configs/get'),
-    getToml: () => get('/configs/get_toml'),
-    getDownloadUrl: () => getFullUrl('/configs/download'),
-    list: () => get('/configs/list_configs', {}, {toastError: false}),
+    saveToml: (data) => post('/configs/save_toml', data),
+    get: (profile) => get('/configs/get', profile ? { fileName: profile } : {}),
+    getToml: (profile) => get('/configs/get_toml', profile ? { profile } : {}),
+    getDownloadUrl: (profile) => getFullUrl('/configs/download', profile ? { profile } : {}),
+    listConfigStatus: () => get('/configs/list_config_status', {}, {toastError: false}),
+    listConfigFiles: () => get('/configs/list_config_files', {}, {toastError: false}),
+    delete: (profile) => get('/configs/delete', { profile }, {toastError: false}),
+    rename: (oldProfile, newName) => get('/configs/rename', { oldProfile, newName }, {toastError: false}),
   },
   peers: {
     checkPeers: () => get('/peers/check_peers'),
@@ -139,6 +141,8 @@ export const api = {
     restart: (profile) => get('/services/restart', profile ? { profile } : {}),
     start: (profile) => get('/services/start', profile ? { profile } : {}),
     stop: (profile) => get('/services/stop', profile ? { profile } : {}),
+    systemService: (profile, enabled) => get('/services/system_service', { profile, enabled }),
+    autoStart: (profile, enabled) => get('/services/auto_start', { profile, enabled }),
   },
   
   // 窗口相关

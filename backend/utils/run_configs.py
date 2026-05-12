@@ -18,7 +18,7 @@ CORE_DIR = os.getenv('CORE_DIR', f"{TRIM_APPDEST}/bin")
 DATA_DIR = os.getenv('DATA_DIR', f"{TRIM_PKGVAR}")
 LOG_DIR = os.getenv('LOG_DIR', f"{TRIM_PKGVAR}/logs")
 
-BUILD_VERSION = "unknown"
+BUILD_VERSION = "0.6.020500"
 
 class EtRunConfig:
     def __init__(self, data: dict):
@@ -51,8 +51,11 @@ def et_config_file(file_name=None):
     return os.path.join(config_dir(), file_name)
 
 def et_config_files() -> List[str]:
+    config_dir_path = config_dir()
+    if not os.path.exists(config_dir_path):
+        return []
     config_files = []
-    for file in os.listdir(config_dir()):
+    for file in os.listdir(config_dir_path):
         if Path(file).name.lower().endswith('.toml'):
             config_files.append(file)
     return config_files
@@ -77,4 +80,7 @@ def et_run_file():
     return os.path.join(data_dir(), 'et_run.json')
 
 def fn_check_file():
+    """
+    检查文件, 记录应用启动时的开机时间，用于检查是否已经启动过应用
+    """
     return os.path.join(data_dir(), 'fn_check.txt')

@@ -32,6 +32,14 @@ def get(profile:str)-> Optional[EtRunInfo]:
     data = __load_data() or {}
     return data.get(profile)
 
+def remove(profile:str):
+    if not profile:
+        return
+    data = __load_data() or {}
+    if profile in data:
+        del data[profile]
+        __save_data(data)
+
 def all() -> Dict[str, EtRunInfo]:
     return __load_data()
 

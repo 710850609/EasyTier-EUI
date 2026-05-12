@@ -37,24 +37,39 @@
               :value="cfg.profile"
             >
               <div class="config-option">
+                <svg-icon size="16" type="mdi" :path="mdiCircle" :color="cfg.running ? 'var(--color-success)' : 'var(--color-text-disabled)'"></svg-icon>
                 <span>{{ cfg.name }}</span>
-                <var-icon
-                  :name="cfg.running ? 'check-circle-outline' : 'minus-circle'"
-                  :color="cfg.running ? 'var(--color-success)' : 'var(--color-text-disabled)'"
-                  size="16"
-                />
               </div>
             </var-option>
           </var-select>
+          <div class="service-status" v-if="selectedConfig">
+             <var-chip size="small" :type="serviceRunning ? 'success' : 'danger'">
+              {{ serviceOperating ? (serviceRunning ? '停止中...' : '启动中...') : serviceRunning ? '运行中' : '未启动' }}
+             </var-chip>
+          </div>
           <div class="service-actions">
             <var-loading type="circle" v-if="serviceOperating" />
-            <var-icon name="play-circle" size="24" @click="startService" color="var(--color-success)" v-if="!serviceRunning && !serviceOperating" :style="{ cursor: 'pointer' }"/>
-            <var-icon name="radio-marked" size="24" @click="stopService" color="var(--color-danger)" v-if="serviceRunning && !serviceOperating"  :style="{ cursor: 'pointer' }"/>
-          </div>
-          <div class="service-status" v-if="selectedConfig">
-            <span class="status-text" :style="{ color: serviceOperating ? 'var(--color-text-disabled)' : (serviceRunning ? 'var(--color-success)' : 'var(--color-danger)') }">
-              {{ serviceOperating ? (serviceRunning ? '停止中...' : '启动中...') : serviceRunning ? '运行中' : '已停止' }}
-            </span>
+            <var-button
+              type="primary"
+              size="small"
+              auto-loading
+              @click="startService"
+              v-if="selectedConfig && !serviceRunning && !serviceOperating"
+            >
+              启动
+            </var-button>
+            <var-button
+              type="danger"
+              auto-loading
+              size="small"
+               
+              @click="stopService"
+              v-if="serviceRunning && !serviceOperating"
+            >
+              停止
+            </var-button>
+            <!-- <var-icon name="play-circle" size="24" @click="startService" color="var(--color-success)" v-if="!serviceRunning && !serviceOperating" :style="{ cursor: 'pointer' }"/> -->
+            <!-- <var-icon name="radio-marked" size="24" @click="stopService" color="var(--color-danger)" v-if="serviceRunning && !serviceOperating"  :style="{ cursor: 'pointer' }"/> -->
           </div>
         </div>
         <!-- <div class="divider"></div> -->
@@ -205,7 +220,7 @@
       confirmButtonText="需要" cancelButtonText="不需要">
       <template #title>
         <var-icon name="information" color="#2979ff" />
-        <span style="color: #2979ff" >首次组网需要确认配置</span>
+        <span style="color: #2979ff" >不存在组网配置</span>
       </template>
       <var-cell title="是否需要快速配置（新手推荐）？" description="" />
     </var-dialog>
@@ -219,6 +234,8 @@ import { api } from '../utils/api.js'
 import toast from '../components/toast.js'
 import { Poller } from '../utils/poller.js'
 import { NODES_SELECTED_COLUMNS_KEY, NODES_SELECTED_NODE_TYPES_KEY, NODES_REFRESH_STEP_KEY } from '../config/storage-keys.js'
+import { mdiCircle } from '@mdi/js'
+import SvgIcon from '@jamescoyle/vue-icon'
 
 // 注入菜单切换方法和快速设置模式
 const setActiveMenu = inject('setActiveMenu')
@@ -227,6 +244,7 @@ const showFastSettingTip = ref(false)
 
 const showFilterMenu = ref(false)
 const dataLoading = ref(false)
+const isUnmounted = ref(false)
 const activeTab = ref('columnsFilter')
 // 加载骨架屏
 const loadingSkeleton = ref(true)
@@ -431,6 +449,7 @@ const fetchNodes = async () => {
       params.profile = selectedConfig.value
     }
     const data = await api.monitor.getList(params);
+    if (isUnmounted.value) return
     let peersData = []
     if (Array.isArray(data)) {
       peersData = data
@@ -458,12 +477,14 @@ const fetchNodes = async () => {
     })
     showServiceError.value = false
   } catch (error) {
+    if (isUnmounted.value) return
     console.error('获取组网信息失败:', error)
     const status = await api.services.status(selectedConfig.value)
+    if (isUnmounted.value) return
     showServiceError.value = true
     if (!status.data.running) {
-      serviceErrorMessage.value = 'EasyTier核心服务未运行，请检查服务是否正常启动'
-    } else {
+    //   serviceErrorMessage.value = 'EasyTier核心服务未运行，请检查服务是否正常启动'
+    // } else {
       serviceErrorMessage.value = `EasyTier核心服务异常 -> ${error.message}`
     }
   } finally {
@@ -479,7 +500,6 @@ const openConfigView = (isFastConfig) => {
 const restartService = () => {
   return new Promise((resolve, reject) => {
     try {
-      // const profile = getProfileFromConfig(selectedConfig.value)
       api.services.restart(selectedConfig.value).then(() => {
         toast.success('服务重启成功')
         resolve()
@@ -493,8 +513,15 @@ const restartService = () => {
 
 const loadConfigs = async () => {
   try {
-    const res = await api.configs.list()
+    const res = await api.configs.listConfigStatus()
     configList.value = res.data || []
+    for (const cfg of configList.value) {
+      if (cfg.running || false) {
+        selectedConfig.value = cfg.profile
+        updateServiceStatus()
+        return
+      }
+    }
     if (configList.value.length > 0 && !selectedConfig.value) {
       selectedConfig.value = configList.value[0].profile
       updateServiceStatus()
@@ -558,8 +585,7 @@ onMounted(async () => {
   loadSettings()
   await loadConfigs()
   try {
-    const needSetting = await api.configs.needSetting();
-    if (needSetting.data.needConfig) {
+    if (!selectedConfig.value) {
       showFastSettingTip.value = true
       return;
     }
@@ -578,6 +604,7 @@ onMounted(async () => {
 
 // 页面销毁时清除定时器
 onUnmounted(() => {
+  isUnmounted.value = true
   nodesPoller.stop()
 })
 
@@ -616,7 +643,7 @@ onUnmounted(() => {
 .config-option {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: left;
   width: 100%;
   gap: 8px;
 }

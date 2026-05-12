@@ -15,8 +15,9 @@ import psutil
 
 from actions import services
 from utils import run_configs, log_util
+from utils import common_util
 
-fn_check_file = run_configs.fn_check_file()
+_fn_check_file = run_configs.fn_check_file()
 
 def status():
     """
@@ -26,10 +27,10 @@ def status():
     0 表示应用正在运行
     3 表示应用未运行
     """
-    if not os.path.exists(fn_check_file):
+    if not os.path.exists(_fn_check_file):
         return 3
     boot_time_timestamp = psutil.boot_time()
-    with open(fn_check_file, 'r') as f:
+    with open(_fn_check_file, 'r') as f:
         data = f.readline()
         if data == str(boot_time_timestamp):
             return 0
@@ -41,13 +42,11 @@ def start():
     启动成功后，把 开机时间 写入 文件
     """
     Path(run_configs.config_dir()).mkdir(parents=True, exist_ok=True)
-    config_file_list = run_configs.et_config_files()
-    if len(config_file_list) > 0:
-        services.start_all()
-    check_file = Path(fn_check_file)
+    services.start_all()
+    check_file = Path(_fn_check_file)
     if not check_file.exists():
         check_file.touch()
-    with open(fn_check_file, 'w') as f:
+    with open(_fn_check_file, 'w') as f:
         f.write(str(psutil.boot_time()))
 
 def stop():
@@ -56,7 +55,17 @@ def stop():
     停止应用，不设置
     """
     services.stop_all()
-    Path(fn_check_file).unlink(missing_ok=True)
+    Path(_fn_check_file).unlink(missing_ok=True)
+
+def is_fn_system():
+    """
+    检查是否为飞牛系统
+    """
+    if sys.platform == "linux":
+        kernel_version = common_util.run_cmd('uname', '-r')
+        logging.info(f"kernel_version: {kernel_version}")
+        return kernel_version.lower().find('trim') != -1
+    return False
 
 if __name__ == '__main__':
     try:

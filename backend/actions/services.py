@@ -11,6 +11,7 @@ from utils import check_peers, common_util
 from utils import process_util
 from utils import run_configs
 from utils import et_run_info
+from utils import fn_service
 from utils.process_util import ProcessManager
 
 # 延迟初始化：使用单例模式
@@ -82,7 +83,6 @@ def start(params=None, *kwargs):
         autostart = False if info is None else info.autostart
         et_run_info.save(profile, rpc_portal, autostart, False)
 
-
 def restart(params=None, *kwargs):
     logging.info(f"重启ET服务...")
     if status(params):
@@ -90,22 +90,26 @@ def restart(params=None, *kwargs):
     start(params)
 
 def start_all(*kwargs):
+    config_file_list = run_configs.et_config_files()
+    if len(config_file_list) == 0:
+        logging.info("暂无配置文件，跳过启动服务")
+        return
     infos = et_run_info.all()
-    system_service_profile = None
-    for profile, info in infos.items():
+    system_service_profiles = []
+    for _, info in infos.items():
         if info.use_system_service:
-            system_service_profile = info.profile
+            system_service_profiles.append(info.profile)
         elif info.autostart:
             logging.info(f"启动 EaysTier 核心服务：{info.profile}")
             start({'profile': info.profile})
-    if system_service_profile:
-        logging.info(f"启动 EaysTier 系统注册服务")
-        start({'profile': system_service_profile})
+    if len(system_service_profiles) > 0:
+        logging.info(f"启动 EaysTier 系统注册服务：{system_service_profiles}")
+        start({'profile': system_service_profiles[0]})
 
 def stop_all(*kwargs):
     infos = et_run_info.all()
     system_service_profile = None
-    for profile, info in infos.items():
+    for _, info in infos.items():
         if info.use_system_service:
             system_service_profile = info.profile
         elif info.autostart:
@@ -114,6 +118,49 @@ def stop_all(*kwargs):
     if system_service_profile:
         logging.info(f"停止 EaysTier 系统注册服务")
         stop({'profile': system_service_profile})
+
+def system_service(params=None, *kwargs):
+    params = params or {}
+    profile = params.get('profile')
+    is_enabled = params.get('enabled', False)
+    if isinstance(is_enabled, str):
+        is_enabled = is_enabled.lower() == 'true'
+    if not profile:
+        raise HttpException('缺少配置名称')
+    config_file = run_configs.et_config_file(profile)
+    if not Path(config_file).exists():
+        raise HttpException(f'配置文件不存在: {profile}')
+    info = et_run_info.get(profile)
+    rpc_portal = info.rpc_portal if info else '127.0.0.1:16888'
+    autostart = info.autostart if info else False
+    if is_enabled:
+        cmd = f"{os.path.join(run_configs.core_dir(), 'easytier-cli')}{_ext} service install --config-file {config_file}"
+        result = common_util.run_cmd(cmd)
+        logging.info(f"注册系统服务结果：{result}")
+        et_run_info.save(profile, rpc_portal, autostart, True)
+    else:
+        cmd = f"{os.path.join(run_configs.core_dir(), 'easytier-cli')}{_ext} service uninstall"
+        result = common_util.run_cmd(cmd)
+        logging.info(f"卸载系统服务结果：{result}")
+        et_run_info.save(profile, rpc_portal, autostart, False)
+    return {'success': True, 'enabled': is_enabled}
+
+def auto_start(params=None, *kwargs):
+    params = params or {}
+    profile = params.get('profile')
+    is_enabled = params.get('enabled', False)
+    if isinstance(is_enabled, str):
+        is_enabled = is_enabled.lower() == 'true'
+    if not profile:
+        raise HttpException('缺少配置名称')
+    info = et_run_info.get(profile)
+    info.autostart = True
+    # 如果是飞牛，则不注册系统服务
+    if fn_service.is_fn_system():
+        info.use_system_service = False
+    else:
+        info.use_system_service = True
+    et_run_info.save(*info.__dict__.values())
 
 
 
