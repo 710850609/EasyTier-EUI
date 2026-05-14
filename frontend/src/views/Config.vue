@@ -192,8 +192,9 @@
             </var-skeleton>
 
             <!-- 高级设置 -->
-            <var-collapse v-if="!fastSettingMode" v-model="flagsOpen" :accordion="true" class="flags-section-inner" :elevation="12">
-              <var-collapse-item name="flags">
+            <var-paper v-if="!fastSettingMode" :elevation="3" class="flags-section-paper">
+              <var-collapse v-model="flagsOpen" :accordion="true" class="flags-section-inner">
+                <var-collapse-item name="flags">
                 <template #title>
                   <div class="collapse-title">
                     <svg-icon type="mdi" :path="mdiShieldEdit" width="24" height="24" color="var(--color-primary)" />
@@ -389,6 +390,7 @@
                 </var-skeleton>
               </var-collapse-item>
             </var-collapse>
+            </var-paper>
 
           </var-paper>
         </var-form>
@@ -1115,6 +1117,12 @@ onMounted(async () => {
   margin-top: 8px;
 }
 
+.flags-section-paper {
+  margin-top: 8px;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
 :deep(.flags-section .var-collapse-item) {
   border-radius: 16px;
   overflow: hidden;
@@ -1124,7 +1132,7 @@ onMounted(async () => {
 :deep(.flags-section-inner .var-collapse-item) {
   border-radius: 12px;
   overflow: hidden;
-  background: var(--color-surface-container-high) !important;
+  background: transparent !important;
 }
 
 :deep(.flags-section-inner .var-collapse-item__header) {
