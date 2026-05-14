@@ -9,6 +9,7 @@ import logging
 import os
 import sys
 from pathlib import Path
+from typing import Optional
 from urllib.parse import quote
 from urllib.parse import unquote
 
@@ -55,7 +56,7 @@ class HttpRequest:
         return fun_params
 
 class HttpResponse(Exception):
-    def __init__(self, code=0, data=None, file: str=None, mime_type=None, download_name:str=None, status_code=200, headers=None):
+    def __init__(self, code=0, data=None, file: Optional[str]=None, mime_type=None, download_name:str=None, status_code=200, headers=None):
         if data and file:
             raise AssertionError(f"不能同时存在data和file")
         self.code = code

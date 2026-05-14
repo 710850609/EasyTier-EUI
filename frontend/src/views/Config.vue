@@ -52,7 +52,7 @@
 
             <div class="config-actions-group" v-if="selectedConfig">
               <var-button size="small" type="primary" @click="showCreateDialog = true">新增</var-button>
-              <var-button size="small" type="primary" @click="startEditName">改名</var-button>
+              <var-button size="small" type="primary" @click="startEditName" :loading="isRenaming">改名</var-button>
               <var-button size="small" type="danger" @click="deleteCurrentConfig" auto-loading>删除</var-button>
             </div>
           </div>
@@ -74,7 +74,7 @@
         <div class="toolbar-row toolbar-actions" v-if="selectedConfig">
           <var-button type="primary" size="small" @click="saveConfig" auto-loading>保存配置</var-button>
           <var-button type="primary" size="small" @click="openCodePage" auto-loading>编辑文件</var-button>
-          <var-button type="primary" size="small" @click="downloadConfig" auto-loading>分享网络</var-button>
+          <var-button type="primary" size="small" @click="showShareConfigType = true">分享网络</var-button>
         </div>
       </div>
 
@@ -88,7 +88,7 @@
                 <span class="section-title">{{ fastSettingMode ? '快速设置' : '基础设置' }}</span>
               </div>
               <div v-if="fastSettingMode">
-                <span style="font-size: 12px; color: var(--color-warning); margin-top: 8px;">填写网络名称和密码，后点击即可 -></span>
+                <span style="font-size: 13px; color: var(--color-warning); margin-top: 8px;">填写网络名称和密码，后点击即可 -> </span>
                 <var-button type="primary" size="small" @click="saveConfig(true)" auto-loading>保存并启动</var-button>
               </div>
             </div>
@@ -137,7 +137,7 @@
                 </var-cell>
               </div>
 
-              <var-cell>
+              <var-cell v-if="!fastSettingMode">
                   <var-cell>
                     <template #icon><div class="section-subtitle">初始节点</div></template>
                     <template #extra>
@@ -390,7 +390,6 @@
               </var-collapse-item>
             </var-collapse>
 
-
           </var-paper>
         </var-form>
       </div>
@@ -422,6 +421,7 @@
         <span>重命名配置</span>
       </template>
       <var-input
+        variant="outlined"
         placeholder="请输入新名称"
         v-model="editNameValue"
         :rules="[v => !!v || '名称不能为空']"
@@ -440,10 +440,16 @@
         :rules="[v => !!v || '配置名称不能为空']"
       />
     </var-dialog>
+
+    <var-dialog v-model:show="showShareConfigType" title="选择数据类型"
+      confirmButtonText="下载文件"  @confirm="downloadConfig" 
+      cancelButtonText="复制到剪贴板" @cancel="copyConfig">
+    </var-dialog>
   </div>
 </template>
 
 <script setup>
+import { copyToClipboard } from '../utils/clipboard.js'
 import { ref, computed, inject, onMounted, nextTick } from 'vue'
 import toast from '../components/toast.js'
 import { api } from '../utils/api.js'
@@ -459,6 +465,7 @@ const customProxyNetwork = ref('')
 const customListener = ref('')
 const flagsOpen = ref([])
 const form = ref(null)
+const showShareConfigType = ref(false)
 const showCodePage = ref(false)
 const isLoadingConfig = ref(true)
 const isLoadingConfigList = ref(true)
@@ -467,6 +474,7 @@ const isRefreshingPublicPeerOptions = ref(false)
 const showPassword = ref(false)
 const isPeerChecking = ref(false)
 const changingAutostart = ref(false)
+const isRenaming = ref(false)
 
 const configList = ref([])
 const selectedConfig = ref('')
@@ -614,8 +622,15 @@ const saveConfig = async (start = false) => {
 }
 
 const downloadConfig = () => {
-  const url = api.configs.getDownloadUrl(selectedConfig.value)
+  const url = api.configs.getShareConfigDownloadUrl(selectedConfig.value)
   window.open(url, '_blank')
+}
+
+const copyConfig = () => {
+  api.configs.getShareConfigStr(selectedConfig.value).then(resp => {
+    copyToClipboard(resp.data)
+    toast.success('已复制配置到剪贴板')
+  })
 }
 
 const openCodePage = () => {
@@ -821,6 +836,7 @@ const confirmEditName = async (action, done) => {
     showRenameDialog.value = false
     return done()
   }
+  isRenaming.value = true
   const loadingToast = toast.loading('重命名中...')
   try {
     const isRunning = await api.services.status(selectedConfig.value).then(resp => resp.data)
@@ -835,8 +851,6 @@ const confirmEditName = async (action, done) => {
     const res = await api.configs.rename(selectedConfig.value, newName+'.toml').catch(error => {
       toast.error('重命名失败: ' + error.message)
       throw error
-    }).finally(() => {
-      loadingToast.clear()
     })
     toast.success('重命名成功')
     await loadConfigs()
@@ -851,6 +865,7 @@ const confirmEditName = async (action, done) => {
       })
     }
   } finally {
+    isRenaming.value = false
     loadingToast.clear()
     return done()
   }

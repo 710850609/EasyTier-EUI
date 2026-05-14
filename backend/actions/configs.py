@@ -140,14 +140,21 @@ def get_toml(params=None, *kwargs):
     with open(et_config_file, "r", encoding="utf-8") as f:
         return f.read()
 
-def download(params=None, *kwargs):
+def download_share_config(params=None, *kwargs):
     profile, _ = Validator.not_empty(params, 'profile', '未指定配置')
     profile = Validator.check_profile(profile)
     tmp_file = copy(profile)
     logging.info(f"{tmp_file}")
     return HttpResponse(file=tmp_file, download_name="config.toml")
 
-def copy(profile=None, *kwargs): 
+def get_share_config_str(params=None, *kwargs):
+    profile, _ = Validator.not_empty(params, 'profile', '未指定配置')
+    profile = Validator.check_profile(profile)
+    tmp_file = copy(profile)
+    with open(tmp_file, "r", encoding="utf-8") as f:
+        return f.read()
+
+def copy(profile:str):
     profile = Validator.check_profile(profile)
     tmp_file = run_configs.data_dir() + '/tmp/config-copy.toml'
     
