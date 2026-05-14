@@ -78,7 +78,7 @@
         </div>
       </div>
 
-      <div class="content-area" v-if="selectedConfig">
+      <div class="content-area" v-if="selectedConfig || fastSettingMode">
         <var-form ref="form">
           <var-paper class="config-section merged-section" :elevation="2">
             <!-- 基础设置 -->
@@ -87,7 +87,7 @@
                 <svg-icon type="mdi" :path="mdiHomeEdit" width="24" height="24" color="var(--color-primary)" />
                 <span class="section-title">{{ fastSettingMode ? '快速设置' : '基础设置' }}</span>
               </div>
-              <div v-if="fastSettingMode">
+              <div v-if="fastSettingMode && selectedConfig">
                 <span style="font-size: 13px; color: var(--color-warning); margin-top: 8px;">填写网络名称和密码，后点击即可 -> </span>
                 <var-button type="primary" size="small" @click="saveConfig(true)" auto-loading>保存并启动</var-button>
               </div>
@@ -467,7 +467,7 @@ const flagsOpen = ref([])
 const form = ref(null)
 const showShareConfigType = ref(false)
 const showCodePage = ref(false)
-const isLoadingConfig = ref(true)
+const isLoadingConfig = ref(false)
 const isLoadingConfigList = ref(true)
 const configToml = ref('')
 const isRefreshingPublicPeerOptions = ref(false)
@@ -686,20 +686,21 @@ const refreshPublicPeerOptions = () => {
 }
 
 const checkPeers = () => {
-  if (isPeerChecking.value) {
-    toast.warning('检测节点可用状态中，请稍后...')
-    return
-  }
-  toast.info('开始检测节点可用状态，这可能需要一些时间，请稍后...')
   return new Promise((resolve, reject) => {
+    if (isPeerChecking.value) {
+      toast.warning('检测节点可用状态中，请稍后...')
+      return
+    }
+    const checkToast = toast.info('开始检测节点可用状态，这可能需要一些时间，请稍后...', 10000)
     isPeerChecking.value = true
     api.peers.checkPeers().then(data => {
       publicPeerOptions.value = data.data.sort((a, b) => b.status - a.status)
-      toast.success('检测节点可用状态成功，请点击初始化节点列表查看')
+      toast.success('检测节点可用状态成功')
     }).catch(() => {
       toast.error('检测节点可用状态失败')
     }).finally(() => {
       isPeerChecking.value = false
+      checkToast.clear()
       resolve()
     })
   })
@@ -814,7 +815,6 @@ const confirmCreateConfig = () => {
   selectedConfig.value = profile
   loadedProfiles.value.add(profile)
   newConfigName.value = ''
-  isLoadingConfig.value = false
 }
 
 const startEditName = () => {
@@ -893,14 +893,16 @@ onMounted(async () => {
     await loadConfig(configList.value[0].profile)
     loadedProfiles.value.add(configList.value[0].profile)
   }
-  api.peers.publicPeers().then(data => {
+  api.peers.publicPeers().then(async data => {
     publicPeerOptions.value = data.data
-    if (fastSettingMode.value && config.value.peer.length === 0) {
+    if (fastSettingMode.value) {
+      isLoadingConfig.value = true
+      await checkPeers()
+      isLoadingConfig.value = false
       newConfigName.value = '默认'
       confirmCreateConfig()
       const peers = publicPeerOptions.value.slice(0, 3).map(e => e.uri)
       config.value.peer.unshift(...peers)
-      isLoadingConfig.value = false
     }    
   })
 })
