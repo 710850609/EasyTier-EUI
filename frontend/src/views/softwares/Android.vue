@@ -28,18 +28,73 @@
         </var-space>
       </div>
       <var-divider />
+
       <div class="download-grid">
         <var-paper class="download-item" :elevation="3">
           <div class="item-header">
             <var-icon name="package" size="24" />
-            <span class="item-title">通用安装包</span>
+            <span class="item-title">arm-64(常见机型)</span>
           </div>
           <div class="item-actions">
-            <var-button type="primary" size="normal" @click="download(true)" auto-loading>
+            <var-button type="primary" size="normal" @click="download('arm64', true)" auto-loading>
               <var-icon name="download"/>
               最新版
             </var-button>
-            <var-button type="primary" size="normal" @click="download(false)" auto-loading>
+            <var-button type="primary" size="normal" @click="download('arm64', false)" auto-loading>
+              <var-icon name="download"/>
+              稳定版
+            </var-button>
+          </div>
+        </var-paper>
+      <!-- </div>
+      <div class="download-grid"> -->
+        <var-paper class="download-item" :elevation="3">
+          <div class="item-header">
+            <var-icon name="package" size="24" />
+            <span class="item-title">arm(古老机型)</span>
+          </div>
+          <div class="item-actions">
+            <var-button type="primary" size="normal" @click="download('arm', true)" auto-loading>
+              <var-icon name="download"/>
+              最新版
+            </var-button>
+            <var-button type="primary" size="normal" @click="download('arm', false)" auto-loading>
+              <var-icon name="download"/>
+              稳定版
+            </var-button>
+          </div>
+        </var-paper>
+      </div>
+      <div class="download-grid">
+        <var-paper class="download-item" :elevation="3">
+          <div class="item-header">
+            <var-icon name="package" size="24" />
+            <span class="item-title">x86_64</span>
+          </div>
+          <div class="item-actions">
+            <var-button type="primary" size="normal" @click="download('x86_64', true)" auto-loading>
+              <var-icon name="download"/>
+              最新版
+            </var-button>
+            <var-button type="primary" size="normal" @click="download('x86_64', false)" auto-loading>
+              <var-icon name="download"/>
+              稳定版
+            </var-button>
+          </div>
+        </var-paper>
+      <!-- </div>
+      <div class="download-grid"> -->
+        <var-paper class="download-item" :elevation="3">
+          <div class="item-header">
+            <var-icon name="package" size="24" />
+            <span class="item-title">x86</span>
+          </div>
+          <div class="item-actions">
+            <var-button type="primary" size="normal" @click="download('x86', true)" auto-loading>
+              <var-icon name="download"/>
+              最新版
+            </var-button>
+            <var-button type="primary" size="normal" @click="download('x86', false)" auto-loading>
               <var-icon name="download"/>
               稳定版
             </var-button>
@@ -118,8 +173,9 @@ const download = (prerelease) => {
 
 .item-header {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 0px;
   margin-bottom: 16px;
   color: var(--color-on-surface);
 }
@@ -127,6 +183,7 @@ const download = (prerelease) => {
 .item-title {
   font-weight: 600;
   font-size: 15px;
+  text-align: center;
 }
 
 .item-actions {

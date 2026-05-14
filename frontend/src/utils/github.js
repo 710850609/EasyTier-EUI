@@ -115,10 +115,10 @@ export async function downloadEasyTierGUI(arch, prerelease = false) {
  * 下载 EasyTier APK
  * @param {boolean} prerelease - 是否下载预发布版本
  */
-export async function downloadEasyTierApk(prerelease = false) {
+export async function downloadEasyTierApk(arch, prerelease = false) {
   return downloadFromGithub(
     'EasyTier/EasyTier',
-    (asset) => asset.name === 'app-universal-release.apk',
+    (asset) => asset.name === `app-${arch}-release.apk`,
     prerelease
   )
 }

@@ -41,7 +41,6 @@ const copyAndOpenLink = () => {
 }
 </script>
 
-
 <style scoped>
 .platform-page {
   padding: 16px;
@@ -100,8 +99,9 @@ const copyAndOpenLink = () => {
 
 .item-header {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 0px;
   margin-bottom: 16px;
   color: var(--color-on-surface);
 }
@@ -109,6 +109,7 @@ const copyAndOpenLink = () => {
 .item-title {
   font-weight: 600;
   font-size: 15px;
+  text-align: center;
 }
 
 .item-actions {
