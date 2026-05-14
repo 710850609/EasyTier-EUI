@@ -72,14 +72,18 @@ def is_use_system_service(profile:str)-> bool:
 def __load_data(reload:bool = False) -> Dict[str, EtRunInfo]:
     global __data
     if __data is None or reload:
+        __data = {}
         run_file = run_configs.et_run_file()
         if not os.path.exists(run_file):
             return {}
         with open(run_file, "r", encoding="utf-8") as f:
             data = json.load(f)
             for key, value in data.items():
-                data[key] = EtRunInfo(**value)
-            __data = data
+                try:
+                    __data[key] = EtRunInfo(**value)
+                except Exception as e:
+                    logging.exception(f'加载元数据异常: {value}')
+    logging.info(f"加载元数据： {__data}")
     return __data
 
 def __save_data(data:Dict[str, EtRunInfo]):
@@ -89,3 +93,9 @@ def __save_data(data:Dict[str, EtRunInfo]):
     with open(run_file, "w", encoding="utf-8") as f:
         serializable_data = {k: v.__dict__ for k, v in data.items()}
         json.dump(serializable_data, f, ensure_ascii=False, indent=4)
+
+
+if __name__ == '__main__':
+    aa = {'profile': None, 'rpc_portal': '127.0.0.1:16889', 'autostart': False, 'use_system_service': False}
+    b = EtRunInfo(**aa)
+    print(b)
