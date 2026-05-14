@@ -260,14 +260,18 @@ def http_handle(base_uri="/", body_data=None, cgi_module=True) -> HttpResponse:
             if not isinstance(response, HttpResponse):
                 response = HttpResponse(data=response)
     except HttpException as e:
-        logging.warning(f"HTTP 异常: {e.status_code} - {e.message}")
+        logging.exception(f"HTTP 异常: {e.status_code} - {e.message}")
         response = HttpResponse(code=1, status_code=e.status_code, data=e.message, headers=e.headers)
     except ImportError as e:
-        logging.error(f"模块导入失败: {str(e)}", exc_info=True)
+        logging.exception(f"模块导入失败: {str(e)}", exc_info=True)
         response = HttpResponse(code=1, status_code=500, data="模块加载失败")
     except AttributeError as e:
-        logging.error(f"函数不存在: {str(e)}", exc_info=True)
-        response = HttpResponse(code=1, status_code=404, data="接口不存在")
+        if str(e).startswith("module 'actions.peers' has no attribute"):
+            logging.exception(f"函数不存在: {str(e)}", exc_info=True)
+            response = HttpResponse(code=1, status_code=404, data="接口不存在")
+        else:
+            logging.exception(e)
+            response = HttpResponse(code=1, status_code=500, data=str(e))
     except Exception as e:
         logging.exception(f"服务异常: {str(e)}")
         # 生产环境不暴露详细错误信息

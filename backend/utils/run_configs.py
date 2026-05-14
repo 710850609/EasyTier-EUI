@@ -64,12 +64,6 @@ def et_pid_file(profile: Optional[str]):
     file_name = 'app.pid' if profile is None else f"{profile}.pid"
     return os.path.join(data_dir(), file_name)
 
-# def et_restart_flag_file():
-#     return os.path.join(data_dir(), '.restart')
-
-# def et_init_flag_file():
-#     return os.path.join(data_dir(), '.init')
-
 def et_peer_meta_file():
     return os.path.join(data_dir(), 'peer-txt-meta.json')
 

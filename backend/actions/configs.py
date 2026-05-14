@@ -3,16 +3,18 @@
 
 import logging
 import os
+import shutil
 from pathlib import Path
 
 import tomlkit
 
-from http_dispatcher.dispatcher import HttpResponse
-from http_dispatcher.dispatcher import HttpException
-from utils import run_configs
 from actions import services
+from http_dispatcher.dispatcher import HttpException
+from http_dispatcher.dispatcher import HttpResponse
 from utils import et_run_info
+from utils import run_configs
 from utils import security
+from utils.validators import Validator
 
 
 def list_config_files(*kwargs):
@@ -42,69 +44,44 @@ def list_config_status(*kwargs):
     return result
 
 def delete(params, *kwargs):
-    profile = params.get('profile') if params else None
-    if not profile:
-        raise HttpException('缺少配置名称')
-    # 安全验证
-    safe_profile = security.validate_profile(profile)
-    if not safe_profile:
-        logging.warning(f"无效的配置文件名: {profile}")
-        raise HttpException('无效的配置文件名', status_code=400)
-    config_file = run_configs.et_config_file(safe_profile)
-    if not os.path.exists(config_file):
-        raise HttpException(f'配置文件不存在: {safe_profile}')
-    os.remove(config_file)
-    pid_file = run_configs.et_pid_file(None if safe_profile == 'default.toml' else safe_profile.replace('.toml', ''))
-    if os.path.exists(pid_file):
-        os.remove(pid_file)
-    et_run_info.remove(safe_profile)
-    return {'success': True}
+    profile, _ = Validator.not_empty(params, 'profile', '配置不能为空')
+    profile = Validator.check_profile(profile)
+    if services.status(params):
+        logging.info(f"{profile} 配置运行中，停止服务...")
+        services.stop(params)
+    info = et_run_info.get(profile)
+    if info and info.autostart:
+        # 禁用自启，当删除最后一个配置时，触发卸载注册服务
+        services.auto_start({'profile': profile, 'enabled': False})
+    Path(run_configs.et_config_file(profile)).unlink(missing_ok=True)
+    et_run_info.remove(profile)
+
 
 def rename(params, *kwargs):
-    # 同时支持驼峰和下划线参数
-    old_profile = params.get('oldProfile') if params else None
-    if not old_profile:
-        old_profile = params.get('old_profile') if params else None
-    new_name = params.get('newName') if params else None
-    if not new_name:
-        new_name = params.get('new_name') if params else None
-    if not old_profile or not new_name:
-        raise HttpException('缺少参数')
-    # 安全验证
-    safe_old_profile = security.validate_profile(old_profile)
-    if not safe_old_profile:
-        logging.warning(f"无效的旧配置文件名: {old_profile}")
-        raise HttpException('无效的旧配置文件名', status_code=400)
-    # 清理新名称
-    safe_new_name = security.sanitize_string(new_name.strip())
-    if not safe_new_name:
-        raise HttpException('新名称不能为空')
-    safe_new_name = safe_new_name.replace(' ', '_')
-    new_profile = safe_new_name if safe_new_name.endswith('.toml') else f'{safe_new_name}.toml'
-    # 再次验证新文件名
-    safe_new_profile = security.validate_profile(new_profile)
-    if not safe_new_profile:
-        raise HttpException('无效的新配置文件名', status_code=400)
-    old_file = run_configs.et_config_file(safe_old_profile)
-    new_file = run_configs.et_config_file(safe_new_profile)
-    if not os.path.exists(old_file):
-        raise HttpException(f'原配置文件不存在: {safe_old_profile}')
-    if safe_old_profile != safe_new_profile and os.path.exists(new_file):
-        raise HttpException(f'目标配置文件已存在: {safe_new_name}')
-    os.rename(old_file, new_file)
-    old_info = et_run_info.get(safe_old_profile)
-    if old_info:
-        et_run_info.save(safe_new_profile, old_info.rpc_portal, old_info.autostart, old_info.use_system_service)
-    return {'name': safe_new_name, 'profile': safe_new_profile}
+    old_profile, _ = Validator.not_empty(params, 'oldProfile', '旧配置名空')
+    new_profile, _ = Validator.not_empty(params, 'newProfile', '新配置名空')
+    old_profile = Validator.check_profile(old_profile)
+    new_profile = Validator.check_profile(new_profile, check_exists=False)
+    if old_profile == new_profile:
+        logging.warning(f"新旧名称一致，跳过重命名: {old_profile}")
+        return {'name': new_profile.replace('.toml', ''), 'profile': new_profile}
+    old_config = run_configs.et_config_file(old_profile)
+    new_config = run_configs.et_config_file(new_profile)
+    if Path(new_config).exists():
+       raise HttpException(f"新名称已存在: {new_profile}")
+
+    shutil.copy2(old_config, new_config)
+    try:
+        services.rename_profile(old_profile, new_profile)
+        Path(old_config).unlink(missing_ok=True)
+    except Exception as e:
+        Path(new_config).unlink(missing_ok=True)
+        raise e
+    return {'name': new_profile.replace('.toml', ''), 'profile': new_profile}
 
 def save(data, *kwargs):
     profile = data.pop('_profile', None) if data else None
-    # 安全验证
-    safe_profile = security.validate_profile(profile)
-    if not safe_profile:
-        logging.warning(f"无效的配置文件名: {profile}")
-        raise HttpException(f'无效的配置文件名: {profile}')
-    profile = safe_profile
+    profile = Validator.check_profile(profile, check_exists=False)
     et_config_file = run_configs.et_config_file(profile)
     path_config_file = Path(et_config_file)
     if not path_config_file.exists():
@@ -119,19 +96,20 @@ def save(data, *kwargs):
     # 头部注释
     with open(et_config_file, "w", encoding="utf-8") as f:
         f.write(tomlkit.dumps(doc))
+    et_run_info.save(profile, None, False, False)
 
 
 def save_toml(data: str, *kwargs):
     try:
         profile = data.pop('_profile', None) if data else None
         if not profile:
-            profile = None
+            raise HttpException("profile is none for save toml")
         else:
             # 安全验证
             safe_profile = security.validate_profile(profile)
             if not safe_profile:
                 logging.warning(f"无效的配置文件名: {profile}")
-                raise HttpException('无效的配置文件名', status_code=400)
+                raise HttpException(f"无效的配置文件名: {profile}")
             profile = safe_profile
         doc = tomlkit.parse(data['toml'])
         doc['instance_name'] = profile
@@ -139,22 +117,16 @@ def save_toml(data: str, *kwargs):
         Path(et_config_file).parent.mkdir(parents=True, exist_ok=True)
         with open(et_config_file, "w", encoding="utf-8") as f:
             f.write(tomlkit.dumps(doc))
+        et_run_info.save(safe_profile, None, False, False)
     except Exception as e:
         logging.error(f"解析配置字符串失败: {e}")
         raise e
 
 def get(params, *kwargs):
     # 同时支持驼峰和下划线参数
-    file_name = params.get('fileName') if params else None
-    if not file_name:
-        file_name = params.get('file_name') if params else None
-    if file_name:
-        safe_file_name = security.validate_profile(file_name)
-        if not safe_file_name:
-            logging.warning(f"无效的配置文件名: {file_name}")
-            raise HttpException('无效的配置文件名', status_code=400)
-        file_name = safe_file_name
-    et_config_file = run_configs.et_config_file(file_name)
+    profile, _ = Validator.not_empty(params, 'profile', '未指定配置')
+    profile = Validator.check_profile(profile)
+    et_config_file = run_configs.et_config_file(profile)
     if os.path.exists(et_config_file):
         with open(et_config_file, "r", encoding="utf-8") as f:
             doc = tomlkit.parse(f.read())
@@ -162,36 +134,21 @@ def get(params, *kwargs):
     return {}
 
 def get_toml(params=None, *kwargs):
-    profile = params.get('profile') if params else None
-    if profile:
-        safe_profile = security.validate_profile(profile)
-        if not safe_profile:
-            logging.warning(f"无效的配置文件名: {profile}")
-            raise HttpException('无效的配置文件名', status_code=400)
-        profile = safe_profile
+    profile, _ = Validator.not_empty(params, 'profile', '未指定配置')
+    profile = Validator.check_profile(profile)
     et_config_file = run_configs.et_config_file(profile)
     with open(et_config_file, "r", encoding="utf-8") as f:
         return f.read()
 
 def download(params=None, *kwargs):
-    profile = params.get('profile') if params else None
-    if profile:
-        safe_profile = security.validate_profile(profile)
-        if not safe_profile:
-            logging.warning(f"无效的配置文件名: {profile}")
-            raise HttpException('无效的配置文件名', status_code=400)
-        profile = safe_profile
+    profile, _ = Validator.not_empty(params, 'profile', '未指定配置')
+    profile = Validator.check_profile(profile)
     tmp_file = copy(profile)
     logging.info(f"{tmp_file}")
     return HttpResponse(file=tmp_file, download_name="config.toml")
 
 def copy(profile=None, *kwargs): 
-    if profile:
-        safe_profile = security.validate_profile(profile)
-        if not safe_profile:
-            logging.warning(f"无效的配置文件名: {profile}")
-            raise HttpException('无效的配置文件名', status_code=400)
-        profile = safe_profile
+    profile = Validator.check_profile(profile)
     tmp_file = run_configs.data_dir() + '/tmp/config-copy.toml'
     
     # 确保目录存在

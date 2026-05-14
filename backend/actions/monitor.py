@@ -5,9 +5,9 @@ import logging
 import os
 import sys
 
-from http_dispatcher.dispatcher import HttpException, HttpResponse
 from utils import common_util, et_run_info
 from utils import run_configs
+from utils.validators import Validator
 
 
 def list(params, *kwargs):
@@ -15,14 +15,17 @@ def list(params, *kwargs):
     获取节点列表
     :param request_data: 请求数据（可选）
     """
-    if params is None:
-        params = {}
-    profile = params.get('profile')
+    profile, _ = Validator.not_empty(params, 'profile', '未指定配置')
+    profile = Validator.check_profile(profile)
     info = et_run_info.get(profile)
     if not info:
-        raise HttpException(f"unknown rpc profile {profile}")
+        logging.warning(f"未找到配置元数据：{profile}")
+        return []
+    if not info.rpc_portal:
+        logging.warning(f"元数据没有rpc信息：{info.__dict__}")
+        return []
     _ext = ".exe" if sys.platform == "win32" else ""
-    cmd = f"{os.path.join(run_configs.core_dir(), 'easytier-cli')}{_ext} -o json --rpc-portal {info.rpc_portal} peer"
+    cmd = f"{os.path.join(run_configs.core_dir(), 'easytier-cli')}{_ext} -o json  --rpc-portal {info.rpc_portal} peer"
     try:
         result = common_util.run_cmd(cmd)
         peer_list = json.loads(result)

@@ -9,14 +9,15 @@ import time
 import zipfile
 from pathlib import Path
 
-import actions.services as et_service
 import utils.common_util as common_util
 import utils.github_util as github_util
+from actions import services
 from http_dispatcher.dispatcher import HttpException
 from utils import run_configs
 
+
 def check_core(*kwargs):
-    core_dir = run_configs.core_dir();
+    core_dir = run_configs.core_dir()
     ext = ".exe" if sys.platform == "win32" else ""
     cli_file = f'{core_dir}/easytier-cli{ext}'
     core_file = f'{core_dir}/easytier-core{ext}'
@@ -47,14 +48,17 @@ def install(data, *kwargs):
     zip_file = f'{core_dir}/easytier-{platform}-{arch}-{et_version}.zip'
     github_util.download_file(url, zip_file)
     unzip_temp_dir = __unzip(zip_file, f'{core_dir}')
-    et_service.stop()
-    for item in Path(f'{unzip_temp_dir}/easytier-{platform}-{arch}').iterdir():
-        shutil.move(str(item), f'{core_dir}/{item.name}')
+
+    stop_profiles = services.stop_all()
+    for item in Path(os.path.join(unzip_temp_dir, f'easytier-{platform}-{arch}')).iterdir():
+        shutil.move(str(item), os.path.join(core_dir, item.name))
         logging.info(f"移动: {item.name}")
     Path(zip_file).unlink()
     shutil.rmtree(unzip_temp_dir)
-    et_service.start()
-    return f'安装{et_version}版本成功'
+    logging.info(f'安装{et_version}版本成功')
+    for profile in stop_profiles:
+        logging.info(f'启动配置：{profile}')
+        services.start({'profile': profile})
 
 def __get_arch():
     machine = platform.machine()

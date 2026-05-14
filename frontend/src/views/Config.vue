@@ -53,7 +53,7 @@
             <div class="config-actions-group" v-if="selectedConfig">
               <var-button size="small" type="primary" @click="showCreateDialog = true">新增</var-button>
               <var-button size="small" type="primary" @click="startEditName">改名</var-button>
-              <var-button size="small" type="danger" @click="deleteCurrentConfig">删除</var-button>
+              <var-button size="small" type="danger" @click="deleteCurrentConfig" auto-loading>删除</var-button>
             </div>
           </div>
 
@@ -61,7 +61,8 @@
             <div class="toolbar-toggles">
               <label class="toggle-item">
                 <span class="toggle-label">开机自启</span>
-                <label class="switch-wrapper">
+                <var-loading v-if="changingAutostart" size="small" />
+                <label class="switch-wrapper" v-if="!changingAutostart">
                   <input type="checkbox" :checked="currentConfigAutostart" @change="(e) => handleSwitchChange(currentConfigData, 'autostart', e.target.checked)" />
                   <span class="switch-slider"></span>
                 </label>
@@ -86,9 +87,9 @@
                 <svg-icon type="mdi" :path="mdiHomeEdit" width="24" height="24" color="var(--color-primary)" />
                 <span class="section-title">{{ fastSettingMode ? '快速设置' : '基础设置' }}</span>
               </div>
-              <div>
+              <div v-if="fastSettingMode">
                 <span style="font-size: 12px; color: var(--color-warning); margin-top: 8px;">填写网络名称和密码，后点击即可 -></span>
-                <var-button type="primary" size="small" @click="saveConfig(true)" auto-loading v-if="fastSettingMode">保存并启动</var-button>
+                <var-button type="primary" size="small" @click="saveConfig(true)" auto-loading>保存并启动</var-button>
               </div>
             </div>
 
@@ -414,7 +415,7 @@
       </div>
     </var-popup>
 
-    <var-dialog v-model:show="showRenameDialog" @confirm="confirmEditName" @cancel="showRenameDialog = false"
+    <var-dialog v-model:show="showRenameDialog" @before-close="confirmEditName"
       confirmButtonText="确认" cancelButtonText="取消">
       <template #title>
         <var-icon name="pencil" color="var(--color-primary)" />
@@ -465,6 +466,7 @@ const configToml = ref('')
 const isRefreshingPublicPeerOptions = ref(false)
 const showPassword = ref(false)
 const isPeerChecking = ref(false)
+const changingAutostart = ref(false)
 
 const configList = ref([])
 const selectedConfig = ref('')
@@ -561,6 +563,22 @@ const ensureInt = (str) => {
 const saveConfig = async (start = false) => {
   const valid = await form.value.validate()
   if (!valid) return
+  const checkStatus = async () => {
+    return await api.services.status(selectedConfig.value).then(resp => resp.data).catch(e => {
+      console.error('检查服务状态失败: ' + e.message)
+      return false
+    })
+  }
+  const autoStart = async () => {
+    return await api.services.autoStart(selectedConfig.value, true)
+      .then(() => {
+        toast.success('设置服务开机启动成功')
+        currentConfigData.value.autostart = true
+        currentConfigAutostart.value = true
+      }).catch(e => {
+        toast.error('设置服务开机启动失败: ' + e.message)
+      })
+  }
   return new Promise((resolve, reject) => {
     let data = { ...config.value }
     data._profile = selectedConfig.value
@@ -569,34 +587,25 @@ const saveConfig = async (start = false) => {
     data.dhcp = !data.ipv4 || !(data.ipv4.trim())
     if (data.flags.enable_ipv6 === undefined) data.flags.enable_ipv6 = true
     if (data.flags.enable_encryption === undefined) data.flags.enable_encryption = true
-    api.configs.save(data).then(res => {
+    api.configs.save(data).then(async res => {
       toast.success('保存配置成功')
-      // 先检查服务状态，只有运行中才重启
-      api.services.status(selectedConfig.value).then(isRunning => {
-        if (isRunning) {
-          const restartLoading = toast.loading('服务重启中...')
-          api.services.restart(selectedConfig.value).then(() => {
-            toast.success('服务重启成功')
-            if (fastSettingMode.value) {
-              toast.info('退出引导设置模式')
-              fastSettingMode.value = false
-            }
-          }).finally(() => {
-            restartLoading.clear()
-            resolve()
-          })
-        } else {
-          // 服务未运行，跳过重启
-          if (fastSettingMode.value) {
-            toast.info('退出引导设置模式')
-            fastSettingMode.value = false
-          }
-          resolve()
-        }
-      }).catch(e => {
-        console.error('检查服务状态失败:', e)
-        resolve()
-      })
+      if (fastSettingMode.value) {
+        // 快速设置模式，自动开启启动服务
+        await autoStart()
+      }
+      if (fastSettingMode.value || await checkStatus()) {
+        const restartLoading = toast.loading(fastSettingMode.value ? '服务启动中...' : '服务重启中...')
+            api.services.restart(selectedConfig.value).then(() => {
+              toast.success('服务启动成功')
+            }).finally(() => {
+              restartLoading.clear()
+            })
+      }      
+      if (fastSettingMode.value) {
+        toast.info('退出引导设置模式')
+        fastSettingMode.value = false
+      }
+      resolve()
     }).catch(e => {
       toast.error('保存配置失败: ' + e.message)
       reject(e)
@@ -624,8 +633,8 @@ const saveToml = () => {
     api.configs.saveToml({ toml: configToml.value, _profile: selectedConfig.value }).then(res => {
       toast.success('保存配置成功')
       // 先检查服务状态，只有运行中才重启
-      api.services.status(selectedConfig.value).then(isRunning => {
-        if (isRunning) {
+      api.services.status(selectedConfig.value).then(resp => {
+        if (resp.data) {
           const restartLoading = toast.loading('服务重启中...')
           api.services.restart(selectedConfig.value).then(() => {
             toast.success('服务重启成功')
@@ -750,19 +759,23 @@ const deleteCurrentConfig = async () => {
     toast.warning('请先停止服务再删除配置')
     return
   }
-  try {
-    await api.configs.delete(cfg.profile)
-    toast.success('配置已删除')
-    await loadConfigs()
-    if (configList.value.length > 0) {
-      selectedConfig.value = configList.value[0].profile
-      await loadConfig(configList.value[0].profile)
-    } else {
-      selectedConfig.value = ''
+  return new Promise(async(resolve, reject) => {
+    try {
+      await api.configs.delete(cfg.profile)
+      toast.success('配置已删除')
+      await loadConfigs()
+      if (configList.value.length > 0) {
+        selectedConfig.value = configList.value[0].profile
+        await loadConfig(configList.value[0].profile)
+      } else {
+        selectedConfig.value = ''
+      }
+      resolve()
+    } catch (error) {
+      toast.error('删除配置失败: ' + error.message)
+      reject(error)
     }
-  } catch (error) {
-    toast.error('删除配置失败: ' + error.message)
-  }
+  })
 }
 
 const confirmCreateConfig = () => {
@@ -795,24 +808,51 @@ const startEditName = () => {
   showRenameDialog.value = true
 }
 
-const confirmEditName = async () => {
+const confirmEditName = async (action, done) => {
+  if (action !== 'confirm') {
+    return done()
+  }
   const newName = editNameValue.value.trim()
   if (!newName) {
     toast.warning('请输入新名称')
-    return
+    return done()
   }
   if (newName === currentConfigData.value.name) {
     showRenameDialog.value = false
-    return
+    return done()
   }
+  const loadingToast = toast.loading('重命名中...')
   try {
-    const res = await api.configs.rename(selectedConfig.value, newName)
-    selectedConfig.value = res.data.profile
+    const isRunning = await api.services.status(selectedConfig.value).then(resp => resp.data)
+    if (isRunning) {
+      const stoping = toast.loading('停止服务中...')
+      await api.services.stop(selectedConfig.value).then(() => toast.success('服务已停止')).finally(() => {
+        stoping.clear()
+      })
+      // 停止et服务可能本地网络会有波动，导致下一次请求被被阻断
+      await new Promise(r => setTimeout(r, 2000));
+    }
+    const res = await api.configs.rename(selectedConfig.value, newName+'.toml').catch(error => {
+      toast.error('重命名失败: ' + error.message)
+      throw error
+    }).finally(() => {
+      loadingToast.clear()
+    })
     toast.success('重命名成功')
-    showRenameDialog.value = false
     await loadConfigs()
-  } catch (error) {
-    toast.error('重命名失败: ' + error.message)
+    selectedConfig.value = res.data.profile
+    currentConfigData.value.name = res.data.name
+    showRenameDialog.value = false
+    if (isRunning) {
+      const starting = toast.loading('启动服务中...')
+      await api.services.start(selectedConfig.value).then(() => toast.success('服务已启动'))
+      .finally(() => {
+        starting.clear()
+      })
+    }
+  } finally {
+    loadingToast.clear()
+    return done()
   }
 }
 
@@ -820,10 +860,13 @@ const handleSwitchChange = async (cfg, field, val) => {
   cfg[field] = val
   if (field === 'autostart') {
     try {
+      changingAutostart.value = true
       await api.services.autoStart(cfg.profile, val)
-      toast.success(val ? '已开启开机自启' : '已关闭开机自启')
+      toast.success(val ? '已开机自启' : '已关闭开机自启')
     } catch (error) {
       cfg[field] = !val
+    } finally {
+      changingAutostart.value = false
     }
   }
 }

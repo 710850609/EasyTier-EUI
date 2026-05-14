@@ -213,13 +213,13 @@ export const api = {
   configs: {
     save: (data) => post('/configs/save', data, {}, {toastError: false}),
     saveToml: (data) => post('/configs/save_toml', data),
-    get: (profile) => get('/configs/get', profile ? { fileName: profile } : {}),
+    get: (profile) => get('/configs/get', profile ? { profile: profile } : {}),
     getToml: (profile) => get('/configs/get_toml', profile ? { profile } : {}),
     getDownloadUrl: (profile) => getFullUrl('/configs/download', profile ? { profile } : {}),
     listConfigStatus: () => get('/configs/list_config_status', {}, {toastError: false}),
     listConfigFiles: () => get('/configs/list_config_files', {}, {toastError: false}),
-    delete: (profile) => get('/configs/delete', { profile }, {toastError: false}),
-    rename: (oldProfile, newName) => get('/configs/rename', { oldProfile, newName }, {toastError: false}),
+    delete: (profile) => post('/configs/delete', { profile }, {toastError: false}),
+    rename: (oldProfile, newProfile) => post('/configs/rename', { oldProfile, newProfile }, {toastError: false}),
   },
   peers: {
     checkPeers: () => get('/peers/check_peers'),
@@ -227,12 +227,12 @@ export const api = {
   },
   // 服务相关
   services: {
-    status: (profile) => get('/services/status', profile ? { profile } : {}),
-    restart: (profile) => get('/services/restart', profile ? { profile } : {}),
-    start: (profile) => get('/services/start', profile ? { profile } : {}, {toastError: false}),
-    stop: (profile) => get('/services/stop', profile ? { profile } : {}),
-    systemService: (profile, enabled) => get('/services/system_service', { profile, enabled }),
-    autoStart: (profile, enabled) => get('/services/auto_start', { profile, enabled }),
+    status: (profile) => get('/services/status', { profile: profile }),
+    restart: (profile) => post('/services/restart', { profile: profile }),
+    start: (profile) => post('/services/start', { profile: profile }, {toastError: false}),
+    stop: (profile) => post('/services/stop', { profile: profile }),
+    systemService: (profile, enabled) => post('/services/system_service', { profile, enabled }),
+    autoStart: (profile, enabled) => post('/services/auto_start', { profile, enabled }),
   },
   
   // 窗口相关

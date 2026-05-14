@@ -494,7 +494,6 @@ const loadConfigs = async () => {
   try {
     const res = await api.configs.listConfigStatus()
     configList.value = res.data || []
-    updateServiceStatus()
     if (isFirstLoadConfigs.value && configList.value.length > 0 && !selectedConfig.value) {
       isFirstLoadConfigs.value = false
       selectedConfig.value = configList.value.filter(e => e.running || false)?.[0]?.profile
@@ -502,6 +501,7 @@ const loadConfigs = async () => {
         selectedConfig.value = configList.value[0].profile
       }
     }
+    updateServiceStatus()
   } catch (error) {
     console.error('加载配置列表失败:', error)
   }

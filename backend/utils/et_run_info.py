@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import json
+import logging
 import os.path
 from pathlib import Path
 from typing import Optional, Dict
+
 
 from http_dispatcher.dispatcher import HttpException
 from utils import run_configs
@@ -14,14 +16,16 @@ class EtRunInfo:
     """
     et 运行信息
     """
-    def __init__(self, profile:str, rpc_portal:str, autostart:bool, use_system_service:bool):
+    def __init__(self, profile:str, rpc_portal:Optional[str], autostart:bool, use_system_service:bool):
+        if not profile:
+            raise HttpException("profile cannot be None for save")
         self.profile = profile
         self.rpc_portal = rpc_portal
         self.autostart = autostart
         self.use_system_service = use_system_service
 
 
-def save(profile:str, rpc_portal:str, autostart:bool, use_system_service:bool):
+def save(profile:Optional[str], rpc_portal:Optional[str], autostart:bool, use_system_service:bool):
     if not profile:
         raise HttpException("profile cannot be None for save")
     data = __load_data() or {}
@@ -34,27 +38,28 @@ def save(profile:str, rpc_portal:str, autostart:bool, use_system_service:bool):
         info.use_system_service = use_system_service if use_system_service is not None else info.use_system_service
     data[profile] = info
     __save_data(data)
+    __load_data(reload=True)
 
-def get(profile:str)-> Optional[EtRunInfo]:
+def get(profile:Optional[str])-> Optional[EtRunInfo]:
     if not profile:
         return None
     data = __load_data() or {}
     info = data.get(profile)
     if info is None and Path(run_configs.et_config_file(profile)).exists():
+        logging.warning(f"元数据不存在，生成默认数据：{profile}")
         save(profile, None, False, False)
     return data.get(profile)
 
 
-def remove(profile:str):
+def remove(profile: Optional[str]):
     if not profile:
         return
-    data = __load_data() or {}
+    data = __load_data(reload=True) or {}
     if profile in data:
         del data[profile]
         __save_data(data)
-        __load_data(reload=True)
 
-def all() -> Dict[str, EtRunInfo]:
+def get_all() -> Dict[str, EtRunInfo]:
     return __load_data()
 
 def is_use_system_service(profile:str)-> bool:
@@ -64,9 +69,9 @@ def is_use_system_service(profile:str)-> bool:
     info = data.get(profile)
     return info is not None and info.use_system_service
 
-def __load_data(reload=False) -> Dict[str, EtRunInfo]:
+def __load_data(reload:bool = False) -> Dict[str, EtRunInfo]:
     global __data
-    if __data is None:
+    if __data is None or reload:
         run_file = run_configs.et_run_file()
         if not os.path.exists(run_file):
             return {}

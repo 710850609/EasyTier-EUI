@@ -4,6 +4,7 @@ import logging
 import os
 import shutil
 import subprocess
+import sys
 
 
 def run_cmd(command, *args, shell=False) -> str:
@@ -34,6 +35,11 @@ def run_cmd(command, *args, shell=False) -> str:
         else:
             cmd = command if isinstance(command, list) else command.split()
     
+    # 设置 Windows 下不弹出控制台窗口
+    creationflags = 0
+    if sys.platform == 'win32' and not shell:
+        creationflags = subprocess.CREATE_NO_WINDOW
+    
     # 执行命令
     result = subprocess.run(
         cmd,
@@ -42,7 +48,8 @@ def run_cmd(command, *args, shell=False) -> str:
         text=True,
         encoding='utf-8',
         errors='replace',  # 遇到无法解码的字符用 � 替换
-        timeout=3600  # 1小时超时
+        timeout=3600,  # 1小时超时
+        creationflags=creationflags
     )
     if result.returncode == 0:
         return result.stdout.strip() if result.stdout else ""
