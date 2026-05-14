@@ -1,7 +1,7 @@
 appname               = EasyTier-Lite
-version=0.5.020500-20260430111653
+version=0.6.020500
 display_name          = 易组网
-desc                  = `<p>致力于简化使用 EasyTier，降低组网门槛，快速访问异地网络设备</p><p>享受 EasyTier 免费、不限设备数量、支持多类型终端等优势</p>更多EasyTier使用技巧，请查看 <a href="https://easytier.cn" target="_blank">官网文档</a></br></br><p><a href="/cgi/ThirdParty/EasyTier-Lite/index.cgi/index.html" target="_blank">易组网Web界面快捷入口</a></p>`
+desc                  = `<p>一款简化使用 EasyTier 的UI，降低组网门槛，快速访问异地网络设备</p><p>享受 EasyTier 免费、不限设备数量、支持多类型终端等优势</p>更多EasyTier使用技巧，请查看 <a href="https://easytier.cn" target="_blank">官网文档</a></br></br><p><a href="/cgi/ThirdParty/EasyTier-Lite/index.cgi/index.html" target="_blank">易组网Web界面快捷入口</a></p>`
 platform=x86
 os_min_version=1.1.8
 source                = thirdparty
