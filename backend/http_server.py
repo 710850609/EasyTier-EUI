@@ -28,7 +28,7 @@ def setup_env(base_uri: str):
     # 是否在 PyInstaller 打包环境中
     WORK_DIR = None
     if getattr(sys, 'frozen', False):
-        print("打包模式运行...")
+        logging.info("打包模式运行...")
         # _MEIPASS 是 PyInstaller 解压资源的临时目录
         WORK_DIR = str(Path(os.path.dirname(sys.executable)).absolute())
         Path(WORK_DIR).mkdir(parents=True, exist_ok=True)
@@ -36,7 +36,7 @@ def setup_env(base_uri: str):
         # BACKEND_PATH = WORK_DIR
         # PACKAGE_PATH = str(sys._MEIPASS)
     else:
-        print("本地模式运行...")
+        logging.info("本地模式运行...")
         project_root_path = Path(__file__).absolute().parent.parent
         WORK_DIR = str(project_root_path.joinpath('temp').joinpath('EasyTier-Lite').absolute())
         Path(WORK_DIR).mkdir(parents=True, exist_ok=True)
@@ -194,6 +194,7 @@ def build_server(host='127.0.0.1', port=5666, base_uri=None) -> Optional[Threade
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser(description='CGI Proxy HTTP Server')
+    # parser.add_argument('--host', default='127.0.0.1', help='Host to bind to (default: 127.0.0.1)')
     parser.add_argument('--host', default='127.0.0.1', help='Host to bind to (default: 127.0.0.1)')
     parser.add_argument('--port', type=int, default=5666, help='Port to bind to (default: 5666)')
     args = parser.parse_args()

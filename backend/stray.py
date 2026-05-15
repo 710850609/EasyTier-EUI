@@ -72,11 +72,11 @@ def start_tray_icon():
             # 必须在 import pystray 之前设置
             if platform.system() == "Linux":
                 os.environ['PYSTRAY_BACKEND'] = 'gtk'
-                print(f"{e}。强制Linux使用 GTK 环境")
+                logging.info(f"{e}。强制Linux使用 GTK 环境")
                 import pystray
                 _use_chinese = False
         else:
-            print(f"pystray 模块加载失败，无法使用托盘图标功能: {e}")
+            logging.info(f"pystray 模块加载失败，无法使用托盘图标功能: {e}")
             raise ImportError("pystray 模块加载失败") from e
 
     def create_image():
@@ -115,8 +115,8 @@ def start_tray_icon():
         _global_icon = icon
         icon.run()
     except Exception as e:
-        print(f"Tray icon error: {e}")
-        print("Note: System tray requires a desktop environment")
+        logging.error("Note: System tray requires a desktop environment")
+        logging.exception(f"Tray icon error: {e}")
 
 
 def start_tray():
@@ -126,7 +126,7 @@ def start_tray():
         tray_thread.start()
         return tray_thread
     except Exception as e:
-        print(f"Failed to start tray: {e}")
+        logging.exception(f"Failed to start tray: {e}")
         return None
 
 def setup_windows_console_handler():
@@ -186,9 +186,9 @@ def setup():
             while not _stop_event.is_set():
                 _stop_event.wait(1)
         except KeyboardInterrupt:
-            print("\n收到 KeyboardInterrupt，正在关闭...")
+            logging.info("\n收到 KeyboardInterrupt，正在关闭...")
     else:
-        print("Running without system tray...")
+        logging.info("Running without system tray...")
         # 保持程序运行
         while not _stop_event.is_set():
             try:

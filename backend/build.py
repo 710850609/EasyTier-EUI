@@ -52,7 +52,7 @@ def install_deps():
 
         print(f"  检测到已在 {'虚拟' if in_venv else 'CI' } 环境中，直接安装")
         pip_cmd = "pip"
-        python_path = "python3"
+        python_path = "python" if sys.platform == 'win32' else 'python3'
     else:
         print(f"  检测到不在虚拟环境中，创建Python虚拟环境")
         project_dir = os.path.dirname(os.path.abspath(__file__))

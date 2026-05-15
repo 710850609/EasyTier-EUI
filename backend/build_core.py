@@ -146,6 +146,7 @@ def build_executable(build_ver:str = None):
         "--hidden-import", "tomlkit",
         "--hidden-import", "requests",
         "--hidden-import", "psutil",
+        "--hidden-import", "webview",
         "--hidden-import", "PIL",
         "--hidden-import", "PIL.Image",
         "--hidden-import", "pygetwindow",
@@ -170,7 +171,8 @@ def build_executable(build_ver:str = None):
         "--add-data", f"{Path(__file__).absolute().parent.parent}/frontend/dist{separator}frontend",
         "--add-data", f"{Path(__file__).absolute().parent}/assets{separator}assets",
         # str(PROJECT_DIR / "http_server.py ")
-        str(PROJECT_DIR / "stray.py ")
+        # str(PROJECT_DIR / "stray.py ")
+        str(PROJECT_DIR / "stray_webview.py ")
     ]
 
     # 添加图标（如果存在）
@@ -417,9 +419,9 @@ if __name__ == "__main__":
     os.environ['PYTHONUTF8'] = "1"
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--et_ver', default='', help='easytier 版本号')
-    parser.add_argument('--build_ver', default='', help='构建版本号')
-    parser.add_argument('--github_proxy_url', default="https://ghfast.top", help='GitHub加速连接')
+    parser.add_argument('--et_ver', default='', help='easytier 版本号', required=False)
+    parser.add_argument('--build_ver', default='', help='构建版本号', required=False)
+    parser.add_argument('--github_proxy_url', default="https://ghfast.top", help='GitHub加速连接', required=False)
     args = parser.parse_args()
     et_ver = args.et_ver
     build_ver = args.build_ver
