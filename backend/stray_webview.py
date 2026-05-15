@@ -8,6 +8,7 @@ from PIL import Image, ImageDraw
 from pystray import MenuItem as item
 
 import http_server
+from utils import run_configs
 
 
 class WebWin:
@@ -20,22 +21,25 @@ class WebWin:
         self.win_height = win_height
         self.tray = None
         self.is_window_visible = False
-        self.web_server = WebServer()
-        self.web_server.start()
         """主线程运行 webview，托盘在后台线程"""
-        # 1. 先创建 webview 窗口
+        self.web_server = WebServer()
+        threading.Thread(target=self.web_server.run, daemon=True).start()
         self.window = webview.create_window(
             self.win_title, self.url,
-            width=self.win_width, height=self.win_height
+            width=self.win_width, height=self.win_height,
+            text_select=True
         )
-        if sys.platform == 'win32':
-            # 2. 创建托盘，注入 window 引用
+        try:
             self.tray = TrayIcon(self.win_title, window=self)
-            self.tray.build()
-            # 3. 托盘在后台线程运行（run() 是阻塞的，必须包线程）
-            threading.Thread(target=self.tray.run, daemon=True).start()
-        # 4. 主线程启动 webview（Windows 必须主线程）
-        webview.start()
+        except Exception as e:
+            logging.exception('启动系统托盘失败')
+        webview_data_dir = os.path.join(run_configs.data_dir(), 'webview')
+        os.makedirs(webview_data_dir, exist_ok=True)
+        webview.start(
+            private_mode=False, # # 关闭隐私模式，开启数据持久化
+            storage_path=webview_data_dir
+        )
+        self.is_window_visible = True
 
     def toggle_show(self):
         if self.is_window_visible:
@@ -68,17 +72,12 @@ class WebServer:
         self.port = port
         self.base_url = base_url
         self.server = None
-        self._thread = None
 
-    def start(self):
+    def run(self):
         """在后台线程启动 HTTP 服务器"""
-        self.server = http_server.build_server(self.host, self.port, self.base_url)
-        self._thread = threading.Thread(target=self._serve, daemon=True)
-        self._thread.start()
-        logging.info(f"HTTP 服务已启动: http://{self.host}:{self.port}")
-
-    def _serve(self):
         try:
+            self.server = http_server.build_server(self.host, self.port, self.base_url)
+            logging.info(f"HTTP 服务启动: http://{self.host}:{self.port}")
             self.server.serve_forever()
         except Exception as e:
             logging.error(f"服务器错误: {e}")
@@ -141,17 +140,15 @@ class TrayIcon:
         )
         return self.tray_icon
 
-    def run(self):
-        """后台线程中启动托盘（阻塞方法，需包 threading）"""
+    def start(self):
         if not self.tray_icon:
             self.build()
-        self.tray_icon.run()
-
-    def run_detached(self):
-        """非阻塞启动（如果 pystray 版本支持）"""
-        if not self.tray_icon:
-            self.build()
-        self.tray_icon.run_detached()
+        if sys.platform == 'darwin':
+            # MacOS 系统托盘必须在主线程运行
+            self.tray_icon.run_detached()
+        else:
+            threading.Thread(target=self.tray_icon.run, daemon=True).start()
+        return self.tray_icon
 
     def stop(self):
         if self.tray_icon:
