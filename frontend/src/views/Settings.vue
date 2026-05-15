@@ -139,7 +139,7 @@
         </template>
       </var-cell>
       <var-cell>
-        <div>简化 EasyTier 使用的UI</div>
+        <div>简化 EasyTier 使用的UI界面</div>
         <div>降低组网门槛，快速访问异地网络设备</div>
         <div>享受 EasyTier 免费、不限设备数量、支持多类型终端等优势</div>
       </var-cell>
