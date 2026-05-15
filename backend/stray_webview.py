@@ -24,6 +24,7 @@ class WebWin:
         """主线程运行 webview，托盘在后台线程"""
         self.web_server = WebServer()
         threading.Thread(target=self.web_server.run, daemon=True).start()
+        webview.settings['OPEN_EXTERNAL_LINKS_IN_BROWSER'] = False
         self.window = webview.create_window(
             self.win_title, self.url,
             width=self.win_width, height=self.win_height,
@@ -33,11 +34,14 @@ class WebWin:
             self.tray = TrayIcon(self.win_title, window=self)
         except Exception as e:
             logging.exception('启动系统托盘失败')
+        res_dir = sys._MEIPASS if getattr(sys, 'frozen', False) else os.path.dirname(__file__)
+        icon_path = os.path.join(os.path.abspath(res_dir), 'assets', 'icon.png')
         webview_data_dir = os.path.join(run_configs.data_dir(), 'webview')
         os.makedirs(webview_data_dir, exist_ok=True)
         webview.start(
             private_mode=False, # # 关闭隐私模式，开启数据持久化
-            storage_path=webview_data_dir
+            storage_path=webview_data_dir,
+            icon=icon_path
         )
         self.is_window_visible = True
 

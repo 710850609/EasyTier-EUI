@@ -140,10 +140,27 @@
         </var-paper>
       </div>
     </var-paper>
+
+    <var-dialog v-model:show="showConfigSelectDialog" title="选择内置配置" @confirm="handleConfigConfirm">
+      <var-select
+        v-model="selectedConfig"
+        variant="outlined"
+        class="config-select"
+      >
+        <var-option
+          v-for="config in configFiles"
+          :key="config.profile"
+          :label="config.name"
+          :value="config.profile"
+        >
+        </var-option>
+      </var-select>
+    </var-dialog>
   </div>
 </template>
 
 <script setup>
+import toast from '../../components/toast.js'
 import { api } from '../../utils/api.js'
 import { downloadEasyTierGUI } from '../../utils/github.js'
 
@@ -155,13 +172,33 @@ const downloadMgrPro = () => {
   })
 }
 
-const downloadEasyTierLite = () => {
-  return new Promise((resolve, reject) => {
-    let url = api.etLite.getDownloadEasyTierLiteUrl({platform: 'windows', 'arch': 'x86_64'})
-    console.log(url)
+const showConfigSelectDialog = ref(false)
+const configFiles = ref([])
+const selectedConfig = ref(null)
+
+const downloadEasyTierLite = async () => {
+  const configs = await api.configs.listConfigFiles().then(resp => resp.data).catch(error => toast.error('获取配置失败:', error))
+  let profile = ''
+  if (configs.length === 0) {
+    toast.info('当前系统无内置配置，将下载无配置版本')
+  } else if (configs.length === 1) {
+    profile =  configs[0].profile
+  } else {
+    configFiles.value = configs 
+    selectedConfig.value = configs[0]?.profile
+    showConfigSelectDialog.value = true
+    return
+  }
+  const url = api.etLite.getDownloadEasyTierLiteUrl({platform: 'windows', 'arch': 'x86_64', profile: profile})
+  window.open(url, '_blank')
+}
+
+const handleConfigConfirm = async () => {
+  if (selectedConfig.value) {
+    const url = api.etLite.getDownloadEasyTierLiteUrl({platform: 'windows', 'arch': 'x86_64', profile: selectedConfig.value})
     window.open(url, '_blank')
-    resolve()
-  })
+  }
+  selectedConfig.value = null
 }
 
 const downloadGithub = (arch, prerelease) => {
@@ -250,4 +287,5 @@ const downloadGithub = (arch, prerelease) => {
   flex: 1;
   min-width: 90px;
 }
+
 </style>

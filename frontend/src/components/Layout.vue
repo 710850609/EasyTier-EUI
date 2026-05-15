@@ -123,7 +123,7 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  margin-left: 240px;
+  margin-left: 200px;
   transition: margin-left 0.3s ease;
 }
 

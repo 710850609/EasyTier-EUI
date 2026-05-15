@@ -22,10 +22,11 @@ def download_easytier_lite(params:dict, *kwargs):
     et_lite_version = _get_et_lite_latest_version()
     platform = params.get('platform', '')
     arch = params.get('arch', '')
+    profile = params.get('profile', '')
     et_lite_package = _get_et_lite_package(platform, arch, et_lite_version, download_temp_dir)
     et_lite_filename = Path(et_lite_package).name
     output_file = f"{output_dir}/{et_lite_filename.replace('.zip', '_merge.zip')}"
-    _merge_et_lite_package(et_lite_package, output_file, download_temp_dir)
+    _merge_et_lite_package(profile, et_lite_package, output_file, download_temp_dir)
     return HttpResponse(file=output_file, download_name=et_lite_filename)
 
 def _get_et_lite_latest_version():
@@ -57,7 +58,7 @@ def _get_et_lite_package(platform:str, arch:str, et_lite_version: str, download_
     return download_file
 
     
-def _merge_et_lite_package(et_lite_package, output_file, unzip_dir):
+def _merge_et_lite_package(profile, et_lite_package, output_file, unzip_dir):
     unzip_temp_dir = f"{unzip_dir}/{int(time.time())}"
     logging.info(f"解压: {et_lite_package} -> {unzip_temp_dir}")
     with zipfile.ZipFile(et_lite_package, 'r') as zf:
@@ -74,11 +75,15 @@ def _merge_et_lite_package(et_lite_package, output_file, unzip_dir):
                 os.makedirs(os.path.dirname(local_path), exist_ok=True)
                 with zf.open(info) as src, open(local_path, 'wb') as dst:
                     dst.write(src.read())
-    config_file = configs.copy()
-    cfg_target_file = f"{unzip_temp_dir}/config/default.toml"
-    Path(cfg_target_file).parent.mkdir(parents=True, exist_ok=True)
-    logging.info(f"复制: {config_file}  ->  {cfg_target_file}")
-    common_util.move(f"{config_file}", f"{cfg_target_file}")
+    if profile:
+        logging.info(f"内置配置文件：{profile}")
+        config_file = configs.copy(profile)
+        cfg_target_file = f"{unzip_temp_dir}/config/{profile}"
+        Path(cfg_target_file).parent.mkdir(parents=True, exist_ok=True)
+        logging.info(f"复制: {config_file}  ->  {cfg_target_file}")
+        common_util.move(f"{config_file}", f"{cfg_target_file}")
+    else:
+        logging.info(f"未指定profile，不内置配置文件")
     
 
     logging.info(f"开始打包: {output_file}")

@@ -99,6 +99,22 @@
         </var-paper>
       </div>
     </var-paper>
+
+      <var-dialog v-model:show="showConfigSelectDialog" title="选择内置配置" @confirm="handleConfigConfirm">
+      <var-select
+        v-model="selectedConfig"
+        variant="outlined"
+        class="config-select"
+      >
+        <var-option
+          v-for="config in configFiles"
+          :key="config.profile"
+          :label="config.name"
+          :value="config.profile"
+        >
+        </var-option>
+      </var-select>
+    </var-dialog>
   </div>
 </template>
 
@@ -110,13 +126,37 @@ const download = (arch, prerelease) => {
   return downloadEasyTierGUI(arch, prerelease)
 }
 
-const downloadEasyTierLite = (platform, arch) => {
-  return new Promise((resolve, reject) => {
-    let url = api.etLite.getDownloadEasyTierLiteUrl({platform: platform, 'arch': arch})
-    console.log(url)
+const showConfigSelectDialog = ref(false)
+const configFiles = ref([])
+const selectedConfig = ref(null)
+const selectedPlatform = ref(null)
+const selectedArch = ref(null)
+
+const downloadEasyTierLite = async (platform, arch) => {
+  const configs = await api.configs.listConfigFiles().then(resp => resp.data).catch(error => toast.error('获取配置失败:', error))
+  let profile = ''
+  selectedPlatform.value = platform
+  selectedArch.value = arch
+  if (configs.length === 0) {
+    toast.info('当前系统无内置配置，将下载无配置版本')
+  } else if (configs.length === 1) {
+    profile =  configs[0].profile
+  } else {
+    configFiles.value = configs 
+    selectedConfig.value = configs[0]?.profile
+    showConfigSelectDialog.value = true
+    return
+  }
+  const url = api.etLite.getDownloadEasyTierLiteUrl({platform: platform, 'arch': arch, profile: profile})
+  window.open(url, '_blank')
+}
+
+const handleConfigConfirm = async () => {
+  if (selectedConfig.value) {
+    const url = api.etLite.getDownloadEasyTierLiteUrl({platform: selectedPlatform.value, 'arch': selectedArch.value, profile: selectedConfig.value})
     window.open(url, '_blank')
-    resolve()
-  })
+  }
+  selectedConfig.value = null
 }
 </script>
 
