@@ -5,7 +5,6 @@ import subprocess
 import time
 import tkinter as tk
 import webbrowser
-import winreg
 
 import pygetwindow as gw
 
@@ -85,6 +84,7 @@ class StrayWin:
     def __get_browser_path_from_registry(self, browser_key):
         """从注册表获取浏览器路径"""
         try:
+            import winreg
             # HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths
             with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
                                 r'SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths') as key:
