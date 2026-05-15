@@ -2,3 +2,4 @@ pyinstaller
 pystray
 pillow
 pygetwindow
+pywebview
