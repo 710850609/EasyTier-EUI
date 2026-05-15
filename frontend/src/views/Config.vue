@@ -1030,6 +1030,10 @@ onMounted(async () => {
   margin-left: 4px;
 }
 
+.config-actions-group .var-button {
+  margin-left: 2px;
+}
+
 .config-switcher {
   min-width: 200px;
   max-width: 300px;
@@ -1421,7 +1425,7 @@ onMounted(async () => {
 
   .toolbar {
     flex-shrink: 0;
-    margin: 16px;
+    margin: 12px 12px 4px;
     padding: 12px;
     border-radius: 10px;
   }
@@ -1454,7 +1458,13 @@ onMounted(async () => {
   }
 
   .content-area {
-    padding: 12px;
+    padding: 8px 12px;
+    margin-top: 0;
+  }
+
+  .config-section {
+    margin: 0 0 12px;
+    padding: 16px;
   }
 
   .section-header {

@@ -502,8 +502,10 @@ const loadConfigs = async () => {
       }
     }
     updateServiceStatus()
+    return true
   } catch (error) {
     console.error('加载配置列表失败:', error)
+    return false
   }
 }
 
@@ -569,7 +571,11 @@ const stopService = async () => {
 // 实际项目中这里调用 HTTP API
 onMounted(async () => {
   loadSettings()
-  await loadConfigs()
+  const result = await loadConfigs()
+  if (!result) {    
+    toast.error('加载配置列表失败，请检查网络连接或服务状态')
+    return
+  }
   try {
     if (!selectedConfig.value) {
       showFastSettingTip.value = true
@@ -699,12 +705,11 @@ onUnmounted(() => {
   max-height: 400px;
 }
 
-
-
 .tab-label {
   display: flex;
   align-items: center;
   gap: 6px;
+  color: var(--color-text);
 }
 
 .tab-content {
