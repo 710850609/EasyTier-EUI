@@ -743,7 +743,7 @@ onUnmounted(() => {
 
 @media (max-width: 768px) {
   .table-wrapper {
-    max-height: calc(100vh - 180px);
+    max-height: calc(100vh - 245px);
   }
 }
 

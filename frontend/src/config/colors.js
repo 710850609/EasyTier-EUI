@@ -66,6 +66,9 @@ export const freshLightTheme = {
   '--snackbar-info-background': '#cbd5e1',
   '--snackbar-success-background': '#07c160',
   '--snackbar-success-color': '#ffffff',
+
+  // Dialog 样式
+  '--dialog-title-color': '#0284c7',
 }
 
 // 清新蓝绿 - 暗色主题
@@ -130,4 +133,7 @@ export const freshDarkTheme = {
   '--snackbar-info-background': '#334155',
   '--snackbar-success-background': '#2ba245',
   '--snackbar-success-color': '#000000',
+
+  // Dialog 样式
+  '--dialog-title-color': '#0284c7',
 }

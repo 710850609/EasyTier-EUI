@@ -2,7 +2,7 @@
   <div class="config-page">
     <div v-if="isLoadingConfigList" class="config-skeleton">
       <div class="skeleton-toolbar">
-        <var-skeleton title :rows="0" />
+        <var-skeleton title :rows="1" />
       </div>
       <div class="skeleton-content">
         <var-paper class="skeleton-paper" :elevation="1">
@@ -27,7 +27,7 @@
     </div>
 
     <template v-else>
-      <div class="toolbar" v-if="!fastSettingMode">
+      <var-paper class="toolbar" :elevation="2" v-if="!fastSettingMode">
         <div class="toolbar-row">
           <div class="toolbar-group toolbar-main">
             <var-select
@@ -70,13 +70,14 @@
             </div>
           </div>
         </div>
-
+        
+        <var-divider />
         <div class="toolbar-row toolbar-actions" v-if="selectedConfig">
           <var-button type="primary" size="small" @click="saveConfig" auto-loading>保存配置</var-button>
           <var-button type="primary" size="small" @click="openCodePage" auto-loading>编辑文件</var-button>
           <var-button type="primary" size="small" @click="showShareConfigType = true">分享网络</var-button>
         </div>
-      </div>
+      </var-paper>
 
       <div class="content-area" v-if="selectedConfig || fastSettingMode">
         <var-form ref="form">
@@ -397,10 +398,10 @@
       </div>
     </template>
 
-    <var-popup v-model:show="showCodePage" class="code-editor-popup" :close-on-click-overlay="false">
-      <div class="code-editor-container">
+    <var-popup v-model:show="showCodePage" class="code-editor-popup" :close-on-click-overlay="false" style="width: 100vw; height: 100vh; position: fixed; top: 0; left: 0; right: 0; bottom: 0; margin: 0; padding: 0; max-width: none; max-height: none;">
+      <div style="height: 100%; width: 100%; display: flex; flex-direction: column; margin: 0; padding: 0;">
         <div class="code-editor-header">
-          <span class="editor-title">编辑配置文件</span>
+          <span class="editor-title">编辑配置【{{ currentConfigData.name }}】</span>
           <var-space>
             <var-button type="primary" size="mini" round @click="saveToml" auto-loading>
               <var-icon name="check"/>
@@ -410,8 +411,8 @@
             </var-button>
           </var-space>
         </div>
-        <div class="code-editor-content">
-          <CodeEditor v-model="configToml" language="toml" style="height: calc(96vh - 60px);" />
+        <div style="flex: 1; overflow: auto; margin: 0; padding: 0;">
+          <CodeEditor v-model="configToml" language="toml" style="height: 100%; width: 100%;" />
         </div>
       </div>
     </var-popup>
@@ -419,8 +420,7 @@
     <var-dialog v-model:show="showRenameDialog" @before-close="confirmEditName"
       confirmButtonText="确认" cancelButtonText="取消">
       <template #title>
-        <var-icon name="pencil" color="var(--color-primary)" />
-        <span>重命名配置</span>
+        <span>重命名配置名称</span>
       </template>
       <var-input
         variant="outlined"
@@ -433,17 +433,17 @@
     <var-dialog v-model:show="showCreateDialog" @confirm="confirmCreateConfig" @cancel="showCreateDialog = false"
       confirmButtonText="确认" cancelButtonText="取消">
       <template #title>
-        <var-icon name="plus-circle" color="var(--color-primary)" />
         <span>新增配置名称</span>
       </template>
       <var-input
+        variant="outlined"
         placeholder="请输入配置名称"
         v-model="newConfigName"
         :rules="[v => !!v || '配置名称不能为空']"
       />
     </var-dialog>
 
-    <var-dialog v-model:show="showShareConfigType" title="选择数据类型"
+    <var-dialog v-model:show="showShareConfigType" title="选择分享类型"
       confirmButtonText="下载文件"  @confirm="downloadConfig" 
       cancelButtonText="复制到剪贴板" @cancel="copyConfig">
     </var-dialog>
@@ -914,7 +914,7 @@ onMounted(async () => {
 .config-page {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 56px);
+  height: calc(100vh - 64px);
   overflow: hidden;
 }
 
@@ -973,10 +973,8 @@ onMounted(async () => {
 
 .toolbar {
   flex-shrink: 0;
-  margin: 16px 16px 0;
+  margin: 24px 16px 0;
   padding: 16px 20px;
-  background: var(--color-surface-container);
-  border: 1px solid var(--color-outline-variant);
   border-radius: 12px;
 }
 
@@ -1013,7 +1011,6 @@ onMounted(async () => {
   justify-content: flex-end;
   gap: 8px;
   padding-top: 8px;
-  border-top: 1px solid var(--color-outline-variant);
   margin-top: 8px;
 }
 
@@ -1031,7 +1028,8 @@ onMounted(async () => {
 }
 
 .config-actions-group .var-button {
-  margin-left: 2px;
+  margin-left: 3px;
+  margin-right: 3px;
 }
 
 .config-switcher {
@@ -1419,13 +1417,13 @@ onMounted(async () => {
   .config-page {
     display: flex;
     flex-direction: column;
-    height: calc(100vh - 56px);
+    height: calc(100vh - 64px);
     overflow: hidden;
   }
 
   .toolbar {
     flex-shrink: 0;
-    margin: 12px 12px 4px;
+    margin: 16px 12px 4px;
     padding: 12px;
     border-radius: 10px;
   }
