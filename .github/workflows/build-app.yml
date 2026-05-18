@@ -320,11 +320,14 @@ jobs:
         with:
           node-version: '24'
           cache: 'npm'
+          cache-dependency-path: 'frontend/package-lock.json'  # 指定路径
+
       - name: Download frontend
         uses: actions/download-artifact@v4
         with:
           name: frontend-dist
           path: frontend/dist
+
       - name: Run build
         run: |
           echo "开始构建架构: ${{ matrix.arch }}"
