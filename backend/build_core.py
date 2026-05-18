@@ -137,6 +137,7 @@ def build_executable(build_ver:str = None):
     cmd = [
         # sys.executable, "-m", "pyinstaller",
         "pyinstaller",
+        "--windowed",
         "--onefile",  # 单文件
         "--clean",    # 清理缓存
         "--name", output_name,
@@ -183,10 +184,10 @@ def build_executable(build_ver:str = None):
         print(f"  警告: 图标文件不存在: {icon_path}")
 
     # Windows 特定选项
-    if sys.platform == "win32":
-        cmd.extend(["--noconsole"])
-    else:
-        cmd.extend(["--console"])
+    # if sys.platform == "win32":
+    #     cmd.extend(["--noconsole"])
+    # else:
+    #     cmd.extend(["--console"])
 
     
     result = run_command(" ".join(cmd), cwd=str(PROJECT_DIR))

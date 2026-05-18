@@ -117,6 +117,8 @@ build_backend() {
     --exclude='build_core.py' \
     --exclude='http_server.py'  \
     --exclude='stray.py'  \
+    --exclude='stray_win.py'  \
+    --exclude='stray_webview.py'  \
     --exclude='requirements-gui.txt'  \
     --exclude='*.spec' \
     --exclude='*.md' \
