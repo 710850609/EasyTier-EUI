@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Optional
 from urllib.parse import quote
 from urllib.parse import unquote
+from utils import run_configs
 
 
 class HttpException(Exception):
@@ -244,7 +245,7 @@ def http_handle(base_uri="/", body_data=None, cgi_module=True) -> HttpResponse:
             if '..' in resource_uri:
                 logging.warning(f"检测到路径遍历尝试: {request.request_uri}")
                 raise HttpException(status_code=403, message=f"不允许访问资源： {request.request_uri}")
-            frontend_path = os.environ.get('FRONTEND_PATH', '')
+            frontend_path = run_configs.FRONTEND_PATH
             if len(resource_uri) == 0:
                 resource_uri = 'index.html'
             resource_path = Path(frontend_path).joinpath(resource_uri).absolute()

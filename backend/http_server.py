@@ -7,64 +7,16 @@ import os
 import sys
 import urllib.parse
 from http.server import HTTPServer, BaseHTTPRequestHandler
-from pathlib import Path
 from socketserver import ThreadingMixIn
 from typing import Optional
 
 from http_dispatcher import dispatcher
-from utils import log_util
+from utils import run_configs
 
-BASE_URI:str = None
-FRONTEND_PATH:str = None
-CONFIG_DIR:str = None
-CORE_DIR:str = None
-DATA_DIR:str = None
-LOG_DIR:str = None
-
-def setup_env(base_uri: str):
-    global BASE_URI, FRONTEND_PATH, CONFIG_DIR, CORE_DIR, DATA_DIR, LOG_DIR
-        # BACKEND_PATH, FRONTEND_PATH, LOG_FILE, ET_BIN_DIR, LOG_DIR, CONFIG_DIR, DATA_DIR, PACKAGE_PATH
-    BASE_URI = base_uri
-    # 是否在 PyInstaller 打包环境中
-    WORK_DIR = None
-    if getattr(sys, 'frozen', False):
-        logging.info("打包模式运行...")
-        # _MEIPASS 是 PyInstaller 解压资源的临时目录
-        WORK_DIR = str(Path(os.path.dirname(sys.executable)).absolute())
-        Path(WORK_DIR).mkdir(parents=True, exist_ok=True)
-        FRONTEND_PATH = os.path.abspath(os.path.join(sys._MEIPASS, 'frontend'))
-        # BACKEND_PATH = WORK_DIR
-        # PACKAGE_PATH = str(sys._MEIPASS)
-    else:
-        logging.info("本地模式运行...")
-        project_root_path = Path(__file__).absolute().parent.parent
-        WORK_DIR = str(project_root_path.joinpath('temp').joinpath('EasyTier-Lite').absolute())
-        Path(WORK_DIR).mkdir(parents=True, exist_ok=True)
-        FRONTEND_PATH = str(project_root_path.joinpath('frontend').joinpath('dist'))
-        # BACKEND_PATH = str(Path(__file__).absolute().parent)
-        # PACKAGE_PATH = ''
-
-    CORE_DIR = os.path.join(WORK_DIR, 'core')
-    CONFIG_DIR = os.path.join(WORK_DIR, 'config')
-    DATA_DIR = os.path.join(WORK_DIR, 'data')
-    LOG_DIR = os.path.join(WORK_DIR, 'logs')
-
-    Path(CORE_DIR).mkdir(parents=True, exist_ok=True)
-    Path(CONFIG_DIR).mkdir(parents=True, exist_ok=True)
-    Path(DATA_DIR).mkdir(parents=True, exist_ok=True)
-    Path(LOG_DIR).mkdir(parents=True, exist_ok=True)
-
-    logging.info(f"BASE_URI: {BASE_URI}")
-    logging.info(f"FRONTEND_PATH: {FRONTEND_PATH}")
-    logging.info(f"CORE_DIR: {CORE_DIR}")
-    logging.info(f"CONFIG_DIR: {CONFIG_DIR}")
-    logging.info(f"DATA_DIR: {DATA_DIR}")
-    logging.info(f"LOG_DIR: {LOG_DIR}")
-
+BASE_URI = "/cgi/ThirdParty/EasyTier-Lite/index.cgi"
 
 class CGIProxyHandler(BaseHTTPRequestHandler):
     """处理 HTTP 请求并转发给 CGI 脚本"""
-
     def log_message(self, format, *args):
         if sys.stdout is None:
             return
@@ -113,12 +65,6 @@ class CGIProxyHandler(BaseHTTPRequestHandler):
             # 构建环境变量
             env = os.environ.copy()
             env.update({
-                'FRONTEND_PATH': FRONTEND_PATH,
-                'CONFIG_DIR': CONFIG_DIR,
-                'CORE_DIR': CORE_DIR,
-                'DATA_DIR': DATA_DIR,
-                'LOG_DIR': LOG_DIR,
-
                 'REQUEST_METHOD': self.command,
                 'QUERY_STRING': query_string,
                 'REQUEST_URI': request_uri,
@@ -177,9 +123,6 @@ class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
 
 def build_server(host='127.0.0.1', port=5666, base_uri=None) -> Optional[ThreadedHTTPServer]:
     """启动 HTTP 服务器"""
-    BASE_URI = "/cgi/ThirdParty/EasyTier-Lite/index.cgi"
-    setup_env(BASE_URI)
-    log_util.setup_log(log_file=os.path.join(LOG_DIR, 'app.log'), log_level=logging.DEBUG, enabled_console=True)
     logging.info(f"HTTP服务启动中....")
     server = ThreadedHTTPServer((host, port), CGIProxyHandler)
     logging.info(f"Starting HTTP server on {host}:{port}")
@@ -199,6 +142,7 @@ if __name__ == '__main__':
     parser.add_argument('--port', type=int, default=5666, help='Port to bind to (default: 5666)')
     args = parser.parse_args()
 
+    run_configs.setup_env()
     server = build_server(args.host, args.port)
     try:
         server.serve_forever()

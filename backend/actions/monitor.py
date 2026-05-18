@@ -19,10 +19,10 @@ def list(params, *kwargs):
     profile = Validator.check_profile(profile)
     info = et_run_info.get(profile)
     if not info:
-        logging.warning(f"未找到配置元数据：{profile}")
+        logging.debug(f"未找到配置元数据：{profile}")
         return []
     if not info.rpc_portal:
-        logging.warning(f"元数据没有rpc信息：{info.__dict__}")
+        logging.debug(f"元数据没有rpc信息：{info.__dict__}")
         return []
     _ext = ".exe" if sys.platform == "win32" else ""
     cmd = f"{os.path.join(run_configs.core_dir(), 'easytier-cli')}{_ext} -o json  --rpc-portal {info.rpc_portal} peer"

@@ -70,6 +70,7 @@ def is_fn_system():
 if __name__ == '__main__':
     try:
         log_util.setup_log(log_file=os.path.join(run_configs.log_dir(), 'cmd.log'), log_level=logging.INFO, enabled_console=False)
+        run_configs.setup_env(init_logger=False)
         args = sys.argv
         if len(args) != 2:
             print(f"传入参数错误： {args}")

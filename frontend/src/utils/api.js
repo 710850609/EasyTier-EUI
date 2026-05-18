@@ -238,7 +238,7 @@ export const api = {
   
   // 窗口相关
   windows: {
-    getDownloadMgrProUrl: () => getFullUrl('/windows/download_mgr_pro')
+    getDownloadMgrProUrl: (data) => getFullUrl('/windows/download_mgr_pro', data)
   },
 
   // easytier-lite 相关

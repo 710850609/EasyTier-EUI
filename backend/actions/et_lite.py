@@ -17,7 +17,7 @@ from utils import run_configs
 def download_easytier_lite(params:dict, *kwargs):
     if not params:
         raise HttpResponse(f"未指定platfrom和arch参数")
-    output_dir = run_configs.data_dir()
+    output_dir = os.path.join(run_configs.data_dir(), 'download')
     download_temp_dir = f"{output_dir}/tmp"
     et_lite_version = _get_et_lite_latest_version()
     platform = params.get('platform', '')

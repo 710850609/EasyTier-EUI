@@ -15,15 +15,16 @@ from utils import run_configs
 from http_dispatcher.dispatcher import HttpResponse
 
 
-def download_mgr_pro(*kwargs):
-    output_dir = run_configs.data_dir()
+def download_mgr_pro(params:dict, *kwargs):
+    profile = params.get('profile', '') if params is not None else None
+    output_dir = os.path.join(run_configs.data_dir(), 'download')
     download_temp_dir = f"{output_dir}/tmp"
     et_version = et_util.get_latest_version()
     et_package = et_util.download_package(download_temp_dir, 'windows', 'x86_64', et_version)
     et_mgr_version = _get_et_mgr_latest_version()
     et_mgr_package = _get_et_mgr_package(et_mgr_version, download_temp_dir)
     output_file = f"{output_dir}/easytier-manager-pro-v{et_mgr_version}-v{et_version}.zip"
-    _merge_package(et_package, et_mgr_package, output_file, download_temp_dir)
+    _merge_package(profile, et_package, et_mgr_package, output_file, download_temp_dir)
     return HttpResponse(file=output_file, download_name=Path(output_file).name)
 
 def _get_et_mgr_latest_version():
@@ -49,7 +50,7 @@ def _get_et_mgr_package(et_mgr_version: str, download_dir: str):
     logging.debug(f"已下载： {download_file}")
     return download_file
 
-def _merge_package(et_package, et_mgr_package, output_file, unzip_dir):
+def _merge_package(profile, et_package, et_mgr_package, output_file, unzip_dir):
     unzip_temp_dir = f"{unzip_dir}/{int(time.time())}"
     logging.info(f"解压: {et_mgr_package} -> {unzip_temp_dir}")
     with zipfile.ZipFile(et_mgr_package, 'r') as zf:
@@ -72,11 +73,15 @@ def _merge_package(et_package, et_mgr_package, output_file, unzip_dir):
     logging.info(f"移动: {unzip_temp_dir}/easytier-windows-x86_64  ->  {unzip_temp_dir}/resource")
     common_util.move(f"{unzip_temp_dir}/easytier-windows-x86_64", f"{unzip_temp_dir}/resource")
     # shutil.rmtree(f"{unzip_temp_dir}/easytier-windows-x86_64")
-    config_file = configs.copy()
-    cfg_target_file = f"{unzip_temp_dir}/config/et-fnos.toml"
-    Path(cfg_target_file).parent.mkdir(parents=True, exist_ok=True)
-    logging.info(f"复制: {config_file}  ->  {cfg_target_file}")
-    common_util.move(f"{config_file}", f"{cfg_target_file}")
+    if profile:
+        logging.info(f"内置配置文件：{profile}")
+        config_file = configs.copy(profile)
+        cfg_target_file = f"{unzip_temp_dir}/config/{profile}"
+        Path(cfg_target_file).parent.mkdir(parents=True, exist_ok=True)
+        logging.info(f"复制: {config_file}  ->  {cfg_target_file}")
+        common_util.move(f"{config_file}", f"{cfg_target_file}")
+    else:
+        logging.info(f"未指定profile，不内置配置文件")
 
     logging.info(f"开始打包: {output_file}")
     with zipfile.ZipFile(output_file, 'w', zipfile.ZIP_DEFLATED) as zf:

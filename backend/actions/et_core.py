@@ -27,7 +27,7 @@ def version(*kwargs):
     if not check_core():
         raise HttpException('内核不存在，请先安装内核')
         
-    core_dir = run_configs.core_dir();
+    core_dir = run_configs.core_dir()
     ext = ".exe" if sys.platform == "win32" else ""
     cmd = f'{core_dir}/easytier-core{ext} --version'
     raw_version = common_util.run_cmd(cmd)

@@ -5,6 +5,7 @@ import logging
 import sys
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
+from typing import Optional
 
 # 全局标志，记录日志是否已配置
 _log_setup_done = False
@@ -17,7 +18,7 @@ if sys.platform == 'win32' and sys.stdout:
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
-def setup_log(log_file:str = None, log_level:int = logging.INFO, enabled_console:bool = False):
+def setup_log(log_file:Optional[str] = None, log_level:int = logging.INFO, enabled_console:bool = False):
     global _log_setup_done
     if _log_setup_done:
         return  # 已配置过，直接返回

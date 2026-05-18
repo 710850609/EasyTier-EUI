@@ -53,7 +53,7 @@
             <div class="config-actions-group" v-if="selectedConfig">
               <var-button size="small" type="primary" @click="showCreateDialog = true">新增</var-button>
               <var-button size="small" type="primary" @click="startEditName" :loading="isRenaming">改名</var-button>
-              <var-button size="small" type="danger" @click="deleteCurrentConfig" auto-loading>删除</var-button>
+              <var-button size="small" type="danger" @click="showDeleteDialog = true" :loading="isDeletingConfig">删除</var-button>
             </div>
           </div>
 
@@ -423,6 +423,7 @@
         <span>重命名配置名称</span>
       </template>
       <var-input
+        size="small"
         variant="outlined"
         placeholder="请输入新名称"
         v-model="editNameValue"
@@ -436,6 +437,7 @@
         <span>新增配置名称</span>
       </template>
       <var-input
+        size="small"
         variant="outlined"
         placeholder="请输入配置名称"
         v-model="newConfigName"
@@ -446,6 +448,11 @@
     <var-dialog v-model:show="showShareConfigType" title="选择分享类型"
       confirmButtonText="下载文件"  @confirm="downloadConfig" 
       cancelButtonText="复制到剪贴板" @cancel="copyConfig">
+    </var-dialog>
+
+    <var-dialog v-model:show="showDeleteDialog" :title="`确认删除配置【${currentConfigData.name}】?`"
+      confirmButtonText="确认"  @confirm="deleteCurrentConfig" 
+      cancelButtonText="取消" @cancel="showDeleteDialog = false">
     </var-dialog>
   </div>
 </template>
@@ -477,6 +484,8 @@ const showPassword = ref(false)
 const isPeerChecking = ref(false)
 const changingAutostart = ref(false)
 const isRenaming = ref(false)
+const showDeleteDialog = ref(false)
+const isDeletingConfig = ref(false)
 
 const configList = ref([])
 const selectedConfig = ref('')
@@ -493,11 +502,16 @@ const config = ref({
   dhcp: true,
   ipv4: '',
   network_identity: { network_name: '', network_secret: '' },
-  rpc_portal: '',
   listeners: [],
   peer: [],
-  flags: { bind_device: true, multi_thread: true, enable_ipv6: true },
-  proxy_network: []
+  proxy_network: [],
+  flags: { 
+    bind_device: true, 
+    multi_thread: true, 
+    enable_ipv6: true,
+    // dev_name: '',
+    // compression: '',
+  },
 })
 
 const currentConfigData = computed(() => configList.value.find(c => c.profile === selectedConfig.value) || {})
@@ -773,12 +787,18 @@ const onConfigSwitch = async (profile) => {
 const deleteCurrentConfig = async () => {
   const cfg = currentConfigData.value
   if (!cfg || !cfg.profile) return
-  if (cfg.running) {
-    toast.warning('请先停止服务再删除配置')
-    return
-  }
+  isDeletingConfig.value = true
   return new Promise(async(resolve, reject) => {
     try {
+      const isRunning = await api.services.status(selectedConfig.value).then(resp => resp.data)
+      if (isRunning) {
+        const stoping = toast.loading('停止服务中...')
+        await api.services.stop(selectedConfig.value).then(() => toast.success('服务已停止')).finally(() => {
+          stoping.clear()
+        })
+        // 停止et服务可能本地网络会有波动，导致下一次请求被被阻断
+        await new Promise(r => setTimeout(r, 2000));
+      }
       await api.configs.delete(cfg.profile)
       toast.success('配置已删除')
       await loadConfigs()
@@ -792,6 +812,8 @@ const deleteCurrentConfig = async () => {
     } catch (error) {
       toast.error('删除配置失败: ' + error.message)
       reject(error)
+    } finally {
+      isDeletingConfig.value = false
     }
   })
 }

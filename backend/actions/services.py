@@ -96,7 +96,10 @@ def start_all(*kwargs):
     system_service_profiles = []
     for _, info in infos.items():
         if info.use_system_service:
-            system_service_profiles.append(info.profile)
+            try:
+                system_service_profiles.append(info.profile)
+            except Exception as e:
+                logging.exception(f"启动【{info.profile}】失败")
         elif info.autostart:
             logging.info(f"启动 EaysTier 核心服务：{info.profile}")
             start({'profile': info.profile})
@@ -122,7 +125,7 @@ def stop_all(*kwargs) -> List[str]:
     logging.info(f"停止配置：{stop_profiles}")
     return stop_profiles
 
-def auto_start(params: dict=None, keep_run_status:bool=True, *kwargs):
+def auto_start(params: Optional[dict]=None, keep_run_status:bool=True, *kwargs):
     profile, _ = Validator.not_empty(params, 'profile', '配置不能为空')
     profile = Validator.check_profile(profile)
     is_enabled = params.get('enabled', False)

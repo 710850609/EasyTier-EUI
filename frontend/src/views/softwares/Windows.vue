@@ -20,7 +20,7 @@
       <div>
         <var-divider />
         <var-space :size="[20, 20]" justify="center">
-          <var-button type="primary" size="normal" block @click="downloadEasyTierLite" auto-loading>
+          <var-button type="primary" size="normal" block @click="showSelectProfile('etLite')" :loading="downloadingEtLite">
             <template #default>
               <var-icon name="download"/>
               稳定版
@@ -51,7 +51,7 @@
       <div>
         <var-divider />
         <var-space :size="[20, 20]" justify="center">
-          <var-button type="primary" size="normal" block @click="downloadMgrPro" auto-loading>
+          <var-button type="primary" size="normal" block @click="showSelectProfile('mgr')" :loading="downloadingMgrPro">
             <template #default>
               <var-icon name="download"/>
               稳定版
@@ -141,7 +141,7 @@
       </div>
     </var-paper>
 
-    <var-dialog v-model:show="showConfigSelectDialog" title="选择内置配置" @confirm="handleConfigConfirm">
+    <var-dialog v-model:show="showConfigSelectDialog" title="选择内置配置" @confirm="downloadApp">
       <var-select
         v-model="selectedConfig"
         variant="outlined"
@@ -164,41 +164,48 @@ import toast from '../../components/toast.js'
 import { api } from '../../utils/api.js'
 import { downloadEasyTierGUI } from '../../utils/github.js'
 
-const downloadMgrPro = () => {
-  return new Promise((resolve, reject) => {
-    let url = api.windows.getDownloadMgrProUrl()
-    window.open(url, '_blank')
-    resolve()
-  })
-}
-
 const showConfigSelectDialog = ref(false)
 const configFiles = ref([])
 const selectedConfig = ref(null)
+const selectedApp = ref(null)
+const downloadingEtLite = ref(false)
+const downloadingMgrPro = ref(false)
 
-const downloadEasyTierLite = async () => {
+const showSelectProfile = async (app) => {
+  selectedApp.value = app
   const configs = await api.configs.listConfigFiles().then(resp => resp.data).catch(error => toast.error('获取配置失败:', error))
-  let profile = ''
   if (configs.length === 0) {
     toast.info('当前系统无内置配置，将下载无配置版本')
   } else if (configs.length === 1) {
-    profile =  configs[0].profile
+    selectedConfig.value =  configs[0].profile
   } else {
     configFiles.value = configs 
     selectedConfig.value = configs[0]?.profile
     showConfigSelectDialog.value = true
     return
   }
-  const url = api.etLite.getDownloadEasyTierLiteUrl({platform: 'windows', 'arch': 'x86_64', profile: profile})
-  window.open(url, '_blank')
+  downloadApp()
 }
 
-const handleConfigConfirm = async () => {
-  if (selectedConfig.value) {
-    const url = api.etLite.getDownloadEasyTierLiteUrl({platform: 'windows', 'arch': 'x86_64', profile: selectedConfig.value})
-    window.open(url, '_blank')
+const downloadApp = () => {
+  try {
+    if (selectedApp.value == 'mgr') {
+      downloadingMgrPro.value = true
+      let url = api.windows.getDownloadMgrProUrl({profile: selectedConfig.value})
+      window.open(url, '_blank')
+    } else if (selectedApp.value == 'etLite') {
+      downloadingEtLite.value = true
+      const url = api.etLite.getDownloadEasyTierLiteUrl({platform: 'windows', 'arch': 'x86_64', profile: selectedConfig.value})
+      window.open(url, '_blank')
+    } else {
+      toast.error('未知的待下载应用')
+      return
+    }
+  } finally {
+    downloadingMgrPro.value = false
+    downloadingEtLite.value = false
+    selectedConfig.value = null
   }
-  selectedConfig.value = null
 }
 
 const downloadGithub = (arch, prerelease) => {
