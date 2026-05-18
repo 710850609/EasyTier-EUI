@@ -11,7 +11,7 @@ from socketserver import ThreadingMixIn
 from typing import Optional
 
 from http_dispatcher import dispatcher
-from utils import run_configs
+from utils import run_configs, log_util
 
 BASE_URI = "/cgi/ThirdParty/EasyTier-Lite/index.cgi"
 
@@ -135,6 +135,9 @@ def build_server(host='127.0.0.1', port=5666, base_uri=None) -> Optional[Threade
 
 
 if __name__ == '__main__':
+    run_configs.setup_env()
+    log_util.setup_log(log_file=os.path.join(run_configs.log_dir(), 'app.log'), log_level=logging.INFO,
+                       enabled_console=False)
     import argparse
     parser = argparse.ArgumentParser(description='CGI Proxy HTTP Server')
     # parser.add_argument('--host', default='127.0.0.1', help='Host to bind to (default: 127.0.0.1)')
@@ -142,7 +145,6 @@ if __name__ == '__main__':
     parser.add_argument('--port', type=int, default=5666, help='Port to bind to (default: 5666)')
     args = parser.parse_args()
 
-    run_configs.setup_env()
     server = build_server(args.host, args.port)
     try:
         server.serve_forever()

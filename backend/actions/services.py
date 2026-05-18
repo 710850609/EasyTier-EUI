@@ -9,7 +9,6 @@ from typing import Union, List, Optional, Set
 from http_dispatcher.dispatcher import HttpException
 from utils import check_peers, common_util
 from utils import et_run_info
-from utils import fn_service
 from utils import process_util
 from utils import run_configs
 from utils.process_util import ProcessManager
@@ -140,7 +139,7 @@ def auto_start(params: Optional[dict]=None, keep_run_status:bool=True, *kwargs):
     is_running = status(params)
     info.autostart = is_enabled
     info.use_system_service = is_enabled
-    if fn_service.is_fn_system():
+    if run_configs.is_fn_system():
         # 如果是飞牛，则不注册系统服务
         info.use_system_service = False
         et_run_info.save(*info.__dict__.values())
@@ -177,7 +176,7 @@ def rename_profile(old_profile: Optional[str], new_profile: Optional[str]):
     if not old_profile:
         raise HttpException(f"不存在运行配置： {old_profile}")
     auto_start_set = __get_system_service_profiles()
-    if fn_service.is_fn_system() or old_profile not in auto_start_set:
+    if run_configs.is_fn_system() or old_profile not in auto_start_set:
         # 飞牛环境或是旧配置不是开机自启，忽略处理
         old_info = et_run_info.get(old_profile)
         et_run_info.save(new_profile, old_info.rpc_portal, old_info.autostart, old_info.use_system_service)

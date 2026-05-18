@@ -4,7 +4,7 @@ import sys
 import threading
 import webview
 import http_server
-from utils import run_configs
+from utils import run_configs, log_util
 
 
 class WebWin:
@@ -83,6 +83,8 @@ class WebServer:
 
 if __name__ == '__main__':
     run_configs.setup_env()
+    log_util.setup_log(log_file=os.path.join(run_configs.log_dir(), 'app.log'), log_level=logging.INFO,
+                       enabled_console=False)
     win = WebWin(
         'http://127.0.0.1:5666/cgi/ThirdParty/EasyTier-Lite/index.cgi',
         '易组网'

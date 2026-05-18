@@ -15,9 +15,8 @@ import psutil
 
 from actions import services
 from utils import run_configs, log_util
-from utils import common_util
 
-_fn_check_file = run_configs.fn_check_file()
+_fn_check_file :str=None
 
 def status():
     """
@@ -57,20 +56,11 @@ def stop():
     services.stop_all()
     Path(_fn_check_file).unlink(missing_ok=True)
 
-def is_fn_system():
-    """
-    检查是否为飞牛系统
-    """
-    if sys.platform == "linux":
-        kernel_version = common_util.run_cmd('uname', '-r')
-        logging.info(f"kernel_version: {kernel_version}")
-        return kernel_version.lower().find('trim') != -1
-    return False
-
 if __name__ == '__main__':
     try:
+        run_configs.setup_env()
         log_util.setup_log(log_file=os.path.join(run_configs.log_dir(), 'cmd.log'), log_level=logging.INFO, enabled_console=False)
-        run_configs.setup_env(init_logger=False)
+        _fn_check_file = run_configs.fn_check_file()
         args = sys.argv
         if len(args) != 2:
             print(f"传入参数错误： {args}")
