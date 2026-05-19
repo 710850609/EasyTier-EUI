@@ -161,46 +161,46 @@ def build_executable(build_ver:str = None):
     ]
 
     # ========== 平台特定的 webview 后端处理 ==========
-    if sys.platform.startswith("linux"):
-        print("  [Linux] 强制 Qt 后端，排除 GTK...")
-        # run_command(f'pip install qtpy PyQt5 PyQtWebEngine')
-        # cmd.extend([
-        #     "--hidden-import", "webview.platforms.qt",
-        #     "--hidden-import", "qtpy",
-        #     "--hidden-import", "qtpy.QtCore",
-        #     "--hidden-import", "qtpy.QtWidgets",
-        #     "--hidden-import", "qtpy.QtWebEngineWidgets",
-        #     "--hidden-import", "PyQt5",
-        #     "--hidden-import", "PyQt5.QtCore",
-        #     "--hidden-import", "PyQt5.QtWebEngineWidgets",
-        #     "--hidden-import", "PyQt5.QtWebEngineCore",
-        #     # 排除 GTK，防止探测 gi 报错
-        #     "--exclude-module", "webview.platforms.gtk",
-        #     "--exclude-module", "gi",
-        #     "--exclude-module", "gi.repository",
-        #     "--exclude-module", "pycairo",
-        # ])
-    elif sys.platform == "darwin":
-        print("  [macOS] 使用 Cocoa 后端...")
-        cmd.extend([
-            "--hidden-import", "webview.platforms.cocoa",
-            "--exclude-module", "webview.platforms.gtk",
-            "--exclude-module", "webview.platforms.qt",
-            "--exclude-module", "gi",
-            "--exclude-module", "qtpy",
-            "--exclude-module", "PyQt5",
-        ])
-    elif sys.platform == "win32":
-        print("  [Windows] 使用 Edge Chromium / MSHTML 后端...")
-        cmd.extend([
-            "--hidden-import", "webview.platforms.edgechromium",
-            "--hidden-import", "webview.platforms.mshtml",
-            "--exclude-module", "webview.platforms.gtk",
-            "--exclude-module", "webview.platforms.cocoa",
-            "--exclude-module", "gi",
-            "--exclude-module", "qtpy",
-            "--exclude-module", "PyQt5",
-        ])
+    # if sys.platform.startswith("linux"):
+    #     print("  [Linux] 强制 Qt 后端，排除 GTK...")
+    #     run_command(f'pip install qtpy PyQt5 PyQtWebEngine')
+    #     cmd.extend([
+    #         "--hidden-import", "webview.platforms.qt",
+    #         "--hidden-import", "qtpy",
+    #         "--hidden-import", "qtpy.QtCore",
+    #         "--hidden-import", "qtpy.QtWidgets",
+    #         "--hidden-import", "qtpy.QtWebEngineWidgets",
+    #         "--hidden-import", "PyQt5",
+    #         "--hidden-import", "PyQt5.QtCore",
+    #         "--hidden-import", "PyQt5.QtWebEngineWidgets",
+    #         "--hidden-import", "PyQt5.QtWebEngineCore",
+    #         # 排除 GTK，防止探测 gi 报错
+    #         "--exclude-module", "webview.platforms.gtk",
+    #         "--exclude-module", "gi",
+    #         "--exclude-module", "gi.repository",
+    #         "--exclude-module", "pycairo",
+    #     ])
+    # elif sys.platform == "darwin":
+    #     print("  [macOS] 使用 Cocoa 后端...")
+    #     cmd.extend([
+    #         "--hidden-import", "webview.platforms.cocoa",
+    #         "--exclude-module", "webview.platforms.gtk",
+    #         "--exclude-module", "webview.platforms.qt",
+    #         "--exclude-module", "gi",
+    #         "--exclude-module", "qtpy",
+    #         "--exclude-module", "PyQt5",
+    #     ])
+    # elif sys.platform == "win32":
+    #     print("  [Windows] 使用 Edge Chromium / MSHTML 后端...")
+    #     cmd.extend([
+    #         "--hidden-import", "webview.platforms.edgechromium",
+    #         "--hidden-import", "webview.platforms.mshtml",
+    #         "--exclude-module", "webview.platforms.gtk",
+    #         "--exclude-module", "webview.platforms.cocoa",
+    #         "--exclude-module", "gi",
+    #         "--exclude-module", "qtpy",
+    #         "--exclude-module", "PyQt5",
+    #     ])
 
     # 打包文件的图标路径
     icon_path = PROJECT_DIR / "assets/icon.ico"
