@@ -136,8 +136,8 @@ def build_server(host='127.0.0.1', port=5666, base_uri=None) -> Optional[Threade
 
 if __name__ == '__main__':
     run_configs.setup_env()
-    log_util.setup_log(log_file=os.path.join(run_configs.log_dir(), 'app.log'), log_level=logging.INFO,
-                       enabled_console=False)
+    log_util.setup_log(log_file=os.path.join(run_configs.log_dir(), 'app.log'), log_level=logging.DEBUG,
+                       enabled_console=True)
     import argparse
     parser = argparse.ArgumentParser(description='CGI Proxy HTTP Server')
     # parser.add_argument('--host', default='127.0.0.1', help='Host to bind to (default: 127.0.0.1)')

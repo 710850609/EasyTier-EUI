@@ -24,10 +24,13 @@ def download_easytier_lite(params:dict, *kwargs):
     arch = params.get('arch', '')
     profile = params.get('profile', '')
     et_lite_package = _get_et_lite_package(platform, arch, et_lite_version, download_temp_dir)
-    et_lite_filename = Path(et_lite_package).name
-    output_file = f"{output_dir}/{et_lite_filename.replace('.zip', '_merge.zip')}"
-    _merge_et_lite_package(profile, et_lite_package, output_file, download_temp_dir)
-    return HttpResponse(file=output_file, download_name=et_lite_filename)
+    if platform == 'fnos':
+        return HttpResponse(file=et_lite_package, download_name=os.path.basename(et_lite_package))
+    else:
+        et_lite_filename = Path(et_lite_package).name
+        output_file = f"{output_dir}/{et_lite_filename.replace('.zip', '_merge.zip')}"
+        _merge_et_lite_package(profile, et_lite_package, output_file, download_temp_dir)
+        return HttpResponse(file=output_file, download_name=et_lite_filename)
 
 def _get_et_lite_latest_version():
     api_url = "https://api.github.com/repos/710850609/EasyTier-Lite/releases/latest"
@@ -42,16 +45,19 @@ def _get_et_lite_package(platform:str, arch:str, et_lite_version: str, download_
         raise HttpResponse(f"当前不支持 {arch} 架构下载，仅支持 {support_arches}")
 
     last_version = et_lite_version
-    download_file = download_dir + f"/easytier-lite-{platform}-{arch}-{last_version}.zip"
+    file_name = f"EasyTier-Lite-{platform}-{arch}-{last_version}.zip"
+    if platform == 'fnos':
+        file_name = file_name.replace('.zip', '.fpk')
+    download_file = download_dir + '/' + file_name
+    download_url = f"https://github.com/710850609/EasyTier-Lite/releases/download/{last_version}/{file_name}"
     if Path(download_file).exists():
         logging.debug(f"已存在缓存:{download_file}")
         return download_file
     logging.debug(f"不存在缓存，开始下载 {download_file}")
-    download_url = f"https://github.com/710850609/EasyTier-Lite/releases/download/{last_version}/easytier-lite-{platform}-{arch}-{last_version}.zip"
     github_proxy = github_util.get_github_proxy()
     if github_proxy and github_proxy != '':
         download_url = f"{github_proxy}/{download_url}"
-    download_temp_file = f"{download_dir}/easytier-lite-{platform}-{arch}-{last_version}.zip.{int(time.time())}"
+    download_temp_file = f"{download_dir}/{file_name}.{int(time.time())}"
     github_util.download_file(download_url, download_temp_file, Path(download_temp_file).name)
     common_util.move(download_temp_file, download_file)
     logging.debug(f"已下载： {download_file}")
