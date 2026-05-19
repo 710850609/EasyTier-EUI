@@ -161,7 +161,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            libgirepository2.0-dev \
+            libgirepository-2.0-dev \
             libcairo2-dev \
             pkg-config \
             gcc \
@@ -205,7 +205,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            libgirepository2.0-dev \
+            libgirepository-2.0-dev \
             libcairo2-dev \
             pkg-config \
             gcc \
