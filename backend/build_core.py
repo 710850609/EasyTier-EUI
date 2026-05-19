@@ -121,6 +121,7 @@ def build_executable(build_ver:str = None):
         "pyinstaller",
         "--windowed",
         "--onefile",  # 单文件
+        # "--onedir",  # 单文件
         "--clean",    # 清理缓存
         "--name", output_name,
         "--distpath", str(DIST_DIR),
@@ -162,23 +163,23 @@ def build_executable(build_ver:str = None):
     # ========== 平台特定的 webview 后端处理 ==========
     if sys.platform.startswith("linux"):
         print("  [Linux] 强制 Qt 后端，排除 GTK...")
-        run_command(f'pip install qtpy PyQt5 PyQtWebEngine')
-        cmd.extend([
-            "--hidden-import", "webview.platforms.qt",
-            "--hidden-import", "qtpy",
-            "--hidden-import", "qtpy.QtCore",
-            "--hidden-import", "qtpy.QtWidgets",
-            "--hidden-import", "qtpy.QtWebEngineWidgets",
-            "--hidden-import", "PyQt5",
-            "--hidden-import", "PyQt5.QtCore",
-            "--hidden-import", "PyQt5.QtWebEngineWidgets",
-            "--hidden-import", "PyQt5.QtWebEngineCore",
-            # 排除 GTK，防止探测 gi 报错
-            "--exclude-module", "webview.platforms.gtk",
-            "--exclude-module", "gi",
-            "--exclude-module", "gi.repository",
-            "--exclude-module", "pycairo",
-        ])
+        # run_command(f'pip install qtpy PyQt5 PyQtWebEngine')
+        # cmd.extend([
+        #     "--hidden-import", "webview.platforms.qt",
+        #     "--hidden-import", "qtpy",
+        #     "--hidden-import", "qtpy.QtCore",
+        #     "--hidden-import", "qtpy.QtWidgets",
+        #     "--hidden-import", "qtpy.QtWebEngineWidgets",
+        #     "--hidden-import", "PyQt5",
+        #     "--hidden-import", "PyQt5.QtCore",
+        #     "--hidden-import", "PyQt5.QtWebEngineWidgets",
+        #     "--hidden-import", "PyQt5.QtWebEngineCore",
+        #     # 排除 GTK，防止探测 gi 报错
+        #     "--exclude-module", "webview.platforms.gtk",
+        #     "--exclude-module", "gi",
+        #     "--exclude-module", "gi.repository",
+        #     "--exclude-module", "pycairo",
+        # ])
     elif sys.platform == "darwin":
         print("  [macOS] 使用 Cocoa 后端...")
         cmd.extend([
@@ -208,11 +209,6 @@ def build_executable(build_ver:str = None):
         cmd.extend(["--icon", str(icon_path)])
     else:
         print(f"  警告: 图标文件不存在: {icon_path}")
-    # Windows 特定选项
-    # if sys.platform == "win32":
-    #     cmd.extend(["--noconsole"])
-    # else:
-    #     cmd.extend(["--console"])
 
     
     result = run_command(" ".join(cmd), cwd=str(PROJECT_DIR))
