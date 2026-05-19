@@ -94,22 +94,6 @@ def install_deps():
     return True
 
 
-def get_platform_name():
-    """获取平台名称"""
-    return get_easytier_platform()
-    # system = sys.platform
-    # machine = os.uname().machine if hasattr(os, 'uname') else 'unknown'
-    #
-    # if system == "win32":
-    #     return "windows-x64"
-    # elif system == "linux":
-    #     if "arm" in machine.lower() or "aarch64" in machine.lower():
-    #         return "linux-arm64"
-    #     return "linux-x64"
-    # elif system == "darwin":
-    #     return "macos-x64"
-    # return f"{system}-{machine}"
-
 def build_executable(build_ver:str = None):
     """构建可执行文件"""
     print("[3/5] 开始打包...")
@@ -132,8 +116,6 @@ def build_executable(build_ver:str = None):
     # 根据平台选择分隔符
     separator = ";" if sys.platform == "win32" else ":"
 
-    # 图标路径
-    icon_path = PROJECT_DIR / "assets/icon.ico"
     cmd = [
         # sys.executable, "-m", "pyinstaller",
         "pyinstaller",
@@ -174,15 +156,58 @@ def build_executable(build_ver:str = None):
         # "--add-data", f"{Path(__file__).absolute().parent}/assets{separator}assets",
         # str(PROJECT_DIR / "http_server.py ")
         # str(PROJECT_DIR / "stray.py ")
-        str(PROJECT_DIR / "stray_webview.py ")
+        str(PROJECT_DIR / "stray_webview.py")
     ]
 
+    # ========== 平台特定的 webview 后端处理 ==========
+    if sys.platform.startswith("linux"):
+        print("  [Linux] 强制 Qt 后端，排除 GTK...")
+        run_command(f'pip install qtpy PyQt5 PyQtWebEngine')
+        cmd.extend([
+            "--hidden-import", "webview.platforms.qt",
+            "--hidden-import", "qtpy",
+            "--hidden-import", "qtpy.QtCore",
+            "--hidden-import", "qtpy.QtWidgets",
+            "--hidden-import", "qtpy.QtWebEngineWidgets",
+            "--hidden-import", "PyQt5",
+            "--hidden-import", "PyQt5.QtCore",
+            "--hidden-import", "PyQt5.QtWebEngineWidgets",
+            "--hidden-import", "PyQt5.QtWebEngineCore",
+            # 排除 GTK，防止探测 gi 报错
+            "--exclude-module", "webview.platforms.gtk",
+            "--exclude-module", "gi",
+            "--exclude-module", "gi.repository",
+            "--exclude-module", "pycairo",
+        ])
+    elif sys.platform == "darwin":
+        print("  [macOS] 使用 Cocoa 后端...")
+        cmd.extend([
+            "--hidden-import", "webview.platforms.cocoa",
+            "--exclude-module", "webview.platforms.gtk",
+            "--exclude-module", "webview.platforms.qt",
+            "--exclude-module", "gi",
+            "--exclude-module", "qtpy",
+            "--exclude-module", "PyQt5",
+        ])
+    elif sys.platform == "win32":
+        print("  [Windows] 使用 Edge Chromium / MSHTML 后端...")
+        cmd.extend([
+            "--hidden-import", "webview.platforms.edgechromium",
+            "--hidden-import", "webview.platforms.mshtml",
+            "--exclude-module", "webview.platforms.gtk",
+            "--exclude-module", "webview.platforms.cocoa",
+            "--exclude-module", "gi",
+            "--exclude-module", "qtpy",
+            "--exclude-module", "PyQt5",
+        ])
+
+    # 打包文件的图标路径
+    icon_path = PROJECT_DIR / "assets/icon.ico"
     # 添加图标（如果存在）
     if icon_path.exists():
         cmd.extend(["--icon", str(icon_path)])
     else:
         print(f"  警告: 图标文件不存在: {icon_path}")
-
     # Windows 特定选项
     # if sys.platform == "win32":
     #     cmd.extend(["--noconsole"])
@@ -193,7 +218,7 @@ def build_executable(build_ver:str = None):
     result = run_command(" ".join(cmd), cwd=str(PROJECT_DIR))
     return result, output_name
 
-def get_easytier_platform():
+def get_platform_name():
     """获取 EasyTier 平台标识"""
     system = sys.platform
     machine = os.uname().machine if hasattr(os, 'uname') else platform.machine()
@@ -245,7 +270,7 @@ def download_easytier(version:str=None, proxy_url=None):
     print(f"  版本: {version}")
     
     # 获取平台标识
-    platform = get_easytier_platform()
+    platform = get_platform_name()
     print(f"  平台: {platform}")
     
     # 构建下载链接
