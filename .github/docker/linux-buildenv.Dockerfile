@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     rsync \
     && rm -rf /var/lib/apt/lists/*
 
-# armv7 不支持
+# armv7、riscv64 不支持
 # 安装 Node.js 24 (自动适配架构)
 #RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash - && \
 #    apt-get install -y --no-install-recommends nodejs && \
