@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       no-draft:
-        description: '对外公布下载(非草稿)'
+        description: '对外公布下载(No Draft)'
         type: boolean
         default: false
       build-fnos:
@@ -629,7 +629,7 @@ jobs:
             artifacts/*/*.fpk
           name: ${{ needs.build-info.outputs.version }}
           tag_name: ${{ needs.build-info.outputs.version }}
-          draft: ${{ github.event.inputs.no-draft == 'false' }}
+          draft: ${{ github.event.inputs.no-draft != 'true' }}
           prerelease: ${{ needs.build-info.outputs.prerelease == 'true' }}
           body: ${{ needs.build-info.outputs.release_notes }}
           fail_on_unmatched_files: false
