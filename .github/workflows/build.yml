@@ -243,100 +243,6 @@ jobs:
           name: macos-arm64
           path: backend/dist/*.zip
 
-  build-linux-indocker:
-    needs: [ build-frontend, build-info ]
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          # - arch: amd64
-          #   qemu_platform: ''
-          #   docker_platform: linux/amd64
-          #   base_image: python:${{ env.PYTHON_VERSION }}-slim
-          #   artifact_name: linux-x64
-          #   build_condition: ${{ github.event.inputs.build_linux_amd64 }}
-          - arch: arm64
-            qemu_platform: arm64
-            docker_platform: linux/arm64
-            base_image: python:${{ env.PYTHON_VERSION }}-slim
-            artifact_name: linux-arm64
-            build_condition: ${{ github.event.inputs.build_linux_arm64 }}
-          - arch: armv7
-            qemu_platform: arm/v7
-            docker_platform: linux/arm/v7
-            base_image: python:${{ env.PYTHON_VERSION }}-slim
-            artifact_name: linux-armv7
-            build_condition: ${{ github.event.inputs.build_linux_armv7 }}
-          - arch: riscv64
-            qemu_platform: riscv64
-            docker_platform: linux/riscv64
-            base_image: riscv64/python:${{ env.PYTHON_VERSION }}
-            artifact_name: linux-riscv64
-            build_condition: ${{ github.event.inputs.build_linux_riscv64 }}
-    if: ${{ matrix.build_condition == 'true' }}
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Set up QEMU
-        if: ${{ matrix.qemu_platform != '' }}
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: ${{ matrix.qemu_platform }}
-      
-      - name: Set up Docker Buildx
-        if: ${{ matrix.qemu_platform != '' }}
-        uses: docker/setup-buildx-action@v3
-      
-      - name: Download frontend
-        uses: actions/download-artifact@v4
-        with:
-          name: frontend-dist
-          path: frontend/dist
-      
-      - name: Build custom environment image
-        if: ${{ matrix.qemu_platform != '' }}
-        uses: docker/build-push-action@v5
-        with:
-          context: .github/docker
-          file: .github/docker/linux-buildenv.Dockerfile
-          platforms: ${{ matrix.docker_platform }}
-          build-args: |
-            BASE_IMAGE=${{ matrix.base_image }}
-          tags: linux-buildenv:${{ matrix.arch }}
-          load: true
-          cache-from: type=gha,scope=linux-buildenv-${{ matrix.arch }}
-          cache-to: type=gha,mode=max,scope=linux-buildenv-${{ matrix.arch }}
-      
-      - name: Build (Native AMD64)
-        if: ${{ matrix.arch == 'amd64' }}
-        run: |
-          pip install --upgrade pip
-          cd backend && python3 build.py --et_ver "${{ needs.build-info.outputs.et_ver }}" --build_ver "${{ needs.build-info.outputs.version }}" --github_proxy_url ""
-      
-      - name: Build (Cross-platform via Docker)
-        if: ${{ matrix.arch != 'amd64' }}
-        run: |
-          docker run --rm --platform ${{ matrix.docker_platform }} \
-            -v ${{ github.workspace }}:/workspace \
-            -w /workspace \
-            -e CI=true \
-            -e GITHUB_ACTIONS=true \
-            -e ET_VER=${{ needs.build-info.outputs.et_ver }} \
-            -e BUILD_VER=${{ needs.build-info.outputs.version }} \
-            linux-buildenv:${{ matrix.arch }} \
-            bash -c '
-              export PIP_ROOT_USER_ACTION=ignore
-              cd backend &&
-              python3 build.py --et_ver "${ET_VER}" --build_ver "${BUILD_VER}" --github_proxy_url ""
-            '
-      
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.artifact_name }}
-          path: backend/dist/*.zip
-
   build-linux-amd64:
     if: ${{ github.event.inputs.build_linux_amd64 == 'true' }}
     needs: [ build-frontend, build-info ]
@@ -364,6 +270,247 @@ jobs:
         with:
           name: linux-x64
           path: backend/dist/*.zip
+
+  build-linux-arm64:
+    if: ${{ github.event.inputs.build_linux_arm64 == 'true' }}
+    needs: [ build-frontend, build-info ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Download frontend
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
+      - name: Build custom environment image
+        uses: docker/build-push-action@v5
+        with:
+          context: .github/docker
+          file: .github/docker/Dockerfile.linux-buildenv
+          platforms: linux/arm64
+          build-args: |
+            PYTHON_VERSION=${{ env.PYTHON_VERSION }}
+          tags: linux-buildenv:arm64
+          load: true
+          cache-from: type=gha,scope=linux-buildenv-arm64
+          cache-to: type=gha,mode=max,scope=linux-buildenv-arm64
+      - name: Build in ARM64 container
+        run: |
+          docker run --rm --platform linux/arm64 \
+            -v ${{ github.workspace }}:/workspace \
+            -w /workspace \
+            -e CI=true \
+            -e GITHUB_ACTIONS=true \
+            -e ET_VER=${{ needs.build-info.outputs.et_ver }} \
+            -e BUILD_VER=${{ needs.build-info.outputs.version }} \
+            linux-buildenv:arm64 \
+            bash -c '
+              export PIP_ROOT_USER_ACTION=ignore
+              cd backend &&
+              python3 build.py --et_ver "${ET_VER}" --build_ver "${BUILD_VER}" --github_proxy_url ""
+            '
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-arm64
+          path: backend/dist/*.zip
+
+  build-linux-riscv64:
+    if: ${{ github.event.inputs.build_linux_riscv64 == 'true' }}
+    needs: [ build-frontend, build-info ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: riscv64
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Download frontend
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
+      - name: Build custom environment image
+        uses: docker/build-push-action@v5
+        with:
+          context: .github/docker
+          file: .github/docker/Dockerfile.linux-buildenv
+          platforms: linux/riscv64
+          build-args: |
+            PYTHON_VERSION=${{ env.PYTHON_VERSION }}
+            BASE_IMAGE=riscv64/python:${{ env.PYTHON_VERSION }}
+          tags: linux-buildenv:riscv64
+          load: true
+          cache-from: type=gha,scope=linux-buildenv-riscv64
+          cache-to: type=gha,mode=max,scope=linux-buildenv-riscv64
+      - name: Build in RISC-V64 container
+        run: |
+          docker run --rm --platform linux/riscv64 \
+            -v ${{ github.workspace }}:/workspace \
+            -w /workspace \
+            -e CI=true \
+            -e GITHUB_ACTIONS=true \
+            -e ET_VER=${{ needs.build-info.outputs.et_ver }} \
+            -e BUILD_VER=${{ needs.build-info.outputs.version }} \
+            linux-buildenv:riscv64 \
+            bash -c '
+              export PIP_ROOT_USER_ACTION=ignore
+              cd backend &&
+              python3 build.py --et_ver "${ET_VER}" --build_ver "${BUILD_VER}" --github_proxy_url ""
+            '
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-riscv64
+          path: backend/dist/*.zip
+
+
+  build-linux-armv7:
+    if: ${{ github.event.inputs.build_linux_armv7 == 'true' }}
+    needs: [ build-frontend, build-info ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm/v7
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Download frontend
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
+      - name: Build custom environment image
+        uses: docker/build-push-action@v5
+        with:
+          context: .github/docker
+          file: .github/docker/Dockerfile.linux-buildenv
+          platforms: linux/arm/v7
+          build-args: |
+            PYTHON_VERSION=${{ env.PYTHON_VERSION }}
+          tags: linux-buildenv:armv7
+          load: true
+          cache-from: type=gha,scope=linux-buildenv-armv7
+          cache-to: type=gha,mode=max,scope=linux-buildenv-armv7
+      - name: Build in ARMv7 container
+        run: |
+          docker run --rm --platform linux/arm/v7 \
+            -v ${{ github.workspace }}:/workspace \
+            -w /workspace \
+            -e CI=true \
+            -e GITHUB_ACTIONS=true \
+            -e ET_VER=${{ needs.build-info.outputs.et_ver }} \
+            -e BUILD_VER=${{ needs.build-info.outputs.version }} \
+            linux-buildenv:armv7 \
+            bash -c '
+              export PIP_ROOT_USER_ACTION=ignore
+              cd backend &&
+              python3 build.py --et_ver "${ET_VER}" --build_ver "${BUILD_VER}" --github_proxy_url ""
+            '
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-armv7
+          path: backend/dist/*.zip
+
+#  build-linux-indocker:
+#    needs: [ build-frontend, build-info ]
+#    runs-on: ubuntu-latest
+#    strategy:
+#      fail-fast: false
+#      matrix:
+#        include:
+#          - arch: arm64
+#            qemu_platform: arm64
+#            docker_platform: linux/arm64
+#            base_image: python:3.12-slim
+#            artifact_name: linux-arm64
+#            build_input: build_linux_arm64
+#          - arch: armv7
+#            qemu_platform: arm/v7
+#            docker_platform: linux/arm/v7
+#            base_image: python:3.12-slim
+#            artifact_name: linux-armv7
+#            build_input: build_linux_armv7
+#          - arch: riscv64
+#            qemu_platform: riscv64
+#            docker_platform: linux/riscv64
+#            base_image: riscv64/python:3.12
+#            artifact_name: linux-riscv64
+#            build_input: build_linux_riscv64
+#    if: ${{ github.event.inputs[matrix.build_input] == 'true' }}
+#    steps:
+#      - uses: actions/checkout@v4
+#
+#      - name: Set up QEMU
+#        if: ${{ matrix.qemu_platform != '' }}
+#        uses: docker/setup-qemu-action@v3
+#        with:
+#          platforms: ${{ matrix.qemu_platform }}
+#
+#      - name: Set up Docker Buildx
+#        if: ${{ matrix.qemu_platform != '' }}
+#        uses: docker/setup-buildx-action@v3
+#
+#      - name: Download frontend
+#        uses: actions/download-artifact@v4
+#        with:
+#          name: frontend-dist
+#          path: frontend/dist
+#
+#      - name: Build custom environment image
+#        if: ${{ matrix.qemu_platform != '' }}
+#        uses: docker/build-push-action@v5
+#        with:
+#          context: .github/docker
+#          file: .github/docker/linux-buildenv.Dockerfile
+#          platforms: ${{ matrix.docker_platform }}
+#          build-args: |
+#            BASE_IMAGE=${{ matrix.base_image }}
+#          tags: linux-buildenv:${{ matrix.arch }}
+#          load: true
+#          cache-from: type=gha,scope=linux-buildenv-${{ matrix.arch }}
+#          cache-to: type=gha,mode=max,scope=linux-buildenv-${{ matrix.arch }}
+#
+#      - name: Build (Native AMD64)
+#        if: ${{ matrix.arch == 'amd64' }}
+#        run: |
+#          pip install --upgrade pip
+#          cd backend && python3 build.py --et_ver "${{ needs.build-info.outputs.et_ver }}" --build_ver "${{ needs.build-info.outputs.version }}" --github_proxy_url ""
+#
+#      - name: Build (Cross-platform via Docker)
+#        if: ${{ matrix.arch != 'amd64' }}
+#        run: |
+#          docker run --rm --platform ${{ matrix.docker_platform }} \
+#            -v ${{ github.workspace }}:/workspace \
+#            -w /workspace \
+#            -e CI=true \
+#            -e GITHUB_ACTIONS=true \
+#            -e ET_VER=${{ needs.build-info.outputs.et_ver }} \
+#            -e BUILD_VER=${{ needs.build-info.outputs.version }} \
+#            linux-buildenv:${{ matrix.arch }} \
+#            bash -c '
+#              export PIP_ROOT_USER_ACTION=ignore
+#              cd backend &&
+#              python3 build.py --et_ver "${ET_VER}" --build_ver "${BUILD_VER}" --github_proxy_url ""
+#            '
+#
+#      - name: Upload artifact
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: ${{ matrix.artifact_name }}
+#          path: backend/dist/*.zip
+
 
   # build-linux-arm64:
   #   if: ${{ github.event.inputs.build_linux_arm64 == 'true' }}
@@ -454,9 +601,9 @@ jobs:
       - build-macos-amd64
       - build-macos-arm64
       - build-linux-amd64
-      - build-linux-indocker
-      # - build-linux-arm64
-      # - build-linux-riscv64
+      - build-linux-arm64
+      - build-linux-riscv64
+      - build-linux-armv7
     runs-on: ubuntu-latest
     if: ${{ always() && !failure() && !cancelled() }}
     steps:
