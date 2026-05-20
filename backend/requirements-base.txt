@@ -1,1 +1,1 @@
-tomlkitrequestspsutil
+pyinstallertomlkitrequestspsutil
