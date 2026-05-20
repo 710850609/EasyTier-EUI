@@ -376,7 +376,6 @@ jobs:
           name: linux-riscv64
           path: backend/dist/*.zip
 
-
   build-linux-armv7:
     if: ${{ github.event.inputs.build_linux_armv7 == 'true' }}
     needs: [ build-frontend, build-info ]
@@ -409,11 +408,12 @@ jobs:
           cache-to: type=gha,mode=max,scope=linux-buildenv-armv7
 
       - name: Verify QEMU and image arch
-        run: docker run --rm --platform linux/arm/v7 alpine echo "QEMU works" && docker image inspect linux-buildenv:armv7 | grep Architecture
+        run: |
+          docker run --rm --platform linux/arm/v7 alpine echo "QEMU works" 
+          docker image inspect linux-buildenv:armv7 | grep Architecture
 
       - name: Build in ARMv7 container
         run: |
-#          报错 exec /usr/bin/bash: exec format error，改用 sh
           docker run --rm --platform linux/arm/v7 \
             -v ${{ github.workspace }}:/workspace \
             -w /workspace \
