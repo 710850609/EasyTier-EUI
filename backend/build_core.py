@@ -204,7 +204,8 @@ def get_platform_name():
         "amd64": "x86_64",
         "aarch64": "aarch64",
         "arm64": "aarch64",
-        "riscv64": "riscv64"
+        "riscv64": "riscv64",
+        "armv7l": "armv7"
     }
     
     sys_name = sys_map.get(system, system)
