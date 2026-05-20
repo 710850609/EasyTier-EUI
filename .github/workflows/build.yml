@@ -6,7 +6,7 @@ on:
       no-draft:
         description: '对外公布下载(非草稿)'
         type: boolean
-        default: true
+        default: false
       build-fnos:
         description: '构建 FnOS (多架构)'
         type: boolean
