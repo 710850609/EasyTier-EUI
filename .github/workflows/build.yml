@@ -387,6 +387,7 @@ jobs:
         uses: docker/setup-qemu-action@v3
         with:
           platforms: arm/v7
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Download frontend
@@ -406,8 +407,15 @@ jobs:
           load: true
           cache-from: type=gha,scope=linux-buildenv-armv7
           cache-to: type=gha,mode=max,scope=linux-buildenv-armv7
+
+      - name: Verify QEMU and image arch
+        run: |
+          docker run --rm --platform linux/arm/v7 alpine echo "QEMU works"
+          docker image inspect linux-buildenv:armv7 | grep '"Architecture"'
+
       - name: Build in ARMv7 container
         run: |
+#          报错 exec /usr/bin/bash: exec format error，改用 sh
           docker run --rm --platform linux/arm/v7 \
             -v ${{ github.workspace }}:/workspace \
             -w /workspace \
@@ -416,7 +424,7 @@ jobs:
             -e ET_VER=${{ needs.build-info.outputs.et_ver }} \
             -e BUILD_VER=${{ needs.build-info.outputs.version }} \
             linux-buildenv:armv7 \
-            bash -c '
+            sh -c '
               export PIP_ROOT_USER_ACTION=ignore
               cd backend &&
               python3 build.py --et_ver "${ET_VER}" --build_ver "${BUILD_VER}" --github_proxy_url ""
