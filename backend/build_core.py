@@ -100,7 +100,7 @@ def build_executable(build_ver:str = None):
 
     if build_ver:
         print(f"  写入构建版本号: {build_ver}")
-        save_file = os.path.join(os.path.dirname(__file__), 'utils', 'run_configs.py')
+        save_file = str(PROJECT_DIR.joinpath('utils', 'run_configs.py'))
         with open(save_file, "r", encoding="utf-8") as f:
             lines = f.readlines()
 
@@ -121,7 +121,6 @@ def build_executable(build_ver:str = None):
         "pyinstaller",
         "--windowed",
         "--onefile",  # 单文件
-        # "--onedir",  # 单文件
         "--clean",    # 清理缓存
         "--name", output_name,
         "--distpath", str(DIST_DIR),
@@ -130,9 +129,6 @@ def build_executable(build_ver:str = None):
         "--hidden-import", "tomlkit",
         "--hidden-import", "requests",
         "--hidden-import", "psutil",
-        "--hidden-import", "webview",
-        # "--hidden-import", "PIL",
-        # "--hidden-import", "PIL.Image",
         "--hidden-import", "actions.configs",
         "--hidden-import", "actions.et_core",
         "--hidden-import", "actions.et_lite",
@@ -147,69 +143,45 @@ def build_executable(build_ver:str = None):
         "--hidden-import", "utils.et_util",
         "--hidden-import", "utils.github_util",
         "--hidden-import", "utils.http_util",
+        "--hidden-import", "utils.ip_util",
         "--hidden-import", "utils.log_util",
         "--hidden-import", "utils.process_util",
+        "--hidden-import", "utils.qrcode_util",
         "--hidden-import", "utils.run_configs",
         "--hidden-import", "utils.security",
         "--hidden-import", "utils.validators",
         "--hidden-import", "http_dispatcher.dispatcher",
         "--add-data", f"{Path(__file__).absolute().parent.parent}/frontend/dist{separator}frontend",
-        # "--add-data", f"{Path(__file__).absolute().parent}/assets{separator}assets",
-        # str(PROJECT_DIR / "http_server.py ")
-        # str(PROJECT_DIR / "stray.py ")
-        str(PROJECT_DIR / "stray_webview.py")
     ]
 
     # ========== 平台特定的 webview 后端处理 ==========
-    # if sys.platform.startswith("linux"):
-    #     print("  [Linux] 强制 Qt 后端，排除 GTK...")
-    #     run_command(f'pip install qtpy PyQt5 PyQtWebEngine')
-    #     cmd.extend([
-    #         "--hidden-import", "webview.platforms.qt",
-    #         "--hidden-import", "qtpy",
-    #         "--hidden-import", "qtpy.QtCore",
-    #         "--hidden-import", "qtpy.QtWidgets",
-    #         "--hidden-import", "qtpy.QtWebEngineWidgets",
-    #         "--hidden-import", "PyQt5",
-    #         "--hidden-import", "PyQt5.QtCore",
-    #         "--hidden-import", "PyQt5.QtWebEngineWidgets",
-    #         "--hidden-import", "PyQt5.QtWebEngineCore",
-    #         # 排除 GTK，防止探测 gi 报错
-    #         "--exclude-module", "webview.platforms.gtk",
-    #         "--exclude-module", "gi",
-    #         "--exclude-module", "gi.repository",
-    #         "--exclude-module", "pycairo",
-    #     ])
-    # elif sys.platform == "darwin":
-    #     print("  [macOS] 使用 Cocoa 后端...")
-    #     cmd.extend([
-    #         "--hidden-import", "webview.platforms.cocoa",
-    #         "--exclude-module", "webview.platforms.gtk",
-    #         "--exclude-module", "webview.platforms.qt",
-    #         "--exclude-module", "gi",
-    #         "--exclude-module", "qtpy",
-    #         "--exclude-module", "PyQt5",
-    #     ])
-    # elif sys.platform == "win32":
-    #     print("  [Windows] 使用 Edge Chromium / MSHTML 后端...")
-    #     cmd.extend([
-    #         "--hidden-import", "webview.platforms.edgechromium",
-    #         "--hidden-import", "webview.platforms.mshtml",
-    #         "--exclude-module", "webview.platforms.gtk",
-    #         "--exclude-module", "webview.platforms.cocoa",
-    #         "--exclude-module", "gi",
-    #         "--exclude-module", "qtpy",
-    #         "--exclude-module", "PyQt5",
-    #     ])
-
-    # 打包文件的图标路径
-    icon_path = PROJECT_DIR / "assets/icon.ico"
-    # 添加图标（如果存在）
-    if icon_path.exists():
-        cmd.extend(["--icon", str(icon_path)])
+    if sys.platform == "linux":
+        print("  [Linux] 不使用 WebView ...")
+        cmd.extend([
+            "--exclude-module", "webview",
+            str(PROJECT_DIR / "http_server.py"),
+        ])
     else:
-        print(f"  警告: 图标文件不存在: {icon_path}")
+        print("  非 [Linux] 使用 WebView ...")
+        webview_logo_path = os.path.join(PROJECT_DIR, 'assets', 'icon.ico')
+        cmd.extend([
+            "--hidden-import", "webview",
+            "--add-data", f"{webview_logo_path}{separator}assets/icon.ico",
+            str(PROJECT_DIR / "main_ui.py"),
+        ])
+        # 打包文件的图标路径
+        if sys.platform == "win32":
+            icon_path = PROJECT_DIR.joinpath('assets', 'icon.ico')
+        elif sys.platform == "darwin":
+            icon_path = PROJECT_DIR.joinpath('assets', 'icon.icns')
+        else:
+            icon_path = PROJECT_DIR.joinpath('assets', 'icon.png')
 
+        # 添加图标（如果存在）
+        if icon_path.exists():
+            cmd.extend(["--icon", str(icon_path)])
+        else:
+            print(f"  警告: 图标文件不存在: {str(icon_path)}")
     
     result = run_command(" ".join(cmd), cwd=str(PROJECT_DIR))
     return result, output_name
@@ -352,7 +324,6 @@ def extract_easytier(zip_path, core_dir):
         print(f"  解压失败: {e}")
         return False
 
-
 def copy_output(output_name, et_file, build_ver):
     """复制输出文件"""
     print("[4/5] 复制输出文件...")
@@ -371,9 +342,10 @@ def copy_output(output_name, et_file, build_ver):
     shutil.copy2(src_file, target_file)
     print(f"  复制到: {target_file}")
 
-    # config_dir = Path(output_dir).joinpath('config')
-    # config_dir.mkdir(parents=False, exist_ok=True)
-    # shutil.copy2(PROJECT_DIR.parent.parent.joinpath('default.toml'), config_dir.joinpath('config.toml'))
+    if sys.platform == "linux":
+        shutil.copy2(PROJECT_DIR.joinpath('shell', 'start.sh'), output_dir.joinpath('start.sh'))
+        shutil.copy2(PROJECT_DIR.joinpath('shell', 'stop.sh'), output_dir.joinpath('stop.sh'))
+
 
     core_dir = Path(output_dir).joinpath('core')
     core_dir.mkdir(parents=False, exist_ok=True)

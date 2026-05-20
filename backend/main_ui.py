@@ -2,8 +2,8 @@ import logging
 import os
 import sys
 import threading
+
 import webview
-from typing_extensions import Literal
 
 import http_server
 from utils import run_configs, log_util
@@ -12,30 +12,32 @@ from utils import run_configs, log_util
 class WebWin:
     """主窗口 + 托盘组合控制器"""
 
-    def __init__(self, url: str, win_title: str, win_width: int = 1100, win_height: int = 680):
-        self.url = url
+    def __init__(self, win_title: str, win_width: int = 1100, win_height: int = 680):
         self.win_title = win_title
         self.win_width = win_width
         self.win_height = win_height
         self.is_window_visible = False
+        host = '127.0.0.1'
+        port = 5666
         """主线程运行 webview，托盘在后台线程"""
-        self.web_server = WebServer()
+        self.web_server = WebServer(host=host, port=port)
         threading.Thread(target=self.web_server.run, daemon=True).start()
+
         webview.settings['OPEN_EXTERNAL_LINKS_IN_BROWSER'] = True
         self.window = webview.create_window(
-            self.win_title, self.url,
+            self.win_title, f'http://{host}:{port}',
             width=self.win_width, height=self.win_height,
             text_select=True
         )
-        # res_dir = sys._MEIPASS if getattr(sys, 'frozen', False) else os.path.dirname(__file__)
-        # icon_path = os.path.join(os.path.abspath(res_dir), 'assets', 'icon.png')
+        res_dir = sys._MEIPASS if getattr(sys, 'frozen', False) else os.path.dirname(__file__)
+        icon_path = os.path.join(os.path.abspath(res_dir), 'assets', 'icon.ico')
         webview_data_dir = os.path.join(run_configs.data_dir(), 'webview')
         os.makedirs(webview_data_dir, exist_ok=True)
         # linux 上指定qt后端
         webview.start(
             private_mode=False, # # 关闭隐私模式，开启数据持久化
             storage_path=webview_data_dir,
-            # icon=icon_path,
+            icon=icon_path,
             debug=not getattr(sys, 'frozen', False),
         )
         self.is_window_visible = True
@@ -87,8 +89,5 @@ class WebServer:
 if __name__ == '__main__':
     run_configs.setup_env()
     log_util.setup_log(log_file=os.path.join(run_configs.log_dir(), 'app.log'), log_level=logging.INFO,
-                       enabled_console=False)
-    win = WebWin(
-        'http://127.0.0.1:5666/cgi/ThirdParty/EasyTier-Lite/index.cgi',
-        '易组网'
-    )
+                       enabled_console=True)
+    win = WebWin('易组网')

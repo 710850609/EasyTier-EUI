@@ -11,7 +11,7 @@ from socketserver import ThreadingMixIn
 from typing import Optional
 
 from http_dispatcher import dispatcher
-from utils import run_configs, log_util
+from utils import run_configs, log_util, ip_util, qrcode_util
 
 BASE_URI = "/cgi/ThirdParty/EasyTier-Lite/index.cgi"
 
@@ -23,15 +23,15 @@ class CGIProxyHandler(BaseHTTPRequestHandler):
         logging.debug("[%s] - %s\n" %
                          (self.address_string(),
                           format % args))
-    
+
     def do_GET(self):
         """处理 GET 请求"""
         self.handle_request()
-    
+
     def do_POST(self):
         """处理 POST 请求"""
         self.handle_request()
-    
+
     def handle_request(self):
         """处理请求的核心逻辑"""
         try:
@@ -43,11 +43,11 @@ class CGIProxyHandler(BaseHTTPRequestHandler):
             if parsed_path.query:
                 request_uri = f"{path}?{parsed_path.query}"
             self.run_cgi(parsed_path.query, request_uri)
-                
+
         except Exception as e:
             logging.error(f"Request handling error: {e}", exc_info=True)
             self.send_error(500, f"Internal server error: {str(e)}")
-    
+
     def run_cgi(self, query_string, request_uri):
         """执行 CGI 脚本并返回结果"""
         try:
@@ -61,7 +61,7 @@ class CGIProxyHandler(BaseHTTPRequestHandler):
                         stdin_data = self.rfile.read(content_length)
                 except ValueError:
                     pass
-            
+
             # 构建环境变量
             env = os.environ.copy()
             env.update({
@@ -83,7 +83,7 @@ class CGIProxyHandler(BaseHTTPRequestHandler):
                 'HTTP_X_FORWARDED_FOR': self.headers.get('X-Forwarded-For', ''),
                 'HTTP_X_REAL_IP': self.headers.get('X-Real-IP', ''),
             })
-            
+
             # 添加所有以 HTTP_ 开头的自定义头
             for header, value in self.headers.items():
                 header_key = f"HTTP_{header.upper().replace('-', '_')}"
@@ -121,17 +121,23 @@ class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
         super().__init__(server_address, RequestHandlerClass)
         # 也可以在这里做其他初始化
 
-def build_server(host='127.0.0.1', port=5666, base_uri=None) -> Optional[ThreadedHTTPServer]:
+def build_server(host:str, port:int=5666, base_uri=None) -> Optional[ThreadedHTTPServer]:
     """启动 HTTP 服务器"""
+    if not host:
+        host = ip_util.get_lan_ips()[0].get('ip')
     logging.info(f"HTTP服务启动中....")
-    server = ThreadedHTTPServer((host, port), CGIProxyHandler)
-    logging.info(f"Starting HTTP server on {host}:{port}")
+    http_server = ThreadedHTTPServer((host, port), CGIProxyHandler)
+    logging.info(f"Starting HTTP server on {host}, port: {port}")
     logging.info(f"Virtual base URI: {BASE_URI}")
-    acc_host = host
+    acc_host = http_server.server_address[0]
+    acc_port = http_server.server_address[1]
     if acc_host == '0.0.0.0':
-        acc_host = '127.0.0.1'
-    logging.info(f"local access http://{acc_host}:{port}{BASE_URI}")
-    return server
+        lan_ips = ip_util.get_lan_ips()
+        acc_host = lan_ips[0].get('ip') if len(lan_ips) > 0 else '127.0.0.1'
+    access_url = f"http://{acc_host}:{acc_port}"
+    qr_code = qrcode_util.create_str(access_url)
+    logging.info(f"Access URL {access_url} , QrCode: {qr_code}")
+    return http_server
 
 
 if __name__ == '__main__':
@@ -141,7 +147,7 @@ if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser(description='CGI Proxy HTTP Server')
     # parser.add_argument('--host', default='127.0.0.1', help='Host to bind to (default: 127.0.0.1)')
-    parser.add_argument('--host', default='127.0.0.1', help='Host to bind to (default: 127.0.0.1)')
+    parser.add_argument('--host', default='', help='Host to bind to (default: 127.0.0.1)')
     parser.add_argument('--port', type=int, default=5666, help='Port to bind to (default: 5666)')
     args = parser.parse_args()
 
