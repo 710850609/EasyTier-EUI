@@ -3,6 +3,10 @@ name: Build Package
 on:
   workflow_dispatch:
     inputs:
+      no-draft:
+        description: '对外公布下载(非草稿)'
+        type: boolean
+        default: true
       build-fnos:
         description: '构建 FnOS (多架构)'
         type: boolean
@@ -619,7 +623,7 @@ jobs:
             artifacts/*/*.fpk
           name: ${{ needs.build-info.outputs.version }}
           tag_name: ${{ needs.build-info.outputs.version }}
-          draft: false
+          draft: ${{ github.event.inputs.no-draft == 'false' }}
           prerelease: ${{ needs.build-info.outputs.prerelease == 'true' }}
           body: ${{ needs.build-info.outputs.release_notes }}
           fail_on_unmatched_files: false
