@@ -7,8 +7,14 @@ FROM ${BASE_IMAGE}
 #    sed -i '/buster-updates/d' /etc/apt/sources.list
 
 # 安装系统依赖
+# 安装 C 编译器、Python 开发头文件、其他常用构建工具
 RUN apt-get update && apt-get install -y --no-install-recommends \
     binutils \
+    gcc \
+    python3-dev \
+    build-essential \
+    libffi-dev \
+    libssl-dev \
     git \
     curl \
     wget \
