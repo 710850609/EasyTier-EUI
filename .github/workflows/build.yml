@@ -296,7 +296,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .github/docker
-          file: .github/docker/Dockerfile.linux-buildenv
+          file: .github/docker/linux-buildenv.Dockerfile
           platforms: linux/arm64
           build-args: |
             PYTHON_VERSION=${{ env.PYTHON_VERSION }}
@@ -346,7 +346,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .github/docker
-          file: .github/docker/Dockerfile.linux-buildenv
+          file: .github/docker/linux-buildenv.Dockerfile
           platforms: linux/riscv64
           build-args: |
             PYTHON_VERSION=${{ env.PYTHON_VERSION }}
@@ -398,7 +398,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .github/docker
-          file: .github/docker/Dockerfile.linux-buildenv
+          file: .github/docker/linux-buildenv.Dockerfile
           platforms: linux/arm/v7
           build-args: |
             PYTHON_VERSION=${{ env.PYTHON_VERSION }}
