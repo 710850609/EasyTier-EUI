@@ -1,4 +1,5 @@
-FROM python:3.9-slim-buster
+ARG BASE_IMAGE=python:3.12-slim
+FROM ${BASE_IMAGE}
 
 # 替换 apt 源为清华（两种架构通用）
 #RUN sed -i 's/deb.debian.org/archive.debian.org/g' /etc/apt/sources.list && \
@@ -7,21 +8,13 @@ FROM python:3.9-slim-buster
 
 # 安装系统依赖
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    binutils \
     git \
     curl \
     wget \
     jq \
     zip \
     rsync \
-    ca-certificates \
-    build-essential \
-    python3-dev \
-    libcairo2-dev \
-    libgirepository1.0-dev \
-    gir1.2-appindicator3-0.1 \
-    python3-pil \
-    python3-xlib \
-    xvfb \
     && rm -rf /var/lib/apt/lists/*
 
 # 安装 Node.js 24 (自动适配架构)
@@ -30,4 +23,4 @@ RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash - && \
     rm -rf /var/lib/apt/lists/*
 
 # 更新pip
-RUN pip install --upgrade pip
+RUN python3 -m pip install --upgrade pip setuptools wheel

@@ -5,6 +5,7 @@
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 EXECUTABLE="$SCRIPT_DIR/EasyTier-Lite"
 PID_FILE="$SCRIPT_DIR/easytier.pid"
+LOG_FILE="$SCRIPT_DIR/logs/app.log"
 
 # 检查可执行文件是否存在且可执行
 if [ ! -x "$EXECUTABLE" ]; then
@@ -26,3 +27,10 @@ nohup "$EXECUTABLE" > /dev/null 2>&1 &
 PID=$!
 echo $PID > "$PID_FILE"
 echo "EasyTier-Lite 已启动，PID: $PID"
+echo "启动信息：可点击URL跳浏览器访问，或是手机扫描二维码访问"
+
+# 可选：显示前几行日志
+echo ""
+sleep 2
+head -20 "$LOG_FILE"
+echo "关闭控制台后程序将继续运行"

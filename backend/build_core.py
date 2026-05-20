@@ -345,7 +345,8 @@ def copy_output(output_name, et_file, build_ver):
     if sys.platform == "linux":
         shutil.copy2(PROJECT_DIR.joinpath('shell', 'start.sh'), output_dir.joinpath('start.sh'))
         shutil.copy2(PROJECT_DIR.joinpath('shell', 'stop.sh'), output_dir.joinpath('stop.sh'))
-
+        output_dir.joinpath('start.sh').chmod(0o777)
+        output_dir.joinpath('stop.sh').chmod(0o777)
 
     core_dir = Path(output_dir).joinpath('core')
     core_dir.mkdir(parents=False, exist_ok=True)

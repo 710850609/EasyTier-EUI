@@ -1,0 +1,496 @@
+name: Build Package
+
+on:
+  workflow_dispatch:
+    inputs:
+      build-fnos:
+        description: '构建 FnOS (多架构)'
+        type: boolean
+        default: true
+      build_windows:
+        description: '构建 Windows (AMD64)'
+        type: boolean
+        default: true
+      build_macos_arm64:
+        description: '构建 macOS (ARM64, Apple Silicon)'
+        type: boolean
+        default: true
+      build_macos_x64:
+        description: '构建 macOS (x86_64, Intel)'
+        type: boolean
+        default: false
+      build_linux_amd64:
+        description: '构建 Linux (AMD64)'
+        type: boolean
+        default: true
+      build_linux_arm64:
+        description: '构建 Linux (ARM64)'
+        type: boolean
+        default: false
+      build_linux_riscv64:
+        description: '构建 Linux (RISC-V 64)'
+        type: boolean
+        default: false
+      build_linux_armv7:
+        description: '构建 Linux (ARMv7)'
+        type: boolean
+        default: false
+
+env:
+  PYTHON_VERSION: '3.12'
+
+permissions:
+  contents: write
+
+jobs:
+  build-info:
+    runs-on: ubuntu-latest
+    outputs:
+      prerelease: ${{ steps.release-info.outputs.prerelease }}
+      version: ${{ steps.release-info.outputs.version }}
+      et_ver: ${{ steps.release-info.outputs.et_ver }}
+      release_notes: ${{ steps.release-info.outputs.release_notes }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Get Release Version And Notes
+        id: release-info
+        run: |          
+          if [[ -f "./build-info.sh" || -f "./version-util.sh" ]]; then
+            chmod +x version-util.sh
+            chmod +x build-info.sh
+          
+            source build-info.sh "unknown" "unknown" "unknown" "unknown"
+            # 从脚本获取实际计算后的值（注意大小写）
+            et_ver="${ET_VER}"
+            build_ver="${BUILD_VER}"
+            release_notes="${CHANGE_NOTES}"
+            prerelease="${PRE_RELEASE}"
+          else
+            echo "错误：build-info.sh 或 version-util.sh 不存在" >&2
+            exit 1
+          fi
+          
+          echo '是否正式版: '$([[ "${prerelease}" == "false" ]] && echo "是" || echo "否")
+          echo "内置 EasyTier 版本: ${et_ver}"            
+          echo "构建版本: ${build_ver}"            
+          echo "变更日志: ${release_notes}"
+          
+          echo "prerelease=${prerelease}" >> $GITHUB_OUTPUT
+          echo "et_ver=${et_ver}" >> $GITHUB_OUTPUT
+          echo "version=${build_ver}" >> $GITHUB_OUTPUT
+          {
+            echo "release_notes<<GH_OUTPUT_EOF"
+            echo "$release_notes"
+            echo "GH_OUTPUT_EOF"
+          } >> $GITHUB_OUTPUT
+
+  build-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: 'frontend/package-lock.json'  # 指定路径
+
+      - name: Install dependencies
+        working-directory: frontend  # 在 frontend 目录执行
+        run: npm install
+
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
+
+      - name: Upload frontend artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
+
+  build-fnos:
+    if: ${{ github.event.inputs.build-fnos == 'true' }}
+    needs: [ build-frontend, build-info ]
+    strategy:
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-latest
+          - arch: aarch64
+            runner: ubuntu-latest
+          # - arch: riscv64
+          #   runner: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: 'frontend/package-lock.json'  # 指定路径
+
+      - name: Download frontend
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
+
+      - name: Run build
+        run: |
+          echo "开始构建架构: ${{ matrix.arch }}"
+          echo "Node 版本: $(node -v)"
+          chmod +x ./fnpack.sh 2>/dev/null || true
+          chmod +x ./version-util.sh 2>/dev/null || true
+          chmod +x ./build-info.sh 2>/dev/null || true
+          chmod +x ./build.sh 2>/dev/null || true
+          ./build.sh arch=${{ matrix.arch }} et_ver="${{ needs.build-info.outputs.et_ver }}" build_ver="${{ needs.build-info.outputs.version }}" build_all="false" download_proxy="false" 2>/dev/null || true
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: fpk-${{ matrix.arch }}
+          path: EasyTier-Lite*.fpk
+
+  build-windows-amd64:
+    if: ${{ github.event.inputs.build_windows == 'true' }}
+    needs: [ build-frontend, build-info ]
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Upgrade pip
+        run: python.exe -m pip install --upgrade pip
+
+      - name: Install UPX
+        run: |
+          choco install upx
+          upx --version
+
+      - name: Download frontend
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
+
+      - name: Build
+        run: cd backend && python build.py --et_ver "${{ needs.build-info.outputs.et_ver }}" --build_ver "${{ needs.build-info.outputs.version }}" --github_proxy_url ""
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-x64
+          path: backend/dist/*.zip
+
+  build-macos-amd64:
+    if: ${{ github.event.inputs.build_macos_x64 == 'true' }}
+    needs: [ build-frontend, build-info ]
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python (x86_64)
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          architecture: 'x64'
+      - name: Upgrade pip (x86_64)
+        run: arch -x86_64 pip install --upgrade pip
+      - name: Download frontend
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
+      - name: Build (x86_64)
+        run: |
+          cd backend
+          arch -x86_64 python3 build.py --et_ver "${{ needs.build-info.outputs.et_ver }}" --build_ver "${{ needs.build-info.outputs.version }}" --github_proxy_url ""
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-x64
+          path: backend/dist/*.zip
+
+  build-macos-arm64:
+    if: ${{ github.event.inputs.build_macos_arm64 == 'true' }}
+    needs: [ build-frontend, build-info ]
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          architecture: arm64
+      - name: Upgrade pip
+        run: pip install --upgrade pip
+      - name: Download frontend
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
+      - name: Build
+        run: cd backend && python3 build.py --et_ver "${{ needs.build-info.outputs.et_ver }}" --build_ver "${{ needs.build-info.outputs.version }}" --github_proxy_url ""
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-arm64
+          path: backend/dist/*.zip
+
+  build-linux-indocker:
+    needs: [ build-frontend, build-info ]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # - arch: amd64
+          #   qemu_platform: ''
+          #   docker_platform: linux/amd64
+          #   base_image: python:${{ env.PYTHON_VERSION }}-slim
+          #   artifact_name: linux-x64
+          #   build_condition: ${{ github.event.inputs.build_linux_amd64 }}
+          - arch: arm64
+            qemu_platform: arm64
+            docker_platform: linux/arm64
+            base_image: python:${{ env.PYTHON_VERSION }}-slim
+            artifact_name: linux-arm64
+            build_condition: ${{ github.event.inputs.build_linux_arm64 }}
+          - arch: armv7
+            qemu_platform: arm/v7
+            docker_platform: linux/arm/v7
+            base_image: python:${{ env.PYTHON_VERSION }}-slim
+            artifact_name: linux-armv7
+            build_condition: ${{ github.event.inputs.build_linux_armv7 }}
+          - arch: riscv64
+            qemu_platform: riscv64
+            docker_platform: linux/riscv64
+            base_image: riscv64/python:${{ env.PYTHON_VERSION }}
+            artifact_name: linux-riscv64
+            build_condition: ${{ github.event.inputs.build_linux_riscv64 }}
+    if: ${{ matrix.build_condition == 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up QEMU
+        if: ${{ matrix.qemu_platform != '' }}
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: ${{ matrix.qemu_platform }}
+      
+      - name: Set up Docker Buildx
+        if: ${{ matrix.qemu_platform != '' }}
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Download frontend
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
+      
+      - name: Build custom environment image
+        if: ${{ matrix.qemu_platform != '' }}
+        uses: docker/build-push-action@v5
+        with:
+          context: .github/docker
+          file: .github/docker/linux-buildenv.Dockerfile
+          platforms: ${{ matrix.docker_platform }}
+          build-args: |
+            BASE_IMAGE=${{ matrix.base_image }}
+          tags: linux-buildenv:${{ matrix.arch }}
+          load: true
+          cache-from: type=gha,scope=linux-buildenv-${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=linux-buildenv-${{ matrix.arch }}
+      
+      - name: Build (Native AMD64)
+        if: ${{ matrix.arch == 'amd64' }}
+        run: |
+          pip install --upgrade pip
+          cd backend && python3 build.py --et_ver "${{ needs.build-info.outputs.et_ver }}" --build_ver "${{ needs.build-info.outputs.version }}" --github_proxy_url ""
+      
+      - name: Build (Cross-platform via Docker)
+        if: ${{ matrix.arch != 'amd64' }}
+        run: |
+          docker run --rm --platform ${{ matrix.docker_platform }} \
+            -v ${{ github.workspace }}:/workspace \
+            -w /workspace \
+            -e CI=true \
+            -e GITHUB_ACTIONS=true \
+            -e ET_VER=${{ needs.build-info.outputs.et_ver }} \
+            -e BUILD_VER=${{ needs.build-info.outputs.version }} \
+            linux-buildenv:${{ matrix.arch }} \
+            bash -c '
+              export PIP_ROOT_USER_ACTION=ignore
+              cd backend &&
+              python3 build.py --et_ver "${ET_VER}" --build_ver "${BUILD_VER}" --github_proxy_url ""
+            '
+      
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: backend/dist/*.zip
+
+  build-linux-amd64:
+    if: ${{ github.event.inputs.build_linux_amd64 == 'true' }}
+    needs: [ build-frontend, build-info ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Upgrade pip
+        run: pip install --upgrade pip
+
+      - name: Download frontend
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
+
+      - name: Build
+        run: cd backend && python3 build.py --et_ver "${{ needs.build-info.outputs.et_ver }}" --build_ver "${{ needs.build-info.outputs.version }}" --github_proxy_url ""
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-x64
+          path: backend/dist/*.zip
+
+  # build-linux-arm64:
+  #   if: ${{ github.event.inputs.build_linux_arm64 == 'true' }}
+  #   needs: [ build-frontend, build-info ]
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+
+  #     - name: Set up QEMU
+  #       uses: docker/setup-qemu-action@v3
+  #       with:
+  #         platforms: arm64
+
+  #     - name: Download frontend
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: frontend-dist
+  #         path: frontend/dist
+  #     - name: Build in ARM64 container
+  #       run: |
+  #         docker run --rm --platform linux/arm64 \
+  #           -v ${{ github.workspace }}:/workspace \
+  #           -w /workspace \
+  #           -e CI=true \
+  #           -e GITHUB_ACTIONS=true \
+  #           -e ET_VER=${{ needs.build-info.outputs.et_ver }} \
+  #           -e BUILD_VER=${{ needs.build-info.outputs.version }} \
+  #           python:${{ env.PYTHON_VERSION }}-slim \
+  #           bash -c '
+  #             export PIP_ROOT_USER_ACTION=ignore
+  #             apt-get update && apt-get install -y binutils &&
+  #             pip install --upgrade pip &&
+  #             cd backend &&
+  #             python3 build.py --et_ver "${ET_VER}" --build_ver "${BUILD_VER}" --github_proxy_url ""
+  #           '
+  #     - name: Upload artifact
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: linux-arm64
+  #         path: backend/dist/*.zip
+
+  # build-linux-riscv64:
+  #   if: ${{ github.event.inputs.build_linux_riscv64 == 'true' }}
+  #   needs: [ build-frontend, build-info ]
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Set up QEMU
+  #       uses: docker/setup-qemu-action@v3
+  #       with:
+  #         platforms: riscv64
+  #     - name: Download frontend
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: frontend-dist
+  #         path: frontend/dist
+  #     - name: Build in RISC-V64 container
+  #       run: |
+  #         docker run --rm --platform linux/riscv64 \
+  #           -v ${{ github.workspace }}:/workspace \
+  #           -w /workspace \
+  #           -e CI=true \
+  #           -e GITHUB_ACTIONS=true \
+  #           -e ET_VER=${{ needs.build-info.outputs.et_ver }} \
+  #           -e BUILD_VER=${{ needs.build-info.outputs.version }} \
+  #           riscv64/python \
+  #           bash -c '
+  #             export PIP_ROOT_USER_ACTION=ignore
+  #             apt-get update && apt-get install -y binutils &&
+  #             pip install --upgrade pip &&
+  #             cd backend &&
+  #             python3 build.py --et_ver "${ET_VER}" --build_ver "${BUILD_VER}" --github_proxy_url ""
+  #           '
+  #     - name: Upload artifact
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: linux-riscv64
+  #         path: backend/dist/*.zip
+
+
+
+
+  release:
+    needs:
+      - build-info
+      - build-fnos
+      - build-windows-amd64
+      - build-macos-amd64
+      - build-macos-arm64
+      - build-linux-amd64
+      - build-linux-indocker
+      # - build-linux-arm64
+      # - build-linux-riscv64
+    runs-on: ubuntu-latest
+    if: ${{ always() && !failure() && !cancelled() }}
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            artifacts/*/*.zip
+            artifacts/*/*.fpk
+          name: ${{ needs.build-info.outputs.version }}
+          tag_name: ${{ needs.build-info.outputs.version }}
+          draft: false
+          prerelease: ${{ needs.build-info.outputs.prerelease == 'true' }}
+          body: ${{ needs.build-info.outputs.release_notes }}
+          fail_on_unmatched_files: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+#      - name: Push FnDepot
+#        if: ${{ needs.build-info.outputs.prerelease == 'false' }}
+#        run: |
+#         new_version="${{ needs.build-info.outputs.version }}"
+#         changelog="${{ needs.build-info.outputs.release_notes }}"
+#
+#         gh workflow run update-version.yml \
+#           --repo "710850609/FnDepot" \
+#           -f app_name="EasyTier-Lite" \
+#           -f new_version="$new_version" \
+#           -f download_url_amd64="https://github.com/710850609/EasyTier-Lite/releases/download/$new_version/EasyTier-Lite-aarch64-$new_version.fpk" \
+#           -f download_url_aarch64="https://github.com/710850609/EasyTier-Lite/releases/download/$new_version/EasyTier-Lite-x86_64-$new_version.fpk" \
+#           -f changelog="$changelog"
+#        env:
+#         GH_TOKEN: ${{ secrets.FNDEPOT_TOKEN }}
