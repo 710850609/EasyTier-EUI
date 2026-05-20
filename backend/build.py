@@ -77,9 +77,13 @@ def install_deps():
     print("  安装 base 依赖")
     if not run_command(f'{pip_cmd} install -r requirements-base.txt {mirror}'):
         raise Exception(f"安装失败: {pip_cmd}")
-    print("  安装 gui 依赖")
-    if not run_command(f'{pip_cmd} install -r requirements-gui.txt {mirror}'):
-        raise Exception(f"安装失败: {pip_cmd}")
+
+    if sys.platform == "linux":
+        print(f"当前是 Linux 环境跳过安装 gui 依赖")
+    else:
+        print("  安装 gui 依赖")
+        if not run_command(f'{pip_cmd} install -r requirements-gui.txt {mirror}'):
+            raise Exception(f"安装失败: {pip_cmd}")
     return python_path, pip_cmd
 
 

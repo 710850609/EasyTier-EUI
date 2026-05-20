@@ -33,7 +33,6 @@ class WebWin:
         icon_path = os.path.join(os.path.abspath(res_dir), 'assets', 'icon.ico')
         webview_data_dir = os.path.join(run_configs.data_dir(), 'webview')
         os.makedirs(webview_data_dir, exist_ok=True)
-        # linux 上指定qt后端
         webview.start(
             private_mode=False, # # 关闭隐私模式，开启数据持久化
             storage_path=webview_data_dir,
