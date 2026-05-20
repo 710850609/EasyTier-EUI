@@ -412,7 +412,6 @@ jobs:
         run: |
           docker run --rm --platform linux/arm/v7 alpine echo "QEMU works"
           docker image inspect linux-buildenv:armv7 | grep '"Architecture"'
-
       - name: Build in ARMv7 container
         run: |
 #          报错 exec /usr/bin/bash: exec format error，改用 sh
