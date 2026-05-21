@@ -90,7 +90,7 @@ def download_file(url: str, output_path: str, desc: str = ""):
                     downloaded += len(chunk)
                     if total_size > 0:
                         percent = (downloaded / total_size) * 100
-                        logging.debug(f"{desc} 进度: {percent:.1f}%")
+                        logging.debug(f"{desc} xia'z进度: {percent:.1f}%")
         
         logging.info(f"下载成功: {output_path}")        
     except Exception as e:

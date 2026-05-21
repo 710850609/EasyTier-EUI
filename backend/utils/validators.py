@@ -32,7 +32,7 @@ class Validator:
 
 
     @staticmethod
-    def check_profile(profile:Optional[str], check_exists:bool = True) -> Optional[str]:
+    def check_profile(profile:Optional[str], check_exists:bool = True) -> str:
         """检查配置文件名"""
         if not profile:
             raise HttpException("未知profile")

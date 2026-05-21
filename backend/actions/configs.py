@@ -96,7 +96,8 @@ def save(data, *kwargs):
     # 头部注释
     with open(et_config_file, "w", encoding="utf-8") as f:
         f.write(tomlkit.dumps(doc))
-    et_run_info.save(profile, None, False, False)
+    #
+    et_run_info.save(profile, None, None, None)
 
 
 def save_toml(data: str, *kwargs):
@@ -117,7 +118,7 @@ def save_toml(data: str, *kwargs):
         Path(et_config_file).parent.mkdir(parents=True, exist_ok=True)
         with open(et_config_file, "w", encoding="utf-8") as f:
             f.write(tomlkit.dumps(doc))
-        et_run_info.save(safe_profile, None, False, False)
+        et_run_info.save(safe_profile, None, None, None)
     except Exception as e:
         logging.error(f"解析配置字符串失败: {e}")
         raise e

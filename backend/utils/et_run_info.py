@@ -25,12 +25,12 @@ class EtRunInfo:
         self.use_system_service = use_system_service
 
 
-def save(profile:Optional[str], rpc_portal:Optional[str], autostart:bool, use_system_service:bool):
+def save(profile:Optional[str], rpc_portal:Optional[str], autostart:Optional[bool], use_system_service:Optional[bool]):
     if not profile:
         raise HttpException("profile cannot be None for save")
     data = __load_data() or {}
     if not data or not data.get(profile):
-        info = EtRunInfo(profile, rpc_portal, autostart, use_system_service)
+        info = EtRunInfo(profile, rpc_portal, False, False)
     else:
         info = data[profile]
         info.rpc_portal = rpc_portal if rpc_portal is not None else info.rpc_portal

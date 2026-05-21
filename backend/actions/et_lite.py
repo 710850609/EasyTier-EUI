@@ -49,14 +49,11 @@ def _get_et_lite_package(platform:str, arch:str, et_lite_version: str, download_
     if platform == 'fnos':
         file_name = file_name.replace('.zip', '.fpk')
     download_file = download_dir + '/' + file_name
-    download_url = f"https://github.com/710850609/EasyTier-Lite/releases/download/{last_version}/{file_name}"
     if Path(download_file).exists():
         logging.debug(f"已存在缓存:{download_file}")
         return download_file
-    logging.debug(f"不存在缓存，开始下载 {download_file}")
-    github_proxy = github_util.get_github_proxy()
-    if github_proxy and github_proxy != '':
-        download_url = f"{github_proxy}/{download_url}"
+    download_url = f"https://github.com/710850609/EasyTier-Lite/releases/download/{last_version}/{file_name}"
+    logging.debug(f"不存在缓存，开始下载 {download_url}")
     download_temp_file = f"{download_dir}/{file_name}.{int(time.time())}"
     github_util.download_file(download_url, download_temp_file, Path(download_temp_file).name)
     common_util.move(download_temp_file, download_file)
