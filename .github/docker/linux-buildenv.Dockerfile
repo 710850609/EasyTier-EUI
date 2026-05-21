@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=python:3.12-slim
+ARG BASE_IMAGE=python:3.12-slim-buster
 FROM ${BASE_IMAGE}
 
 # 替换 apt 源为清华（两种架构通用）

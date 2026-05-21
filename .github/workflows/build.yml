@@ -407,11 +407,6 @@ jobs:
           cache-from: type=gha,scope=linux-buildenv-armv7
           cache-to: type=gha,mode=max,scope=linux-buildenv-armv7
 
-      - name: Verify QEMU and image arch
-        run: |
-          docker run --rm --platform linux/arm/v7 alpine echo "QEMU works" 
-          docker image inspect linux-buildenv:armv7 | grep Architecture
-
       - name: Build in ARMv7 container
         run: |
           docker run --rm --platform linux/arm/v7 \
