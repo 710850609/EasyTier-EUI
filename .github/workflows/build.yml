@@ -298,8 +298,8 @@ jobs:
           context: .github/docker
           file: .github/docker/linux-buildenv.Dockerfile
           platforms: linux/arm64
-          build-args: |
-            PYTHON_VERSION=${{ env.PYTHON_VERSION }}
+#          build-args: |
+#            PYTHON_VERSION=${{ env.PYTHON_VERSION }}
           tags: linux-buildenv:arm64
           load: true
           cache-from: type=gha,scope=linux-buildenv-arm64
@@ -348,9 +348,9 @@ jobs:
           context: .github/docker
           file: .github/docker/linux-buildenv.Dockerfile
           platforms: linux/riscv64
-          build-args: |
-            PYTHON_VERSION=${{ env.PYTHON_VERSION }}
-            BASE_IMAGE=riscv64/python:${{ env.PYTHON_VERSION }}
+#          build-args: |
+#            PYTHON_VERSION=${{ env.PYTHON_VERSION }}
+#            BASE_IMAGE=riscv64/python:${{ env.PYTHON_VERSION }}
           tags: linux-buildenv:riscv64
           load: true
           cache-from: type=gha,scope=linux-buildenv-riscv64
@@ -400,8 +400,8 @@ jobs:
           context: .github/docker
           file: .github/docker/linux-buildenv.Dockerfile
           platforms: linux/arm/v7
-          build-args: |
-            PYTHON_VERSION=${{ env.PYTHON_VERSION }}
+#          build-args: |
+#            PYTHON_VERSION=${{ env.PYTHON_VERSION }}
           tags: linux-buildenv:armv7
           load: true
           cache-from: type=gha,scope=linux-buildenv-armv7
