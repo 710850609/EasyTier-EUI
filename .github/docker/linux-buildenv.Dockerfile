@@ -1,7 +1,4 @@
 ARG BASE_IMAGE=debian:buster
-# 编译参数
-ARG PYTHON_VERSION=3.12.4
-ARG PYPI_MIRROR="https://pypi.org/simple"
 FROM ${BASE_IMAGE}
 
 # 换国内源（可选，取消注释即可）
@@ -39,6 +36,9 @@ RUN sed -i 's|http://deb.debian.org/debian|http://archive.debian.org/debian|g' /
     && rm -rf /var/lib/apt/lists/*
 
 # 下载并编译 Python 3.12
+# 编译参数
+ARG PYTHON_VERSION=3.12.4
+ARG PYPI_MIRROR="https://pypi.org/simple"
 # 注意：在 ARM QEMU 模拟环境下编译较慢，如需加速可去掉 --enable-optimizations
 RUN wget -q https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tgz && \
     tar xzf Python-${PYTHON_VERSION}.tgz && \
