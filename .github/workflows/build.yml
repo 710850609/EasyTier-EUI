@@ -350,7 +350,7 @@ jobs:
           platforms: linux/riscv64
 #          build-args: |
 #            PYTHON_VERSION=${{ env.PYTHON_VERSION }}
-#            BASE_IMAGE=riscv64/python:${{ env.PYTHON_VERSION }}
+            BASE_IMAGE=riscv64/python:${{ env.PYTHON_VERSION }}
           tags: linux-buildenv:riscv64
           load: true
           cache-from: type=gha,scope=linux-buildenv-riscv64
