@@ -75,7 +75,7 @@ def install_deps():
     # 安装依赖（带清华镜像）
     mirror = "-i https://pypi.tuna.tsinghua.edu.cn/simple"
     print("  安装 pyinstaller 依赖")
-    if not run_command(f'{pip_cmd} install pyinstaller {mirror}'):
+    if not run_command(f'{pip_cmd} install pyinstaller qrcode {mirror}'):
         raise Exception(f"安装失败: {pip_cmd}")
 
     print("  安装 base 依赖")

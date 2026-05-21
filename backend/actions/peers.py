@@ -33,7 +33,7 @@ def check_peers(*kwargs):
     return peer_list
 
 
-def public_peers(data, *kwargs):
+def public_peers(data:dict, *kwargs):
     refresh = data and 'refresh' in data and data['refresh'] or False
     profile = None if data is None else data.get('profile')
     peer_meta = {}
