@@ -116,18 +116,9 @@ build_backend() {
     --exclude='build.py' \
     --exclude='build_core.py' \
     --exclude='http_server.py'  \
-    --exclude='stray.py'  \
-    --exclude='stray_win.py'  \
-    --exclude='stray_webview.py'  \
+    --exclude='main_ui.py'  \
     --exclude='requirements-gui.txt'  \
-    --exclude='*.spec' \
-    --exclude='*.md' \
-    --exclude='*.go' \
-    --exclude='*.mod' \
-    --exclude='*.sum' \
-    --exclude='*.syso' \
-    --exclude='*.bat' \
-    --exclude='winres' \
+    --exclude='*.sh' \
     backend/ "${app_script_path}/"
 }
 
