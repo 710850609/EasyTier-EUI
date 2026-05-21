@@ -346,7 +346,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .github/docker
-          file: .github/docker/linux-buildenv.Dockerfile
+          file: .github/docker/linux-build-risvc64.Dockerfile
           platforms: linux/riscv64
           build-args: |
             PYTHON_VERSION=${{ env.PYTHON_VERSION }}
