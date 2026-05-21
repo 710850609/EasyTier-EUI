@@ -348,7 +348,7 @@ jobs:
           context: .github/docker
           file: .github/docker/linux-buildenv.Dockerfile
           platforms: linux/riscv64
-#          build-args: |
+          build-args: |
 #            PYTHON_VERSION=${{ env.PYTHON_VERSION }}
             BASE_IMAGE=riscv64/python:${{ env.PYTHON_VERSION }}
           tags: linux-buildenv:riscv64
