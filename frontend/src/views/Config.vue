@@ -190,7 +190,7 @@
                             <div class="peer-primary-uri" v-if="peer.resolved_uri">
                               {{ peer.resolved_uri }}
                             </div>
-                            {{ peer.uri }}
+                            <span v-if="peer.resolved_uri && peer.uri !== peer.resolved_uri">{{ peer.uri }}</span>
                             <div class="peer-secondary-uri">
                               <span class="peer-tag latency-tag" :class="peer.latency < 500 ? (peer.latency < 100 ? 'latency-good' : 'latency-normal') : 'latency-bad'"  
                                 v-if="peer.latency > 0">
@@ -598,6 +598,8 @@ const addPeer = () => {
   if (!peer) return
   publicPeerOptions.value.unshift({ uri: peer, resolved_uri: peer, latency: -1, status: -1 })
   config.value.peer.unshift(peer)
+  console.log(config.value.peer)
+  console.log(publicPeerOptions.value)
   customPeer.value = ''
 }
 
@@ -720,7 +722,7 @@ const saveToml = () => {
 const refreshPublicPeerOptions = () => {
   isRefreshingPublicPeerOptions.value = true
   return new Promise((resolve) => {
-    api.peers.publicPeers({ refresh: true }).then(data => {
+    api.peers.publicPeers({ 'profile': selectedConfig.value, 'refresh': true }).then(data => {
       publicPeerOptions.value = data.data
       toast.success('刷新可选节点成功')
     }).finally(() => {
@@ -945,7 +947,7 @@ onMounted(async () => {
     await loadConfig(configList.value[0].profile)
     loadedProfiles.value.add(configList.value[0].profile)
   }
-  api.peers.publicPeers().then(async data => {
+  api.peers.publicPeers({'profile': selectedConfig.value}).then(async data => {
     publicPeerOptions.value = data.data
     if (fastSettingMode.value) {
       isLoadingConfig.value = true

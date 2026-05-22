@@ -131,7 +131,7 @@ def __download_peer_meta():
     except Exception as e:
         logging.exception(f"获取节点元数据失败")
         # raise HttpException(f"获取公共节点失败，请尝试在设置修改Github加速地址后重试")
-        raise HttpException(f'获取公共节点失败：{e}')
+        raise HttpException(f'获取公共节点失败, 请检查网络连接或切换Github加速地址： {e}')
 
 def __sort_peers(peers: list[dict]):
     peers.sort(key=lambda x: (-x.get('status'), x.get('latency', 0), x['resolved_uri'], x['uri']))
