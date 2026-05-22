@@ -223,7 +223,7 @@ export const api = {
     rename: (oldProfile, newProfile) => post('/configs/rename', { oldProfile, newProfile }, {toastError: false}),
   },
   peers: {
-    checkPeers: () => get('/peers/check_peers'),
+    checkPeers: (params = {}) => get('/peers/check_peers', params),
     publicPeers: (params = {}) => get('/peers/public_peers', params),
   },
   // 服务相关

@@ -14,14 +14,15 @@ from utils import check_peers as check_util, run_configs
 from utils import github_util
 
 
-def check_peers(*kwargs):
+def check_peers(params: dict, *kwargs):
     """
     检查节点是否可用
     :param request_data: 请求数据（可选）
     """
-    peer_list = public_peers(data = {'refresh': False}, sort=False)
+    profile = (params or {}).get('profile')
+    peer_list = public_peers(data = {'profile': profile, 'refresh': False})
     if len(peer_list) == 0:
-        peer_list = public_peers(data = {'refresh': True}, sort=False)
+        peer_list = public_peers(data = {'profile': profile, 'refresh': True})
     # 提取 URI 列表
     peer_uris = [peer['uri'] for peer in peer_list]
     core_dir = run_configs.core_dir()
@@ -44,7 +45,7 @@ def check_peers(*kwargs):
     return peer_list
 
 
-def public_peers(data:dict, sort: bool=True, *kwargs):
+def public_peers(data:dict, *kwargs):
     refresh = (data is not None and 'refresh' in data and data['refresh']) or False
     profile = None if data is None else data.get('profile')
     peers = __get_public_peers(refresh)

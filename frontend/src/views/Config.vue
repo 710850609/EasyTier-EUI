@@ -142,9 +142,7 @@
                 <div class="peer-cell-header">
                   <div class="section-subtitle">
                     初始节点
-                    <var-tooltip content="数据来自社区。动态节点：社区节点经过其他协议转换而来。适用于使用的社区节点下线后，由易组网更新动态节点数据，从而不实现组网设备不重启的情况下持续在线" :offset-x="60">
-                      <var-icon name="help-circle-outline" size="16" class="help-icon" />
-                    </var-tooltip>
+                    <var-icon name="information-outline" size="12pt" @click="showPublicPeerTip = true" />
                   </div>                    
                   <div class="peer-actions">
                     <var-button type="primary" size="mini" auto-loading @click="refreshPublicPeerOptions">刷新节点</var-button>
@@ -483,6 +481,15 @@
       confirmButtonText="确认"  @confirm="deleteCurrentConfig" 
       cancelButtonText="取消" @cancel="showDeleteDialog = false">
     </var-dialog>
+
+    <var-popup position="top" v-model:show="showPublicPeerTip">
+      <div style="padding: 24px; max-width: 100%; font-size: 14px;">
+        <p><span style="font-weight: bold;">初始节点</span>：用于发现组网设备，数据来自网络社区</p>
+        <p><span style="font-weight: bold;">动态节点</span>：原始节点经过TXT协议转换而来。易组网在线维护数据，解决节点下线后，设备不重启的情况下持续在线。</p>
+        <p><span style="font-weight: bold;">刷新节点</span>：在线获取易组网维护的初始节点数据</p>
+        <p><span style="font-weight: bold;">检测节点</span>：基于易组网本地设备网络，检测节点的是否可用、延迟、是否可转发</p>
+      </div>
+  </var-popup>
   </div>
 </template>
 
@@ -515,6 +522,7 @@ const changingAutostart = ref(false)
 const isRenaming = ref(false)
 const showDeleteDialog = ref(false)
 const isDeletingConfig = ref(false)
+const showPublicPeerTip = ref(false)
 
 const configList = ref([])
 const selectedConfig = ref('')
@@ -740,7 +748,8 @@ const checkPeers = () => {
     }
     const checkToast = toast.info('开始检测节点可用状态，这可能需要一些时间，请稍后...', 15000)
     isPeerChecking.value = true
-    api.peers.checkPeers().then(data => {
+    api.peers.checkPeers({ 'profile': selectedConfig.value }).then(data => {
+      publicPeerOptions.value = data.data
       toast.success('检测节点可用状态成功')
     }).catch(() => {
       toast.error('检测节点可用状态失败')
