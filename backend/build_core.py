@@ -29,10 +29,19 @@ def run_command(cmd, cwd=None):
     """执行命令并返回结果"""
     print(f"执行: {cmd}")
     try:
+        kwargs = {
+            'shell': True,
+            'cwd': cwd,
+            'capture_output': True,
+            'text': True,
+            'encoding': 'utf-8',
+            'errors': 'replace',
+        }
+        if sys.platform == 'win32':
+            kwargs['creationflags'] = subprocess.CREATE_NO_WINDOW
         # Windows 使用 utf-8 编码
         encoding = 'utf-8' if sys.platform == "win32" else None
-        result = subprocess.run(cmd, shell=True, cwd=cwd, capture_output=True, text=True,
-                                encoding=encoding, errors='replace', creationflags = subprocess.CREATE_NO_WINDOW)
+        result = subprocess.run(cmd, **kwargs)
     except Exception as e:
         print(f"执行命令时出错: {e}")
         return False
