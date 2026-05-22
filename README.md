@@ -23,5 +23,7 @@
 - <a href="https://easytier.cn">EasyTier文档</a>
 - <a href="https://www.varletjs.com/#/zh-CN">Varlet文档</a>
 
-## 支持开发
-<img src="frontend/public/images/reward_code.jpg width="200">
+## 赞助
+<p align="center">
+  <img src="frontend/public/images/reward_code.jpg" width="200" />
+</p>
