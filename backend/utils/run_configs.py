@@ -72,7 +72,7 @@ def setup_env():
     _is_inited_evn = True
 
 
-BUILD_VERSION = "0.7.020604-20260518174954"
+BUILD_VERSION = "0.7.020604-20260521143732"
 
 
 def is_fn_system():
@@ -121,6 +121,9 @@ def et_pid_file(profile: Optional[str]) -> str:
 
 def et_peer_meta_file() -> str:
     return os.path.join(data_dir(), 'peer-txt-meta.json')
+
+def et_peer_check_result_file() -> str:
+    return os.path.join(data_dir(), 'peer-check-result.json')
 
 def github_proxy_file() -> str:
     return os.path.join(data_dir(), 'github_proxy_url.txt')

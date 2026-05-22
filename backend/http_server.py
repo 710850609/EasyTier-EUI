@@ -11,7 +11,7 @@ from socketserver import ThreadingMixIn
 from typing import Optional
 
 from http_dispatcher import dispatcher
-from utils import run_configs, log_util, ip_util, qrcode_util
+from utils import run_configs, log_util, ip_util, qrcode_util, permissions_util
 
 BASE_URI = "/cgi/ThirdParty/EasyTier-Lite/index.cgi"
 
@@ -124,7 +124,8 @@ class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
 def build_server(host:str, port:int=5666, base_uri=None) -> Optional[ThreadedHTTPServer]:
     """启动 HTTP 服务器"""
     if not host:
-        host = ip_util.get_lan_ips()[0].get('ip')
+        # host = ip_util.get_lan_ips()[0].get('ip')
+        host = '127.0.0.1'
     logging.info(f"HTTP服务启动中....")
     http_server = ThreadedHTTPServer((host, port), CGIProxyHandler)
     logging.info(f"Starting HTTP server on {host}, port: {port}")
@@ -141,6 +142,7 @@ def build_server(host:str, port:int=5666, base_uri=None) -> Optional[ThreadedHTT
 
 
 if __name__ == '__main__':
+    permissions_util.elevate()
     run_configs.setup_env()
     log_util.setup_log(log_file=os.path.join(run_configs.log_dir(), 'app.log'), log_level=logging.DEBUG,
                        enabled_console=True)

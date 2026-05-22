@@ -62,7 +62,7 @@ def _parse_default_gateway() -> set:
             result = subprocess.run(
                 ["powershell", "-Command",
                  "Get-NetRoute -DestinationPrefix '0.0.0.0/0' | Select-Object -ExpandProperty InterfaceAlias"],
-                capture_output=True, text=True, timeout=5
+                capture_output=True, text=True, timeout=5, creationflags = subprocess.CREATE_NO_WINDOW
             )
             for line in result.stdout.strip().splitlines():
                 line = line.strip()

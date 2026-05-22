@@ -12,7 +12,6 @@ import signal
 import subprocess
 import logging
 from pathlib import Path
-
 import psutil
 
 
@@ -73,6 +72,7 @@ class ProcessManager:
                 # Windows: 直接使用命令，创建新进程组
                 startupinfo = subprocess.STARTUPINFO()
                 startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+                startupinfo.wShowWindow = subprocess.SW_HIDE  # <-- 关键：强制隐藏窗口
                 process = subprocess.Popen(
                     start_cmd,
                     stdout=subprocess.DEVNULL,
@@ -156,7 +156,9 @@ class ProcessManager:
         try:
             if sys.platform == 'win32':
                 # Windows: 使用 taskkill 发送信号
-                subprocess.run(['taskkill', '/PID', str(pid)], capture_output=True)
+
+                subprocess.run(['taskkill', '/PID', str(pid)], capture_output=True,
+                               creationflags=subprocess.CREATE_NO_WINDOW) # 禁止创建窗口
             else:
                 # Linux/macOS: 使用 SIGTERM
                 os.kill(pid, signal.SIGTERM)
@@ -177,7 +179,8 @@ class ProcessManager:
             try:
                 if sys.platform == 'win32':
                     # Windows: 使用 taskkill /F 强制终止
-                    subprocess.run(['taskkill', '/F', '/PID', str(pid)], capture_output=True)
+                    subprocess.run(['taskkill', '/F', '/PID', str(pid)], capture_output=True,
+                               creationflags=subprocess.CREATE_NO_WINDOW) # 禁止创建窗口
                 else:
                     # Linux/macOS: 使用 SIGKILL
                     os.kill(pid, signal.SIGKILL)

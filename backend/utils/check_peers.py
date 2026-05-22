@@ -16,6 +16,9 @@ import subprocess
 import sys
 import time
 
+from actions import peers
+from utils import run_configs
+
 
 def get_random_string(length=16):
     """获取随机字符串（指定长度）"""
@@ -74,7 +77,7 @@ def check_peers(bin_path, peer_list, max_wait_second = 10):
                 text=True,
                 encoding='utf-8',
                 errors='ignore',
-                creationflags=subprocess.CREATE_NEW_PROCESS_GROUP
+                creationflags=subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.CREATE_NO_WINDOW,
             )
         else:
             return subprocess.Popen(
@@ -85,7 +88,7 @@ def check_peers(bin_path, peer_list, max_wait_second = 10):
                 stderr=subprocess.DEVNULL,
                 text=True,
                 encoding='utf-8',
-                errors='ignore'
+                errors='ignore',
             )
     
     # 启动进程
@@ -97,7 +100,7 @@ def check_peers(bin_path, peer_list, max_wait_second = 10):
         logging.info(f"进程启动失败，返回码: {process.returncode}")
         return {'success': [], 'fail': peer_list}
     
-    logging.info(f"进程启动成功，PID: {process.pid}")
+    logging.info(f"检测进程启动成功，PID: {process.pid}")
     
     # 等待 RPC 服务就绪
     logging.info(f"等待 RPC 服务就绪 (127.0.0.1:{rpc_port})...")
@@ -136,14 +139,17 @@ def check_peers(bin_path, peer_list, max_wait_second = 10):
             if process.poll() is not None:
                 raise Exception(f"EasyTier 服务已退出，返回码: {process.returncode}")
             
-            time.sleep(2)
-            result = check_peers_available(bin_path, rpc_port)
+            time.sleep(3)
+            result = check_peers_available_use_peer(bin_path, rpc_port, peer_list)
+            logging.debug(f"节点检测结果: {result}")
             fail_list = result['fail'] if len(result['fail']) > 0 else peer_list
             result['fail'] = fail_list if len(result['fail']) == 0 and len(result['success']) == 0 else peer_list
             if len(result['fail']) == 0:
                 break
             # logging.info(f"继续等待未连接节点: {result['fail']}")
             logging.info(f"继续检测未连接节点")
+
+        # 排序处理
         
         return result
     finally:
@@ -161,15 +167,16 @@ def check_peers(bin_path, peer_list, max_wait_second = 10):
                 pass
 
 
-def check_peers_available(bin_path, rpc_port):
+def check_peers_available_use_peer(bin_path, rpc_port, peer_list:list):
     """检测节点可用(bin_path, rpc端口)"""
     cli_path = os.path.join(bin_path, 'easytier-cli.exe' if sys.platform == 'win32' else 'easytier-cli')
     
     cmd = [
         cli_path,
+        '-v',
         '-p', f'127.0.0.1:{rpc_port}',
         '-o', 'json',
-        'connector'
+        'peer'
     ]
     
     try:
@@ -183,7 +190,8 @@ def check_peers_available(bin_path, rpc_port):
             stderr=subprocess.PIPE,
             text=True,
             encoding='utf-8',
-            errors='ignore'
+            errors='ignore',
+            creationflags=subprocess.CREATE_NO_WINDOW
         )
         
         # 手动实现超时控制
@@ -202,17 +210,26 @@ def check_peers_available(bin_path, rpc_port):
         data = json.loads(stdout)
         
         # 失败节点
-        fail_peers = []
+        fail_peers = list(peer_list)
         # 成功节点
-        success_peers = []
+        success_peers = {}
         
         for item in data:
-            url = item.get('url', {}).get('url', '')
-            if item.get('status') == 0:
-                success_peers.append(url)
-            else:
-                fail_peers.append(url)
-        
+            result = {'relay': item.get('route', {}).get('feature_flag', {}).get('avoid_relay_data', True) == False}
+            # 支持转发
+            conns = item.get('peer', {}).get('conns', [])
+            if len(conns) > 0:
+                uri = conns[0].get('tunnel', {}).get('remote_addr', {}).get('url')
+                result['uri'] = uri
+                result['resolved_uri'] = conns[0].get('tunnel', {}).get('resolved_remote_addr', {}).get('url')
+                latency_us = conns[0].get('stats', {}).get('latency_us')
+                result['latency'] = max(1, latency_us // 1000)
+                # 此节点数据为毫秒，当大于500ms, 只能取到500
+                # result['latency_ms'] = item.get('route', {}).get('path_latency', [])
+                if uri in fail_peers:
+                    fail_peers.remove(uri)
+                    success_peers[uri] = result
+
         return {
             'success': success_peers,
             'fail': fail_peers
@@ -225,13 +242,74 @@ def check_peers_available(bin_path, rpc_port):
         logging.info(f"检测失败: {e}")
         raise e
 
+def check_peers_available_use_connector(bin_path, rpc_port):
+    """检测节点可用(bin_path, rpc端口)"""
+    cli_path = os.path.join(bin_path, 'easytier-cli.exe' if sys.platform == 'win32' else 'easytier-cli')
 
-def check(peer_source:[], max_wait_second=10):
-    """主函数"""    
-    logging.info("检测节点连通性")
-    result = check_peers(peer_source, max_wait_second)
-    logging.info("检测结果: " + json.dumps(result, ensure_ascii=False, indent=0))
-    return result
+    cmd = [
+        cli_path,
+        '-p', f'127.0.0.1:{rpc_port}',
+        '-o', 'json',
+        'connector'
+    ]
 
-# if __name__ == "__main__":
-#     check()
+    try:
+        # logging.info(f"执行检测命令: {' '.join(cmd)}")
+        logging.info(f"执行节点连接检测")
+
+        # 使用 Popen 替代 run，兼容 Windows Python 3.7
+        process = subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            encoding='utf-8',
+            errors='ignore',
+            creationflags=subprocess.CREATE_NO_WINDOW
+        )
+
+        # 手动实现超时控制
+        try:
+            stdout, stderr = process.communicate(timeout=5)
+        except subprocess.TimeoutExpired:
+            logging.info("检测命令超时")
+            process.kill()
+            process.wait()
+            return {'success': [], 'fail': []}
+
+        if process.returncode != 0:
+            logging.info(f"检测命令执行失败: {stderr}")
+            return {'success': [], 'fail': []}
+
+        data = json.loads(stdout)
+
+        # 失败节点
+        fail_peers = []
+        # 成功节点
+        success_peers = []
+
+        for item in data:
+            url = item.get('url', {}).get('url', '')
+            if item.get('status') == 0:
+                success_peers.append(url)
+            else:
+                fail_peers.append(url)
+
+        return {
+            'success': success_peers,
+            'fail': fail_peers
+        }
+
+    except json.JSONDecodeError as e:
+        logging.info(f"解析 JSON 失败: {e}")
+        raise e
+    except Exception as e:
+        logging.info(f"检测失败: {e}")
+        raise e
+
+
+if __name__ == "__main__":
+    run_configs.setup_env()
+    peer_list = peers.public_peers({})
+    peer_uris = [peer['uri'] for peer in peer_list]
+    check_peers(run_configs.core_dir(), peer_uris, max_wait_second=5)

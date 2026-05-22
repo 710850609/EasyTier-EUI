@@ -1,4 +1,4 @@
-<template>
+<<template>
   <div class="config-page">
     <div v-if="isLoadingConfigList" class="config-skeleton">
       <div class="skeleton-toolbar">
@@ -138,53 +138,82 @@
                 </var-cell>
               </div>
 
-              <var-cell v-if="!fastSettingMode">
-                  <var-cell>
-                    <template #icon><div class="section-subtitle">初始节点</div></template>
-                    <template #extra>
-                       <div class="peer-actions">
-                         <var-button type="primary" size="mini" auto-loading @click="refreshPublicPeerOptions">刷新节点</var-button>
-                         <var-button type="primary" size="mini" auto-loading @click="checkPeers">检测节点</var-button>
-                       </div>
-                    </template>
-                  </var-cell>
+              <var-cell v-if="!fastSettingMode" class="peer-cell">
+                <div class="peer-cell-header">
+                  <div class="section-subtitle">
+                    初始节点
+                    <var-tooltip content="数据来自社区。动态节点：社区节点经过其他协议转换而来。适用于使用的社区节点下线后，由易组网更新动态节点数据，从而不实现组网设备不重启的情况下持续在线" :offset-x="60">
+                      <var-icon name="help-circle-outline" size="16" class="help-icon" />
+                    </var-tooltip>
+                  </div>                    
+                  <div class="peer-actions">
+                    <var-button type="primary" size="mini" auto-loading @click="refreshPublicPeerOptions">刷新节点</var-button>
+                    <var-button type="primary" size="mini" auto-loading @click="checkPeers">检测节点</var-button>
+                  </div>
+                </div>
+                
                 <var-select
                   variant="outlined"
                   size="small"
                   v-model="config.peer"
                   multiple
-                  placeholder="初始节点，用于发现组网设备"
+                  :placeholder="`${config.peer.length} 个节点，用于发现组网设备`"
                   :chip="true"
                   blur-color="var(--color-primary)"
                   class="peer-select"
                 >
                   <template #default>
-                    <var-cell>
-                      <template #icon>
-                        <svg-icon type="mdi" :path="mdilPencil" color="var(--color-primary)" />
-                      </template>
-                      <template #description>
-                        <var-input placeholder="输入初始节点" size="mini" v-model="customPeer" blur-color="var(--color-primary)" />
-                      </template>
-                      <template #extra>
-                        <var-button type="primary" size="small" @click="addPeer">添加</var-button>
-                      </template>
-                    </var-cell>
-                    <var-option
-                      v-for="peer in publicPeerOptions"
-                      :key="peer.uri"
-                      :label="peer.label || peer.uri"
-                      :value="peer.uri"
-                    >
-                      <var-cell :title="peer.label || peer.uri">
-                        <template #extra v-if="peer.status !== undefined">
-                          <svg-icon size="16" type="mdi" :path="mdiCircle" :color="peer.status == 1 ? 'var(--color-success)' : 'var(--color-danger)'"></svg-icon>
+                    <div class="peer-custom-input">
+                      <svg-icon type="mdi" :path="mdilPencil" color="var(--color-primary)" size="20" />
+                      <var-input 
+                        placeholder="输入自定义节点，例如 tcp://1.2.3.4:11010" 
+                        size="small" 
+                        v-model="customPeer" 
+                        blur-color="var(--color-primary)" 
+                        class="peer-custom-field"
+                      />
+                      <var-button type="primary" size="small" @click="addPeer">添加</var-button>
+                    </div>
+                    
+                    <div class="peer-options-list">
+                      <var-option
+                        v-for="peer in publicPeerOptions"
+                        :key="peer.uri"
+                        :value="peer.uri"
+                        :label="peer.uri"
+                        class="peer-option-wrapper"
+                      >
+                      <var-cell>
+                        <template #description>
+                          <!-- 左侧：地址信息 -->
+                          <div class="peer-info">
+                            <div class="peer-primary-uri" v-if="peer.resolved_uri">
+                              {{ peer.resolved_uri }}
+                            </div>
+                            {{ peer.uri }}
+                            <div class="peer-secondary-uri">
+                              <span class="peer-tag latency-tag" :class="peer.latency < 500 ? (peer.latency < 100 ? 'latency-good' : 'latency-normal') : 'latency-bad'"  
+                                v-if="peer.latency > 0">
+                                {{ peer.latency }}ms
+                              </span>
+                              <span class="peer-tag relay-tag" v-if="peer.relay == 1">可中转</span>
+                              <span class="peer-tag dynamic-tag" v-if="peer.resolved_uri && peer.uri !== peer.resolved_uri">动态</span>
+                            </div>
+                          </div>
+                        </template>
+                        <template #extra>
+                          <!-- 右侧：状态标识 -->
+                          <div class="status-dot" v-if="peer.status !== undefined" :class="peer.status == 1 ? 'status-online' : 'status-offline'"></div>
+                          <div class="peer-status-area">
+                          </div>
                         </template>
                       </var-cell>
-                    </var-option>
+                      </var-option>
+                    </div>
                   </template>
                 </var-select>
               </var-cell>
+              
               <var-cell v-if="fastSettingMode">
                 <p>
                   <span style="font-size: 12px; color: var(--color-warning); margin-top: 8px;">默认使用动态社区节点用于发现组网节点。如不想用，请刷新页面重新选择正常模式进行配置</span>
@@ -567,7 +596,7 @@ const multiThreadCountStr = computed({
 const addPeer = () => {
   const peer = customPeer.value
   if (!peer) return
-  publicPeerOptions.value.unshift({ uri: peer, label: peer })
+  publicPeerOptions.value.unshift({ uri: peer })
   config.value.peer.unshift(peer)
   customPeer.value = ''
 }
@@ -1124,23 +1153,226 @@ onMounted(async () => {
   color: var(--color-text);
 }
 
+/* ===== 节点下拉框优化样式 ===== */
+.peer-cell {
+  padding: 8px 0;
+}
+
+.peer-cell-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .peer-actions {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-shrink: 0;
 }
 
-.flags-section {
-  margin-top: 16px;
-  border-radius: 16px;
+
+/* ===== 已选中 chip 区域限制高度：最多显示 2.5 个，超出滚动 ===== */
+.peer-select {
+  max-width: 100%;
+}
+
+/* 限制 chip 容器高度 */
+.peer-select :deep(.var-select__chips) {
+  max-height: 72px;
+  overflow-y: auto;
+}
+
+/* chip 容器滚动条美化 */
+.peer-select :deep(.var-select__chips)::-webkit-scrollbar {
+  width: 4px;
+}
+
+.peer-select :deep(.var-select__chips)::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.peer-select :deep(.var-select__chips)::-webkit-scrollbar-thumb {
+  background: var(--color-text-disabled);
+  border-radius: 2px;
+}
+
+/* 调整 chip 间距，让 2.5 个刚好能被截断 */
+.peer-select :deep(.var-chip) {
+  margin: 2px 4px 2px 0;
+}
+/* .var-option .var-checkbox--unchecked {
+  background: var(--color-text) !important;
+  color: var(--color-text) !important;
+} */
+
+/* 自定义输入区域 */
+.peer-custom-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface-container-high);
+}
+
+.peer-custom-field {
+  flex: 1;
+}
+
+/* 选项列表容器 */
+.peer-options-list {
+  max-height: 320px;
+  /* overflow-y: auto; */
+}
+
+/* 单个选项卡片 */
+.peer-option-wrapper {
+  padding: 4 !important;
+  margin: 0 !important;
+  height: auto !important;
+  min-height: auto !important;
+
+}
+
+.peer-option-wrapper :deep(.var-option__cover) {
+  padding: 0 !important;
+}
+
+.peer-card {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  margin: 4px 8px;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.peer-card:hover {
+  background: var(--color-surface-container-high);
+  border-color: var(--color-outline-variant);
+}
+
+/* 左侧信息区 */
+.peer-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
   overflow: hidden;
-  background: var(--color-surface-container) !important;
 }
 
-.flags-section-inner {
-  margin-top: 8px;
+.peer-primary-uri {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--color-text);
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
+.peer-secondary-uri {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 标签样式 */
+.peer-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.relay-tag {
+  background: var(--color-info-container);
+  color: var(--color-on-info-container);
+}
+
+.latency-good {
+  background: var(--color-success-container);
+  color: var(--color-on-success-container);
+}
+
+.latency-normal {
+  background: var(--color-info-container);
+  color: var(--color-on-info-container);
+}
+
+.latency-bad {
+  background: var(--color-danger-container);
+  color: var(--color-on-danger-container);
+}
+
+.dynamic-tag {
+  background: var(--color-success-container);
+  color: var(--color-on-success-container);
+}
+
+/* 右侧状态区 */
+.peer-status-area {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-online {
+  background: var(--color-success);
+  box-shadow: 0 0 0 2px rgba(var(--color-success-rgb, 76, 175, 80), 0.2);
+}
+
+.status-offline {
+  background: var(--color-danger);
+  opacity: 0.8;
+}
+
+/* 下拉面板滚动条优化 */
+.peer-options-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.peer-options-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.peer-options-list::-webkit-scrollbar-thumb {
+  background: var(--color-text-disabled);
+  border-radius: 3px;
+}
+
+/* 选中态优化 */
+.peer-option-wrapper :deep(.var-option--selected) .peer-card {
+  background: var(--color-primary-container);
+  border-color: var(--color-primary);
+}
+
+/* ===== 高级设置样式 ===== */
 .flags-section-paper {
   margin-top: 8px;
   border-radius: 16px;
@@ -1224,79 +1456,7 @@ onMounted(async () => {
   gap: 16px;
 }
 
-.peer-select {
-  max-width: 100%;
-}
-
-.peer-select :deep(.var-select__select) {
-  max-height: 120px;
-  overflow-y: auto;
-}
-
-.peer-select :deep(.var-chip) {
-  max-width: 180px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-:deep(.var-select__select) {
-  max-height: 120px;
-  overflow-y: auto;
-}
-
-:deep(.var-chip) {
-  max-width: 160px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.switch-wrapper {
-  position: relative;
-  display: inline-block;
-  width: 36px;
-  height: 20px;
-  cursor: pointer;
-}
-
-.switch-wrapper input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.switch-slider {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: var(--color-text-disabled);
-  border-radius: 10px;
-  transition: background-color 0.2s;
-}
-
-.switch-slider::before {
-  content: '';
-  position: absolute;
-  height: 16px;
-  width: 16px;
-  left: 2px;
-  bottom: 2px;
-  background-color: #fff;
-  border-radius: 50%;
-  transition: transform 0.2s;
-}
-
-.switch-wrapper input:checked + .switch-slider {
-  background-color: var(--color-primary);
-}
-
-.switch-wrapper input:checked + .switch-slider::before {
-  transform: translateX(16px);
-}
-
+/* ===== 代码编辑器 ===== */
 .code-editor-popup {
   :deep(.var-popup__content) {
     width: 98vw !important;
@@ -1354,6 +1514,7 @@ onMounted(async () => {
   background: #0d1117;
 }
 
+/* ===== Deep 覆盖 ===== */
 :deep(.var-form) {
   display: flex;
   flex-direction: column;
@@ -1435,6 +1596,7 @@ onMounted(async () => {
   animation: spin 1s linear infinite;
 }
 
+/* ===== 响应式 ===== */
 @media (max-width: 767px) {
   .config-page {
     display: flex;
@@ -1499,6 +1661,24 @@ onMounted(async () => {
     grid-template-columns: 1fr;
   }
 
+  .peer-card {
+    padding: 8px 10px;
+    margin: 2px 4px;
+  }
+
+  .peer-primary-uri {
+    font-size: 15px;
+  }
+
+  .peer-secondary-uri {
+    font-size: 11px;
+  }
+
+  .peer-tag {
+    font-size: 10px;
+    padding: 1px 4px;
+  }
+
   .code-editor-popup {
     :deep(.var-popup__content) {
       width: 100vw !important;
@@ -1523,6 +1703,12 @@ onMounted(async () => {
 @media (max-width: 480px) {
   .feature-grid {
     grid-template-columns: 1fr;
+  }
+  
+  .peer-status-area {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
   }
 }
 </style>

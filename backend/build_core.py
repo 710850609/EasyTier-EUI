@@ -31,7 +31,8 @@ def run_command(cmd, cwd=None):
     try:
         # Windows 使用 utf-8 编码
         encoding = 'utf-8' if sys.platform == "win32" else None
-        result = subprocess.run(cmd, shell=True, cwd=cwd, capture_output=True, text=True, encoding=encoding, errors='replace')
+        result = subprocess.run(cmd, shell=True, cwd=cwd, capture_output=True, text=True,
+                                encoding=encoding, errors='replace', creationflags = subprocess.CREATE_NO_WINDOW)
     except Exception as e:
         print(f"执行命令时出错: {e}")
         return False

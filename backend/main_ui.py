@@ -6,7 +6,7 @@ import threading
 import webview
 
 import http_server
-from utils import run_configs, log_util
+from utils import run_configs, log_util, permissions_util
 
 
 class WebWin:
@@ -86,6 +86,7 @@ class WebServer:
 
 
 if __name__ == '__main__':
+    permissions_util.elevate()
     run_configs.setup_env()
     log_util.setup_log(log_file=os.path.join(run_configs.log_dir(), 'app.log'), log_level=logging.INFO,
                        enabled_console=True)
