@@ -203,7 +203,7 @@
                         </template>
                         <template #extra>
                           <!-- 右侧：状态标识 -->
-                          <div class="status-dot" v-if="peer.status !== undefined" :class="peer.status == 1 ? 'status-online' : 'status-offline'"></div>
+                          <div class="status-dot" v-if="peer.status in [0, 1]" :class="peer.status == 1 ? 'status-online' : 'status-offline'"></div>
                           <div class="peer-status-area">
                           </div>
                         </template>
@@ -596,7 +596,7 @@ const multiThreadCountStr = computed({
 const addPeer = () => {
   const peer = customPeer.value
   if (!peer) return
-  publicPeerOptions.value.unshift({ uri: peer })
+  publicPeerOptions.value.unshift({ uri: peer, resolved_uri: peer, latency: -1, status: -1 })
   config.value.peer.unshift(peer)
   customPeer.value = ''
 }
@@ -736,10 +736,9 @@ const checkPeers = () => {
       toast.warning('检测节点可用状态中，请稍后...')
       return
     }
-    const checkToast = toast.info('开始检测节点可用状态，这可能需要一些时间，请稍后...', 10000)
+    const checkToast = toast.info('开始检测节点可用状态，这可能需要一些时间，请稍后...', 15000)
     isPeerChecking.value = true
     api.peers.checkPeers().then(data => {
-      publicPeerOptions.value = data.data.sort((a, b) => b.status - a.status)
       toast.success('检测节点可用状态成功')
     }).catch(() => {
       toast.error('检测节点可用状态失败')
@@ -1512,6 +1511,52 @@ onMounted(async () => {
 .code-editor-content {
   padding: 0;
   background: #0d1117;
+}
+
+
+.switch-wrapper {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 20px;
+  cursor: pointer;
+}
+
+.switch-wrapper input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.switch-slider {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--color-text-disabled);
+  border-radius: 10px;
+  transition: background-color 0.2s;
+}
+
+.switch-slider::before {
+  content: '';
+  position: absolute;
+  height: 16px;
+  width: 16px;
+  left: 2px;
+  bottom: 2px;
+  background-color: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+
+.switch-wrapper input:checked + .switch-slider {
+  background-color: var(--color-primary);
+}
+
+.switch-wrapper input:checked + .switch-slider::before {
+  transform: translateX(16px);
 }
 
 /* ===== Deep 覆盖 ===== */

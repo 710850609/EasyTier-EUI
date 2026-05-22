@@ -104,7 +104,7 @@
     </var-paper>
 
     <!-- 开发者选项 -->
-    <var-paper class="setting-block" :elevation="1">
+    <var-paper class="setting-block" :elevation="1" v-if="showDevContent">
       <div class="block-header">
         <!-- <var-icon name="wrench" size="24" color="var(--color-primary)" /> -->
         <svg-icon type="mdi" :path="mdiDevTo" size="24" color="var(--color-primary)"></svg-icon>
@@ -121,7 +121,14 @@
 
     <!-- 关于 -->
     <var-paper class="setting-block" :elevation="1">
-      <div class="block-header">
+      <div class="block-header" 
+        @mousedown="startPress"
+        @mouseup="cancelPress"
+        @mouseleave="cancelPress"
+        @touchstart.prevent="startPress"
+        @touchend="cancelPress"
+        @touchcancel="cancelPress"
+        @touchmove="cancelPress">
         <var-icon name="information" size="24" color="var(--color-info)" />
         <span class="block-title">关于</span>
       </div>      
@@ -156,6 +163,8 @@ import { getLatestVersionWithCache } from '../utils/github.js'
 import SvgIcon from '@jamescoyle/vue-icon'
 import { mdiBrightness6, mdiAccessPointNetwork, mdiDevTo, mdiShieldLock } from '@mdi/js'
 
+const dev_toggle_timer = ref(null);
+const showDevContent = ref(false)
 const vConsoleEnabled = ref(false)
 const vConsoleInstance = ref(null)
 const isFetchingEtCoreVersion = ref(true)
@@ -166,6 +175,17 @@ const etVersionList = ref([])
 const githubMirror = ref('')
 const githubMirrors = ref([])
 const buildVersion = ref('')
+
+const startPress = (e) => {
+  dev_toggle_timer.value = setTimeout(() => {
+    showDevContent.value = !showDevContent.value
+    toast.success(`开发者选项已${showDevContent.value ? '开启' : '关闭'}`)
+  }, 3000);
+};
+
+const cancelPress = () => {
+  clearTimeout(dev_toggle_timer.value);
+};
 
 const hasNewVersion = computed(() => etVersion.value.version && etVersion.value.latest_version && etVersion.value.version !== etVersion.value.latest_version)
 // 计算当前主题模式（从 theme.js 获取）
@@ -287,7 +307,7 @@ const getBuildVersion = async () => {
     buildVersion.value = data
   } catch (e) {
     console.error('获取构建版本号失败:', e)
-    buildVersion.value = '获取构建版本号失败'
+    buildVersion.value = '获取版本号失败'
   }
 }
 
