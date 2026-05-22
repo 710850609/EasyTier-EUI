@@ -138,11 +138,14 @@
           <strong>易组网</strong>
         </template>
         <template #description>
-            <var-chip type="primary" size="mini">{{ buildVersion }}</var-chip>
+          <var-chip type="primary" size="mini">{{ buildVersion }}</var-chip>
         </template>
         <template #extra>
-          <!-- <img src="https://img.shields.io/github/v/release/710850609/fpk-easytier-lite?color=blue&logo=github" /> -->
-          <a href='https://github.com/710850609/fpk-easytier-lite' target="_blank"><img alt="GitHub stars" src="https://img.shields.io/github/stars/710850609/fpk-easytier-lite?logo=github"></a>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <a href='https://github.com/710850609/fpk-easytier-lite' target="_blank"><img alt="GitHub stars" src="https://img.shields.io/github/stars/710850609/fpk-easytier-lite?logo=github"></a>
+            <var-chip @click="showRewardCdoe = true" type="info" size="small" style="white-space: nowrap; writing-mode: horizontal-tb; flex-shrink: 0;">支持</var-chip>
+            <!-- <img src="https://img.shields.io/github/v/release/710850609/fpk-easytier-lite?color=blue&logo=github" /> -->
+          </div>
         </template>
       </var-cell>
       <var-cell>
@@ -151,6 +154,20 @@
         <div>享受 EasyTier 免费、不限设备数量、支持多类型终端等优势</div>
       </var-cell>
     </var-paper>
+
+    <div>
+      
+    </div>
+      <var-popup :default-style="false" v-model:show="showRewardCdoe">
+      <var-result class="result" description="打赏支持或是点Stars，都是对我的肯定">
+        <template #image>
+          <img src="../../public/images/reward_code.jpg" style="width: 50%; height: 50%;" />
+        </template>
+        <template #footer>
+          <var-button type="success" @click="showRewardCdoe = false">关闭</var-button>
+        </template>
+      </var-result>
+    </var-popup>
   </div>
 </template>
 
@@ -175,6 +192,7 @@ const etVersionList = ref([])
 const githubMirror = ref('')
 const githubMirrors = ref([])
 const buildVersion = ref('')
+const showRewardCdoe = ref(false)
 
 const startPress = (e) => {
   dev_toggle_timer.value = setTimeout(() => {
