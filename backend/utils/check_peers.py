@@ -184,15 +184,16 @@ def check_peers_available_use_peer(bin_path, rpc_port, peer_list:list):
         logging.info(f"执行节点连接检测")
         
         # 使用 Popen 替代 run，兼容 Windows Python 3.7
-        process = subprocess.Popen(
-            cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            encoding='utf-8',
-            errors='ignore',
-            creationflags=subprocess.CREATE_NO_WINDOW
-        )
+        kwargs = {
+            'stdout': subprocess.PIPE,
+            'stderr': subprocess.PIPE,
+            'text': True,
+            'encoding': 'utf-8',
+            'errors': 'ignore',
+        }
+        if sys.platform == 'win32':
+            kwargs['creationflags'] = subprocess.CREATE_NO_WINDOW
+        process = subprocess.Popen(cmd, **kwargs)
         
         # 手动实现超时控制
         try:
@@ -258,15 +259,17 @@ def check_peers_available_use_connector(bin_path, rpc_port):
         logging.info(f"执行节点连接检测")
 
         # 使用 Popen 替代 run，兼容 Windows Python 3.7
-        process = subprocess.Popen(
-            cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            encoding='utf-8',
-            errors='ignore',
-            creationflags=subprocess.CREATE_NO_WINDOW
-        )
+        kwargs = {
+            'stdout': subprocess.PIPE,
+            'stderr': subprocess.PIPE,
+            'text': True,
+            'encoding': 'utf-8',
+            'errors': 'ignore',
+        }
+        if sys.platform == 'win32':
+            kwargs['creationflags'] = subprocess.CREATE_NO_WINDOW
+
+        process = subprocess.Popen(cmd, **kwargs)
 
         # 手动实现超时控制
         try:
