@@ -16,7 +16,7 @@ import psutil
 from actions import services
 from utils import run_configs, log_util
 
-_fn_check_file :str=None
+_fn_check_file :str=''
 
 def status():
     """
@@ -27,12 +27,14 @@ def status():
     3 表示应用未运行
     """
     if not os.path.exists(_fn_check_file):
+        logging.info(f"文件 {_fn_check_file} 不存在，应用未运行")
         return 3
     boot_time_timestamp = psutil.boot_time()
     with open(_fn_check_file, 'r') as f:
         data = f.readline()
         if data == str(boot_time_timestamp):
             return 0
+        logging.info(f"文件 {_fn_check_file} 内容是 {data}，与当前开机时间 {boot_time_timestamp} 不一致，应用未运行")
         return 3
 
 def start():
@@ -46,7 +48,9 @@ def start():
     if not check_file.exists():
         check_file.touch()
     with open(_fn_check_file, 'w') as f:
-        f.write(str(psutil.boot_time()))
+        boot_time_timestamp = str(psutil.boot_time())
+        f.write(boot_time_timestamp)
+        logging.info(f"文件 {_fn_check_file} 内容写入 {boot_time_timestamp} 成功，应用启动成功")
 
 def stop():
     """
@@ -55,6 +59,7 @@ def stop():
     """
     services.stop_all()
     Path(_fn_check_file).unlink(missing_ok=True)
+    logging.info(f"文件 {_fn_check_file} 已删除, 应用停止成功")
 
 if __name__ == '__main__':
     try:

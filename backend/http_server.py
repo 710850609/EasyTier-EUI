@@ -6,6 +6,7 @@ import logging
 import os
 import sys
 import urllib.parse
+import webbrowser
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from socketserver import ThreadingMixIn
 from typing import Optional
@@ -124,8 +125,7 @@ class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
 def build_server(host:str, port:int=5666, base_uri=None) -> Optional[ThreadedHTTPServer]:
     """启动 HTTP 服务器"""
     if not host:
-        # host = ip_util.get_lan_ips()[0].get('ip')
-        host = '127.0.0.1'
+        host = ip_util.get_lan_ips()[0].get('ip')
     logging.info(f"HTTP服务启动中....")
     http_server = ThreadedHTTPServer((host, port), CGIProxyHandler)
     logging.info(f"Starting HTTP server on {host}, port: {port}")
@@ -138,6 +138,11 @@ def build_server(host:str, port:int=5666, base_uri=None) -> Optional[ThreadedHTT
     access_url = f"http://{acc_host}:{acc_port}"
     qr_code = qrcode_util.create_str(access_url)
     logging.info(f"Access URL {access_url} , QrCode: {qr_code}")
+    if host != '127.0.0.1':
+        try:
+            webbrowser.open_new_tab(access_url)
+        except Exception as e:
+            logging.error(f"打开本地设备不支持浏览器访问: {e}")
     return http_server
 
 

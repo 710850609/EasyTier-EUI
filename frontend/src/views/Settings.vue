@@ -143,12 +143,12 @@
         <template #extra>
           <div style="display: flex; align-items: center; gap: 8px;">
             <a href='https://github.com/710850609/fpk-easytier-lite' target="_blank"><img alt="GitHub stars" src="https://img.shields.io/github/stars/710850609/fpk-easytier-lite?logo=github"></a>
-            <var-chip @click="showRewardCdoe = true" type="info" size="small" style="white-space: nowrap; writing-mode: horizontal-tb; flex-shrink: 0;">支持</var-chip>
-            <!-- <img src="https://img.shields.io/github/v/release/710850609/fpk-easytier-lite?color=blue&logo=github" /> -->
+            <var-chip elevation="1" @click="showRewardCdoe = true" type="info" size="small" style="white-space: nowrap; writing-mode: horizontal-tb; flex-shrink: 0;">打赏</var-chip>
           </div>
         </template>
       </var-cell>
       <var-cell>
+        <img alt="GitHub stars" src="https://img.shields.io/github/downloads/710850609/EasyTier-Lite/total?color=blue&label=GitHub%E4%B8%8B%E8%BD%BD%E9%87%8F">
         <div>简化 EasyTier 使用的UI界面</div>
         <div>降低组网门槛，快速访问异地网络设备</div>
         <div>享受 EasyTier 免费、不限设备数量、支持多类型终端等优势</div>
@@ -159,12 +159,12 @@
       
     </div>
       <var-popup :default-style="false" v-model:show="showRewardCdoe">
-      <var-result class="result" description="打赏支持或是点Stars，都是对我的肯定">
+      <var-result class="result" description="点Stars或是打赏支持，都是对易组网的肯定">
         <template #image>
           <img src="../../public/images/reward_code.jpg" style="width: 50%; height: 50%;" />
         </template>
         <template #footer>
-          <var-button type="success" @click="showRewardCdoe = false">关闭</var-button>
+          <var-button type="info" @click="showRewardCdoe = false">关闭</var-button>
         </template>
       </var-result>
     </var-popup>

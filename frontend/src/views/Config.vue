@@ -20,9 +20,13 @@
       <var-icon name="file-document-outline" size="56" color="var(--color-text-disabled)" />
       <p class="empty-title">暂无配置</p>
       <p class="empty-hint">创建第一个配置开始使用 EasyTier</p>
-      <var-button type="primary" size="large" @click="showCreateDialog = true">
+      <var-button type="primary" size="large" @click="setupShowMode(1);" auto-loading>
         <var-icon name="plus" size="18" />
-        新增配置
+        快速新增
+      </var-button>
+      <var-button type="primary" size="large" @click="setupShowMode(2);" auto-loading>
+        <var-icon name="plus" size="18" />
+        普通新增
       </var-button>
     </div>
 
@@ -51,9 +55,10 @@
             </var-select>
 
             <div class="config-actions-group" v-if="selectedConfig">
-              <var-button size="small" type="primary" @click="showCreateDialog = true">新增</var-button>
-              <var-button size="small" type="primary" @click="startEditName" :loading="isRenaming">改名</var-button>
-              <var-button size="small" type="danger" @click="showDeleteDialog = true" :loading="isDeletingConfig">删除</var-button>
+              <var-button size="small" type="primary" @click="showCreateDialog = true; showMode = 1;" v-if="showMode === 0">新增</var-button>
+              <var-button size="small" type="primary" @click="startEditName" :loading="isRenaming" v-if="showMode === 0">改名</var-button>
+              <var-button size="small" type="danger" @click="showDeleteDialog = true" :loading="isDeletingConfig" v-if="showMode === 0">删除</var-button>
+              <var-button size="small" type="danger" @click="exitAddMode" :loading="isDeletingConfig" v-if="showMode !== 0">退出新增</var-button>
             </div>
           </div>
 
@@ -72,10 +77,10 @@
         </div>
         
         <var-divider />
-        <div class="toolbar-row toolbar-actions" v-if="selectedConfig">
+        <div class="toolbar-row toolbar-actions">
           <var-button type="primary" size="small" @click="saveConfig" auto-loading>保存配置</var-button>
-          <var-button type="primary" size="small" @click="openCodePage" auto-loading>编辑文件</var-button>
-          <var-button type="primary" size="small" @click="showShareConfigType = true">分享网络</var-button>
+          <var-button type="primary" size="small" @click="openCodePage" auto-loading v-if="showMode === 0">编辑文件</var-button>
+          <var-button type="primary" size="small" @click="showShareConfigType = true" v-if="showMode === 0">分享网络</var-button>
         </div>
       </var-paper>
 
@@ -88,7 +93,7 @@
                 <svg-icon type="mdi" :path="mdiHomeEdit" width="24" height="24" color="var(--color-primary)" />
                 <span class="section-title">{{ fastSettingMode ? '快速设置' : '基础设置' }}</span>
               </div>
-              <div v-if="fastSettingMode && selectedConfig">
+              <div v-if="fastSettingMode">
                 <span style="font-size: 13px; color: var(--color-warning); margin-top: 8px;">填写网络名称和密码，后点击即可 -> </span>
                 <var-button type="primary" size="small" @click="saveConfig(true)" auto-loading>保存并启动</var-button>
               </div>
@@ -213,9 +218,16 @@
               </var-cell>
               
               <var-cell v-if="fastSettingMode">
-                <p>
-                  <span style="font-size: 12px; color: var(--color-warning); margin-top: 8px;">默认使用动态社区节点用于发现组网节点。如不想用，请刷新页面重新选择正常模式进行配置</span>
-                </p>
+                <div style="font-size: 12px; color: var(--color-warning); margin-top: 8px;">
+                  <p>
+                    <span >默认使用动态社区节点用于发现组网节点。</span>
+                    <var-icon name="help-circle-outline" size="12pt" @click="showPublicPeerTip = true" class="help-icon" />
+                  </p>
+                  <p>
+                    <span >如不想用，请 <var-button type="primary" size="mini" @click="fastSettingMode = false">重新选择</var-button> 选择正常模式进行配置</span>
+                  </p>
+
+                </div>
               </var-cell>
             </var-skeleton>
 
@@ -458,7 +470,7 @@
       />
     </var-dialog>
 
-    <var-dialog v-model:show="showCreateDialog" @confirm="confirmCreateConfig" @cancel="showCreateDialog = false"
+    <var-dialog v-model:show="showCreateDialog" @confirm="confirmCreateConfig" @cancel="exitAddMode"
       confirmButtonText="确认" cancelButtonText="取消">
       <template #title>
         <span>新增配置名称</span>
@@ -503,6 +515,9 @@ import SvgIcon from '@jamescoyle/vue-icon'
 import { mdiEye, mdiEyeOff, mdiHomeEdit, mdiShieldEdit, mdiCircle } from '@mdi/js'
 import { mdilPencil, mdilAccount, mdilLock } from '@mdi/light-js'
 
+
+// 显示模式： 0 编辑 1 快速新增 2 普通新增
+const showMode = ref(0)
 const fastSettingMode = inject('fastSettingMode', ref(false))
 const publicPeerOptions = ref([])
 const customPeer = ref('')
@@ -644,6 +659,12 @@ const saveConfig = async (start = false) => {
   }
   return new Promise((resolve, reject) => {
     let data = { ...config.value }
+    if (fastSettingMode.value) {
+      // 快速设置模式，配置文件名同网络名称
+      selectedConfig.value = data.network_identity.network_name || '默认'
+      currentConfigData.value.name = selectedConfig.value 
+      configList.value.push({ 'profile': selectedConfig.value + '.toml', 'name': selectedConfig.value, 'autostart': false })
+    }
     data._profile = selectedConfig.value
     data.peer = data.peer.map(e => ({ uri: e }))
     data.proxy_network = data.proxy_network.map(e => ({ cidr: e }))
@@ -667,6 +688,9 @@ const saveConfig = async (start = false) => {
       if (fastSettingMode.value) {
         toast.info('退出引导设置模式')
         fastSettingMode.value = false
+      }
+      if (showMode.value != 0) {
+        exitAddMode()
       }
       resolve()
     }).catch(e => {
@@ -949,24 +973,44 @@ const handleSwitchChange = async (cfg, field, val) => {
   }
 }
 
-onMounted(async () => {
-  await loadConfigs()
-  if (configList.value.length > 0) {
-    selectedConfig.value = configList.value[0].profile
-    await loadConfig(configList.value[0].profile)
-    loadedProfiles.value.add(configList.value[0].profile)
-  }
-  api.peers.publicPeers({'profile': selectedConfig.value}).then(async data => {
-    publicPeerOptions.value = data.data
-    if (fastSettingMode.value) {
-      isLoadingConfig.value = true
-      await checkPeers()
-      isLoadingConfig.value = false
-      newConfigName.value = '默认'
-      confirmCreateConfig()
+const setupShowMode = async (mode) => {
+  return new Promise(async(resolve, reject) => {
+    if (mode === 1) {
+      if (publicPeerOptions.value.length == 0 || publicPeerOptions.value[0].status != 1) {
+        isLoadingConfig.value = true
+        await checkPeers()
+        isLoadingConfig.value = false
+      }
+      fastSettingMode.value = true
       const peers = publicPeerOptions.value.slice(0, 3).map(e => e.uri)
       config.value.peer.unshift(...peers)
-    }    
+    } else if (mode === 2) {
+      showCreateDialog.value = true
+    }
+    showMode.value = mode
+  }).finally(() => {
+    resolve()
+  })
+}
+
+const exitAddMode = async () => {
+  showMode.value = 0
+  showCreateDialog.value = false
+  newConfigName.value = ''
+  await loadConfigs()
+  selectedConfig.value = configList.value?.[0]?.profile || ''
+}
+
+onMounted(async () => {
+  await loadConfigs()
+  if (configList.value.length == 0) {
+    return
+  }
+  selectedConfig.value = configList.value[0].profile
+  await loadConfig(configList.value[0].profile)
+  loadedProfiles.value.add(configList.value[0].profile)
+  api.peers.publicPeers({'profile': selectedConfig.value}).then(async data => {
+    publicPeerOptions.value = data.data
   })
 })
 </script>

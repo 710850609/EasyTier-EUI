@@ -578,7 +578,12 @@ onMounted(async () => {
   }
   try {
     if (!selectedConfig.value) {
-      showFastSettingTip.value = true
+      // showFastSettingTip.value = true
+      // 没有选择配置，直接跳配置页面
+      toast.success('当前没有网络配置，请创建网络配置后再查看节点数据')
+      setTimeout(() => {
+        setActiveMenu?.('config')
+      }, 250)
       return;
     }
   } catch (error) {

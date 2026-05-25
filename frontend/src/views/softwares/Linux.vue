@@ -35,6 +35,12 @@
           <var-button type="primary" size="normal" block @click="downloadEasyTierLite('linux', 'riscv64')" auto-loading>
             <template #default>
               <var-icon name="download"/>
+              armv7版
+            </template>
+          </var-button>
+          <var-button type="primary" size="normal" block @click="downloadEasyTierLite('linux', 'riscv64')" auto-loading>
+            <template #default>
+              <var-icon name="download"/>
               riscv64版
             </template>
           </var-button>
