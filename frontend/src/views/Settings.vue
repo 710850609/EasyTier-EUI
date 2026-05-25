@@ -142,7 +142,7 @@
         </template>
         <template #extra>
           <div style="display: flex; align-items: center; gap: 8px;">
-            <a href='https://github.com/710850609/fpk-easytier-lite' target="_blank"><img alt="GitHub stars" src="https://img.shields.io/github/stars/710850609/fpk-easytier-lite?logo=github"></a>
+            <a href='https://github.com/710850609/fpk-easytier-lite' target="_blank"><img alt="GitHub stars" src="https://img.shields.io/github/stars/710850609/EasyTier-Lite?logo=github"></a>
             <var-chip elevation="1" @click="showRewardCdoe = true" type="info" size="small" style="white-space: nowrap; writing-mode: horizontal-tb; flex-shrink: 0;">打赏</var-chip>
           </div>
         </template>
