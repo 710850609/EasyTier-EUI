@@ -23,7 +23,7 @@ if [ -f "$PID_FILE" ]; then
 fi
 
 # 后台运行（nohup 防止终端关闭时退出，输出重定向到空）
-nohup "$EXECUTABLE" > /dev/null 2>&1 &
+sudo nohup "$EXECUTABLE" > /dev/null 2>&1 &
 PID=$!
 echo $PID > "$PID_FILE"
 echo "EasyTier-Lite 已启动，PID: $PID"

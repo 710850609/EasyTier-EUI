@@ -8,10 +8,10 @@
 
 ## 功能
 - 支持多平台
-  - FnOS
-  - Windows
-  - MacOS (未验证)
-  - Linux (未验证)
+  - FnOS (x86_64, aarch64)
+  - Windows (x86_64)
+  - Linux (x86_64, aarch64, riscv64, 部分验证)
+  - MacOS (intel, arm64, 未验证)
 - 支持多配置
 - 支持设置开机自启
 - 支持EasyTier常见设置项
@@ -23,7 +23,7 @@
 - <a href="https://easytier.cn">EasyTier文档</a>
 - <a href="https://www.varletjs.com/#/zh-CN">Varlet文档</a>
 
-## 赞助
+## 打赏
 <p align="center">
   <img src="frontend/public/images/reward_code.jpg" width="200" />
 </p>

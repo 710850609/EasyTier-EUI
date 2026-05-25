@@ -90,4 +90,5 @@ if __name__ == '__main__':
     run_configs.setup_env()
     log_util.setup_log(log_file=os.path.join(run_configs.log_dir(), 'app.log'), log_level=logging.INFO,
                        enabled_console=True)
-    win = WebWin('易组网')
+    ver = run_configs.build_version()
+    win = WebWin(f'易组网 {ver}')

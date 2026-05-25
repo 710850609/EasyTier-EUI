@@ -179,6 +179,10 @@ def build_executable(build_ver:str = None):
             "--add-data", f"{webview_logo_path}{separator}assets/icon.ico",
             str(PROJECT_DIR / "main_ui.py"),
         ])
+        if sys.platform == "win32":
+            cmd.extend([
+                "--uac-admin",
+            ])
         # 打包文件的图标路径
         if sys.platform == "win32":
             icon_path = PROJECT_DIR.joinpath('assets', 'icon.ico')
