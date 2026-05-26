@@ -17,12 +17,12 @@
         <var-space :size="[20, 20]" justify="center">
           <var-cell>
             <var-link type="primary" underline="none" href="https://github.com/EasyTier/EasyTier/releases" target="_blank">
-              <img src="https://img.shields.io/github/v/tag/EasyTier/EasyTier?color=blue&logo=github" />
+              <img src="https://img.shields.io/github/v/tag/EasyTier/EasyTier?color=blue&logo=github&label=最新版" />
             </var-link>
           </var-cell>
           <var-cell>
             <var-link type="primary" underline="none" href="https://github.com/EasyTier/EasyTier/releases" target="_blank">
-              <img src="https://img.shields.io/github/v/release/EasyTier/EasyTier?color=blue&logo=github" />
+              <img src="https://img.shields.io/github/v/release/EasyTier/EasyTier?color=blue&logo=github&label=稳定版" />
             </var-link>
           </var-cell>
         </var-space>

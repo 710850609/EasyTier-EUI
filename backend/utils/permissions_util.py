@@ -1,16 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import logging
-import os
-import shutil
-import subprocess
-import sys
-import sys
-import os
 import ctypes
-import subprocess
-import shutil
+import os
 import shlex
+import shutil
+import subprocess
+import sys
 
 
 def is_admin() -> bool:
@@ -31,9 +26,11 @@ def elevate() -> None:
 
     # ── Windows ──
     if sys.platform == 'win32':
-        args = subprocess.list2cmdline(sys.argv[1:])
+        # 构建完整的命令行参数（包含程序路径）
+        args = subprocess.list2cmdline([sys.executable] + sys.argv[1:])
+        # 使用 SW_HIDE (0) 避免弹出控制台窗口
         ret = ctypes.windll.shell32.ShellExecuteW(
-            None, "runas", sys.executable, args, None, 1
+            None, "runas", sys.executable, args, None, 0
         )
         if ret <= 32:
             raise PermissionError(f"UAC 提权失败或用户取消 (错误码: {ret})")

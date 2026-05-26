@@ -89,8 +89,18 @@
         <var-loading type="wave" v-if="isFetchingGithubMirrors" />
       </var-cell>
       <var-cell>
-        <var-select v-model="githubMirror" variant="outlined" size="small" :line="true"
-          :options="githubMirrors" label-key="label" value-key="value">
+        <var-select v-model="githubMirror" variant="outlined" size="small" :line="true">
+          <var-option v-for="item in githubMirrors" :key="item.value" :value="item.value" :label="item.label">
+            <var-cell border style="display: flex;">
+              <template #description>
+                {{ item.label }} 
+                <var-chip type="warning" size="mini" plain v-if="item.desc">{{ item.desc }}</var-chip>
+              </template>
+              <template #extra>
+                <span v-if="item.delay > 0"> {{ item.delay }}s </span>
+              </template>
+            </var-cell>
+          </var-option>
         </var-select>
       </var-cell>
       <var-cell>

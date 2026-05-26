@@ -190,17 +190,17 @@
                         <template #description>
                           <!-- 左侧：地址信息 -->
                           <div class="peer-info">
-                            <div class="peer-primary-uri" v-if="peer.resolved_uri">
-                              {{ peer.resolved_uri }}
+                            <div class="peer-primary-uri">
+                              {{ peer.uri }}
                             </div>
-                            <span v-if="peer.resolved_uri && peer.uri !== peer.resolved_uri">{{ peer.uri }}</span>
+                            <span v-if="peer.resolved_uri && peer.dynamic">{{ peer.resolved_uri }}</span>
                             <div class="peer-secondary-uri">
                               <span class="peer-tag latency-tag" :class="peer.latency < 500 ? (peer.latency < 100 ? 'latency-good' : 'latency-normal') : 'latency-bad'"  
                                 v-if="peer.latency > 0">
                                 {{ peer.latency }}ms
                               </span>
                               <span class="peer-tag relay-tag" v-if="peer.relay == 1">可中转</span>
-                              <span class="peer-tag dynamic-tag" v-if="peer.resolved_uri && peer.uri !== peer.resolved_uri">动态</span>
+                              <span class="peer-tag dynamic-tag" v-if="peer.dynamic">动态</span>
                             </div>
                           </div>
                         </template>
@@ -661,9 +661,10 @@ const saveConfig = async (start = false) => {
     let data = { ...config.value }
     if (fastSettingMode.value) {
       // 快速设置模式，配置文件名同网络名称
-      selectedConfig.value = data.network_identity.network_name || '默认'
+      const networkName = data.network_identity.network_name || '默认'
+      selectedConfig.value = networkName + '.toml'
       currentConfigData.value.name = selectedConfig.value 
-      configList.value.push({ 'profile': selectedConfig.value + '.toml', 'name': selectedConfig.value, 'autostart': false })
+      configList.value.push({ 'profile': selectedConfig.value, 'name': networkName, 'autostart': false })
     }
     data._profile = selectedConfig.value
     data.peer = data.peer.map(e => ({ uri: e }))
@@ -1362,7 +1363,7 @@ onMounted(async () => {
 }
 
 .latency-good {
-  background: var(--color-success-container);
+  background: var(--snackbar-success-background);
   color: var(--color-on-success-container);
 }
 

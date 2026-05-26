@@ -77,7 +77,7 @@ def __get_public_peers(refresh=False) -> list[dict]:
         meta_data = __download_peer_meta()
 
     peer_check_result_file = run_configs.et_peer_check_result_file()
-    if Path(peer_check_result_file).exists():
+    if not refresh and Path(peer_check_result_file).exists():
         try:
             with open(peer_check_result_file, "r", encoding="utf-8") as f:
                 json_list = json.load(f)

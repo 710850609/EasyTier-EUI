@@ -25,7 +25,7 @@
             </var-option>
           </var-select>
           <div class="service-status" v-if="selectedConfig">
-             <var-chip size="small" :type="serviceRunning ? 'success' : 'danger'">
+             <var-chip size="small" :type="serviceRunning ? 'success' : 'danger'" elevation="1">
               {{ serviceOperating ? (serviceRunning ? '停止中...' : '启动中...') : serviceRunning ? '运行中' : '未启动' }}
              </var-chip>
           </div>
