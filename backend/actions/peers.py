@@ -20,7 +20,7 @@ def check_peers(params: dict, *kwargs):
     :param request_data: 请求数据（可选）
     """
     profile = (params or {}).get('profile')
-    peer_list = public_peers(data = {'profile': profile, 'refresh': False})
+    peer_list = public_peers(data = {'profile': profile, 'refresh': True})
     if len(peer_list) == 0:
         peer_list = public_peers(data = {'profile': profile, 'refresh': True})
     # 提取 URI 列表
@@ -33,15 +33,16 @@ def check_peers(params: dict, *kwargs):
         peer_result = success_peers.get(uri, {})
         if uri in success_peers.keys() and peer_result:
             peer['status'] = 1
-            peer['resolved_uri'] = peer_result.get('resolved_uri')
+            # peer['src_uri'] = peer_result.get('src_uri')
             peer['relay'] = peer_result.get('relay')
             peer['latency'] = peer_result.get('latency')
+            peer['dynamic'] = peer_result.get('dynamic')
+            peer['hostname'] = peer_result.get('hostname')
         else:
             peer['status'] = 0
             peer['relay'] = -1
             peer['latency'] = -1
-    __sort_peers(peer_list)
-    __save_peer_check_result(peer_list)
+    __save_peer_check_result(peer_list, sort=True)
     return peer_list
 
 
@@ -60,7 +61,7 @@ def public_peers(data:dict, *kwargs):
                     uri = item["uri"]
                     if uri not in uri_set:
                         uri_set.add(uri)
-                        peers.insert(0, {'uri': uri, 'resolved_uri': uri, 'relay': -1, 'latency': -1, 'status': -1 })
+                        peers.insert(0, {'uri': uri, 'src_uri': uri, 'relay': -1, 'latency': -1, 'status': -1 })
         except Exception as e:
             logging.error(f"解析配置文件失败: {e}")
             # 配置文件解析失败时，返回空列表，不影响获取公共节点
@@ -100,7 +101,8 @@ def __get_public_peers(refresh=False) -> list[dict]:
             real_uri = item.get('uri', '').strip()
             if len(real_uri) > 0 and uri not in uri_set:
                 uri_set.add(uri)
-                result.append(PeersCheckResult(uri, real_uri))
+                dynamic = real_uri and uri != real_uri
+                result.append(PeersCheckResult(uri, real_uri, dynamic=dynamic))
 
         peers = [item.__dict__ for item in result]
         __sort_peers(peers)
@@ -135,4 +137,4 @@ def __download_peer_meta():
         raise HttpException(f'获取公共节点失败, 请检查网络连接或切换Github加速地址： {e}')
 
 def __sort_peers(peers: list[dict]):
-    peers.sort(key=lambda x: (-x.get('status'), x.get('latency', 0), x['resolved_uri'], x['uri']))
+    peers.sort(key=lambda x: (-x.get('status'), x.get('latency', 0), x['src_uri'], x['uri']))

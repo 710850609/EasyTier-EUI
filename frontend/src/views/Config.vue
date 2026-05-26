@@ -193,7 +193,8 @@
                             <div class="peer-primary-uri">
                               {{ peer.uri }}
                             </div>
-                            <span v-if="peer.resolved_uri && peer.dynamic">{{ peer.resolved_uri }}</span>
+                            <!-- <span style="font-size: 12px; color: var(--color-primary);">{{ peer.hostname || '' }}</span> -->
+                            <span v-if="peer.src_uri != peer.uri && peer.dynamic">{{ peer.src_uri }}</span>
                             <div class="peer-secondary-uri">
                               <span class="peer-tag latency-tag" :class="peer.latency < 500 ? (peer.latency < 100 ? 'latency-good' : 'latency-normal') : 'latency-bad'"  
                                 v-if="peer.latency > 0">
@@ -619,7 +620,7 @@ const multiThreadCountStr = computed({
 const addPeer = () => {
   const peer = customPeer.value
   if (!peer) return
-  publicPeerOptions.value.unshift({ uri: peer, resolved_uri: peer, latency: -1, status: -1 })
+  publicPeerOptions.value.unshift({ uri: peer, src_uri: peer, latency: -1, status: -1 })
   config.value.peer.unshift(peer)
   console.log(config.value.peer)
   console.log(publicPeerOptions.value)

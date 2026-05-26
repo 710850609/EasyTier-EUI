@@ -216,13 +216,18 @@ def check_peers_available_use_peer(bin_path, rpc_port, peer_list:list):
         success_peers = {}
         
         for item in data:
-            result = {'relay': item.get('route', {}).get('feature_flag', {}).get('avoid_relay_data', True) == False}
-            # 支持转发
+            route = item.get('route', {})
+            hostname = route.get('hostname', '').replace('PublicServer_', '')
+            result = {
+                'relay': route.get('feature_flag', {}).get('avoid_relay_data', True) == False,
+                'hostname': hostname,
+            }
             conns = item.get('peer', {}).get('conns', [])
+            # 支持转发
             if len(conns) > 0:
                 uri = conns[0].get('tunnel', {}).get('remote_addr', {}).get('url')
                 result['uri'] = uri
-                result['resolved_uri'] = conns[0].get('tunnel', {}).get('resolved_remote_addr', {}).get('url')
+                # result['resolved_uri'] = conns[0].get('tunnel', {}).get('resolved_remote_addr', {}).get('url')
                 latency_us = conns[0].get('stats', {}).get('latency_us')
                 result['latency'] = max(1, latency_us // 1000)
                 # 此节点数据为毫秒，当大于500ms, 只能取到500

@@ -138,7 +138,7 @@ def build_server(host:str, port:int=5666, base_uri=None) -> Optional[ThreadedHTT
     access_url = f"http://{acc_host}:{acc_port}"
     qr_code = qrcode_util.create_str(access_url)
     logging.info(f"Access URL {access_url} , QrCode: {qr_code}")
-    if host != '127.0.0.1':
+    if not run_configs.is_local_mode():
         try:
             webbrowser.open_new_tab(access_url)
         except Exception as e:
@@ -150,11 +150,11 @@ if __name__ == '__main__':
     permissions_util.elevate()
     run_configs.setup_env()
     log_util.setup_log(log_file=os.path.join(run_configs.log_dir(), 'app.log'), log_level=logging.DEBUG,
-                       enabled_console=True)
+                       enabled_console=run_configs.is_local_mode())
     import argparse
     parser = argparse.ArgumentParser(description='CGI Proxy HTTP Server')
-    # parser.add_argument('--host', default='127.0.0.1', help='Host to bind to (default: 127.0.0.1)')
-    parser.add_argument('--host', default='', help='Host to bind to (default: 127.0.0.1)')
+    parser.add_argument('--host', default='127.0.0.1', help='Host to bind to (default: 127.0.0.1)')
+    # parser.add_argument('--host', default='', help='Host to bind to (default: 127.0.0.1)')
     parser.add_argument('--port', type=int, default=5666, help='Port to bind to (default: 5666)')
     args = parser.parse_args()
 

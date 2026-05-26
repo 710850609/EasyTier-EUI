@@ -136,3 +136,6 @@ def fn_check_file() -> str:
     检查文件, 记录应用启动时的开机时间，用于检查是否已经启动过应用
     """
     return os.path.join(data_dir(), 'fn_check.txt')
+
+def is_local_mode() -> bool:
+    return not getattr(sys, 'frozen', False)
