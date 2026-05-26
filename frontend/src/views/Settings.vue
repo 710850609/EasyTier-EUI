@@ -170,11 +170,15 @@
         <div>享受 EasyTier 免费、不限设备数量、支持多类型终端等优势</div>
       </var-cell>
       <var-cell>
-        <div style="display: flex; align-items: center; gap: 8px;">
+        <div style="display: flex; align-items: center; gap: 8px; margin: 2px 0;">
           <img alt="GitHub stars" src="https://img.shields.io/github/downloads/710850609/EasyTier-Lite/total?color=blue&label=GitHub%E4%B8%8B%E8%BD%BD%E9%87%8F" />
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
           <a href="https://github.com/710850609/fpk-easytier-lite/releases/latest" target="_blank">
             <img alt="稳定版" src="https://img.shields.io/github/v/release/710850609/EasyTier-Lite?color=blue&logo=github&label=稳定版" />
           </a>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
           <a href="https://github.com/710850609/fpk-easytier-lite/releases" target="_blank">
             <img alt="最新版" src="https://img.shields.io/github/v/tag/710850609/EasyTier-Lite?color=blue&logo=github&label=最新版" />
           </a>

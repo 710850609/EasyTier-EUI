@@ -122,7 +122,7 @@ class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
         super().__init__(server_address, RequestHandlerClass)
         # 也可以在这里做其他初始化
 
-def build_server(host:str, port:int=5666, base_uri=None) -> Optional[ThreadedHTTPServer]:
+def build_server(host:str, port:int=5666, open_browser:bool=False, base_uri=None) -> Optional[ThreadedHTTPServer]:
     """启动 HTTP 服务器"""
     if not host:
         host = '0.0.0.0'
@@ -138,7 +138,7 @@ def build_server(host:str, port:int=5666, base_uri=None) -> Optional[ThreadedHTT
     access_url = f"http://{acc_host}:{acc_port}"
     qr_code = qrcode_util.create_str(access_url)
     logging.info(f"Access URL {access_url} , QrCode: {qr_code}")
-    if not run_configs.is_local_mode():
+    if open_browser:
         try:
             webbrowser.open_new_tab(access_url)
         except Exception as e:
@@ -158,7 +158,7 @@ if __name__ == '__main__':
     parser.add_argument('--port', type=int, default=5666, help='Port to bind to (default: 5666)')
     args = parser.parse_args()
 
-    server = build_server(args.host, args.port)
+    server = build_server(args.host, args.port, open_browser=not run_configs.is_local_mode())
     try:
         server.serve_forever()
     except KeyboardInterrupt:

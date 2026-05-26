@@ -150,8 +150,8 @@
                     <var-icon name="information-outline" size="12pt" @click="showPublicPeerTip = true" />
                   </div>                    
                   <div class="peer-actions">
-                    <var-button type="primary" size="mini" auto-loading @click="refreshPublicPeerOptions">刷新节点</var-button>
-                    <var-button type="primary" size="mini" auto-loading @click="checkPeers">检测节点</var-button>
+                    <!-- <var-button type="primary" size="mini" auto-loading @click="refreshPublicPeerOptions">刷新节点</var-button> -->
+                    <var-button type="primary" size="mini" auto-loading @click="checkPeers">刷新并检测节点</var-button>
                   </div>
                 </div>
                 
@@ -496,11 +496,11 @@
     </var-dialog>
 
     <var-popup position="top" v-model:show="showPublicPeerTip">
-      <div style="padding: 24px; max-width: 100%; font-size: 14px;">
-        <p><span style="font-weight: bold;">初始节点</span>：用于发现组网设备，数据来自网络社区</p>
-        <p><span style="font-weight: bold;">动态节点</span>：原始节点经过TXT协议转换而来。易组网在线维护数据，解决节点下线后，设备不重启的情况下持续在线。</p>
-        <p><span style="font-weight: bold;">刷新节点</span>：在线获取易组网维护的初始节点数据</p>
-        <p><span style="font-weight: bold;">检测节点</span>：基于易组网本地设备网络，检测节点的是否可用、延迟、是否可转发</p>
+      <div style="padding: 24px; max-width: 100%; font-size: 14px; margin-top: 10px;">
+        <p style="margin: 4px 0;"><span style="font-weight: bold;">初始节点</span>：用于发现组网设备，数据来自网络社区</p>
+        <p style="margin: 4px 0;"><span style="font-weight: bold;">动态节点</span>：原始节点经过TXT协议转换而来。易组网在线维护数据，解决节点下线后，设备不重启的情况下持续在线。</p>
+        <p style="margin: 4px 0;"><span style="font-weight: bold;">节点刷新</span>：在线获取易组网维护的初始节点数据</p>
+        <p style="margin: 4px 0;"><span style="font-weight: bold;">节点检测</span>：基于易组网本地设备网络，检测节点的是否可用、延迟、是否可转发</p>
       </div>
   </var-popup>
   </div>
