@@ -36,12 +36,16 @@ def github_mirrors(*kwargs):
             # 去除空行
             lines = [l.strip() for l in content.split('\n') if l.strip()]
             selected = lines[0] if lines else ""
+        #  https://github.akams.cn/
         sources = [
             { "value": "https://gh-proxy.org", "label": "gh-proxy.org"},
             { "value": "https://ghfast.top", "label": "ghfast.top"},
             { "value": "https://ghproxy.net", "label": "ghproxy.net"},
             { "value": "https://gh.llkk.cc", "label": "gh.llkk.cc"},
             { "value": "https://gh.felicity.ac.cn", "label": "gh.felicity.ac.cn"},
+            { "value": "https://github-proxy.memory-echoes.cn", "label": "github-proxy.memory-echoes.cn"},
+            { "value": "https://github.starrlzy.cn", "label": "github.starrlzy.cn"},
+            { "value": "https://gh.b52m.cn", "label": "gh.b52m.cn"},
         ]
 
         # ── 新增：并发测速 ──
@@ -53,7 +57,7 @@ def github_mirrors(*kwargs):
 
             start = time.time()
             try:
-                resp = requests.head(test_url, timeout=5, allow_redirects=True)
+                resp = requests.head(test_url, timeout=4, allow_redirects=True)
                 if resp.status_code < 400:
                     elapsed = (time.time() - start) * 1
                     item["delay"] = round(elapsed, 2)

@@ -45,9 +45,11 @@ def install(data, *kwargs):
     url = f"https://github.com/easyTier/easytier/releases/download/{et_version}/easytier-{platform}-{arch}-{et_version}.zip"
     logging.info(f"内核下载地址: {url}")
     core_dir = run_configs.core_dir()
-    zip_file = f'{core_dir}/easytier-{platform}-{arch}-{et_version}.zip'
+    run_configs.data_dir()
+    output_dir = os.path.join(run_configs.data_dir(), 'download')
+    zip_file = f'{output_dir}/easytier-{platform}-{arch}-{et_version}.zip'
     github_util.download_file(url, zip_file)
-    unzip_temp_dir = __unzip(zip_file, f'{core_dir}')
+    unzip_temp_dir = __unzip(zip_file, os.path.join(run_configs.data_dir(), 'download', 'temp'))
 
     stop_profiles = services.stop_all()
     for item in Path(os.path.join(unzip_temp_dir, f'easytier-{platform}-{arch}')).iterdir():

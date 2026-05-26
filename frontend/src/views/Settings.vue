@@ -86,7 +86,7 @@
       <var-divider />
       <var-cell>
         GitHub加速地址
-        <var-loading type="wave" v-if="isFetchingGithubMirrors" />
+        <!-- <var-loading type="wave" v-if="isFetchingGithubMirrors" /> -->
       </var-cell>
       <var-cell>
         <var-select v-model="githubMirror" variant="outlined" size="small" :line="true">
@@ -101,6 +101,13 @@
               </template>
             </var-cell>
           </var-option>
+          <template #append-icon>
+            <var-icon 
+              name="refresh" 
+              :class="{ 'is-spinning': isFetchingGithubMirrors }"
+              @click.stop="getGithubMirrors" 
+            />
+          </template>
         </var-select>
       </var-cell>
       <var-cell>

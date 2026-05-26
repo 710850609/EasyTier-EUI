@@ -84,13 +84,18 @@ def download_file(url: str, output_path: str, desc: str = ""):
         downloaded = 0
         
         with open(output_path, 'wb') as f:
+            last_percent = -1  # 初始化在循环外
             for chunk in response.iter_content(chunk_size=8192):
                 if chunk:
                     f.write(chunk)
                     downloaded += len(chunk)
                     if total_size > 0:
                         percent = (downloaded / total_size) * 100
-                        logging.debug(f"{desc} xia'z进度: {percent:.1f}%")
+                        current_percent = int(percent)  # 取整
+                        # 每增加 1% 打印一次，且只打印一次
+                        if current_percent > last_percent:
+                            logging.debug(f"{desc} 下载进度: {current_percent}%")
+                            last_percent = current_percent
         
         logging.info(f"下载成功: {output_path}")        
     except Exception as e:
