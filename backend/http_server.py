@@ -125,7 +125,8 @@ class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
 def build_server(host:str, port:int=5666, base_uri=None) -> Optional[ThreadedHTTPServer]:
     """启动 HTTP 服务器"""
     if not host:
-        host = ip_util.get_lan_ips()[0].get('ip')
+        # host = ip_util.get_lan_ips()[0].get('ip')
+        host = '0.0.0.0'
     logging.info(f"HTTP服务启动中....")
     http_server = ThreadedHTTPServer((host, port), CGIProxyHandler)
     logging.info(f"Starting HTTP server on {host}, port: {port}")

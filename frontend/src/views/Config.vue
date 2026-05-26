@@ -93,7 +93,7 @@
                 <svg-icon type="mdi" :path="mdiHomeEdit" width="24" height="24" color="var(--color-primary)" />
                 <span class="section-title">{{ fastSettingMode ? '快速设置' : '基础设置' }}</span>
               </div>
-              <div v-if="fastSettingMode">
+              <div v-if="fastSettingMode && publicPeerOptions.length > 0">
                 <span style="font-size: 13px; color: var(--color-warning); margin-top: 8px;">填写网络名称和密码，后点击即可 -> </span>
                 <var-button type="primary" size="small" @click="saveConfig(true)" auto-loading>保存并启动</var-button>
               </div>
@@ -975,19 +975,19 @@ const handleSwitchChange = async (cfg, field, val) => {
 
 const setupShowMode = async (mode) => {
   return new Promise(async(resolve, reject) => {
+    showMode.value = mode
     if (mode === 1) {
+      fastSettingMode.value = true
       if (publicPeerOptions.value.length == 0 || publicPeerOptions.value[0].status != 1) {
         isLoadingConfig.value = true
         await checkPeers()
         isLoadingConfig.value = false
       }
-      fastSettingMode.value = true
       const peers = publicPeerOptions.value.slice(0, 3).map(e => e.uri)
       config.value.peer.unshift(...peers)
     } else if (mode === 2) {
       showCreateDialog.value = true
     }
-    showMode.value = mode
   }).finally(() => {
     resolve()
   })
@@ -1348,6 +1348,7 @@ onMounted(async () => {
   display: inline-flex;
   align-items: center;
   padding: 1px 6px;
+  margin-right: 4px;
   border-radius: 4px;
   font-size: 11px;
   font-weight: 500;
