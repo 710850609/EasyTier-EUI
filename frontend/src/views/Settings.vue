@@ -165,10 +165,20 @@
         </template>
       </var-cell>
       <var-cell>
-        <img alt="GitHub stars" src="https://img.shields.io/github/downloads/710850609/EasyTier-Lite/total?color=blue&label=GitHub%E4%B8%8B%E8%BD%BD%E9%87%8F">
         <div>简化 EasyTier 使用的UI界面</div>
         <div>降低组网门槛，快速访问异地网络设备</div>
         <div>享受 EasyTier 免费、不限设备数量、支持多类型终端等优势</div>
+      </var-cell>
+      <var-cell>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <img alt="GitHub stars" src="https://img.shields.io/github/downloads/710850609/EasyTier-Lite/total?color=blue&label=GitHub%E4%B8%8B%E8%BD%BD%E9%87%8F" />
+          <a href="https://github.com/710850609/fpk-easytier-lite/releases/latest" target="_blank">
+            <img alt="稳定版" src="https://img.shields.io/github/v/release/710850609/EasyTier-Lite?color=blue&logo=github&label=稳定版" />
+          </a>
+          <a href="https://github.com/710850609/fpk-easytier-lite/releases" target="_blank">
+            <img alt="最新版" src="https://img.shields.io/github/v/tag/710850609/EasyTier-Lite?color=blue&logo=github&label=最新版" />
+          </a>
+        </div>
       </var-cell>
     </var-paper>
 

@@ -1,6 +1,8 @@
 # EasyTier-Lite
 ![Downloads](https://img.shields.io/github/downloads/710850609/EasyTier-Lite/total?color=blue&label=downloads)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/710850609/EasyTier-Lite)
+![Latest Version](https://img.shields.io/github/v/tag/710850609/EasyTier-Lite?color=blue&logo=github&label=version)
+
 ## 简介
 <p>EasyTier简化使用的一种UI</p>
 <p>适用于无公网IPv4场景</p>
