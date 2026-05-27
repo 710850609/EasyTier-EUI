@@ -104,7 +104,7 @@ def install_deps():
     return True
 
 
-def build_executable(build_ver:str = None):
+def build_executable(build_ver:str = None, one_file:bool = True):
     """构建可执行文件"""
     print("[3/5] 开始打包...")
 
@@ -130,7 +130,7 @@ def build_executable(build_ver:str = None):
         # sys.executable, "-m", "pyinstaller",
         "pyinstaller",
         "--windowed",
-        "--onefile",  # 单文件
+        "--onefile" if one_file else "--onedir",  # 单文件
         "--clean",    # 清理缓存
         "--name", output_name,
         "--distpath", str(DIST_DIR),
@@ -339,23 +339,30 @@ def extract_easytier(zip_path, core_dir):
         print(f"  解压失败: {e}")
         return False
 
-def copy_output(output_name, et_file, build_ver):
+def copy_output(output_name, et_file, build_ver, one_file:bool):
     """复制输出文件"""
     print("[4/5] 复制输出文件...")
     
     platform_name = get_platform_name()
     output_dir = DIST_DIR.joinpath(f"EasyTier-Lite-{platform_name}")
-    Path(output_dir).mkdir(parents=False, exist_ok=True)
 
-    # 确定可执行文件扩展名
-    ext = ".exe" if sys.platform == "win32" else ""
-    src_file = DIST_DIR.joinpath(f"{output_name}{ext}")
-    if not src_file.exists():
-        print(f"  未找到: {src_file}")
-        return False
-    target_file = output_dir.joinpath(f"{output_name}{ext}")
-    shutil.copy2(src_file, target_file)
-    print(f"  复制到: {target_file}")
+    if one_file:
+        Path(output_dir).mkdir(parents=False, exist_ok=True)
+        # 确定可执行文件扩展名
+        ext = ".exe" if sys.platform == "win32" else ""
+        src_file = DIST_DIR.joinpath(f"{output_name}{ext}")
+        if not src_file.exists():
+            print(f"  未找到: {src_file}")
+            return False
+        target_file = output_dir.joinpath(f"{output_name}{ext}")
+        shutil.copy2(src_file, target_file)
+        print(f"  复制到: {target_file}")
+    else:
+        output_dir = DIST_DIR.joinpath(f"EasyTier-Lite")
+        if not output_dir.exists():
+            print(f"  未找到: {output_dir}")
+            return False
+        pass
 
     if sys.platform == "linux":
         shutil.copy2(PROJECT_DIR.joinpath('shell', 'start.sh'), output_dir.joinpath('start.sh'))
@@ -382,7 +389,7 @@ def copy_output(output_name, et_file, build_ver):
                 zf.write(item, arch_name)
     return True, zipfile_name
 
-def main(et_ver:str=None, github_proxy_url:str=None, build_ver:str=""):
+def main(et_ver:str=None, github_proxy_url:str=None, build_ver:str="", one_file:bool=True):
     """主函数"""
     print("=" * 50)
     print("EasyTier-Lite Server 多平台打包")
@@ -392,6 +399,7 @@ def main(et_ver:str=None, github_proxy_url:str=None, build_ver:str=""):
     print(f"当前Python版本: {platform.python_version()}")
     print(f"当前Python: {sys.executable}")
     print(f"Python 路径: {sys.path}")
+    print(f"打包模式：one_file = {one_file}")
     print("=" * 50)
 
     # 检查 Python
@@ -406,7 +414,7 @@ def main(et_ver:str=None, github_proxy_url:str=None, build_ver:str=""):
         print("[错误] 依赖安装失败")
         sys.exit(1)
 
-    result, output_name = build_executable(build_ver)
+    result, output_name = build_executable(build_ver, one_file)
     if not result:
         print("[错误] 打包失败")
         sys.exit(1)
@@ -416,7 +424,7 @@ def main(et_ver:str=None, github_proxy_url:str=None, build_ver:str=""):
         print(f"[错误] 下载easytier失败")
         sys.exit(1)
 
-    result, output_name = copy_output(output_name, et_file, build_ver)
+    result, output_name = copy_output(output_name, et_file, build_ver, one_file)
     if not result:
         print("[错误] 复制文件失败")
         sys.exit(1)
@@ -440,4 +448,4 @@ if __name__ == "__main__":
     print(f"et_ver: {et_ver}")
     print(f"github_proxy_url: {github_proxy_url}")
 
-    main(et_ver, github_proxy_url, build_ver)
+    main(et_ver, github_proxy_url, build_ver, one_file=True)
