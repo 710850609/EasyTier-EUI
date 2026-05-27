@@ -21,8 +21,8 @@ def check_peers(params: dict, *kwargs):
     """
     profile = (params or {}).get('profile')
     peer_list = public_peers(data = {'profile': profile, 'refresh': True})
-    if len(peer_list) == 0:
-        peer_list = public_peers(data = {'profile': profile, 'refresh': True})
+    # if len(peer_list) == 0:
+    #     peer_list = public_peers(data = {'profile': profile, 'refresh': True})
     # 提取 URI 列表
     peer_uris = [peer['uri'] for peer in peer_list]
     core_dir = run_configs.core_dir()
@@ -137,4 +137,4 @@ def __download_peer_meta():
         raise HttpException(f'获取公共节点失败, 请检查网络连接或切换Github加速地址： {e}')
 
 def __sort_peers(peers: list[dict]):
-    peers.sort(key=lambda x: (-x.get('status'), x.get('latency', 0), x['src_uri'], x['uri']))
+    peers.sort(key=lambda x: (-x.get('status'), x.get('latency', 0), x.get('src_uri', ''), x.get('uri', '')))
