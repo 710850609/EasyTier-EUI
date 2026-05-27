@@ -221,11 +221,11 @@
               <var-cell v-if="fastSettingMode">
                 <div style="font-size: 12px; color: var(--color-warning); margin-top: 8px;">
                   <p>
-                    <span >默认使用动态社区节点用于发现组网节点。</span>
+                    <span >默认使用社区节点用于发现组网节点。</span>
                     <var-icon name="help-circle-outline" size="12pt" @click="showPublicPeerTip = true" class="help-icon" />
                   </p>
                   <p>
-                    <span >如不想用，请 <var-button type="primary" size="mini" @click="fastSettingMode = false">重新选择</var-button> 选择正常模式进行配置</span>
+                    <span >如不想用，请 <var-button type="primary" size="mini" @click="fastSettingMode = false">重新选择</var-button> 普通模式进行配置</span>
                   </p>
 
                 </div>
@@ -562,6 +562,8 @@ const config = ref({
     bind_device: true, 
     multi_thread: true, 
     enable_ipv6: true,
+    private_mode: true,
+    latency_first: true,
     // dev_name: '',
     // compression: '',
   },
@@ -833,16 +835,11 @@ const loadConfigs = async () => {
   }
 }
 
-const loadedProfiles = ref(new Set())
-
 const onConfigSwitch = async (profile) => {
   const cfg = configList.value.find(c => c.profile === profile)
   if (cfg) {
     try {
-      if (!loadedProfiles.value.has(profile)) {
-        await loadConfig(cfg.profile)
-        loadedProfiles.value.add(profile)
-      }
+      await loadConfig(cfg.profile)
     } catch (error) {
       toast.error('加载配置失败: ' + (error.message || '未知错误'))
     }
@@ -902,7 +899,6 @@ const confirmCreateConfig = () => {
   config.value.proxy_network = []
   configList.value.push({ 'profile': profile, 'name': name, 'autostart': false })
   selectedConfig.value = profile
-  loadedProfiles.value.add(profile)
   newConfigName.value = ''
 }
 
@@ -979,6 +975,8 @@ const setupShowMode = async (mode) => {
   return new Promise(async(resolve, reject) => {
     showMode.value = mode
     if (mode === 1) {
+      config.value.network_identity.network_name = ''
+      config.value.network_identity.network_secret = ''
       fastSettingMode.value = true
       if (publicPeerOptions.value.length == 0 || publicPeerOptions.value[0].status != 1) {
         isLoadingConfig.value = true
@@ -1010,7 +1008,6 @@ onMounted(async () => {
   }
   selectedConfig.value = configList.value[0].profile
   await loadConfig(configList.value[0].profile)
-  loadedProfiles.value.add(configList.value[0].profile)
   api.peers.publicPeers({'profile': selectedConfig.value}).then(async data => {
     publicPeerOptions.value = data.data
   })
