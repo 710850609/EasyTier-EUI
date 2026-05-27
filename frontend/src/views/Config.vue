@@ -94,7 +94,7 @@
                 <span class="section-title">{{ fastSettingMode ? '快速设置' : '基础设置' }}</span>
               </div>
               <div v-if="fastSettingMode && publicPeerOptions.length > 0">
-                <span style="font-size: 13px; color: var(--color-warning); margin-top: 8px;">填写网络名称和密码，后点击即可 -> </span>
+                <span class="fast-setting-hint">填写网络名称和密码，后点击即可 -&gt; </span>
                 <var-button type="primary" size="small" @click="saveConfig(true)" auto-loading>保存并启动</var-button>
               </div>
             </div>
@@ -135,7 +135,7 @@
                         width="24"
                         height="24"
                         @click="showPassword = !showPassword"
-                        style="cursor: pointer; opacity: 0.54;"
+                        class="eye-icon"
                         size="8"
                       />
                     </template>
@@ -219,15 +219,14 @@
               </var-cell>
               
               <var-cell v-if="fastSettingMode">
-                <div style="font-size: 12px; color: var(--color-warning); margin-top: 8px;">
+                <div class="fast-setting-mode-hint">
                   <p>
-                    <span >默认使用社区节点用于发现组网节点。</span>
+                    <span>默认使用社区节点用于发现组网节点。</span>
                     <var-icon name="help-circle-outline" size="12pt" @click="showPublicPeerTip = true" class="help-icon" />
                   </p>
                   <p>
-                    <span >如不想用，请 <var-button type="primary" size="mini" @click="fastSettingMode = false">重新选择</var-button> 普通模式进行配置</span>
+                    <span>如不想用，请 <var-button type="primary" size="mini" @click="fastSettingMode = false">重新选择</var-button> 普通模式进行配置</span>
                   </p>
-
                 </div>
               </var-cell>
             </var-skeleton>
@@ -438,8 +437,8 @@
       </div>
     </template>
 
-    <var-popup v-model:show="showCodePage" class="code-editor-popup" :close-on-click-overlay="false" style="width: 100vw; height: 100vh; position: fixed; top: 0; left: 0; right: 0; bottom: 0; margin: 0; padding: 0; max-width: none; max-height: none;">
-      <div style="height: 100%; width: 100%; display: flex; flex-direction: column; margin: 0; padding: 0;">
+    <var-popup v-model:show="showCodePage" class="code-editor-popup" :close-on-click-overlay="false" :style="{ width: '100vw', height: '100vh', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, margin: 0, padding: 0, maxWidth: 'none', maxHeight: 'none' }">
+      <div class="code-editor-wrapper">
         <div class="code-editor-header">
           <span class="editor-title">编辑配置【{{ currentConfigData.name }}】</span>
           <var-space>
@@ -451,8 +450,8 @@
             </var-button>
           </var-space>
         </div>
-        <div style="flex: 1; overflow: auto; margin: 0; padding: 0;">
-          <CodeEditor v-model="configToml" language="toml" style="height: 100%; width: 100%;" />
+        <div class="code-editor-content-area">
+          <CodeEditor v-model="configToml" language="toml" class="code-editor-inner" />
         </div>
       </div>
     </var-popup>
@@ -496,11 +495,11 @@
     </var-dialog>
 
     <var-popup position="top" v-model:show="showPublicPeerTip">
-      <div style="padding: 24px; max-width: 100%; font-size: 14px; margin-top: 10px;">
-        <p style="margin: 4px 0;"><span style="font-weight: bold;">初始节点</span>：用于发现组网设备，数据来自网络社区</p>
-        <p style="margin: 4px 0;"><span style="font-weight: bold;">动态节点</span>：原始节点经过TXT协议转换而来。易组网在线维护数据，解决节点下线后，设备不重启的情况下持续在线。</p>
-        <p style="margin: 4px 0;"><span style="font-weight: bold;">节点刷新</span>：在线获取易组网维护的初始节点数据</p>
-        <p style="margin: 4px 0;"><span style="font-weight: bold;">节点检测</span>：基于易组网本地设备网络，检测节点的是否可用、延迟、是否可转发</p>
+      <div class="help-content">
+        <p class="help-paragraph"><span class="help-bold">初始节点</span>：用于发现组网设备，数据来自网络社区</p>
+        <p class="help-paragraph"><span class="help-bold">动态节点</span>：原始节点经过TXT协议转换而来。易组网在线维护数据，解决节点下线后，设备不重启的情况下持续在线。</p>
+        <p class="help-paragraph"><span class="help-bold">节点刷新</span>：在线获取易组网维护的初始节点数据</p>
+        <p class="help-paragraph"><span class="help-bold">节点检测</span>：基于易组网本地设备网络，检测节点的是否可用、延迟、是否可转发</p>
       </div>
   </var-popup>
   </div>
@@ -1614,6 +1613,74 @@ onMounted(async () => {
   transform: translateX(16px);
 }
 
+/* ===== 内联样式迁移 ===== */
+.fast-setting-hint {
+  font-size: 13px;
+  color: var(--color-warning);
+  margin-top: 8px;
+}
+
+.fast-setting-mode-hint {
+  font-size: 12px;
+  color: var(--color-warning);
+  margin-top: 8px;
+}
+
+.eye-icon {
+  cursor: pointer;
+  opacity: 0.54;
+}
+
+.code-editor-popup-container {
+  width: 100vw;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: 0;
+  padding: 0;
+  max-width: none;
+  max-height: none;
+}
+
+.code-editor-wrapper {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+}
+
+.code-editor-content-area {
+  flex: 1;
+  overflow: auto;
+  margin: 0;
+  padding: 0;
+}
+
+.code-editor-inner {
+  height: 100%;
+  width: 100%;
+}
+
+.help-content {
+  padding: 24px;
+  max-width: 100%;
+  font-size: 14px;
+  margin-top: 10px;
+}
+
+.help-paragraph {
+  margin: 4px 0;
+}
+
+.help-bold {
+  font-weight: bold;
+}
+
 /* ===== Deep 覆盖 ===== */
 :deep(.var-form) {
   display: flex;
@@ -1808,6 +1875,157 @@ onMounted(async () => {
   .peer-status-area {
     flex-direction: column;
     align-items: flex-end;
+    gap: 4px;
+  }
+}
+</style>
+
+<!-- 全局样式 - 解决 Varlet 下拉菜单样式穿透问题 -->
+<style>
+/* 节点选择下拉菜单样式 */
+.var-select-dropdown .peer-option-wrapper {
+  padding: 0;
+  margin: 0;
+}
+
+.var-select-dropdown .var-cell {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.var-select-dropdown .var-cell__title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text);
+  margin-bottom: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.var-select-dropdown .var-cell__description {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.var-select-dropdown .peer-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.var-select-dropdown .peer-primary-uri {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.var-select-dropdown .peer-secondary-uri {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.var-select-dropdown .peer-tag {
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.var-select-dropdown .latency-tag {
+  background-color: var(--color-primary-container);
+  color: var(--color-on-primary-container);
+}
+
+.var-select-dropdown .latency-good {
+  background-color: var(--color-success);
+  color: #fff;
+}
+
+.var-select-dropdown .latency-normal {
+  background-color: var(--color-warning);
+  color: #fff;
+}
+
+.var-select-dropdown .latency-bad {
+  background-color: var(--color-danger);
+  color: #fff;
+}
+
+.var-select-dropdown .relay-tag {
+  background-color: var(--color-info);
+  color: #fff;
+}
+
+.var-select-dropdown .dynamic-tag {
+  background-color: var(--color-primary);
+  color: #fff;
+}
+
+.var-select-dropdown .var-cell__extra {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.var-select-dropdown .status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.var-select-dropdown .status-online {
+  background-color: var(--color-success);
+}
+
+.var-select-dropdown .status-offline {
+  background-color: var(--color-danger);
+}
+
+.var-select-dropdown .peer-status-area {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* 移动端适配 */
+@media (max-width: 767px) {
+  .var-select-dropdown .var-cell {
+    padding: 6px 10px;
+  }
+  
+  .var-select-dropdown .var-cell__title {
+    font-size: 13px;
+  }
+  
+  .var-select-dropdown .peer-primary-uri {
+    font-size: 13px;
+  }
+  
+  .var-select-dropdown .peer-secondary-uri {
+    font-size: 11px;
+    gap: 4px;
+  }
+  
+  .var-select-dropdown .peer-tag {
+    font-size: 10px;
+    padding: 1px 4px;
+  }
+  
+  .var-select-dropdown .var-cell__extra {
+    gap: 4px;
+  }
+  
+  .var-select-dropdown .peer-status-area {
     gap: 4px;
   }
 }

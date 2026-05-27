@@ -3,6 +3,7 @@
 import logging
 import os.path
 import sys
+import threading
 from pathlib import Path
 from typing import Union, List, Optional, Set
 
@@ -14,21 +15,29 @@ from utils import run_configs
 from utils.process_util import ProcessManager
 from utils.validators import Validator
 
-# 延迟初始化：使用单例模式
+# 延迟初始化：使用线程安全的单例模式
 _pm = {}
+_pm_lock = threading.Lock()
 _ext = ".exe" if sys.platform == "win32" else ""
 
 def _get_process_manager(profile:str = None) -> Union[ProcessManager]:
-    """获取 ProcessManager 实例（延迟初始化）"""
-    global _pm
+    """获取 ProcessManager 实例（延迟初始化，线程安全）"""
     if not profile:
         raise HttpException(f"profile is none for process manager")
     pm_key = profile
+    
+    # 双重检查锁定模式，保证线程安全的同时提高性能
     cur_pm = _pm.get(pm_key)
-    if cur_pm is None:
-        pid_file = run_configs.et_pid_file(profile)
-        cur_pm = process_util.ProcessManager(pid_file.replace('.toml', ''))
-        _pm[pm_key] = cur_pm
+    if cur_pm is not None:
+        return cur_pm
+    
+    with _pm_lock:
+        # 再次检查，防止在获取锁期间已被其他线程创建
+        cur_pm = _pm.get(pm_key)
+        if cur_pm is None:
+            pid_file = run_configs.et_pid_file(profile)
+            cur_pm = process_util.ProcessManager(pid_file.replace('.toml', ''))
+            _pm[pm_key] = cur_pm
     return cur_pm
 
 def status(params=None, *kwargs) -> bool:
@@ -279,6 +288,3 @@ def _system_service_status() -> int:
         raise HttpException(f"未知服务状态： {result}")
 
 
-if __name__ == '__main__':
-    # os.symlink("F:/git-space/EasyTier-Lite/temp/EasyTier-Lite/config/default.toml", "F:/git-space/EasyTier-Lite/temp/EasyTier-Lite/config/setup/default.toml", target_is_directory=False)
-    os.symlink("F:/git-space/EasyTier-Lite/temp/EasyTier-Lite/config/测试.toml", "F:/git-space/EasyTier-Lite/temp/EasyTier-Lite/config/setup/测试.toml", target_is_directory=False)

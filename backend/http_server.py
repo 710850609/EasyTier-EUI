@@ -91,10 +91,16 @@ class CGIProxyHandler(BaseHTTPRequestHandler):
                 if header_key not in env:
                     env[header_key] = value
 
-            for item in env.items():
-                os.environ[item[0]] = item[1]
-
-            resp = dispatcher.http_handle(base_uri=BASE_URI, body_data=stdin_data, cgi_module=False)
+            # 保存原始环境变量，避免污染全局环境
+            original_env = os.environ.copy()
+            try:
+                # 临时设置环境变量供 dispatcher 使用
+                os.environ.update(env)
+                resp = dispatcher.http_handle(base_uri=BASE_URI, body_data=stdin_data, cgi_module=False)
+            finally:
+                # 恢复原始环境变量
+                os.environ.clear()
+                os.environ.update(original_env)
             self.send_response(resp.status_code)
             if resp.headers is not None:
                 for key, value in resp.headers.items():
