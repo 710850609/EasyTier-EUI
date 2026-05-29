@@ -2,11 +2,6 @@
   "count": 2,
   "updateTime": 1776731675,
   "peers": {
-    "txt://2.ethub1.v6.army": {
-      "status": 1,
-      "updateTime": 1776731675,
-      "uri": "tcp://ros.scpsl.com.cn:11010"
-    },
     "tcp://225284.xyz:11010": {
       "status": 1,
       "updateTime": 1776731675,
