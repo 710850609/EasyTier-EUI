@@ -22,9 +22,9 @@
 
 ## 界面
 ### PC端界面
-<img src="assets/nodes-pc1.png" width="300" /><img src="assets/nodes-pc2.png" width="300" />
+<img src="assets/nodes-pc1.png" width="300" /><img src="assets/config-pc3.png" width="300" />
 <br>
-<img src="assets/config-pc3.png" width="300" /><img src="assets/config-pc1.png" width="300" />
+<img src="assets/nodes-pc2.png" width="300" /><img src="assets/config-pc1.png" width="300" />
 <br>
 <img src="assets/config-pc2.png" width="300" /><img src="assets/download-pc1.png" width="300" />
 <br>
