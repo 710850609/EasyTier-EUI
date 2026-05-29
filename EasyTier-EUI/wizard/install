@@ -1,0 +1,26 @@
+[
+    {
+        "stepTitle": "欢迎安装",
+        "items": [
+            {
+                "type": "tips",
+                "helpText": "欢迎安装使用EasyTier-EUI，一款方便使用EasyTier的UI界面"
+            },
+            {
+                "type": "tips",
+                "helpText": "EasyTier需要管理员权限创建TUN设备，以支持虚拟组网功能，需要您同意以root权限运行EasyTier-EUI。"
+            },
+            {
+                "type": "switch",
+                "field": "wizard_agree_terms",
+                "label": "我已阅读并同意授权",
+                "rules": [
+                    {
+                        "required": true,
+                        "message": "请同意授权"
+                    }
+                ]
+            }
+        ]
+    }
+]
