@@ -3,7 +3,7 @@
 
 # 获取脚本所在目录（绝对路径）
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-EXECUTABLE="$SCRIPT_DIR/EasyTier-Lite"
+EXECUTABLE="$SCRIPT_DIR/EasyTier-EUI"
 PID_FILE="$SCRIPT_DIR/easytier.pid"
 LOG_FILE="$SCRIPT_DIR/logs/app.log"
 
@@ -17,7 +17,7 @@ fi
 if [ -f "$PID_FILE" ]; then
     PID=$(cat "$PID_FILE")
     if kill -0 "$PID" 2>/dev/null; then
-        echo "EasyTier-Lite 似乎已在运行 (PID: $PID)"
+        echo "EasyTier-EUI 似乎已在运行 (PID: $PID)"
         exit 1
     fi
 fi
@@ -26,7 +26,7 @@ fi
 sudo nohup "$EXECUTABLE" > /dev/null 2>&1 &
 PID=$!
 echo $PID > "$PID_FILE"
-echo "EasyTier-Lite 已启动，PID: $PID"
+echo "EasyTier-EUI 已启动，PID: $PID"
 echo "启动信息：可点击URL跳浏览器访问，或是手机扫描二维码访问"
 
 # 可选：显示前几行日志

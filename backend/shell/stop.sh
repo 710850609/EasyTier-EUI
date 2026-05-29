@@ -2,7 +2,7 @@
 # 停止 EasyTier-EUI 的所有进程
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-EXECUTABLE="$SCRIPT_DIR/EasyTier-Lite"
+EXECUTABLE="$SCRIPT_DIR/EasyTier-EUI"
 PID_FILE="$SCRIPT_DIR/easytier.pid"
 
 # 1. 先用 PID 文件尝试停止
@@ -23,7 +23,7 @@ fi
 
 # 2. 再通过进程名清理残留（兼容有/无 pkill 的环境）
 if command -v pkill >/dev/null 2>&1; then
-    pkill -f "EasyTier-Lite"
+    pkill -f "EasyTier-EUI"
 else
     # 回退方案：ps + grep + awk + kill
     PIDS=$(ps -eo pid,args | grep "$EXECUTABLE" | grep -v grep | awk '{print $1}')
@@ -33,4 +33,4 @@ else
     fi
 fi
 
-echo "EasyTier-Lite 已停止"
+echo "EasyTier-EUI 已停止"
