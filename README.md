@@ -22,21 +22,20 @@
 
 ## 界面
 ### PC端界面
-<img src="assets/nodes-pc1.png" width="260" />
-<img src="assets/nodes-pc2.png" width="260" />
-<img src="assets/config-pc3.png" width="260" />
-<img src="assets/config-pc1.png" width="260" />
-<img src="assets/config-pc2.png" width="260" />
-<img src="assets/download-pc1.png" width="260" />
-<img src="assets/setting-pc1.png" width="260" />
+<img src="assets/nodes-pc1.png" width="300" />
+<img src="assets/nodes-pc2.png" width="300" />
+<br>
+<img src="assets/config-pc3.png" width="300" />
+<img src="assets/config-pc1.png" width="300" />
+<br>
+<img src="assets/config-pc2.png" width="300" />
+<img src="assets/download-pc1.png" width="300" />
+<br>
+<img src="assets/setting-pc1.png" width="300" />
 
 
 ### 移动端界面
-<img src="assets/nodes-m1.png" height="260" />
-<img src="assets/config-m2.png" height="260" />
-<img src="assets/config-m1.png" height="260" />
-<img src="assets/download-m1.png" height="260" />
-<img src="assets/setting-m1.png" height="260" />
+<img src="assets/nodes-m1.png" height="260" /> <img src="assets/config-m2.png" height="260" /> <img src="assets/config-m1.png" height="260" /> <img src="assets/download-m1.png" height="260" /> <img src="assets/setting-m1.png" height="260" />
 
 
 ## 其他链接
