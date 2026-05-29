@@ -142,7 +142,7 @@ def build_executable(build_ver:str = None, one_file:bool = True):
         "--hidden-import", "psutil",
         "--hidden-import", "actions.configs",
         "--hidden-import", "actions.et_core",
-        "--hidden-import", "actions.et_lite",
+        "--hidden-import", "actions.et_eui",
         "--hidden-import", "actions.monitor",
         "--hidden-import", "actions.peers",
         "--hidden-import", "actions.services",

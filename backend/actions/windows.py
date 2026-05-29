@@ -23,7 +23,7 @@ def download_mgr_pro(params:dict, *kwargs):
     et_package = et_util.download_package(download_dir, 'windows', 'x86_64', et_version)
     et_mgr_version = _get_et_mgr_latest_version()
     et_mgr_package = _get_et_mgr_package(et_mgr_version, download_dir)
-    output_file = f"{download_dir}/easytier-manager-pro-v{et_mgr_version}-v{et_version}.zip"
+    output_file = f"{download_temp_dir}/easytier-manager-pro-v{et_mgr_version}-v{et_version}.zip"
     _merge_package(profile, et_package, et_mgr_package, output_file, download_temp_dir)
     return HttpResponse(file=output_file, download_name=Path(output_file).name)
 

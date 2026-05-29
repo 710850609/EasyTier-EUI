@@ -7,4 +7,4 @@
 - 支持显示日志
 - GitHub加速地址，支持在线获取，并识别是否支持api
 - GitHub release文件下载支持，多线程下载，自动选择加速地址
-- 程序包改名 EasyTier-EUI
+

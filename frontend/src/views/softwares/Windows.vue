@@ -191,7 +191,7 @@ const downloadApp = () => {
   try {
     if (selectedApp.value == 'mgr') {
       downloadingMgrPro.value = true
-      let url = api.windows.getDownloadMgrProUrl({profile: selectedConfig.value})
+      let url = api.windows.getDownloadMgrProUrl({profile: selectedConfig.value || ''})
       window.open(url, '_blank')
     } else if (selectedApp.value == 'etEui') {
       downloadingEtEui.value = true

@@ -20,6 +20,25 @@
 - 提供动态初始节点（数据来自网络社区）
 - 支持本地初始节点检测：可用性、延迟、可中转
 
+## 界面
+### PC端界面
+<img src="assets/nodes-pc1.png" width="260" />
+<img src="assets/nodes-pc2.png" width="260" />
+<img src="assets/config-pc3.png" width="260" />
+<img src="assets/config-pc1.png" width="260" />
+<img src="assets/config-pc2.png" width="260" />
+<img src="assets/download-pc1.png" width="260" />
+<img src="assets/setting-pc1.png" width="260" />
+
+
+### 移动端界面
+<img src="assets/nodes-m1.png" height="260" />
+<img src="assets/config-m2.png" height="260" />
+<img src="assets/config-m1.png" height="260" />
+<img src="assets/download-m1.png" height="260" />
+<img src="assets/setting-m1.png" height="260" />
+
+
 ## 其他链接
 - <a href="https://github.com/EasyTier/EasyTier">EasyTier源码</a>
 - <a href="https://easytier.cn">EasyTier文档</a>

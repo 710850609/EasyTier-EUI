@@ -189,7 +189,7 @@ const downloadEasyTierEui = async (platform, arch) => {
 
 const handleConfigConfirm = async () => {
   if (selectedConfig.value) {
-    const url = api.etEui.getDownloadEasyTierEuiUrl({platform: selectedPlatform.value, 'arch': selectedArch.value, profile: selectedConfig.value})
+    const url = api.etEui.getDownloadEasyTierEuiUrl({platform: selectedPlatform.value, 'arch': selectedArch.value, profile: selectedConfig.value || ''})
     window.open(url, '_blank')
   }
   selectedConfig.value = null

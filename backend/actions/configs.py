@@ -157,7 +157,7 @@ def get_share_config_str(params=None, *kwargs):
 
 def copy(profile:str):
     profile = Validator.check_profile(profile)
-    tmp_file = run_configs.data_dir() + '/tmp/config-copy.toml'
+    tmp_file = run_configs.data_dir() + '/download/temp/config-copy.toml'
     
     # 确保目录存在
     os.makedirs(os.path.dirname(tmp_file), exist_ok=True)
