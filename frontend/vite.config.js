@@ -7,8 +7,8 @@ import { VarletUIResolver } from 'unplugin-vue-components/resolvers'
 import { createHtmlPlugin } from 'vite-plugin-html'
 
 // 生产环境配置
-const BASE = '/cgi/ThirdParty/EasyTier-Lite/index.cgi'
-const API_BASE = '/cgi/ThirdParty/EasyTier-Lite/index.cgi/api'
+const BASE = '/cgi/ThirdParty/EasyTier-EUI/index.cgi'
+const API_BASE = '/cgi/ThirdParty/EasyTier-EUI/index.cgi/api'
 const fnosToken = 'k/8Qbvscxmlur9xYlceJUssSS7ho0AM7CN4r/qM6p9U='
 
 export default defineConfig(({ mode }) => ({

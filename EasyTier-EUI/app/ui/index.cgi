@@ -33,8 +33,8 @@ def active_venv():
 
 def dispatcher():
     from http_dispatcher import  dispatcher
-    # os.environ['FRONTEND_PATH'] = f'/var/apps/EasyTier-Lite/target/frontend'
-    dispatcher.http_handle(base_uri='/cgi/ThirdParty/EasyTier-Lite/index.cgi', cgi_module=True)
+    # os.environ['FRONTEND_PATH'] = f'/var/apps/EasyTier-EUI/target/frontend'
+    dispatcher.http_handle(base_uri='/cgi/ThirdParty/EasyTier-EUI/index.cgi', cgi_module=True)
 
 if __name__ == '__main__':
     try:

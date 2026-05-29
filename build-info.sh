@@ -1,7 +1,7 @@
 #!/bin/bash
 
 et_version() {
-    local min_et_version='2.5.0'
+    local min_et_version='2.6.4'
     local fetch_url="https://api.github.com/repos/EasyTier/EasyTier/releases/latest"
 
     # 检查 jq 是否存在
@@ -10,13 +10,24 @@ et_version() {
         exit 1
     fi
 
-    # 带超时和重试的 curl
+    # 带超时和重试的 curl，保存错误输出
     local latest_release
-    latest_release=$(curl -fsSL --max-time 15 --retry 1 "${fetch_url}" 2>/dev/null)
+    local curl_error
+    latest_release=$(curl -fsSL --max-time 15 --retry 1 "${fetch_url}" 2>&1)
+    curl_exit_code=$?
 
-    if [ -z "$latest_release" ]; then
-        echo "获取最新 EasyTier 版本信息失败" >&2
-        exit 1
+    if [ -z "$latest_release" ] || [ $curl_exit_code -ne 0 ]; then
+        echo "错误：获取最新 EasyTier 版本信息失败" >&2
+        echo "  URL: ${fetch_url}" >&2
+        echo "  curl 退出码: ${curl_exit_code}" >&2
+        if [ -n "$latest_release" ]; then
+            echo "  错误信息: ${latest_release}" >&2
+        else
+            echo "  错误信息: 服务器无响应或返回空内容" >&2
+        fi
+        echo "  请检查网络连接或稍后重试" >&2
+        ET_VER="$min_et_version"
+#        exit 1
     fi
 
     # 提取版本号

@@ -12,15 +12,15 @@
         </div>
       </div>
       <div class="version-info">
-        <var-cell>集成当前配置、EasyTier内核，解压启动后启动服务即可组网</var-cell>
+        <var-cell>集成当前配置、EasyTier内核，解压启动后启动服务即可组网(自建初始节点，请自行修改配置)</var-cell>
         <var-cell>
-          <var-link type="primary" underline="none" href="https://github.com/710850609/EasyTier-Lite/releases" target="_blank"><img src="https://img.shields.io/github/v/release/710850609/EasyTier-Lite?color=blue&logo=github&label=稳定版" /></var-link>
+          <var-link type="primary" underline="none" href="https://github.com/710850609/EasyTier-EUI/releases" target="_blank"><img src="https://img.shields.io/github/v/release/710850609/EasyTier-EUI?color=blue&logo=github&label=稳定版" /></var-link>
         </var-cell>
       </div>
       <div>
         <var-divider />
         <var-space :size="[20, 20]" justify="center">
-          <var-button type="primary" size="normal" block @click="showSelectProfile('etLite')" :loading="downloadingEtLite">
+          <var-button type="primary" size="normal" block @click="showSelectProfile('etEui')" :loading="downloadingEtEui">
             <template #default>
               <var-icon name="download"/>
               稳定版
@@ -168,7 +168,7 @@ const showConfigSelectDialog = ref(false)
 const configFiles = ref([])
 const selectedConfig = ref(null)
 const selectedApp = ref(null)
-const downloadingEtLite = ref(false)
+const downloadingEtEui = ref(false)
 const downloadingMgrPro = ref(false)
 
 const showSelectProfile = async (app) => {
@@ -193,9 +193,9 @@ const downloadApp = () => {
       downloadingMgrPro.value = true
       let url = api.windows.getDownloadMgrProUrl({profile: selectedConfig.value})
       window.open(url, '_blank')
-    } else if (selectedApp.value == 'etLite') {
-      downloadingEtLite.value = true
-      const url = api.etLite.getDownloadEasyTierLiteUrl({platform: 'windows', 'arch': 'x86_64', profile: selectedConfig.value})
+    } else if (selectedApp.value == 'etEui') {
+      downloadingEtEui.value = true
+      const url = api.etEui.getDownloadEasyTierEuiUrl({platform: 'windows', 'arch': 'x86_64', profile: selectedConfig.value || ''})
       window.open(url, '_blank')
     } else {
       toast.error('未知的待下载应用')
@@ -203,7 +203,7 @@ const downloadApp = () => {
     }
   } finally {
     downloadingMgrPro.value = false
-    downloadingEtLite.value = false
+    downloadingEtEui.value = false
     selectedConfig.value = null
   }
 }

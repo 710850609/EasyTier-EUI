@@ -20,9 +20,9 @@ def check_peers(params: dict, *kwargs):
     :param request_data: 请求数据（可选）
     """
     profile = (params or {}).get('profile')
-    peer_list = public_peers(data = {'profile': profile, 'refresh': True})
-    # if len(peer_list) == 0:
-    #     peer_list = public_peers(data = {'profile': profile, 'refresh': True})
+    peer_list = public_peers(data = {'profile': profile, 'refresh': False})
+    if len(peer_list) == 0:
+        peer_list = public_peers(data = {'profile': profile, 'refresh': True})
     # 提取 URI 列表
     peer_uris = [peer['uri'] for peer in peer_list]
     core_dir = run_configs.core_dir()
@@ -121,7 +121,7 @@ def __save_peer_check_result(peers: list[dict|PeersCheckResult], sort: bool=Fals
 def __download_peer_meta():
     try:
         github_proxy = github_util.get_github_proxy()
-        peer_meta_url = f"https://raw.githubusercontent.com/710850609/EasyTier-Lite/refs/heads/main/peers/peer-txt-meta.json"
+        peer_meta_url = f"https://raw.githubusercontent.com/710850609/EasyTier-EUI/refs/heads/main/peers/peer-txt-meta.json"
         if github_proxy and github_proxy != '':
             peer_meta_url = f"{github_proxy}/{peer_meta_url}"
         response = requests.get(peer_meta_url, timeout=30)

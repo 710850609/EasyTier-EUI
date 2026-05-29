@@ -12,33 +12,33 @@
         </div>
       </div>
       <div class="version-info">
-        <var-cell>集成当前配置、EasyTier内核，解压启动后启动服务即可组网</var-cell>
+        <var-cell>集成当前配置、EasyTier内核，解压启动后启动服务即可组网(自建初始节点，请自行修改配置)</var-cell>
         <var-cell>
-          <var-link type="primary" underline="none" href="https://github.com/710850609/EasyTier-Lite/releases" target="_blank"><img src="https://img.shields.io/github/v/release/710850609/EasyTier-Lite?color=blue&logo=github&label=稳定版" /></var-link>
+          <var-link type="primary" underline="none" href="https://github.com/710850609/EasyTier-EUI/releases" target="_blank"><img src="https://img.shields.io/github/v/release/710850609/EasyTier-EUI?color=blue&logo=github&label=稳定版" /></var-link>
         </var-cell>
       </div>
       <div>
         <var-divider />
         <var-space :size="[20, 20]" justify="center">
-          <var-button type="primary" size="normal" block @click="downloadEasyTierLite('linux', 'x86_64')" auto-loading>
+          <var-button type="primary" size="normal" block @click="downloadEasyTierEui('linux', 'x86_64')" auto-loading>
             <template #default>
               <var-icon name="download"/>
               x86_64版
             </template>
           </var-button>
-          <var-button type="primary" size="normal" block @click="downloadEasyTierLite('linux', 'aarch64')" auto-loading>
+          <var-button type="primary" size="normal" block @click="downloadEasyTierEui('linux', 'aarch64')" auto-loading>
             <template #default>
               <var-icon name="download"/>
               aarch64版
             </template>
           </var-button>
-          <var-button type="primary" size="normal" block @click="downloadEasyTierLite('linux', 'riscv64')" auto-loading>
+          <var-button type="primary" size="normal" block @click="downloadEasyTierEui('linux', 'riscv64')" auto-loading>
             <template #default>
               <var-icon name="download"/>
               armv7版
             </template>
           </var-button>
-          <var-button type="primary" size="normal" block @click="downloadEasyTierLite('linux', 'riscv64')" auto-loading>
+          <var-button type="primary" size="normal" block @click="downloadEasyTierEui('linux', 'riscv64')" auto-loading>
             <template #default>
               <var-icon name="download"/>
               riscv64版
@@ -153,6 +153,7 @@
 </template>
 
 <script setup>
+import toast from '../../components/toast.js'
 import { api } from '../../utils/api.js'
 import { downloadEasyTierGUI } from '../../utils/github.js'
 
@@ -167,7 +168,7 @@ const selectedConfig = ref(null)
 const selectedPlatform = ref(null)
 const selectedArch = ref(null)
 
-const downloadEasyTierLite = async (platform, arch) => {
+const downloadEasyTierEui = async (platform, arch) => {
   const configs = await api.configs.listConfigFiles().then(resp => resp.data).catch(error => toast.error('获取配置失败:', error))
   let profile = ''
   selectedPlatform.value = platform
@@ -182,13 +183,13 @@ const downloadEasyTierLite = async (platform, arch) => {
     showConfigSelectDialog.value = true
     return
   }
-  const url = api.etLite.getDownloadEasyTierLiteUrl({platform: platform, 'arch': arch, profile: profile})
+  const url = api.etEui.getDownloadEasyTierEuiUrl({platform: platform, 'arch': arch, profile: profile})
   window.open(url, '_blank')
 }
 
 const handleConfigConfirm = async () => {
   if (selectedConfig.value) {
-    const url = api.etLite.getDownloadEasyTierLiteUrl({platform: selectedPlatform.value, 'arch': selectedArch.value, profile: selectedConfig.value})
+    const url = api.etEui.getDownloadEasyTierEuiUrl({platform: selectedPlatform.value, 'arch': selectedArch.value, profile: selectedConfig.value})
     window.open(url, '_blank')
   }
   selectedConfig.value = null

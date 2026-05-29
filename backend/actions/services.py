@@ -231,7 +231,7 @@ def _system_service_install(profiles: List[str]) -> str:
         else:
             logging.warning(f"跳过配置不存在: {profile}")
     desc = f"易组网-启动配置:{','.join(profiles)}"
-    display_name = "EasyTier-Lite"
+    display_name = "EasyTier-EUI"
     rpc_port = check_peers.get_available_port(start_port=16999)
     rpc_portal = f"127.0.0.1:{rpc_port}"
     cmd = (f"{os.path.join(run_configs.core_dir(), 'easytier-cli')}{_ext} service install "

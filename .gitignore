@@ -21,12 +21,12 @@ venv/
 ENV/
 env/
 
-# EasyTier-Lite
-EasyTier-Lite/app/bin/*
-EasyTier-Lite/app/server
-EasyTier-Lite/app/frontend
-EasyTier-Lite/app/backend
-EasyTier-Lite/app/default.toml
+# EasyTier-EUI
+EasyTier-EUI/app/bin/*
+EasyTier-EUI/app/server
+EasyTier-EUI/app/frontend
+EasyTier-EUI/app/backend
+EasyTier-EUI/app/default.toml
 
 peers/.venv
 peers/.venv

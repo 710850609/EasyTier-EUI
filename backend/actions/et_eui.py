@@ -14,29 +14,29 @@ from http_dispatcher.dispatcher import HttpResponse
 from utils import run_configs
 
 
-def download_easytier_lite(params:dict, *kwargs):
+def download_easytier_eui(params:dict, *kwargs):
     if not params:
         raise HttpResponse(f"未指定platfrom和arch参数")
     output_dir = os.path.join(run_configs.data_dir(), 'download')
-    download_temp_dir = f"{output_dir}/tmp"
-    et_lite_version = _get_et_lite_latest_version()
+    download_temp_dir = f"{output_dir}"
+    et_lite_version = _get_et_eui_latest_version()
     platform = params.get('platform', '')
     arch = params.get('arch', '')
     profile = params.get('profile', '')
-    et_lite_package = _get_et_lite_package(platform, arch, et_lite_version, download_temp_dir)
+    et_lite_package = _get_et_eui_package(platform, arch, et_lite_version, output_dir)
     if platform == 'fnos':
         return HttpResponse(file=et_lite_package, download_name=os.path.basename(et_lite_package))
     else:
         et_lite_filename = Path(et_lite_package).name
-        output_file = f"{output_dir}/{et_lite_filename.replace('.zip', '_merge.zip')}"
-        _merge_et_lite_package(profile, et_lite_package, output_file, download_temp_dir)
+        output_file = f"{output_dir}/tmp/{et_lite_filename.replace('.zip', '_merge.zip')}"
+        _merge_package(profile, et_lite_package, output_file, download_temp_dir)
         return HttpResponse(file=output_file, download_name=et_lite_filename)
 
-def _get_et_lite_latest_version():
-    api_url = "https://api.github.com/repos/710850609/EasyTier-Lite/releases/latest"
+def _get_et_eui_latest_version():
+    api_url = "https://api.github.com/repos/710850609/EasyTier-EUI/releases/latest"
     return github_util.get_latest_version(api_url)
 
-def _get_et_lite_package(platform:str, arch:str, et_lite_version: str, download_dir: str):
+def _get_et_eui_package(platform:str, arch:str, et_lite_version: str, download_dir: str):
     support_platforms = ['windows', 'linux', 'macos', 'fnos']
     if platform not in support_platforms:
         raise HttpResponse(f"当前不支持 {platform} 平台下载，仅支持 {support_platforms}")
@@ -45,14 +45,14 @@ def _get_et_lite_package(platform:str, arch:str, et_lite_version: str, download_
         raise HttpResponse(f"当前不支持 {arch} 架构下载，仅支持 {support_arches}")
 
     last_version = et_lite_version
-    file_name = f"EasyTier-Lite-{platform}-{arch}-{last_version}.zip"
+    file_name = f"EasyTier-EUI-{platform}-{arch}-{last_version}.zip"
     if platform == 'fnos':
         file_name = file_name.replace('.zip', '.fpk')
     download_file = download_dir + '/' + file_name
     if Path(download_file).exists():
         logging.debug(f"已存在缓存:{download_file}")
         return download_file
-    download_url = f"https://github.com/710850609/EasyTier-Lite/releases/download/{last_version}/{file_name}"
+    download_url = f"https://github.com/710850609/EasyTier-EUI/releases/download/{last_version}/{file_name}"
     logging.debug(f"不存在缓存，开始下载 {download_url}")
     download_temp_file = f"{download_dir}/{file_name}.{int(time.time())}"
     github_util.download_file(download_url, download_temp_file, Path(download_temp_file).name)
@@ -61,9 +61,10 @@ def _get_et_lite_package(platform:str, arch:str, et_lite_version: str, download_
     return download_file
 
     
-def _merge_et_lite_package(profile, et_lite_package, output_file, unzip_dir):
+def _merge_package(profile, et_lite_package, output_file, unzip_dir):
     unzip_temp_dir = f"{unzip_dir}/{int(time.time())}"
     logging.info(f"解压: {et_lite_package} -> {unzip_temp_dir}")
+    config_path = ''
     with zipfile.ZipFile(et_lite_package, 'r') as zf:
         # zf.extractall(unzip_temp_dir)
         for info in zf.infolist():
@@ -74,6 +75,8 @@ def _merge_et_lite_package(profile, et_lite_package, output_file, unzip_dir):
             local_path = os.path.join(unzip_temp_dir, *normalized_path.split('/'))            
             if info.is_dir():
                 os.makedirs(local_path, exist_ok=True)
+                if local_path == 'core':
+                    config_path = os.path.dirname(local_path) + '/config'
             else:
                 os.makedirs(os.path.dirname(local_path), exist_ok=True)
                 with zf.open(info) as src, open(local_path, 'wb') as dst:
@@ -81,7 +84,7 @@ def _merge_et_lite_package(profile, et_lite_package, output_file, unzip_dir):
     if profile:
         logging.info(f"内置配置文件：{profile}")
         config_file = configs.copy(profile)
-        cfg_target_file = f"{unzip_temp_dir}/config/{profile}"
+        cfg_target_file = f"{config_path}/{profile}"
         Path(cfg_target_file).parent.mkdir(parents=True, exist_ok=True)
         logging.info(f"复制: {config_file}  ->  {cfg_target_file}")
         common_util.move(f"{config_file}", f"{cfg_target_file}")
@@ -90,6 +93,7 @@ def _merge_et_lite_package(profile, et_lite_package, output_file, unzip_dir):
     
 
     logging.info(f"开始打包: {output_file}")
+    Path(output_file).parent.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(output_file, 'w', zipfile.ZIP_DEFLATED) as zf:
         for item in Path(unzip_temp_dir).rglob('*'):
             if item.is_file():

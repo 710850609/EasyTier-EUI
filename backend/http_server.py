@@ -14,7 +14,7 @@ from typing import Optional
 from http_dispatcher import dispatcher
 from utils import run_configs, log_util, ip_util, qrcode_util, permissions_util
 
-BASE_URI = "/cgi/ThirdParty/EasyTier-Lite/index.cgi"
+BASE_URI = "/cgi/ThirdParty/EasyTier-EUI/index.cgi"
 
 class CGIProxyHandler(BaseHTTPRequestHandler):
     """处理 HTTP 请求并转发给 CGI 脚本"""

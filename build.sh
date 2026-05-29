@@ -1,7 +1,7 @@
 #!/bin/bash
 
 DOWNLOAD_FILE="unknown"
-BIN_DIR="EasyTier-Lite/app/bin"
+BIN_DIR="EasyTier-EUI/app/bin"
 
 declare -A PARAMS
 # 默认值
@@ -96,10 +96,10 @@ build_backend() {
     ' "$target_file" > "${target_file}.tmp" && mv "${target_file}.tmp" "$target_file"
 
     echo "下载py依赖"
-    rm -rf EasyTier-Lite/app/backend 
-    mkdir -p EasyTier-Lite/app/backend/wheels
+    rm -rf EasyTier-EUI/app/backend
+    mkdir -p EasyTier-EUI/app/backend/wheels
     # 下载 wheel 
-    app_script_path="EasyTier-Lite/app/backend"
+    app_script_path="EasyTier-EUI/app/backend"
     pip download \
         --only-binary=:all: \
         --platform $py_platform \
@@ -143,9 +143,9 @@ build_frontend() {
     else
       echo "已存在前端编译资源，跳过编译前端"
     fi
-    rm -rf EasyTier-Lite/app/frontend
-    mkdir -p EasyTier-Lite/app/frontend
-    cp -rf frontend/dist/* EasyTier-Lite/app/frontend/
+    rm -rf EasyTier-EUI/app/frontend
+    mkdir -p EasyTier-EUI/app/frontend
+    cp -rf frontend/dist/* EasyTier-EUI/app/frontend/
     echo '拷贝前端资源到app/frontend目录'
 }
 
@@ -185,25 +185,25 @@ update_app() {
 
 build_fpk() {
     local fpk_version=$BUILD_VER
-    sed -i "s|^[[:space:]]*version[[:space:]]*=.*|version=${fpk_version}|" 'EasyTier-Lite/manifest'
+    sed -i "s|^[[:space:]]*version[[:space:]]*=.*|version=${fpk_version}|" 'EasyTier-EUI/manifest'
     echo "设置 manifest 的 version 为: ${fpk_version}"
-    sed -i "s|^[[:space:]]*platform[[:space:]]*=.*|platform=${platform}|" 'EasyTier-Lite/manifest'
+    sed -i "s|^[[:space:]]*platform[[:space:]]*=.*|platform=${platform}|" 'EasyTier-EUI/manifest'
     echo "设置 manifest 的 platform 为: ${platform}"
-    sed -i "s|^[[:space:]]*os_min_version[[:space:]]*=.*|os_min_version=${os_min_version}|" 'EasyTier-Lite/manifest'
+    sed -i "s|^[[:space:]]*os_min_version[[:space:]]*=.*|os_min_version=${os_min_version}|" 'EasyTier-EUI/manifest'
     echo "设置 manifest 的 os_min_version 为: ${os_min_version}"
 
     echo "开始打包 fpk"
     if command -v fnpack >/dev/null 2>&1; then
         echo "使用系统已安装的 fnpack 进行打包"
-        fnpack build --directory EasyTier-Lite/  || { echo "打包失败"; exit 1; }
+        fnpack build --directory EasyTier-EUI/  || { echo "打包失败"; exit 1; }
     else
         echo "使用本地 fnpack 脚本进行打包"
-        ./fnpack.sh build --directory EasyTier-Lite || { echo "打包失败"; exit 1; }
+        ./fnpack.sh build --directory EasyTier-EUI || { echo "打包失败"; exit 1; }
     fi 
 
-    fpk_name="EasyTier-Lite-fnos-${arch}-${fpk_version}.fpk"
+    fpk_name="EasyTier-EUI-fnos-${arch}-${fpk_version}.fpk"
     rm -f "${fpk_name}"
-    mv EasyTier-Lite.fpk "${fpk_name}"
+    mv EasyTier-EUI.fpk "${fpk_name}"
     echo "打包完成: ${fpk_name}"
 }
 

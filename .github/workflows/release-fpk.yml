@@ -189,7 +189,7 @@ jobs:
           
       #     gh workflow run update-version.yml \
       #       --repo "710850609/FnDepot" \
-      #       -f app_name="EasyTier-Lite" \
+      #       -f app_name="EasyTier-EUI" \
       #       -f new_version="$new_version" \
       #       -f download_url_amd64="https://github.com/710850609/fpk-EasyTier-Lite/releases/download/$new_version/EasyTier-Lite-x86_64-$new_version.fpk" \
       #       -f download_url_aarch64="https://github.com/710850609/fpk-EasyTier-Lite/releases/download/$new_version/EasyTier-Lite-aarch64-$new_version.fpk" \

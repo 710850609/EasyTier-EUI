@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-EasyTier-Lite Server 多平台打包脚本
+EasyTier-EUI Server 多平台打包脚本
 支持: Windows(x64), Linux(x64/arm64), 统信UOS(x64/arm64)
 """
 

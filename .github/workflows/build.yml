@@ -157,7 +157,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: fpk-${{ matrix.arch }}
-          path: EasyTier-Lite*.fpk
+          path: EasyTier-EUI*.fpk
 
   build-windows-amd64:
     if: ${{ github.event.inputs.build_windows == 'true' }}
@@ -639,7 +639,7 @@ jobs:
 #
 #         gh workflow run update-version.yml \
 #           --repo "710850609/FnDepot" \
-#           -f app_name="EasyTier-Lite" \
+#           -f app_name="EasyTier-EUI" \
 #           -f new_version="$new_version" \
 #           -f download_url_amd64="https://github.com/710850609/EasyTier-Lite/releases/download/$new_version/EasyTier-Lite-aarch64-$new_version.fpk" \
 #           -f download_url_aarch64="https://github.com/710850609/EasyTier-Lite/releases/download/$new_version/EasyTier-Lite-x86_64-$new_version.fpk" \

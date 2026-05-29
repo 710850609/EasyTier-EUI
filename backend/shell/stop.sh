@@ -1,5 +1,5 @@
 #!/bin/sh
-# 停止 EasyTier-Lite 的所有进程
+# 停止 EasyTier-EUI 的所有进程
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 EXECUTABLE="$SCRIPT_DIR/EasyTier-Lite"

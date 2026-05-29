@@ -14,19 +14,19 @@
       <div class="version-info">
         <var-cell>安装后，输入相同网络名、网络密码、初始化节点，保存启动，即可组网</var-cell>
         <var-cell>
-          <var-link type="primary" underline="none" href="https://github.com/710850609/EasyTier-Lite/releases" target="_blank"><img src="https://img.shields.io/github/v/release/710850609/EasyTier-Lite?color=blue&logo=github&label=稳定版" /></var-link>
+          <var-link type="primary" underline="none" href="https://github.com/710850609/EasyTier-EUI/releases" target="_blank"><img src="https://img.shields.io/github/v/release/710850609/EasyTier-EUI?color=blue&logo=github&label=稳定版" /></var-link>
         </var-cell>
       </div>
       <div>
         <var-divider />
         <var-space :size="[20, 20]" justify="center">
-          <var-button type="primary" size="normal" block @click="downloadEasyTierLite('fnos', 'x86_64')" auto-loading>
+          <var-button type="primary" size="normal" block @click="downloadEasyTierEui('fnos', 'x86_64')" auto-loading>
             <template #default>
               <var-icon name="download"/>
               x86_64版
             </template>
           </var-button>
-          <var-button type="primary" size="normal" block @click="downloadEasyTierLite('fnos', 'aarch64')" auto-loading>
+          <var-button type="primary" size="normal" block @click="downloadEasyTierEui('fnos', 'aarch64')" auto-loading>
             <template #default>
               <var-icon name="download"/>
               aarch64版
@@ -41,9 +41,9 @@
 <script setup>
 import { api } from '../../utils/api.js'
 
-const downloadEasyTierLite = (platform, arch) => {
+const downloadEasyTierEui = (platform, arch) => {
   return new Promise((resolve, reject) => {
-    let url = api.etLite.getDownloadEasyTierLiteUrl({platform: platform, 'arch': arch})
+    let url = api.etEui.getDownloadEasyTierEuiUrl({platform: platform, 'arch': arch})
     console.log(url)
     window.open(url, '_blank')
     resolve()

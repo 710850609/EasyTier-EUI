@@ -38,14 +38,13 @@ def github_mirrors(*kwargs):
             selected = lines[0] if lines else ""
         #  https://github.akams.cn/
         sources = [
-            { "value": "https://gh-proxy.org", "label": "gh-proxy.org"},
-            { "value": "https://ghfast.top", "label": "ghfast.top"},
-            { "value": "https://ghproxy.net", "label": "ghproxy.net"},
-            { "value": "https://gh.llkk.cc", "label": "gh.llkk.cc"},
-            { "value": "https://gh.felicity.ac.cn", "label": "gh.felicity.ac.cn"},
-            { "value": "https://github-proxy.memory-echoes.cn", "label": "github-proxy.memory-echoes.cn"},
-            { "value": "https://github.starrlzy.cn", "label": "github.starrlzy.cn"},
-            { "value": "https://gh.b52m.cn", "label": "gh.b52m.cn"},
+            { "value": "https://gh-proxy.org", "label": "gh-proxy.org", "support_pi": True},
+            { "value": "https://gh.felicity.ac.cn", "label": "gh.felicity.ac.cn", "support_pi": True},
+            { "value": "https://ghfast.top", "label": "ghfast.top", "support_pi": False},
+            { "value": "https://ghproxy.net", "label": "ghproxy.net", "support_pi": False},
+            { "value": "https://gh.llkk.cc", "label": "gh.llkk.cc", "support_pi": False},
+            { "value": "https://github-proxy.memory-echoes.cn", "label": "github-proxy.memory-echoes.cn", "support_pi": False},
+            { "value": "https://gh.b52m.cn", "label": "gh.b52m.cn", "support_pi": False},
         ]
 
         # ── 新增：并发测速 ──

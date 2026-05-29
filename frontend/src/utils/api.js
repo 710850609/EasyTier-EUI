@@ -242,8 +242,8 @@ export const api = {
   },
 
   // easytier-lite 相关
-  etLite: {
-    getDownloadEasyTierLiteUrl: (data) => getFullUrl('/et_lite/download_easytier_lite', data)
+  etEui: {
+    getDownloadEasyTierEuiUrl: (data) => getFullUrl('/et_eui/download_easytier_eui', data)
   },
   // ET 核心相关
   etCore: {

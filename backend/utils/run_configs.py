@@ -27,7 +27,7 @@ def setup_env():
     WORK_DIR = None
     is_local_mode = False
     if is_fn_system():
-        TRIM_APPNAME = os.getenv('TRIM_APPNAME', 'EasyTier-Lite')
+        TRIM_APPNAME = os.getenv('TRIM_APPNAME', 'EasyTier-EUI')
         TRIM_APPDEST = os.getenv('TRIM_APPDEST', f'/var/apps/{TRIM_APPNAME}/target')
         TRIM_PKGVAR = os.getenv('TRIM_PKGVAR', f'/var/apps/{TRIM_APPNAME}/var')
         TRIM_SHARE_DIR = os.getenv('TRIM_SHARE_DIR', f'/var/apps/{TRIM_APPNAME}/shares/{TRIM_APPNAME}')
@@ -45,7 +45,7 @@ def setup_env():
     else:
         is_local_mode = True
         project_root_path = Path(__file__).absolute().parent.parent.parent
-        WORK_DIR = str(project_root_path.joinpath('temp').joinpath('EasyTier-Lite').absolute())
+        WORK_DIR = str(project_root_path.joinpath('temp').joinpath('EasyTier-EUI').absolute())
         Path(WORK_DIR).mkdir(parents=True, exist_ok=True)
         FRONTEND_PATH = str(project_root_path.joinpath('frontend').joinpath('dist'))
 
@@ -72,7 +72,7 @@ def setup_env():
     _is_inited_evn = True
 
 
-BUILD_VERSION = "0.7.020604-20260521143732"
+BUILD_VERSION = "0.8.020604-20260529112221"
 
 
 def is_fn_system():

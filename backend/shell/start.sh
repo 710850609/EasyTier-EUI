@@ -1,5 +1,5 @@
 #!/bin/sh
-# 启动 EasyTier-Lite
+# 启动 EasyTier-EUI
 
 # 获取脚本所在目录（绝对路径）
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
