@@ -275,13 +275,18 @@ def download_easytier(version:str=None, proxy_url=None):
         downloaded = 0
         
         with open(download_path, 'wb') as f:
+            last_percent = -1  # 初始化在循环外
             for chunk in response.iter_content(chunk_size=8192):
                 if chunk:
                     f.write(chunk)
                     downloaded += len(chunk)
                     if total_size > 0:
                         percent = (downloaded / total_size) * 100
-                        print(f"  进度: {percent:.1f}%", end='\r')
+                        current_percent = int(percent)  # 取整
+                        # 每增加 1% 打印一次，且只打印一次
+                        if current_percent > last_percent:
+                            print(f"  进度: {current_percent}%", end='\r')
+                            last_percent = current_percent
         
         print(f"\n  下载完成: {download_path}")
         return download_path
@@ -346,8 +351,8 @@ def copy_output(output_name, et_file, build_ver, one_file:bool):
     print("[4/5] 复制输出文件...")
     
     platform_name = get_platform_name()
-    output_dir = DIST_DIR.joinpath(f"{APP_NAME}-{platform_name}{'-' + build_ver if build_ver else ""}")
-    output_dir = DIST_DIR.joinpath(f"{APP_NAME}")
+    output_dir = DIST_DIR.joinpath(f"{APP_NAME}-{platform_name}{'-' + build_ver if build_ver else ""}").joinpath(APP_NAME)
+    # output_dir = DIST_DIR.joinpath(f"{APP_NAME}")
     output_dir.mkdir(parents=True, exist_ok=True)
     if one_file:
         # Path(output_dir).mkdir(parents=False, exist_ok=True)
@@ -361,11 +366,11 @@ def copy_output(output_name, et_file, build_ver, one_file:bool):
         shutil.copy2(src_file, target_file)
         print(f"  复制到: {target_file}")
     else:
-        build_dist_dir = DIST_DIR.joinpath(APP_NAME)
-        if not build_dist_dir.exists():
-            print(f"  未找到: {build_dist_dir}")
+        src_dir = DIST_DIR.joinpath(APP_NAME)
+        if not src_dir.exists():
+            print(f"  未找到: {src_dir}")
             return False
-        # shutil.copytree(build_dist_dir, output_dir, dirs_exist_ok=True)
+        shutil.copytree(src_dir, output_dir, dirs_exist_ok=True)
         pass
 
     if sys.platform == "linux":

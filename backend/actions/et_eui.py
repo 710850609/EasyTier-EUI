@@ -17,19 +17,18 @@ from utils import run_configs
 def download_easytier_eui(params:dict, *kwargs):
     if not params:
         raise HttpResponse(f"未指定platfrom和arch参数")
-    output_dir = os.path.join(run_configs.data_dir(), 'download')
-    download_temp_dir = f"{output_dir}"
+    download_dir = os.path.join(run_configs.data_dir(), 'download')
     et_lite_version = _get_et_eui_latest_version()
     platform = params.get('platform', '')
     arch = params.get('arch', '')
     profile = params.get('profile', '')
-    et_lite_package = _get_et_eui_package(platform, arch, et_lite_version, output_dir)
+    et_lite_package = _get_et_eui_package(platform, arch, et_lite_version, download_dir)
     if platform == 'fnos':
         return HttpResponse(file=et_lite_package, download_name=os.path.basename(et_lite_package))
     else:
         et_lite_filename = Path(et_lite_package).name
-        output_file = f"{output_dir}/tmp/{et_lite_filename.replace('.zip', '_merge.zip')}"
-        _merge_package(profile, et_lite_package, output_file, download_temp_dir)
+        output_file = f"{download_dir}/temp/{et_lite_filename.replace('.zip', '_merge.zip')}"
+        _merge_package(profile, et_lite_package, output_file, download_dir)
         return HttpResponse(file=output_file, download_name=et_lite_filename)
 
 def _get_et_eui_latest_version():
@@ -54,7 +53,7 @@ def _get_et_eui_package(platform:str, arch:str, et_lite_version: str, download_d
         return download_file
     download_url = f"https://github.com/710850609/EasyTier-EUI/releases/download/{last_version}/{file_name}"
     logging.debug(f"不存在缓存，开始下载 {download_url}")
-    download_temp_file = f"{download_dir}/{file_name}.{int(time.time())}"
+    download_temp_file = f"{download_dir}/temp/{file_name}.{int(time.time())}"
     github_util.download_file(download_url, download_temp_file, Path(download_temp_file).name)
     common_util.move(download_temp_file, download_file)
     logging.debug(f"已下载： {download_file}")
@@ -62,7 +61,7 @@ def _get_et_eui_package(platform:str, arch:str, et_lite_version: str, download_d
 
     
 def _merge_package(profile, et_lite_package, output_file, unzip_dir):
-    unzip_temp_dir = f"{unzip_dir}/{int(time.time())}"
+    unzip_temp_dir = f"{unzip_dir}/temp/{int(time.time())}"
     logging.info(f"解压: {et_lite_package} -> {unzip_temp_dir}")
     config_path = ''
     with zipfile.ZipFile(et_lite_package, 'r') as zf:

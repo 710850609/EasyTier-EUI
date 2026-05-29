@@ -37,16 +37,16 @@ def get_download_url(system:str, arch: str, version: str=None):
 def download_package(download_dir: str, system: str, arch: str, version: str=None):
     if  version is None or version == '':
         version = get_latest_version()
-    dowload_file_name = get_package_name(system, arch, version)
-    logging.debug(f"下载 {system}/{arch} 版本 {version} 包 {dowload_file_name}")
-    download_file = download_dir + '/' + dowload_file_name;
+    download_file_name = get_package_name(system, arch, version)
+    logging.debug(f"下载 {system}/{arch} 版本 {version} 包 {download_file_name}")
+    download_file = download_dir + '/' + download_file_name
     if Path(download_file).exists():
         logging.debug(f"已存在缓存:{download_file}")
         return download_file;
     logging.debug(f"不存在缓存，开始下载 {download_file}");
-    download_url = f"https://github.com/EasyTier/EasyTier/releases/download/v{version}/{dowload_file_name}"
-    download_temp_file = f"{download_dir}/{dowload_file_name}.{int(time.time())}"
-    github_util.download_file(download_url, download_temp_file, dowload_file_name)
+    download_url = f"https://github.com/EasyTier/EasyTier/releases/download/v{version}/{download_file_name}"
+    download_temp_file = f"{download_dir}/temp/{download_file_name}.{int(time.time())}"
+    github_util.download_file(download_url, download_temp_file, download_file_name)
     common_util.move(download_temp_file, download_file)
     logging.debug(f"已下载： {download_file}")
-    return download_file;
+    return download_file
