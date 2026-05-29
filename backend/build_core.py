@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-EasyTier-Lite Server 多平台打包脚本
+Server 多平台打包脚本
 支持: Windows(x64), Linux(x64/arm64), 统信UOS(x64/arm64)
 """
 
@@ -24,6 +24,7 @@ if sys.platform == "win32":
 PROJECT_DIR = Path(__file__).parent.absolute()
 BUILD_DIR = PROJECT_DIR / "build"
 DIST_DIR = PROJECT_DIR / "dist"
+APP_NAME = "EasyTier-EUI"
 
 def run_command(cmd, cwd=None):
     """执行命令并返回结果"""
@@ -121,8 +122,8 @@ def build_executable(build_ver:str = None, one_file:bool = True):
                     line = f'BUILD_VERSION = "{build_ver}"\n'
                 f.write(line)
 
-    output_name = f"EasyTier-Lite"
-
+    output_name = f"{APP_NAME}"
+    
     # 根据平台选择分隔符
     separator = ";" if sys.platform == "win32" else ":"
 
@@ -173,12 +174,6 @@ def build_executable(build_ver:str = None, one_file:bool = True):
         ])
     else:
         print("  非 [Linux] 使用 WebView ...")
-        webview_logo_path = os.path.join(PROJECT_DIR, 'assets', 'icon.ico')
-        cmd.extend([
-            "--hidden-import", "webview",
-            "--add-data", f"{webview_logo_path}{separator}assets/icon.ico",
-            str(PROJECT_DIR / "main_ui.py"),
-        ])
         if sys.platform == "win32":
             cmd.extend([
                 "--uac-admin",
@@ -196,6 +191,13 @@ def build_executable(build_ver:str = None, one_file:bool = True):
             cmd.extend(["--icon", str(icon_path)])
         else:
             print(f"  警告: 图标文件不存在: {str(icon_path)}")
+
+        webview_logo_path = os.path.join(PROJECT_DIR, 'assets', 'icon.ico')
+        cmd.extend([
+            "--hidden-import", "webview",
+            "--add-data", f"{webview_logo_path}{separator}assets/icon.ico",
+            str(PROJECT_DIR / "main_ui.py"),
+        ])
     
     result = run_command(" ".join(cmd), cwd=str(PROJECT_DIR))
     return result, output_name
@@ -344,10 +346,11 @@ def copy_output(output_name, et_file, build_ver, one_file:bool):
     print("[4/5] 复制输出文件...")
     
     platform_name = get_platform_name()
-    output_dir = DIST_DIR.joinpath(f"EasyTier-Lite-{platform_name}")
-
+    output_dir = DIST_DIR.joinpath(f"{APP_NAME}-{platform_name}{'-' + build_ver if build_ver else ""}")
+    output_dir = DIST_DIR.joinpath(f"{APP_NAME}")
+    output_dir.mkdir(parents=True, exist_ok=True)
     if one_file:
-        Path(output_dir).mkdir(parents=False, exist_ok=True)
+        # Path(output_dir).mkdir(parents=False, exist_ok=True)
         # 确定可执行文件扩展名
         ext = ".exe" if sys.platform == "win32" else ""
         src_file = DIST_DIR.joinpath(f"{output_name}{ext}")
@@ -358,10 +361,11 @@ def copy_output(output_name, et_file, build_ver, one_file:bool):
         shutil.copy2(src_file, target_file)
         print(f"  复制到: {target_file}")
     else:
-        output_dir = DIST_DIR.joinpath(f"EasyTier-Lite")
-        if not output_dir.exists():
-            print(f"  未找到: {output_dir}")
+        build_dist_dir = DIST_DIR.joinpath(APP_NAME)
+        if not build_dist_dir.exists():
+            print(f"  未找到: {build_dist_dir}")
             return False
+        # shutil.copytree(build_dist_dir, output_dir, dirs_exist_ok=True)
         pass
 
     if sys.platform == "linux":
@@ -380,19 +384,27 @@ def copy_output(output_name, et_file, build_ver, one_file:bool):
         print(f"  警告: EasyTier 文件不存在")
         return False
     
-    # 压缩
-    zipfile_name = DIST_DIR.joinpath(Path(output_dir).name + f'{"-"+build_ver if build_ver else ""}.zip')
+    # 压缩：打包 output_dir 及其所有内容
+    zipfile_name = DIST_DIR.joinpath(f"{APP_NAME}-{platform_name}{'-' + build_ver if build_ver else ""}.zip")
     with zipfile.ZipFile(zipfile_name, 'w', zipfile.ZIP_DEFLATED) as zf:
-        for item in Path(output_dir).rglob('*'):
-            if item.is_file():
-                arch_name = item.relative_to(output_dir)
+        # 遍历 output_dir 下的所有内容（包括文件和文件夹）
+        for item in output_dir.rglob('*'):
+            # 计算相对路径（相对于 output_dir，保留 APP_NAME 根目录）
+            arch_name = Path(APP_NAME) / item.relative_to(output_dir)
+            
+            if item.is_dir():
+                # 创建目录条目（路径末尾需要加斜杠）
+                dir_info = zipfile.ZipInfo(str(arch_name) + '/')
+                zf.writestr(dir_info, '')
+            elif item.is_file():
+                # 打包文件
                 zf.write(item, arch_name)
     return True, zipfile_name
 
 def main(et_ver:str=None, github_proxy_url:str=None, build_ver:str="", one_file:bool=True):
     """主函数"""
     print("=" * 50)
-    print("EasyTier-Lite Server 多平台打包")
+    print(f"{APP_NAME} Server 多平台打包")
     print(f"当前平台: {get_platform_name()}")
     print(f"et_ver: {et_ver}")
     print(f"build_ver: {build_ver}")
