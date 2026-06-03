@@ -95,7 +95,7 @@
               </div>
               <div v-if="fastSettingMode && publicPeerOptions.length > 0">
                 <span class="fast-setting-hint">填写网络名称和密码，后点击即可 -&gt; </span>
-                <var-button type="primary" size="small" @click="saveConfig(true)" auto-loading>保存并启动</var-button>
+                <var-button type="primary" size="small" @click="saveConfig" auto-loading>保存并启动</var-button>
               </div>
             </div>
 
@@ -147,12 +147,12 @@
                 <div class="peer-cell-header">
                   <div class="section-subtitle">
                     初始节点
-                    <var-icon name="information-outline" size="12pt" @click="showPublicPeerTip = true" />
+                    <var-icon name="information-outline" size="12pt" @click="showPublicPeerTip = true" color="var(--color-primary)" />
                   </div>                    
-                  <div class="peer-actions">
-                    <!-- <var-button type="primary" size="mini" auto-loading @click="refreshPublicPeerOptions">刷新节点</var-button> -->
-                    <var-button type="primary" size="mini" auto-loading @click="checkPeers">刷新并检测节点</var-button>
-                  </div>
+                  <!-- <div class="peer-actions">
+                    <var-button type="primary" size="mini" auto-loading @click="refreshPublicPeerOptions">获取最新节点</var-button>
+                    <var-button type="primary" size="mini" auto-loading @click="checkPeers">检测节点</var-button>
+                  </div> -->
                 </div>
                 
                 <var-select
@@ -208,12 +208,18 @@
                         <template #extra>
                           <!-- 右侧：状态标识 -->
                           <div class="status-dot" v-if="peer.status in [0, 1]" :class="peer.status == 1 ? 'status-online' : 'status-offline'"></div>
-                          <div class="peer-status-area">
-                          </div>
+                          <div class="peer-status-area"></div>
                         </template>
                       </var-cell>
                       </var-option>
                     </div>
+                  </template>                  
+                  <template #append-icon>
+                    <var-icon 
+                      name="refresh" 
+                      :class="{ 'is-spinning': isRefreshingPublicPeerOptions }"
+                      @click.stop="refreshPublicPeerOptions"
+                    />
                   </template>
                 </var-select>
               </var-cell>
@@ -497,7 +503,8 @@
     <var-popup position="top" v-model:show="showPublicPeerTip">
       <div class="help-content">
         <p class="help-paragraph"><span class="help-bold">初始节点</span>：用于发现组网设备，数据来自网络社区</p>
-        <p class="help-paragraph"><span class="help-bold">动态节点</span>：原始节点经过TXT协议转换而来。易组网在线维护数据，解决节点下线后，设备不重启的情况下持续在线。</p>
+        <p class="help-paragraph"><span class="help-bold">动态节点</span>：原始节点经过TXT协议转换而来</p>
+        <!-- <p class="help-paragraph"><span class="help-bold">动态节点</span>：原始节点经过TXT协议转换而来。易组网在线维护数据，解决节点下线后，设备不重启的情况下持续在线。</p> -->
         <p class="help-paragraph"><span class="help-bold">节点刷新</span>：在线获取易组网维护的初始节点数据</p>
         <p class="help-paragraph"><span class="help-bold">节点检测</span>：基于易组网本地设备网络，检测节点的是否可用、延迟、是否可转发</p>
       </div>
@@ -640,26 +647,30 @@ const ensureInt = (str) => {
   return str
 }
 
-const saveConfig = async (start = false) => {
-  const valid = await form.value.validate()
-  if (!valid) return
-  const checkStatus = async () => {
-    return await api.services.status(selectedConfig.value).then(resp => resp.data).catch(e => {
-      console.error('检查服务状态失败: ' + e.message)
-      return false
-    })
-  }
-  const autoStart = async () => {
-    return await api.services.autoStart(selectedConfig.value, true)
-      .then(() => {
-        toast.success('设置服务开机启动成功')
-        currentConfigData.value.autostart = true
-        currentConfigAutostart.value = true
-      }).catch(e => {
-        toast.error('设置服务开机启动失败: ' + e.message)
+const saveConfig = () => {
+  return new Promise(async (resolve, reject) => {
+    const valid = await form.value.validate()
+    if (!valid) {
+      reject();
+      return
+    }      
+
+    const checkStatus = async () => {
+      return await api.services.status(selectedConfig.value).then(resp => resp.data).catch(e => {
+        console.error('检查服务状态失败: ' + e.message)
+        return false
       })
-  }
-  return new Promise((resolve, reject) => {
+    }
+    const autoStart = async () => {
+      return await api.services.autoStart(selectedConfig.value, true)
+        .then(() => {
+          toast.success('设置服务开机启动成功')
+          currentConfigData.value.autostart = true
+          currentConfigAutostart.value = true
+        }).catch(e => {
+          toast.error('设置服务开机启动失败: ' + e.message)
+        })
+    }
     let data = { ...config.value }
     if (fastSettingMode.value) {
       // 快速设置模式，配置文件名同网络名称
@@ -682,7 +693,7 @@ const saveConfig = async (start = false) => {
       }
       if (fastSettingMode.value || await checkStatus()) {
         const restartLoading = toast.loading(fastSettingMode.value ? '服务启动中...' : '服务重启中...')
-            api.services.restart(selectedConfig.value).then(() => {
+            await api.services.restart(selectedConfig.value).then(() => {
               toast.success('服务启动成功')
             }).finally(() => {
               restartLoading.clear()
@@ -695,10 +706,11 @@ const saveConfig = async (start = false) => {
       if (showMode.value != 0) {
         exitAddMode()
       }
-      resolve()
     }).catch(e => {
       toast.error('保存配置失败: ' + e.message)
       reject(e)
+    }).finally(() => {
+      resolve()
     })
   })
 }
@@ -756,10 +768,11 @@ const saveToml = () => {
 
 const refreshPublicPeerOptions = () => {
   isRefreshingPublicPeerOptions.value = true
-  return new Promise((resolve) => {
-    api.peers.publicPeers({ 'profile': selectedConfig.value, 'refresh': true }).then(data => {
+  return new Promise((resolve, reject) => {
+    api.peers.publicPeers({ 'profile': selectedConfig.value, 'refresh': true }).then(async (data) => {
       publicPeerOptions.value = data.data
-      toast.success('刷新可选节点成功')
+      toast.success('已获取最新节点')
+      await checkPeers()
     }).finally(() => {
       isRefreshingPublicPeerOptions.value = false
       resolve()
@@ -773,7 +786,7 @@ const checkPeers = () => {
       toast.warning('检测节点可用状态中，请稍后...')
       return
     }
-    const checkToast = toast.info('开始检测节点可用状态，这可能需要一些时间，请稍后...', 15000)
+    const checkToast = toast.info('开始检测节点可用状态，这可能需要一些时间，请稍后...', 30000)
     isPeerChecking.value = true
     api.peers.checkPeers({ 'profile': selectedConfig.value }).then(data => {
       publicPeerOptions.value = data.data
@@ -979,7 +992,7 @@ const setupShowMode = async (mode) => {
       fastSettingMode.value = true
       if (publicPeerOptions.value.length == 0 || publicPeerOptions.value[0].status != 1) {
         isLoadingConfig.value = true
-        await checkPeers()
+        await refreshPublicPeerOptions()
         isLoadingConfig.value = false
       }
       const peers = publicPeerOptions.value.slice(0, 3).map(e => e.uri)

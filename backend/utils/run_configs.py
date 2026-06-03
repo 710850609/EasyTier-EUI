@@ -125,9 +125,6 @@ def et_peer_meta_file() -> str:
 def et_peer_check_result_file() -> str:
     return os.path.join(data_dir(), 'peer-check-result.json')
 
-def github_proxy_file() -> str:
-    return os.path.join(data_dir(), 'github_proxy_url.txt')
-
 def et_run_file() -> str:
     return os.path.join(data_dir(), 'et_run.json')
 

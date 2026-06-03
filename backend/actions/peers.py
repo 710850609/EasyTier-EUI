@@ -5,7 +5,6 @@ import json
 import logging
 from pathlib import Path
 
-import requests
 import tomlkit
 
 from http_dispatcher.dispatcher import HttpException
@@ -20,9 +19,9 @@ def check_peers(params: dict, *kwargs):
     :param request_data: 请求数据（可选）
     """
     profile = (params or {}).get('profile')
-    peer_list = public_peers(data = {'profile': profile, 'refresh': False})
+    peer_list = public_peers(data = {'profile': profile, 'refresh': 'false'})
     if len(peer_list) == 0:
-        peer_list = public_peers(data = {'profile': profile, 'refresh': True})
+        peer_list = public_peers(data = {'profile': profile, 'refresh': 'true'})
     # 提取 URI 列表
     peer_uris = [peer['uri'] for peer in peer_list]
     core_dir = run_configs.core_dir()
@@ -47,8 +46,9 @@ def check_peers(params: dict, *kwargs):
 
 
 def public_peers(data:dict, *kwargs):
-    refresh = (data is not None and 'refresh' in data and data['refresh']) or False
-    profile = None if data is None else data.get('profile')
+    data = data or {}
+    refresh = data.get('refresh', 'false').lower() == 'true'
+    profile = data.get('profile')
     peers = __get_public_peers(refresh)
     uri_set = set(item.get('uri') for item in peers)
 
@@ -68,11 +68,27 @@ def public_peers(data:dict, *kwargs):
             pass
     return peers
 
+def set_peer_source(params: dict, *kwargs):
+    params = params or {}
+    source = params.get('source', '')
+    test_peer_mark_file = Path(run_configs.data_dir(), 'test-peer-source')
+    if source.lower() == 'test':
+        test_peer_mark_file.touch(exist_ok=True)
+        logging.info(f"启用测试节点源")
+    else:
+        test_peer_mark_file.unlink(missing_ok=True)
+        logging.info(f"禁用测试节点源")
+    __get_public_peers(refresh=True)
+
+def get_peer_source(*kwargs):
+    if Path(run_configs.data_dir(), 'test-peer-source').exists():
+        return {'source': 'test'}
+    return {'source': ''}
+
 
 def __get_public_peers(refresh=False) -> list[dict]:
     result :list[PeersCheckResult]= []
     meta_data = None
-    peers = []
     peer_meta_file = run_configs.et_peer_meta_file()
     if refresh or not Path(peer_meta_file).exists():
         meta_data = __download_peer_meta()
@@ -119,21 +135,18 @@ def __save_peer_check_result(peers: list[dict|PeersCheckResult], sort: bool=Fals
         f.write(json.dumps(dict_peers, ensure_ascii=False, indent=2))
 
 def __download_peer_meta():
+    peer_meta_url = f"https://raw.githubusercontent.com/710850609/EasyTier-EUI/refs/heads/main/configs/peers.json"
+    test_peer_mark_file = Path(run_configs.data_dir(), 'test-peer-source')
+    if test_peer_mark_file.exists():
+        peer_meta_url = peer_meta_url.replace('.json', '-test.json')
     try:
-        github_proxy = github_util.get_github_proxy()
-        peer_meta_url = f"https://raw.githubusercontent.com/710850609/EasyTier-EUI/refs/heads/main/peers/peer-txt-meta.json"
-        if github_proxy and github_proxy != '':
-            peer_meta_url = f"{github_proxy}/{peer_meta_url}"
-        response = requests.get(peer_meta_url, timeout=30)
-        response.raise_for_status()
-        data = response.json()
+        data = github_util.download_raw_file(peer_meta_url, timeout=10)
         peer_meta_file = run_configs.et_peer_meta_file()
         with open(peer_meta_file, "w", encoding="utf-8") as f:
             f.write(json.dumps(data, ensure_ascii=False, indent=2))
         return data
     except Exception as e:
         logging.exception(f"获取节点元数据失败")
-        # raise HttpException(f"获取公共节点失败，请尝试在设置修改Github加速地址后重试")
         raise HttpException(f'获取公共节点失败, 请检查网络连接或切换Github加速地址： {e}')
 
 def __sort_peers(peers: list[dict]):

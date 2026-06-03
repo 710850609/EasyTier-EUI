@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
+import json
 import logging
+import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -9,81 +10,37 @@ from pathlib import Path
 import requests
 
 from http_dispatcher.dispatcher import HttpException
-from utils import run_configs
+from utils import run_configs, et_run_info, github_util
 
 
-def build_version(*kwargs):
-    return run_configs.build_version()
+def eui_info(*kwargs):
+    platform = 'trim' if run_configs.is_fn_system() else sys.platform
+    return {
+        'build_version': run_configs.build_version(),
+        'install_path': str(Path(run_configs.core_dir()).parent),
+        'platform': platform,
+    }
 
-def save_github_mirror(data, *kwargs):
-    url = data['url'] or ''
+def github_mirrors(params:dict, *kwargs):
     try:
-        github_proxy_file = run_configs.github_proxy_file()
-        cfg_path = Path(github_proxy_file)
-        cfg_path.write_text(url.strip())
-        return '保存成功'
-    except Exception as e:
-        logging.error(f"保存代理配置失败: {e}")
-        raise HttpException(f"保存代理配置失败: {e}") from e
-
-def github_mirrors(*kwargs):
-    try:
-        github_proxy_file = run_configs.github_proxy_file()
-        selected = ''
-        cfg_path = Path(github_proxy_file)
-        if cfg_path.exists():
-            content = cfg_path.read_text().strip()
-            # 去除空行
-            lines = [l.strip() for l in content.split('\n') if l.strip()]
-            selected = lines[0] if lines else ""
-        #  https://github.akams.cn/
-        sources = [
-            { "value": "https://gh-proxy.org", "label": "gh-proxy.org", "support_pi": True},
-            { "value": "https://gh.felicity.ac.cn", "label": "gh.felicity.ac.cn", "support_pi": True},
-            { "value": "https://ghfast.top", "label": "ghfast.top", "support_pi": False},
-            { "value": "https://ghproxy.net", "label": "ghproxy.net", "support_pi": False},
-            { "value": "https://gh.llkk.cc", "label": "gh.llkk.cc", "support_pi": False},
-            { "value": "https://github-proxy.memory-echoes.cn", "label": "github-proxy.memory-echoes.cn", "support_pi": False},
-            { "value": "https://gh.b52m.cn", "label": "gh.b52m.cn", "support_pi": False},
-        ]
-
-        # ── 新增：并发测速 ──
-        def _test_speed(item):
-            proxy = item["value"]
-            # 使用 GitHub 轻量文件测试，HEAD 请求减少流量
-            test_path = "https://raw.githubusercontent.com/github/gitignore/main/README.md"
-            test_url = f"{proxy}/{test_path}" if proxy else test_path
-
-            start = time.time()
-            try:
-                resp = requests.head(test_url, timeout=4, allow_redirects=True)
-                if resp.status_code < 400:
-                    elapsed = (time.time() - start) * 1
-                    item["delay"] = round(elapsed, 2)
-                    item["status"] = "ok"
-                    item["desc"] = ""
-                else:
-                    item["delay"] = -1
-                    item["status"] = f"http_{resp.status_code}"
-                    item["desc"] = f"不可用(HTTP {resp.status_code})"
-            except requests.exceptions.Timeout:
-                item["delay"] = -1
-                item["status"] = "timeout"
-                item["desc"] = f"超时"
-            except Exception:
-                item["delay"] = -1
-                item["status"] = str(e)
-                item["desc"] = f"不可用"
-            return item
-
-        # 并发测速（线程数 = 代理数量）
-        with ThreadPoolExecutor(max_workers=len(sources)) as executor:
-            list(executor.map(_test_speed, sources))
-
-        # 按速度排序：可用（speed > 0）的在前，按延迟升序；不可用的（-1）放最后
-        sources.sort(key=lambda x: (x.get("delay", -1) == -1, x.get("delay", -1)))
-        sources.insert(0, { "value": "", "label": "不使用"})
-        return { 'selected': selected, 'sources': sources }
+        params = params or {}
+        refresh = params.get('refresh', 'false').lower() == 'true'
+        url_list = github_util.get_proxy_urls(refresh=refresh)
+        url_list = [ {**item, 'label': item.get('url').replace('https://', '')} for item in url_list]
+        return url_list
     except Exception as e:
         logging.warning(f"读取代理配置失败: {e}")
         raise HttpException(f"读取代理配置失败: {e}") from e
+
+def shutdown(*kwargs):
+    import os
+    import threading
+    logging.info("Received shutdown request, exiting...")
+
+    def do_exit():
+        time.sleep(0.5)
+        os._exit(0)
+
+    threading.Thread(target=do_exit, daemon=True).start()
+    return {"status": "success", "message": "正在关闭服务..."}
+

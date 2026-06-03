@@ -225,6 +225,8 @@ export const api = {
   peers: {
     checkPeers: (params = {}) => get('/peers/check_peers', params),
     publicPeers: (params = {}) => get('/peers/public_peers', params),
+    setPeerSource: (params = {}) => post('/peers/set_peer_source', params),
+    getPeerSource: (params = {}) => post('/peers/get_peer_source', params),
   },
   // 服务相关
   services: {
@@ -249,12 +251,13 @@ export const api = {
   etCore: {
     getVersion: () => get('/et_core/version'),
     install: (data) => post('/et_core/install', data),
+    getVersionList: (params = {}) => get('/et_core/version_list', params),
   },
   // 设置相关
   settings: {
-    getBuildVersion: () => get('/settings/build_version'),
-    getGithubMirrors: () => get('/settings/github_mirrors'),
-    saveGithubMirror: (data) => post('/settings/save_github_mirror', data),
+    shutdown: () => post('/settings/shutdown'),
+    getEuiInfo: () => get('/settings/eui_info'),
+    getGithubMirrors: (params = {}) => get('/settings/github_mirrors', params),
   }
 }
 

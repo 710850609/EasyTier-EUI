@@ -1,6 +1,6 @@
 #!/bin/bash
 
-APP_NAME="EasyTier-Lite"
+APP_NAME="EasyTier-EUI"
 # 卸载应用
 echo "卸载应用..."
 sudo appcenter-cli uninstall ${APP_NAME}

@@ -42,7 +42,7 @@ def _get_et_mgr_package(et_mgr_version: str, download_dir: str):
     logging.debug(f"不存在缓存，开始下载 {download_file}")
     download_url = f"https://github.com/EasyTier/easytier-manager/releases/download/v{last_version}/easytier-manager-pro.zip"
     download_temp_file = f"{download_dir}/temp/easytier-manager-pro-v{last_version}.zip.{int(time.time())}"
-    github_util.download_file(download_url, download_temp_file, f"easytier-windows-pro-v{last_version}.zip")
+    github_util.download_release_file(download_url, download_temp_file, f"easytier-windows-pro-v{last_version}.zip")
     common_util.move(download_temp_file, download_file)
     logging.debug(f"已下载： {download_file}")
     return download_file

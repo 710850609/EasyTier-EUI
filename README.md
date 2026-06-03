@@ -1,19 +1,20 @@
 # EasyTier-EUI
-![Downloads](https://img.shields.io/github/downloads/710850609/EasyTier-EUI/total?color=blue&label=downloads)
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/710850609/EasyTier-EUI)
-![Latest Version](https://img.shields.io/github/v/tag/710850609/EasyTier-EUI?color=blue&logo=github&label=version)
+![Downloads](https://img.shields.io/github/downloads/710850609/EasyTier-EUI/total?color=blue&label=Downloads)
+![Latest Version](https://img.shields.io/github/v/tag/710850609/EasyTier-EUI?color=blue&logo=github&label=Version)
+
+[//]: # ([![Ask DeepWiki]&#40;https://deepwiki.com/badge.svg&#41;]&#40;https://deepwiki.com/710850609/EasyTier-EUI&#41;)
 
 ## 简介
-<p>EasyTier简化使用的一种UI</p>
-<p>适用于无公网IPv4场景</p>
-<p>飞牛版本基于CGI模式实现，尽量减少内存使用</p>
+<p>简化使用EasyTier的一种UI界面，快速组网</p>
+<p>更合适于无公网IPv4场景</p>
+<p>飞牛版本基于CGI模式实现，不查看组网情况下，仅运行EasyTier核心服务，尽量减少内存使用</p>
 
 ## 功能
 - 支持多平台
   - FnOS (x86_64, aarch64)
   - Windows (x86_64)
-  - Linux (x86_64, aarch64, riscv64, 部分验证)
-  - MacOS (intel, arm64, 未验证)
+  - Linux (x86_64, aarch64, riscv64) [Ubuntu20, UOS20(Debian10)]
+  - MacOS (Intel, arm64) [未验证]
 - 支持多配置
 - 支持设置开机自启
 - 支持EasyTier常见设置项

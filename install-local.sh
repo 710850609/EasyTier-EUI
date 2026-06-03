@@ -1,1 +1,1 @@
-cd EasyTier-Lite && sudo appcenter-cli install-local --env ../config.env && cd ../
+cd EasyTier-EUI && sudo appcenter-cli install-local --env ../config.env && cd ../

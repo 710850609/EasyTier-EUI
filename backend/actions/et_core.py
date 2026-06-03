@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+import json
 import logging
 import os
 import platform
@@ -35,6 +36,21 @@ def version(*kwargs):
     et_version = raw_version[:raw_version.index('-')]
     return { 'version': f'v{et_version}', 'raw_version': raw_version }
 
+def version_list(params: dict, *kwargs):
+    refresh = (params or {}).get('refresh', 'false').lower() == 'true'
+    version_file = Path(run_configs.data_dir()).joinpath('et_versions.json')
+    release_info = {'create_time': int(time.time() * 1000), 'versions': []}
+    if not version_file.exists() or refresh:
+        releases = github_util.get_api('https://api.github.com/repos/easyTier/easytier/releases')
+        for item in releases:
+            release_info['versions'].append({'version': item.get('name'), 'prerelease': item.get('prerelease')})
+        with open(version_file, "w", encoding="utf-8") as f:
+            f.write(json.dumps(release_info, ensure_ascii=False, indent=2))
+    else:
+        with open(version_file, "r", encoding="utf-8") as f:
+            release_info = json.load(f)
+    return release_info
+
 def install(data, *kwargs):
     et_version = data['version']
     if not et_version:
@@ -48,7 +64,7 @@ def install(data, *kwargs):
     run_configs.data_dir()
     output_dir = os.path.join(run_configs.data_dir(), 'download')
     zip_file = f'{output_dir}/easytier-{platform}-{arch}-{et_version}.zip'
-    github_util.download_file(url, zip_file)
+    github_util.download_release_file(url, zip_file)
     unzip_temp_dir = __unzip(zip_file, os.path.join(run_configs.data_dir(), 'download', 'temp'))
 
     stop_profiles = services.stop_all()

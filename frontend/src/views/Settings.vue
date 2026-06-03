@@ -23,7 +23,7 @@
     </var-paper>
 
     <!-- 内核设置 -->
-     <var-paper class="setting-block" :elevation="1">
+    <var-paper class="setting-block" :elevation="1">
       <div class="block-header">
         <!-- <var-icon name="lock" size="24" color="var(--color-primary)" /> -->
         <svg-icon type="mdi" :path="mdiShieldLock" size="24" color="var(--color-primary)"></svg-icon>
@@ -78,7 +78,7 @@
     </var-paper>
 
     <!-- 网络设置 -->
-    <var-paper class="setting-block" :elevation="1">
+    <!-- <var-paper class="setting-block" :elevation="1" style="display: none;">
       <div class="block-header">
         <svg-icon type="mdi" :path="mdiAccessPointNetwork"  color="var(--color-primary)"></svg-icon>
         <span class="block-title">网络</span>
@@ -86,11 +86,11 @@
       <var-divider />
       <var-cell>
         GitHub加速地址
-        <!-- <var-loading type="wave" v-if="isFetchingGithubMirrors" /> -->
+        <var-loading type="wave" v-if="isFetchingGithubMirrors" />
       </var-cell>
       <var-cell>
         <var-select v-model="githubMirror" variant="outlined" size="small" :line="true">
-          <var-option v-for="item in githubMirrors" :key="item.value" :value="item.value" :label="item.label">
+          <var-option v-for="item in githubMirrors" :key="item.url" :value="item.url" :label="item.label">
             <var-cell border style="display: flex;">
               <template #description>
                 {{ item.label }} 
@@ -105,20 +105,20 @@
             <var-icon 
               name="refresh" 
               :class="{ 'is-spinning': isFetchingGithubMirrors }"
-              @click.stop="getGithubMirrors" 
+              @click.stop="getGithubMirrors(true)" 
             />
           </template>
         </var-select>
       </var-cell>
       <var-cell>
         <template #extra>          
-          <var-button type="primary" size="small" @click="saveGitHubMirror" auto-loading style="min-width: 80px;">
-            <var-icon name="check" />
-            保存           
+          <var-button type="primary" size="small" @click="getGithubMirrors(true)" auto-loading style="min-width: 80px;">
+            <var-icon name="download" />
+            更新
           </var-button>
         </template>
       </var-cell>
-    </var-paper>
+    </var-paper> -->
 
     <!-- 开发者选项 -->
     <var-paper class="setting-block" :elevation="1" v-if="showDevContent">
@@ -133,6 +133,39 @@
         <template #extra>
           <var-switch v-model="vConsoleEnabled" @change="toggleVConsole" />
         </template>
+      </var-cell>
+      <var-cell>
+        <template #description>使用测试社区节点</template>
+        <template #extra>
+          <var-switch v-model="testPeerSourceEnabled" :loading="changingPeerSource" @change="togglePeerSource" />
+        </template>
+      </var-cell>
+      
+      <var-cell>
+        GitHub加速地址
+        <!-- <var-loading type="wave" v-if="isFetchingGithubMirrors" /> -->
+      </var-cell>
+      <var-cell>
+        <var-select v-model="githubMirror" variant="outlined" size="small" :line="true">
+          <var-option v-for="item in githubMirrors" :key="item.url" :value="item.url" :label="item.label">
+            <var-cell border style="display: flex;">
+              <template #description>
+                {{ item.label }} 
+                <var-chip type="warning" size="mini" plain v-if="item.desc">{{ item.desc }}</var-chip>
+              </template>
+              <template #extra>
+                <span v-if="item.delay > 0"> {{ item.delay }}s </span>
+              </template>
+            </var-cell>
+          </var-option>
+          <template #append-icon>
+            <var-icon 
+              name="refresh" 
+              :class="{ 'is-spinning': isFetchingGithubMirrors }"
+              @click.stop="getGithubMirrors(true)" 
+            />
+          </template>
+        </var-select>
       </var-cell>
     </var-paper>
 
@@ -170,6 +203,13 @@
         <div>享受 EasyTier 免费、不限设备数量、支持多类型终端等优势</div>
       </var-cell>
       <var-cell>
+        <template #description>
+          <span style="font-size: 11px;">安装路径</span>
+          <var-chip type="primary" size="mini" :label="installPath">{{ installPath }}</var-chip>
+        </template>
+      </var-cell>
+      <var-divider />
+      <var-cell>
         <div style="display: flex; align-items: center; gap: 8px; margin: 2px 0;">
           <img alt="GitHub stars" src="https://img.shields.io/github/downloads/710850609/EasyTier-EUI/total?color=blue&label=GitHub%E4%B8%8B%E8%BD%BD%E9%87%8F" />
         </div>
@@ -186,19 +226,24 @@
       </var-cell>
     </var-paper>
 
-    <div>
-      
-    </div>
-      <var-popup :default-style="false" v-model:show="showRewardCdoe">
-      <var-result class="result" description="点Stars或是打赏支持，都是对易组网的肯定">
-        <template #image>
-          <img src="../../public/images/reward_code.jpg" style="width: 50%; height: 50%;" />
-        </template>
-        <template #footer>
-          <var-button type="info" @click="showRewardCdoe = false">关闭</var-button>
-        </template>
-      </var-result>
-    </var-popup>
+    <var-button block type="danger" v-if="platform === 'linux'" @click="shutdown">
+      <template #default>
+        <var-icon name="power" size="20" /> 关闭 易组网
+      </template>
+    </var-button>
+  <div>      
+  </div>
+
+  <var-popup :default-style="false" v-model:show="showRewardCdoe">
+    <var-result class="result" description="感谢您的肯定">
+      <template #image>
+        <img src="../../public/images/reward_code.jpg" style="width: 50%; height: 50%;" />
+      </template>
+      <template #footer>
+        <var-button type="info" @click="showRewardCdoe = false">关闭</var-button>
+      </template>
+    </var-result>
+  </var-popup>
   </div>
 </template>
 
@@ -214,6 +259,8 @@ import { mdiBrightness6, mdiAccessPointNetwork, mdiDevTo, mdiShieldLock } from '
 const dev_toggle_timer = ref(null);
 const showDevContent = ref(false)
 const vConsoleEnabled = ref(false)
+const changingPeerSource = ref(false)
+const testPeerSourceEnabled = ref(false)
 const vConsoleInstance = ref(null)
 const isFetchingEtCoreVersion = ref(true)
 const isFetchingVersionList = ref(false)
@@ -223,7 +270,9 @@ const etVersionList = ref([])
 const githubMirror = ref('')
 const githubMirrors = ref([])
 const buildVersion = ref('')
+const installPath = ref('')
 const showRewardCdoe = ref(false)
+const platform = ref('')
 
 const startPress = (e) => {
   dev_toggle_timer.value = setTimeout(() => {
@@ -275,6 +324,26 @@ const toggleVConsole = async (val) => {
   }
 }
 
+const togglePeerSource = async (val) => {
+  changingPeerSource.value = true
+  const data = { source: val ? 'test' : 'stable' }
+  await api.peers.setPeerSource(data).then(() => {
+    testPeerSourceEnabled.value = val
+  }).finally(() => {
+    changingPeerSource.value = false
+  })
+}
+
+const loadPeerSource = async () => {
+  try {
+    const { data } = await api.peers.getPeerSource()
+    testPeerSourceEnabled.value = data.source === 'test'
+  } catch (e) {
+    console.error('获取节点来源失败:', e)
+    testPeerSourceEnabled.value = false
+  }
+}
+
 // 获取当前版本
 const getEtVersion = async () => {
   try {
@@ -289,16 +358,21 @@ const getEtVersion = async () => {
   }
 }
 
-const getEtVersionList = async (useCache = true) => {
+const getEtVersionList = async (useCache = true, showTip = true) => {
   isFetchingVersionList.value = true
   try {
-    etVersionList.value = await getLatestVersionWithCache('easyTier/easytier', useCache)
+    const resp = await api.etCore.getVersionList({'refresh': !useCache})
+    etVersionList.value = resp.data.versions || []
+    // etVersionList.value = await getLatestVersionWithCache('easyTier/easytier', useCache)
     etVersion.value.latest_version = etVersionList.value[0]?.version || ''
     if (!etVersion.value.selected_version) {
       etVersion.value.selected_version = etVersion.value.latest_version
     }
-    if (!useCache) {
+    if (!useCache && showTip) {      
       toast.success('内核可选版本已刷新')
+    }
+    if (new Date().getTime() - resp.data.create_time > 1000 * 60 * 60 * 24) {
+      getEtVersionList(false, false)
     }
   } catch (e) {
     console.error('获取版本列表失败:', e)
@@ -327,21 +401,15 @@ const installEtCore = async () => {
   })
 }
 
-const saveGitHubMirror = async () => {
-  try {
-    await api.settings.saveGithubMirror({ url: githubMirror.value })
-    toast.success('GitHub 加速地址已保存')
-  } catch (e) {
-    console.error('保存 GitHub 加速地址失败:', e)
-  }
-}
-
-const getGithubMirrors = async () => {
+const getGithubMirrors = async (refresh = false) => {
   try {
     isFetchingGithubMirrors.value = true
-    const { data } = await api.settings.getGithubMirrors()
-    githubMirror.value = data.selected
-    githubMirrors.value = data.sources
+    const { data } = await api.settings.getGithubMirrors({'refresh': refresh})
+    // githubMirror.value = data.selected
+    githubMirrors.value = data
+    if (refresh) {
+      toast.success('已获取最新地址')
+    }
   } catch (e) {
     console.error('获取 GitHub 加速地址失败:', e)
   } finally {
@@ -349,14 +417,29 @@ const getGithubMirrors = async () => {
   }
 }
 
-const getBuildVersion = async () => {
+const getEuiInfo = async () => {
   try {
     buildVersion.value = '获取版本号中...'
-    const { data } = await api.settings.getBuildVersion()
-    buildVersion.value = data
+    const { data } = await api.settings.getEuiInfo()
+    buildVersion.value = data.build_version
+    installPath.value = data.install_path
+    platform.value = data.platform
   } catch (e) {
-    console.error('获取构建版本号失败:', e)
+    console.error('获取版本号失败:', e)
     buildVersion.value = '获取版本号失败'
+  }
+}
+
+const shutdown = async () => {
+  try {
+    await api.settings.shutdown()
+    toast.success('易组网正在关闭...')
+    setTimeout(() => {
+      window.location.reload()
+    }, 1000)
+  } catch (e) {
+    console.error('关闭易组网失败:', e)
+    toast.error('关闭易组网失败')
   }
 }
 
@@ -367,11 +450,13 @@ onMounted(() => {
   // 如果之前开启过，自动加载
   if (enabled) {
     loadVConsole()
+    showDevContent.value = true
   }  
   getEtVersion()
   getEtVersionList()
   getGithubMirrors()
-  getBuildVersion()
+  getEuiInfo()
+  loadPeerSource()
 })
 </script>
 

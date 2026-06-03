@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
+import json
 import logging
 import os
 import time
@@ -13,6 +13,20 @@ import utils.github_util as github_util
 from http_dispatcher.dispatcher import HttpResponse
 from utils import run_configs
 
+def version_list(params: dict, *kwargs):
+    refresh = params.get('refresh', False)
+    version_file = Path(run_configs.data_dir()).joinpath('et_versions.json')
+    release_info = {'create_time': time.time(), 'versions': []}
+    if not version_file.exists() or refresh:
+        releases = github_util.get_api('https://api.github.com/repos/10850609/EasyTier-EUI/releases')
+        for item in releases:
+            release_info['versions'].append({'version': item.get('name'), 'prerelease': item.get('prerelease')})
+        with open(version_file, "w", encoding="utf-8") as f:
+            f.write(json.dumps(release_info, ensure_ascii=False, indent=2))
+    else:
+        with open(version_file, "r", encoding="utf-8") as f:
+            release_info = json.load(f)
+    return release_info
 
 def download_easytier_eui(params:dict, *kwargs):
     if not params:
@@ -54,7 +68,7 @@ def _get_et_eui_package(platform:str, arch:str, et_lite_version: str, download_d
     download_url = f"https://github.com/710850609/EasyTier-EUI/releases/download/{last_version}/{file_name}"
     logging.debug(f"不存在缓存，开始下载 {download_url}")
     download_temp_file = f"{download_dir}/temp/{file_name}.{int(time.time())}"
-    github_util.download_file(download_url, download_temp_file, Path(download_temp_file).name)
+    github_util.download_release_file(download_url, download_temp_file, Path(download_temp_file).name)
     common_util.move(download_temp_file, download_file)
     logging.debug(f"已下载： {download_file}")
     return download_file
@@ -63,7 +77,6 @@ def _get_et_eui_package(platform:str, arch:str, et_lite_version: str, download_d
 def _merge_package(profile, et_lite_package, output_file, unzip_dir):
     unzip_temp_dir = f"{unzip_dir}/temp/{int(time.time())}"
     logging.info(f"解压: {et_lite_package} -> {unzip_temp_dir}")
-    config_path = ''
     with zipfile.ZipFile(et_lite_package, 'r') as zf:
         # zf.extractall(unzip_temp_dir)
         for info in zf.infolist():
@@ -74,8 +87,6 @@ def _merge_package(profile, et_lite_package, output_file, unzip_dir):
             local_path = os.path.join(unzip_temp_dir, *normalized_path.split('/'))            
             if info.is_dir():
                 os.makedirs(local_path, exist_ok=True)
-                if local_path == 'core':
-                    config_path = os.path.dirname(local_path) + '/config'
             else:
                 os.makedirs(os.path.dirname(local_path), exist_ok=True)
                 with zf.open(info) as src, open(local_path, 'wb') as dst:
@@ -83,7 +94,7 @@ def _merge_package(profile, et_lite_package, output_file, unzip_dir):
     if profile:
         logging.info(f"内置配置文件：{profile}")
         config_file = configs.copy(profile)
-        cfg_target_file = f"{config_path}/{profile}"
+        cfg_target_file = Path(unzip_temp_dir, 'EasyTier-EUI', 'config', profile)
         Path(cfg_target_file).parent.mkdir(parents=True, exist_ok=True)
         logging.info(f"复制: {config_file}  ->  {cfg_target_file}")
         common_util.move(f"{config_file}", f"{cfg_target_file}")
