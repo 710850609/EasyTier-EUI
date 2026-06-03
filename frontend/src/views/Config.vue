@@ -372,7 +372,7 @@
                               <var-button type="primary" size="small" @click="addProxyNetwork">添加</var-button>
                             </template>
                           </var-cell>
-                          <var-option v-for="(e, index) in config.proxy_network" :key="index" :label="e" :value="e" />
+                          <var-option v-for="(e, index) in proxyNetworkOptions" :key="index" :label="e" :value="e" />
                         </var-select>
                       </div>
                     </div>
@@ -545,6 +545,7 @@ const isRenaming = ref(false)
 const showDeleteDialog = ref(false)
 const isDeletingConfig = ref(false)
 const showPublicPeerTip = ref(false)
+const lanIps = ref([])
 
 const configList = ref([])
 const selectedConfig = ref('')
@@ -557,7 +558,7 @@ const defaultProtocolList = ref([{'label':'默认','value':''},{'label':'tcp','v
 const compressionOptions = ref([{'label':'无压缩','value':'none'},{'label':'zstd','value':'zstd'}])
 
 const config = ref({
-  hostname: undefined,
+  hostname: '',
   dhcp: true,
   ipv4: '',
   network_identity: { network_name: '', network_secret: '' },
@@ -577,6 +578,12 @@ const config = ref({
 
 const currentConfigData = computed(() => configList.value.find(c => c.profile === selectedConfig.value) || {})
 const currentConfigAutostart = computed(() => currentConfigData.value.autostart || false)
+const proxyNetworkOptions = computed(() => 
+  [...new Set([
+    ...(config.value.proxy_network || []), 
+    ...(lanIps.value || [])
+  ])]
+)
 
 const featureSwitches = [
   { key: 'latency_first', label: '开启延迟优先模式', tooltip: '优先选择延迟最低的连接路径' },
@@ -1013,12 +1020,19 @@ const exitAddMode = async () => {
   selectedConfig.value = configList.value?.[0]?.profile || ''
 }
 
+const getLanIps = () => {
+  api.configs.getLanIps().then(data => {
+    lanIps.value = data.data
+  })
+}
+
 onMounted(async () => {
   await loadConfigs()
   if (configList.value.length == 0) {
     return
   }
   selectedConfig.value = configList.value[0].profile
+  getLanIps()
   await loadConfig(configList.value[0].profile)
   api.peers.publicPeers({'profile': selectedConfig.value}).then(async data => {
     publicPeerOptions.value = data.data

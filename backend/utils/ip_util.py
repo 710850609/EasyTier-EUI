@@ -179,3 +179,13 @@ if __name__ == "__main__":
     print("本机局域网 IP（仅默认网关网卡）：")
     for info in ips:
         print(f"  {info['name']:35s} -> {info['ip']}/{info['netmask']}")
+
+
+    ips = get_lan_ips()
+    ip_list = []
+    for item in ips:
+        ip = item['ip']
+        arr = ip.split('.')
+        ip_list.append(f"{arr[0]}.{arr[1]}.{arr[2]}.1/32")
+        ip_list.append(f"{arr[0]}.{arr[1]}.1.1/24")
+        print(ip_list)

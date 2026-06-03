@@ -11,11 +11,20 @@ import tomlkit
 from actions import services
 from http_dispatcher.dispatcher import HttpException
 from http_dispatcher.dispatcher import HttpResponse
-from utils import et_run_info
+from utils import et_run_info, ip_util
 from utils import run_configs
 from utils import security
 from utils.validators import Validator
 
+def list_lan_ips(*kwargs):
+    ips = ip_util.get_lan_ips()
+    ip_list = []
+    for item in ips:
+        ip = item['ip']
+        ip_list.append(f"{ip}/32")
+        # arr = ip.split('.')
+        # ip_list.append(f"{arr[0]}.{arr[1]}.{arr[2]}.1/24")
+    return ip_list
 
 def list_config_files(*kwargs):
     config_files = run_configs.et_config_files()

@@ -16,7 +16,7 @@ from utils import github_util
 def check_peers(params: dict, *kwargs):
     """
     检查节点是否可用
-    :param request_data: 请求数据（可选）
+    :param: 请求数据（可选）
     """
     profile = (params or {}).get('profile')
     peer_list = public_peers(data = {'profile': profile, 'refresh': 'false'})
@@ -26,13 +26,12 @@ def check_peers(params: dict, *kwargs):
     peer_uris = [peer['uri'] for peer in peer_list]
     core_dir = run_configs.core_dir()
     result = check_util.check_peers(core_dir, peer_uris, max_wait_second=6)
+    success_peers = result.get('success', {})
     for peer in peer_list:
-        success_peers = result.get('success', {})
         uri = peer.get('uri')
         peer_result = success_peers.get(uri, {})
-        if uri in success_peers.keys() and peer_result:
+        if peer_result and uri in success_peers.keys():
             peer['status'] = 1
-            # peer['src_uri'] = peer_result.get('src_uri')
             peer['relay'] = peer_result.get('relay')
             peer['latency'] = peer_result.get('latency')
             peer['dynamic'] = peer_result.get('dynamic')
@@ -41,7 +40,7 @@ def check_peers(params: dict, *kwargs):
             peer['status'] = 0
             peer['relay'] = -1
             peer['latency'] = -1
-    __save_peer_check_result(peer_list, sort=True)
+    peer_list = __save_peer_check_result(peer_list, sort=True)
     return peer_list
 
 
@@ -91,7 +90,7 @@ def __get_public_peers(refresh=False) -> list[dict]:
     meta_data = None
     peer_meta_file = run_configs.et_peer_meta_file()
     if refresh or not Path(peer_meta_file).exists():
-        meta_data = __download_peer_meta()
+        meta_data = __download_peers()
 
     peer_check_result_file = run_configs.et_peer_check_result_file()
     if not refresh and Path(peer_check_result_file).exists():
@@ -127,14 +126,15 @@ def __get_public_peers(refresh=False) -> list[dict]:
 
     return peers
 
-def __save_peer_check_result(peers: list[dict|PeersCheckResult], sort: bool=False):
+def __save_peer_check_result(peers: list[dict|PeersCheckResult], sort: bool=False) -> list[dict]:
     dict_peers = [item.__dict__ if isinstance(item, PeersCheckResult) else item for item in peers]
     if sort:
         __sort_peers(dict_peers)
     with open(run_configs.et_peer_check_result_file(), "w", encoding="utf-8") as f:
         f.write(json.dumps(dict_peers, ensure_ascii=False, indent=2))
+    return dict_peers
 
-def __download_peer_meta():
+def __download_peers():
     peer_meta_url = f"https://raw.githubusercontent.com/710850609/EasyTier-EUI/refs/heads/main/configs/peers.json"
     test_peer_mark_file = Path(run_configs.data_dir(), 'test-peer-source')
     if test_peer_mark_file.exists():
