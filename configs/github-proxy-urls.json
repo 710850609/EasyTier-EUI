@@ -1,0 +1,11 @@
+[
+  { "url": "https://gh.felicity.ac.cn", "support_api": true},
+  { "url": "https://gh-proxy.org", "support_api": true},
+  { "url": "https://github.dpik.top", "support_api": true},
+  { "url": "https://gh.dpik.top", "support_api": true},
+  { "url": "https://ghfast.top", "support_api": false},
+  { "url": "https://ghproxy.net", "support_api": false},
+  { "url": "https://gh.llkk.cc", "support_api": false},
+  { "url": "https://github-proxy.memory-echoes.cn", "support_api": false},
+  { "url": "https://gh.b52m.cn", "support_api": false}
+]
