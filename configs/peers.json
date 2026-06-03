@@ -1,0 +1,16 @@
+{
+  "count": 2,
+  "updateTime": 1776731675,
+  "peers": {
+    "tcp://225284.xyz:11010": {
+      "status": 1,
+      "updateTime": 1776731675,
+      "uri": "tcp://225284.xyz:11010"
+    },
+    "udp://us01.225284.xyz:11010": {
+      "status": 1,
+      "updateTime": 1776731675,
+      "uri": "udp://us01.225284.xyz:11010"
+    }
+  }
+}
