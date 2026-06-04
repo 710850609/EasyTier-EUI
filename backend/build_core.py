@@ -163,6 +163,9 @@ def build_executable(build_ver:str = None, one_file:bool = True):
         "--hidden-import", "utils.validators",
         "--hidden-import", "http_dispatcher.dispatcher",
         "--add-data", f"{Path(__file__).absolute().parent.parent}/frontend/dist{separator}frontend",
+        "--add-data", f"{Path(__file__).absolute().parent.parent}/frontend/dist{separator}frontend",
+        "--add-data", f"{PROJECT_DIR.joinpath('assets', 'upgrade.bat')}{separator}upgrade.bat",
+        "--add-data", f"{PROJECT_DIR.joinpath('assets', 'upgrade.sh')}{separator}upgrade.sh",
     ]
 
     # ========== 平台特定的 webview 后端处理 ==========

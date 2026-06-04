@@ -246,13 +246,16 @@ export const api = {
 
   // easytier-lite 相关
   etEui: {
-    getDownloadEasyTierEuiUrl: (data) => getFullUrl('/et_eui/download_easytier_eui', data)
+    getDownloadEasyTierEuiUrl: (data) => getFullUrl('/et_eui/download_easytier_eui', data),
+    update: (data) => post('/et_eui/update', data),
   },
   // ET 核心相关
   etCore: {
     getVersion: () => get('/et_core/version'),
     install: (data) => post('/et_core/install', data),
     getVersionList: (params = {}) => get('/et_core/version_list', params),
+    getEtLogLevel: (params = {}) => get('/et_core/get_log_level', params),
+    setEtLogLevel: (params = {}) => post('/et_core/set_log_level', params),
   },
   // 设置相关
   settings: {

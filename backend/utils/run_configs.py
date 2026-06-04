@@ -15,6 +15,8 @@ CONFIG_DIR:str = None
 CORE_DIR:str = None
 DATA_DIR:str = None
 LOG_DIR:str = None
+UPGRADE_SCRIPT_PATH:str = None
+
 
 _is_inited_evn = False
 
@@ -22,7 +24,7 @@ def setup_env():
     global _is_inited_evn
     if _is_inited_evn:
         return
-    global FRONTEND_PATH, CONFIG_DIR, CORE_DIR, DATA_DIR, LOG_DIR
+    global FRONTEND_PATH, CONFIG_DIR, CORE_DIR, DATA_DIR, LOG_DIR, UPGRADE_SCRIPT_PATH
     # 是否在 PyInstaller 打包环境中
     WORK_DIR = None
     if is_fn_system():
@@ -41,11 +43,13 @@ def setup_env():
         WORK_DIR = str(Path(os.path.dirname(sys.executable)).absolute())
         Path(WORK_DIR).mkdir(parents=True, exist_ok=True)
         FRONTEND_PATH = os.path.abspath(os.path.join(sys._MEIPASS, 'frontend'))
+        UPGRADE_SCRIPT_PATH = os.path.abspath(sys._MEIPASS)
     else:
         project_root_path = Path(__file__).absolute().parent.parent.parent
         WORK_DIR = str(project_root_path.joinpath('temp').joinpath('EasyTier-EUI').absolute())
         Path(WORK_DIR).mkdir(parents=True, exist_ok=True)
         FRONTEND_PATH = str(project_root_path.joinpath('frontend').joinpath('dist'))
+        UPGRADE_SCRIPT_PATH = Path(__file__).absolute().parent.parent.joinpath('assets')
 
     if WORK_DIR:
         CORE_DIR = os.path.join(WORK_DIR, 'core')
@@ -70,7 +74,7 @@ def setup_env():
     _is_inited_evn = True
 
 
-BUILD_VERSION = "0.9.020604-20260603164240"
+BUILD_VERSION = "0.9.020604-20260604163916"
 
 
 def is_fn_system():
@@ -134,3 +138,9 @@ def fn_check_file() -> str:
 
 def is_local_mode() -> bool:
     return not getattr(sys, 'frozen', False)
+
+def upgrade_script_path() -> str:
+    if sys.platform == 'win32':
+        return os.path.join(UPGRADE_SCRIPT_PATH, 'upgrade.bat')
+    else:
+        return os.path.join(UPGRADE_SCRIPT_PATH, 'upgrade.sh')

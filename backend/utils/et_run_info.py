@@ -11,26 +11,27 @@ from http_dispatcher.dispatcher import HttpException
 from utils import run_configs
 
 __data = None
+_default_log_level:str = 'error'
 
 class EtRunInfo:
     """
     et 运行信息
     """
-    def __init__(self, profile:str, rpc_portal:Optional[str], autostart:bool, use_system_service:bool):
+    def __init__(self, profile:str, rpc_portal:Optional[str], autostart:bool, use_system_service:bool, log_level:str = _default_log_level):
         if not profile:
             raise HttpException("profile cannot be None for save")
         self.profile = profile
         self.rpc_portal = rpc_portal
         self.autostart = autostart
         self.use_system_service = use_system_service
+        self.log_level = log_level
 
-
-def save(profile:Optional[str], rpc_portal:Optional[str], autostart:Optional[bool], use_system_service:Optional[bool]):
+def save(profile:Optional[str], rpc_portal:Optional[str], autostart:Optional[bool], use_system_service:Optional[bool], log_level:str = _default_log_level):
     if not profile:
         raise HttpException("profile cannot be None for save")
     data = __load_data() or {}
     if not data or not data.get(profile):
-        info = EtRunInfo(profile, rpc_portal, False, False)
+        info = EtRunInfo(profile, rpc_portal, False, False, log_level)
     else:
         info = data[profile]
         info.rpc_portal = rpc_portal if rpc_portal is not None else info.rpc_portal
@@ -50,7 +51,6 @@ def get(profile:Optional[str])-> Optional[EtRunInfo]:
         save(profile, None, False, False)
     return data.get(profile)
 
-
 def remove(profile: Optional[str]):
     if not profile:
         return
@@ -68,6 +68,21 @@ def is_use_system_service(profile:str)-> bool:
     data = __load_data() or {}
     info = data.get(profile)
     return info is not None and info.use_system_service
+
+def get_log_level() -> str:
+    cfgs = get_all() or {}
+    infos = cfgs.values()
+    if not infos or len(infos) == 0:
+        return _default_log_level
+    else:
+        return next(iter(infos)).log_level or _default_log_level
+
+def set_log_level(log_level:str = _default_log_level) -> None:
+    cfgs = get_all() or {}
+    for info in cfgs.values():
+        info.log_level = log_level
+    __save_data(cfgs)
+    __load_data(reload=True)
 
 def __load_data(reload:bool = False) -> Dict[str, EtRunInfo]:
     global __data

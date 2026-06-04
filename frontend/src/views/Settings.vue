@@ -27,54 +27,78 @@
       <div class="block-header">
         <!-- <var-icon name="lock" size="24" color="var(--color-primary)" /> -->
         <svg-icon type="mdi" :path="mdiShieldLock" size="24" color="var(--color-primary)"></svg-icon>
-        <span class="block-title">内核</span>
+        <span class="block-title">内核-EasyTier</span>
       </div>
       <var-divider />
       <!-- 当前版本信息 -->
-      <var-cell>
-        <var-loading type="wave" v-if="isFetchingEtCoreVersion" />
-        <div v-if="!isFetchingEtCoreVersion">
-          <span>EasyTier </span>
-          <span>{{ etVersion.version }}</span>
+      <div class="setting-row">
+        <span class="setting-label">当前版本</span>
+        <div v-if="isFetchingEtCoreVersion">
+          <var-loading type="wave" />
         </div>
-      </var-cell>
-      <var-cell>
-        <template #description>
-          <var-select variant="outlined" placeholder="可选内核版本" size="small" v-model="etVersion.selected_version">
-            <template #default>
-              <var-option v-for="item in etVersionList" :key="item.version" :label="item.version" :value="item.version">
-                <var-cell :title="item.version" border>
-                  <template #extra>
-                    <var-badge 
-                      :type="item.prerelease ? 'warning' : 'success'" 
-                      position="right-bottom" 
-                      :value="item.prerelease ? '预发' : '稳定'">
-                    </var-badge>
-                  </template>
-                </var-cell>
-              </var-option>
-            </template>
-            <template #append-icon>
-              <var-icon 
-                name="refresh" 
-                :class="{ 'is-spinning': isFetchingVersionList }"
-                @click.stop="refreshVersionList" 
-              />
-            </template>
-          </var-select>
-        </template>
-      </var-cell>
-      <var-cell>
-        <template #description v-if="hasNewVersion">
-          <var-chip type="warning" size="small" plain>有新版本</var-chip>
-        </template>
-        <template #extra>
-          <var-button type="primary" size="small" @click="installEtCore(true)" auto-loading style="min-width: 80px;">
+        <span v-else class="setting-value">{{ etVersion.version || '未知' }}</span>
+      </div>
+      <var-divider />
+      <div class="setting-row">
+        <span class="setting-label">可选版本</span>
+        <var-select 
+          class="setting-select" 
+          variant="outlined" 
+          placeholder="选择版本" 
+          size="small" 
+          v-model="etVersion.selected_version"
+        >
+          <template #default>
+            <var-option v-for="item in etVersionList" :key="item.version" :label="item.version" :value="item.version">
+              <var-cell :title="item.version" border>
+                <template #extra>
+                  <var-badge 
+                    :type="item.prerelease ? 'warning' : 'success'" 
+                    position="right-bottom" 
+                    :value="item.prerelease ? '预发' : '稳定'">
+                  </var-badge>
+                </template>
+              </var-cell>
+            </var-option>
+          </template>
+          <template #append-icon>
+            <var-icon 
+              name="refresh" 
+              :class="{ 'is-spinning': isFetchingVersionList }"
+              @click.stop="refreshVersionList" 
+            />
+          </template>
+        </var-select>
+      </div>
+      <div class="setting-row">
+        <div class="setting-actions">
+          <var-chip v-if="hasNewVersion" type="warning" size="small" plain>有新版本</var-chip>
+          <var-button type="primary" size="small" @click="installEtCore(true)" auto-loading>
             <var-icon name="download" />
-            安装           
+            安装
           </var-button>
-        </template>
-      </var-cell>
+        </div>
+      </div>
+      <var-divider />
+      <div class="setting-row">
+        <span class="setting-label">日志级别</span>
+        <var-select 
+          class="setting-select" 
+          placeholder="请选择日志级别" 
+          v-model="etLogLevel" 
+          variant="outlined"
+          size="small"
+          :on-change="setEtLogLevel"
+          :line="true"
+          :options="logLevelOptions"
+          label-key="label"
+          value-key="value"
+        >
+          <!-- <var-option label="信息" value="info" />
+          <var-option label="警告" value="warn" />
+          <var-option label="错误" value="error" /> -->
+        </var-select>
+      </div>
     </var-paper>
 
     <!-- 网络设置 -->
@@ -182,48 +206,64 @@
         <var-icon name="information" size="24" color="var(--color-info)" />
         <span class="block-title">关于</span>
       </div>      
-      <var-divider />
-      <var-cell>
-        <template #icon>
-          <strong>易组网</strong>
-        </template>
-        <template #description>
-          <var-chip type="primary" size="mini">{{ buildVersion }}</var-chip>
-        </template>
-        <template #extra>
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <a href='https://github.com/710850609/fpk-easytier-lite' target="_blank"><img alt="GitHub stars" src="https://img.shields.io/github/stars/710850609/EasyTier-EUI?logo=github"></a>
-            <var-chip elevation="1" @click="showRewardCdoe = true" type="info" size="small" style="white-space: nowrap; writing-mode: horizontal-tb; flex-shrink: 0;">打赏</var-chip>
-          </div>
-        </template>
-      </var-cell>
-      <var-cell>
-        <div>简化 EasyTier 使用的UI界面</div>
-        <div>降低组网门槛，快速访问异地网络设备</div>
-        <div>享受 EasyTier 免费、不限设备数量、支持多类型终端等优势</div>
-      </var-cell>
-      <var-cell>
-        <template #description>
-          <span style="font-size: 11px;">安装路径</span>
-          <var-chip type="primary" size="mini" :label="installPath">{{ installPath }}</var-chip>
-        </template>
-      </var-cell>
-      <var-divider />
-      <var-cell>
-        <div style="display: flex; align-items: center; gap: 8px; margin: 2px 0;">
-          <img alt="GitHub stars" src="https://img.shields.io/github/downloads/710850609/EasyTier-EUI/total?color=blue&label=GitHub%E4%B8%8B%E8%BD%BD%E9%87%8F" />
+      <!-- 版本信息卡片 -->
+      <div class="about-version-card">
+        <div class="version-main">
+          <span class="version-name">易组网</span>
+          <img alt="下载量" src="https://img.shields.io/github/downloads/710850609/EasyTier-EUI/total?color=blue&label=下载量" />
         </div>
-        <div style="display: flex; align-items: center; gap: 8px;">
+        <div class="version-actions">
+          <a href='https://github.com/710850609/EasyTier-EUI' target="_blank">
+            <img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/710850609/EasyTier-EUI?style=flat&label=%E7%82%B9%20Stars">
+
+          </a>
+          <var-chip elevation="1" @click="showRewardCdoe = true" type="info" size="small">打赏</var-chip>
+        </div>
+      </div>
+      
+      <!-- 简介 -->
+      <div class="about-section">
+        <!-- <div class="about-title">简介</div> -->
+        <div class="about-content">
+          <p>简化 EasyTier 使用的 UI 界面，降低组网门槛，快速访问异地网络设备。</p>
+          <p>享受 EasyTier 免费、不限设备数量、支持多类型终端等优势。</p>
+        </div>
+      </div>
+      
+      <!-- 安装路径 -->
+      <div class="about-section">
+        <!-- 最新版本 -->
+        <div class="version-row">
+          <a href="https://github.com/710850609/EasyTier-EUI/releases" target="_blank">
+            <img alt="最新版" src="https://img.shields.io/github/v/tag/710850609/EasyTier-EUI?color=orange&logo=github&label=最新版" />
+          </a>
+          <var-button type="primary" size="small" @click="installEuiVersion('release')" auto-loading>
+            <var-icon name="download" />
+            安装
+          </var-button>
+        </div>        
+        <!-- 稳定版本 -->
+        <div class="version-row">
           <a href="https://github.com/710850609/EasyTier-EUI/releases/latest" target="_blank">
             <img alt="稳定版" src="https://img.shields.io/github/v/release/710850609/EasyTier-EUI?color=blue&logo=github&label=稳定版" />
           </a>
+          <var-button type="primary" size="small" @click="installEuiVersion('prerelease')" auto-loading>
+            <var-icon name="download" />
+            安装
+          </var-button>
+        </div>  
+        <div class="version-row">
+          <img :src="'https://img.shields.io/badge/%E5%BD%93%E5%89%8D%20%E7%89%88%E6%9C%AC-v' + buildVersion.replace('-', '--') + '-green'" />
+          <!-- <span class="about-title">当前版本</span> -->
+          <!-- <var-chip type="primary" size="small">{{ buildVersion }}</var-chip> -->
+        </div>    
+        
+        <div class="version-row">
+          <span class="about-title">安装路径</span>
+          <var-chip type="primary" size="small">{{ installPath }}</var-chip>
+          <!-- <code class="path-code">{{ installPath }}</code> -->
         </div>
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <a href="https://github.com/710850609/EasyTier-EUI/releases" target="_blank">
-            <img alt="最新版" src="https://img.shields.io/github/v/tag/710850609/EasyTier-EUI?color=blue&logo=github&label=最新版" />
-          </a>
-        </div>
-      </var-cell>
+      </div>
     </var-paper>
 
     <var-button block type="danger" v-if="platform === 'linux'" @click="shutdown">
@@ -235,7 +275,7 @@
   </div>
 
   <var-popup :default-style="false" v-model:show="showRewardCdoe">
-    <var-result class="result" description="感谢您的肯定">
+    <var-result class="result" description="点Stars或是打赏 感谢您的肯定">
       <template #image>
         <img src="../../public/images/reward_code.jpg" style="width: 50%; height: 50%;" />
       </template>
@@ -273,12 +313,20 @@ const buildVersion = ref('')
 const installPath = ref('')
 const showRewardCdoe = ref(false)
 const platform = ref('')
+const etLogLevel = ref('info')
+const euiHasNewVersion = ref(false)
+const isCheckingEuiUpdate = ref(false)
+const logLevelOptions = ref([
+  { value: 'off', label: '禁用' }, // cli 是 disabled
+  { value: 'error', label: '错误' },
+  { value: 'warn', label: '警告' },  // cli 是 warning
+  { value: 'info', label: '信息' },
+  { value: 'debug', label: '调试' },
+  { value: 'trace', label: '追踪' },
+])
 
 const startPress = (e) => {
-  dev_toggle_timer.value = setTimeout(() => {
-    showDevContent.value = !showDevContent.value
-    toast.success(`开发者选项已${showDevContent.value ? '开启' : '关闭'}`)
-  }, 3000);
+  dev_toggle_timer.value = setTimeout(() => {  }, 3000);
 };
 
 const cancelPress = () => {
@@ -430,6 +478,17 @@ const getEuiInfo = async () => {
   }
 }
 
+const installEuiVersion = async (versionType) => {
+  try {
+    const { data } = await api.etEui.update({ ver_tag: versionType })
+    toast.success(`更新成功: ${data.message}`)
+    window.location.reload()
+  } catch (e) {
+    console.error('更新失败:', e)
+    toast.error('更新失败: ' + (e.message || '未知错误'))
+  }
+}
+
 const shutdown = async () => {
   try {
     await api.settings.shutdown()
@@ -440,6 +499,22 @@ const shutdown = async () => {
   } catch (e) {
     console.error('关闭易组网失败:', e)
     toast.error('关闭易组网失败')
+  }
+}
+
+const getEtLogLevel = async () => {
+  const { data } = await api.etCore.getEtLogLevel()
+  etLogLevel.value = data
+}
+
+const setEtLogLevel = async (level) => {
+  const loadingToast = toast.loading('正在修改内核日志级别，请稍后...')
+  try {
+    await api.etCore.setEtLogLevel({ level: level })
+    const selectedLabel = logLevelOptions.value.filter(item => item.value === level)[0].label
+    toast.success(`内核日志级别已设置为 ${selectedLabel}`)
+  } finally {
+    loadingToast.clear()
   }
 }
 
@@ -457,6 +532,7 @@ onMounted(() => {
   getGithubMirrors()
   getEuiInfo()
   loadPeerSource()
+  getEtLogLevel()
 })
 </script>
 
@@ -575,5 +651,159 @@ onMounted(() => {
 .theme-option span {
   font-size: 14px;
   font-weight: 500;
+}
+
+/* 设置行样式 */
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  gap: 16px;
+}
+
+.setting-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text);
+  flex: 1;
+}
+
+.setting-select {
+  flex: 3;
+  min-width: 160px;
+}
+
+.setting-value {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.setting-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-left: auto;
+}
+
+/* 关于部分样式 */
+.about-version-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  background: var(--color-primary-container);
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+
+.version-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.version-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-on-primary-container);
+}
+
+.version-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.about-section {
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--color-outline);
+}
+
+.about-section:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.about-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  margin-bottom: 8px;
+}
+
+.about-content {
+  font-size: 14px;
+  color: var(--color-text);
+  line-height: 1.6;
+}
+
+.about-content p {
+  margin: 4px 0;
+}
+
+.path-code {
+  display: inline-block;
+  padding: 8px 12px;
+  background: var(--color-surface);
+  border-radius: 8px;
+  font-family: monospace;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  word-break: break-all;
+  max-width: 100%;
+}
+
+.stats-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.version-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+}
+
+/* 移动端响应式 */
+@media (max-width: 480px) {
+  .about-version-card {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
+  
+  .version-main {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .version-name {
+    font-size: 18px;
+  }
+  
+  .version-actions {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .stats-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .path-code {
+    font-size: 12px;
+    padding: 6px 10px;
+  }
 }
 </style>

@@ -43,8 +43,7 @@
             <var-button
               type="danger"
               auto-loading
-              size="small"
-               
+              size="small"               
               @click="stopService"
               v-if="serviceRunning && !serviceOperating"
             >
@@ -542,8 +541,8 @@ const startService = async () => {
     const cfg = configList.value.find(c => c.profile === selectedConfig.value)
     if (cfg) cfg.running = true
     fetchNodes()
-  } catch (error) {
-    toast.error('服务启动失败: ' + error.message)
+  // } catch (error) {
+  //   toast.error('服务启动失败: ' + error.message)
   } finally {
     serviceOperating.value = false
     pendingAction.value = ''

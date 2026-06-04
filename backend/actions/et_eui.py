@@ -1,17 +1,65 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+import gzip
 import json
 import logging
 import os
+import shutil
+import sys
+import platform
+import tarfile
 import time
 import zipfile
 from pathlib import Path
 
+import psutil
+
 import actions.configs as configs
 import utils.common_util as common_util
 import utils.github_util as github_util
+from actions import services
 from http_dispatcher.dispatcher import HttpResponse
 from utils import run_configs
+
+def update(params: dict, *kwargs):
+    params = params or {}
+    ver_tag = params.get('ver_tag', '')
+    if ver_tag not in ('release', 'prerelease'):
+        raise HttpResponse(f"版本标签错误：{ver_tag}")
+    download_url, filename = __get_download_url(ver_tag == 'release')
+    download_dir = os.path.join(run_configs.data_dir(), 'download')
+    download_file = os.path.join(download_dir, filename)
+    if not os.path.exists(download_file):
+        github_util.download_release_file(download_url, download_file)
+    extract_dir = os.path.join(download_dir, 'temp', str(int(time.time())))
+    if run_configs.is_fn_system() or test:
+        # fpk是gzip压缩的文件
+        os.makedirs(extract_dir, exist_ok=True)
+        with tarfile.open(download_file, 'r:gz') as tar:
+            tar.extractall(path=extract_dir)
+            # 可选：列出解压的内容
+            for member in tar.getmembers():
+                print(member.name)
+        app_dir = os.path.join(extract_dir, 'app')
+        with tarfile.open(os.path.join(extract_dir, 'app.tgz'), 'r:gz') as tar:
+            tar.extractall(path=app_dir)
+        backend_path = Path(run_configs.core_dir()).parent.joinpath('backend')
+        shutil.copytree(os.path.join(app_dir, 'backend'), backend_path, dirs_exist_ok=True)
+        logging.info(f"更新backend： {backend_path}")
+        frontend_path = Path(run_configs.core_dir()).parent.joinpath('frontend')
+        shutil.copytree(os.path.join(app_dir, 'frontend'), frontend_path, dirs_exist_ok=True)
+        logging.info(f"更新frontend： {frontend_path}")
+        pass
+    else:
+        services.stop_all()
+        _extract_package(download_file, extract_dir)
+        app_path = Path(run_configs.core_dir()).parent
+        shutil.copytree(os.path.join(extract_dir, 'EasyTier-EUI'), app_path.joinpath('_update'), dirs_exist_ok=True)
+        upgrade_script = run_configs.upgrade_script_path()
+        common_util.run_cmd([upgrade_script, app_path])
+    pass
+
+
 
 def version_list(params: dict, *kwargs):
     refresh = params.get('refresh', False)
@@ -110,3 +158,72 @@ def _merge_package(profile, et_lite_package, output_file, unzip_dir):
                 arch_name = item.relative_to(unzip_temp_dir)
                 zf.write(item, arch_name)
     common_util.delete(unzip_temp_dir)
+
+def _extract_package(package_file:str, extract_dir:str):
+    logging.info(f"解压: {package_file} -> {extract_dir}")
+    with zipfile.ZipFile(package_file, 'r') as zf:
+        # zf.extractall(unzip_temp_dir)
+        for info in zf.infolist():
+            # 🔴 关键：统一转换为系统分隔符，再处理
+            # zipfile 读取的 filename 可能是 / 或 \，统一用 /
+            normalized_path = info.filename.replace('\\', '/')
+            # 构建本地文件系统路径（自动适应 Windows/Unix）
+            local_path = os.path.join(extract_dir, *normalized_path.split('/'))
+            if info.is_dir():
+                os.makedirs(local_path, exist_ok=True)
+            else:
+                os.makedirs(os.path.dirname(local_path), exist_ok=True)
+                with zf.open(info) as src, open(local_path, 'wb') as dst:
+                    dst.write(src.read())
+
+def __get_download_url(is_release: bool) -> tuple[str, str]:
+    # 系统映射
+    sys_map = {
+        "win32": "windows",
+        "linux": "linux",
+        "darwin": "macos"
+    }
+    # 架构映射
+    arch_map = {
+        "x86_64": "x86_64",
+        "amd64": "x86_64",
+        "aarch64": "aarch64",
+        "arm64": "aarch64",
+        "riscv64": "riscv64",
+        "armv7l": "armv7"
+    }
+    system = sys.platform
+    machine = os.uname().machine if hasattr(os, 'uname') else platform.machine()
+    sys_name = sys_map.get(system, system)
+    arch_name = arch_map.get(machine.lower())
+    if run_configs.is_fn_system():
+        sys_name = 'fnos'
+    release_infos = github_util.get_api("https://api.github.com/repos/710850609/EasyTier-EUI/releases")
+    release_info = {}
+    for item in release_infos:
+        prerelease = item.get('prerelease', '')
+        if prerelease and not is_release:
+            release_info = item
+            break
+        if not prerelease and is_release:
+            release_info = item
+            break
+    if not release_info or not release_info.get('assets', []):
+        raise HttpResponse(f"没有可下载版本")
+
+    assets = release_info.get('assets', [])
+    package_prefix = f"EasyTier-EUI-{sys_name}-{arch_name}"
+    download_url = ''
+    filename = ''
+    for asset in assets:
+        if asset.get('name', '').startswith(package_prefix):
+            download_url = asset.get('browser_download_url', '')
+            filename = asset.get('name', '')
+            break
+    if not download_url:
+        raise HttpResponse(f"没有可下载版本")
+    return download_url, filename
+
+if __name__ == '__main__':
+    run_configs.setup_env()
+    update({'ver_tag': 'release'})

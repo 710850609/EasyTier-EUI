@@ -20,10 +20,11 @@ def get_latest_version(api_url) -> str:
     合适 提取版本号 v1.2.3 -> 1.2.3
     """
     try:
-        response = requests.get(api_url, timeout=30)
-        response.raise_for_status()
-        data = response.json()
-        
+        # response = requests.get(api_url, timeout=30)
+        # response.raise_for_status()
+        # data = response.json()
+        data = get_api(api_url)
+
         tag_name = data.get('tag_name', '')
         # 提取版本号 v1.2.3 -> 1.2.3
         match = re.search(r'(\d+\.\d+\.\d+)', tag_name)

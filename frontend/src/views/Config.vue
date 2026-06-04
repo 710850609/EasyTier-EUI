@@ -93,7 +93,7 @@
                 <svg-icon type="mdi" :path="mdiHomeEdit" width="24" height="24" color="var(--color-primary)" />
                 <span class="section-title">{{ fastSettingMode ? '快速设置' : '基础设置' }}</span>
               </div>
-              <div v-if="fastSettingMode && publicPeerOptions.length > 0">
+              <div v-if="fastSettingMode && !isLoadingConfig && publicPeerOptions.length > 0">
                 <span class="fast-setting-hint">填写网络名称和密码，后点击即可 -&gt; </span>
                 <var-button type="primary" size="small" @click="saveConfig" auto-loading>保存并启动</var-button>
               </div>

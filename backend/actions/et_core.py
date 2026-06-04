@@ -14,8 +14,18 @@ import utils.common_util as common_util
 import utils.github_util as github_util
 from actions import services
 from http_dispatcher.dispatcher import HttpException
-from utils import run_configs
+from utils import run_configs, et_run_info
 
+
+def get_log_level(params:dict, *kwargs):
+    log_level = et_run_info.get_log_level()
+    return log_level
+
+def set_log_level(params:dict, *kwargs):
+    params = params or {}
+    log_level = params.get("level", 'error')
+    et_run_info.set_log_level(log_level)
+    services.change_log_level(log_level)
 
 def check_core(*kwargs):
     core_dir = run_configs.core_dir()

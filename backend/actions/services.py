@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+import copy
 import logging
 import os.path
 import sys
@@ -88,7 +89,10 @@ def start(params=None, *kwargs):
             "-c",
             config_file,
             "-r",
-            rpc_portal
+            rpc_portal,
+            f"--file-log-dir", f"{run_configs.log_dir()}",
+            f"--file-log-level", f"{info.log_level or 'error'}",
+            f"--file-log-size", f"50"  # 单个文件日志大小，单位 MB，默认值为 100MB
         ]
         logging.info(f"启动ET命令: {cmd}")
         pm = _get_process_manager(profile)
@@ -146,8 +150,8 @@ def auto_start(params: Optional[dict]=None, keep_run_status:bool=True, *kwargs):
     is_enabled = params.get('enabled', False)
     if isinstance(is_enabled, str):
         is_enabled = is_enabled.lower() == 'true'
-
-    info = et_run_info.get(profile)
+    # 深拷贝，避免修改原数据
+    info = copy.deepcopy(et_run_info.get(profile))
     if info and info.autostart == is_enabled:
         logging.info(f"开启自启未变更，跳过修改：{info.autostart}")
         return
@@ -172,7 +176,7 @@ def auto_start(params: Optional[dict]=None, keep_run_status:bool=True, *kwargs):
         stop(params)
     service_status = _system_service_status()
     if len(auto_start_set) > 0:
-        rpc_portal = _system_service_install(list(auto_start_set))
+        rpc_portal = _system_service_install(list(auto_start_set), info.log_level)
         info.rpc_portal = rpc_portal
     elif service_status > -1:
         logging.info(f"不存在需要自启配置，卸载系统服务")
@@ -192,10 +196,10 @@ def rename_profile(old_profile: Optional[str], new_profile: Optional[str]):
     if not old_profile:
         raise HttpException(f"不存在运行配置： {old_profile}")
     auto_start_set = __get_system_service_profiles()
+    old_info = et_run_info.get(old_profile)
     if run_configs.is_fn_system() or old_profile not in auto_start_set:
         # 飞牛环境或是旧配置不是开机自启，忽略处理
-        old_info = et_run_info.get(old_profile)
-        et_run_info.save(new_profile, old_info.rpc_portal, old_info.autostart, old_info.use_system_service)
+        et_run_info.save(new_profile, old_info.rpc_portal, old_info.autostart, old_info.use_system_service, old_info.log_level)
         et_run_info.remove(old_profile)
     else:
         is_running = _system_service_status() == 1
@@ -205,15 +209,47 @@ def rename_profile(old_profile: Optional[str], new_profile: Optional[str]):
                 _system_service_stop()
             auto_start_set.remove(old_profile)
             auto_start_set.add(new_profile)
-            et_run_info.save(new_profile, None, False, False)
+            et_run_info.save(new_profile, None, old_info.autostart, old_info.use_system_service, old_info.log_level)
             is_save_new = True
-            rpc_portal = _system_service_install(list(auto_start_set))
+            rpc_portal = _system_service_install(list(auto_start_set), old_info.log_level)
             et_run_info.save(new_profile, rpc_portal, True, True)
             et_run_info.remove(old_profile)
         except Exception as e:
             if is_save_new:
                 et_run_info.remove(new_profile)
             raise e
+
+def change_log_level(log_level):
+    infos = et_run_info.get_all()
+    profiles_systemed = []
+    need_handle_profiles_no_systemed = []
+    need_handle_systemed = False
+    for info in infos.values():
+        if status({'profile': info.profile}):
+            if not info.use_system_service:
+                need_handle_profiles_no_systemed.append(info.profile)
+            else:
+                need_handle_systemed = True
+        if info.use_system_service:
+            profiles_systemed.append(info.profile)
+    if need_handle_systemed:
+        _system_service_stop()
+        _system_service_uninstall()
+        _system_service_install(profiles_systemed, log_level)
+    for profile in need_handle_profiles_no_systemed:
+        info = et_run_info.get(profile)
+        log_level = 'disabled' if log_level == 'off' else log_level
+        log_level = 'warning' if log_level == 'warn' else log_level
+        cmd = [
+            f"{os.path.join(run_configs.core_dir(), 'easytier-cli')}{_ext}",
+            "--rpc-portal",
+            info.rpc_portal,
+            "logger",
+            "set",
+            log_level,
+        ]
+        logging.info(f"设置日志级别命令： {cmd}")
+        common_util.run_cmd(cmd)
 
 
 def __get_system_service_profiles() -> Set[str]:
@@ -227,7 +263,7 @@ def __get_system_service_profiles() -> Set[str]:
                 et_run_info.remove(config_file)
     return auto_start_set
 
-def _system_service_install(profiles: List[str]) -> str:
+def _system_service_install(profiles: List[str], log_level:str = 'error') -> str:
     if len(profiles or []) == 0:
         raise AssertionError(f"未指定启动配置，无法注册系统服务")
     cmd_config_file_parts = ''
@@ -249,7 +285,8 @@ def _system_service_install(profiles: List[str]) -> str:
            f" --rpc-portal {rpc_portal}"
            f" {cmd_config_file_parts}"
            f" --file-log-dir {run_configs.log_dir()}"
-           f" --file-log-level error"
+           f" --file-log-level {log_level or 'error'}"
+           f" --file-log-size 50" # 单个文件日志大小，单位 MB，默认值为 100MB
            )
     logging.info(f"注册服务命令： {cmd}")
     result = common_util.run_cmd(cmd)
@@ -293,5 +330,4 @@ def _system_service_status() -> int:
         return -1
     else:
         raise HttpException(f"未知服务状态： {result}")
-
 

@@ -1,23 +1,22 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import json
 import logging
 import sys
 import time
-from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-import requests
-
 from http_dispatcher.dispatcher import HttpException
-from utils import run_configs, et_run_info, github_util
+from utils import run_configs, github_util, et_run_info
 
 
 def eui_info(*kwargs):
     platform = 'trim' if run_configs.is_fn_system() else sys.platform
+    install_path = Path(run_configs.core_dir()).parent
+    if platform == 'trim':
+        install_path = install_path.parent
     return {
         'build_version': run_configs.build_version(),
-        'install_path': str(Path(run_configs.core_dir()).parent),
+        'install_path': str(install_path),
         'platform': platform,
     }
 
