@@ -220,7 +220,7 @@ def __get_download_url(is_release: bool) -> tuple[str, str]:
             filename = asset.get('name', '')
             break
     if not download_url:
-        raise HttpResponse(f"没有可下载版本")
+        raise HttpResponse(f"没有可下载链接")
     return download_url, filename
 
 if __name__ == '__main__':
