@@ -6,6 +6,7 @@
 
 import os
 import re
+import shlex
 import sys
 import time
 import signal
@@ -74,7 +75,7 @@ class ProcessManager:
                 startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
                 startupinfo.wShowWindow = subprocess.SW_HIDE  # <-- 关键：强制隐藏窗口
                 process = subprocess.Popen(
-                    *start_cmd,
+                    start_cmd,
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.PIPE,
                     stdin=subprocess.DEVNULL,
@@ -85,8 +86,10 @@ class ProcessManager:
                 )
             else:
                 # Linux/macOS: 使用 bash -c
+                bash_cmd = ["bash", "-c", " ".join(shlex.quote(x) for x in start_cmd)]
                 process = subprocess.Popen(
-                    ["bash", "-c", *start_cmd],
+                    # ["bash", "-c", *start_cmd],
+                    bash_cmd,
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.PIPE,
                     stdin=subprocess.DEVNULL,
