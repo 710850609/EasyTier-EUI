@@ -37,9 +37,6 @@ def update(params: dict, *kwargs):
         os.makedirs(extract_dir, exist_ok=True)
         with tarfile.open(download_file, 'r:gz') as tar:
             tar.extractall(path=extract_dir)
-            # 可选：列出解压的内容
-            for member in tar.getmembers():
-                print(member.name)
         app_dir = os.path.join(extract_dir, 'app')
         with tarfile.open(os.path.join(extract_dir, 'app.tgz'), 'r:gz') as tar:
             tar.extractall(path=app_dir)
