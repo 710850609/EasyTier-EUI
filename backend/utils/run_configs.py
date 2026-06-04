@@ -43,7 +43,6 @@ def setup_env():
         Path(WORK_DIR).mkdir(parents=True, exist_ok=True)
         FRONTEND_PATH = os.path.abspath(os.path.join(sys._MEIPASS, 'frontend'))
     else:
-        is_local_mode = True
         project_root_path = Path(__file__).absolute().parent.parent.parent
         WORK_DIR = str(project_root_path.joinpath('temp').joinpath('EasyTier-EUI').absolute())
         Path(WORK_DIR).mkdir(parents=True, exist_ok=True)
