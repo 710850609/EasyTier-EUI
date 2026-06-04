@@ -32,7 +32,7 @@ def update(params: dict, *kwargs):
     if not os.path.exists(download_file):
         github_util.download_release_file(download_url, download_file)
     extract_dir = os.path.join(download_dir, 'temp', str(int(time.time())))
-    if run_configs.is_fn_system() or test:
+    if run_configs.is_fn_system():
         # fpk是gzip压缩的文件
         os.makedirs(extract_dir, exist_ok=True)
         with tarfile.open(download_file, 'r:gz') as tar:
@@ -56,7 +56,9 @@ def update(params: dict, *kwargs):
         app_path = Path(run_configs.core_dir()).parent
         shutil.copytree(os.path.join(extract_dir, 'EasyTier-EUI'), app_path.joinpath('_update'), dirs_exist_ok=True)
         upgrade_script = run_configs.upgrade_script_path()
-        common_util.run_cmd([upgrade_script, app_path])
+        cmd = [upgrade_script, str(app_path)]
+        logging.info(f"执行升级脚本：{' '.join(cmd)}")
+        common_util.run_cmd(cmd)
     pass
 
 

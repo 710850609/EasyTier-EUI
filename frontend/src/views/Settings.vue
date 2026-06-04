@@ -237,7 +237,7 @@
           <a href="https://github.com/710850609/EasyTier-EUI/releases" target="_blank">
             <img alt="最新版" src="https://img.shields.io/github/v/tag/710850609/EasyTier-EUI?color=orange&logo=github&label=最新版" />
           </a>
-          <var-button type="primary" size="small" @click="installEuiVersion('release')" auto-loading>
+          <var-button type="primary" size="small" @click="installEuiVersion('prerelease')" auto-loading>
             <var-icon name="download" />
             安装
           </var-button>
@@ -247,7 +247,7 @@
           <a href="https://github.com/710850609/EasyTier-EUI/releases/latest" target="_blank">
             <img alt="稳定版" src="https://img.shields.io/github/v/release/710850609/EasyTier-EUI?color=blue&logo=github&label=稳定版" />
           </a>
-          <var-button type="primary" size="small" @click="installEuiVersion('prerelease')" auto-loading>
+          <var-button type="primary" size="small" @click="installEuiVersion('release')" auto-loading>
             <var-icon name="download" />
             安装
           </var-button>
@@ -478,15 +478,17 @@ const getEuiInfo = async () => {
   }
 }
 
-const installEuiVersion = async (versionType) => {
-  try {
-    const { data } = await api.etEui.update({ ver_tag: versionType })
-    toast.success(`更新成功: ${data.message}`)
-    window.location.reload()
-  } catch (e) {
-    console.error('更新失败:', e)
-    toast.error('更新失败: ' + (e.message || '未知错误'))
-  }
+const installEuiVersion = (versionType) => {
+  return new Promise((resolve, reject) => {
+    api.etEui.update({ ver_tag: versionType })
+    .then((res) => {
+      toast.success(res.data || `更新成功`)
+      setTimeout(() => window.location.reload(), 1500)
+    })
+    .finally(() => {
+      resolve()
+    })
+  })
 }
 
 const shutdown = async () => {
@@ -512,7 +514,7 @@ const setEtLogLevel = async (level) => {
   try {
     await api.etCore.setEtLogLevel({ level: level })
     const selectedLabel = logLevelOptions.value.filter(item => item.value === level)[0].label
-    toast.success(`内核日志级别已设置为 ${selectedLabel}`)
+    toast.success(`内核日志级别已设置【${selectedLabel}】`)
   } finally {
     loadingToast.clear()
   }
