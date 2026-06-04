@@ -49,7 +49,7 @@ class ProcessManager:
         return False
 
 
-    def start(self, start_cmd:str) -> int:
+    def start(self, start_cmd:list[str]) -> int:
         """
         启动进程
         """
@@ -74,7 +74,7 @@ class ProcessManager:
                 startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
                 startupinfo.wShowWindow = subprocess.SW_HIDE  # <-- 关键：强制隐藏窗口
                 process = subprocess.Popen(
-                    start_cmd,
+                    *start_cmd,
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.PIPE,
                     stdin=subprocess.DEVNULL,
@@ -86,7 +86,7 @@ class ProcessManager:
             else:
                 # Linux/macOS: 使用 bash -c
                 process = subprocess.Popen(
-                    ["bash", "-c", start_cmd],
+                    ["bash", "-c", *start_cmd],
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.PIPE,
                     stdin=subprocess.DEVNULL,

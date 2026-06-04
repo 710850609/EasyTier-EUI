@@ -10,11 +10,11 @@ import sys
 from pathlib import Path
 from typing import Optional, List
 
-FRONTEND_PATH = None
-CONFIG_DIR = None
-CORE_DIR = None
-DATA_DIR = None
-LOG_DIR = None
+FRONTEND_PATH:str = None
+CONFIG_DIR:str = None
+CORE_DIR:str = None
+DATA_DIR:str = None
+LOG_DIR:str = None
 
 _is_inited_evn = False
 
@@ -25,7 +25,6 @@ def setup_env():
     global FRONTEND_PATH, CONFIG_DIR, CORE_DIR, DATA_DIR, LOG_DIR
     # 是否在 PyInstaller 打包环境中
     WORK_DIR = None
-    is_local_mode = False
     if is_fn_system():
         TRIM_APPNAME = os.getenv('TRIM_APPNAME', 'EasyTier-EUI')
         TRIM_APPDEST = os.getenv('TRIM_APPDEST', f'/var/apps/{TRIM_APPNAME}/target')
@@ -44,7 +43,7 @@ def setup_env():
         FRONTEND_PATH = os.path.abspath(os.path.join(sys._MEIPASS, 'frontend'))
     else:
         project_root_path = Path(__file__).absolute().parent.parent.parent
-        WORK_DIR = str(project_root_path.joinpath('temp').joinpath('EasyTier-EUI').absolute())
+        WORK_DIR = str(project_root_path.joinpath('my temp').joinpath('EasyTier-EUI').absolute())
         Path(WORK_DIR).mkdir(parents=True, exist_ok=True)
         FRONTEND_PATH = str(project_root_path.joinpath('frontend').joinpath('dist'))
 

@@ -82,7 +82,14 @@ def start(params=None, *kwargs):
     else:
         rpc_port = check_peers.get_available_port(start_port=16888)
         rpc_portal = f"127.0.0.1:{rpc_port}"
-        cmd = f"{os.path.join(run_configs.core_dir(), 'easytier-core')}{_ext} -c {config_file} -r {rpc_portal}"
+        # 使用用列表传参，避免执行文件路径含空格，导致报错找不到文件
+        cmd = [
+            f"{os.path.join(run_configs.core_dir(), 'easytier-core')}{_ext}",
+            "-c",
+            config_file,
+            "-r",
+            rpc_portal
+        ]
         logging.info(f"启动ET命令: {cmd}")
         pm = _get_process_manager(profile)
         pm.start(cmd)
