@@ -43,7 +43,7 @@ def setup_env():
         WORK_DIR = str(Path(os.path.dirname(sys.executable)).absolute())
         Path(WORK_DIR).mkdir(parents=True, exist_ok=True)
         FRONTEND_PATH = os.path.abspath(os.path.join(sys._MEIPASS, 'frontend'))
-        UPGRADE_SCRIPT_PATH = os.path.abspath(sys._MEIPASS)
+        UPGRADE_SCRIPT_PATH = os.path.abspath(os.path.join(sys._MEIPASS, 'assets'))
     else:
         project_root_path = Path(__file__).absolute().parent.parent.parent
         WORK_DIR = str(project_root_path.joinpath('temp').joinpath('EasyTier-EUI').absolute())
