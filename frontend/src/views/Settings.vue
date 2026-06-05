@@ -61,7 +61,7 @@
             <var-icon 
               name="refresh" 
               :class="{ 'is-spinning': isFetchingVersionList }"
-              @click.stop="getEtReleaseInfo()" 
+              @click.stop="getEtReleaseInfo(true)" 
             />
           </template>
         </var-select>
