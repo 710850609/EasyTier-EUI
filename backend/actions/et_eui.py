@@ -73,24 +73,22 @@ def get_release_info(params: dict, *kwargs):
         releases = github_util.get_api('https://api.github.com/repos/710850609/EasyTier-EUI/releases?per_page=100')
         for item in releases:
             item_download_count = 0
-            if not release_info['latest_prerelease'] or not release_info['latest_release']:
-                assets = {}
-                version = item.get('name')
-                for asset in item['assets']:
+            assets = {}
+            ver = item.get('name')
+            for asset in item['assets']:
+                download_count = asset.get('download_count', 0)
+                item_download_count += download_count
+                total_download += download_count
+                if (item['prerelease'] and not release_info['latest_prerelease']) or (not item['prerelease'] and not release_info['latest_release']):
                     filename = asset.get('name')
                     download_url = asset.get('browser_download_url')
-                    download_count = asset.get('download_count', 0)
-                    item_download_count += download_count
-                    total_download += download_count
-                    platform_arch = filename.replace('EasyTier-EUI-', '').replace(f'-{version}', '').replace('.zip', '').replace('.fpk', '')
+                    platform_arch = filename.replace('EasyTier-EUI-', '').replace(f'-{ver}', '').replace('.zip', '').replace('.fpk', '')
                     assets[platform_arch] = {'download_url': download_url, 'download_count': download_count}
-                info = {'version': version, 'download_count': item_download_count, 'assets': assets, 'changelog': item.get('body')}
-                if item['prerelease']:
-                    release_info['latest_prerelease'] = info
-                else:
-                    release_info['latest_release'] = info
-            else:
-                total_download += sum([asset.get('download_count', 0) for asset in item['assets']])
+                    info = {'version': ver, 'download_count': item_download_count, 'assets': assets, 'changelog': item.get('body')}
+                    if item['prerelease']:
+                        release_info['latest_prerelease'] = info
+                    else:
+                        release_info['latest_release'] = info
             release_info['total_download'] = total_download
         with open(release_file, "w", encoding="utf-8") as f:
             f.write(json.dumps(release_info, ensure_ascii=False, indent=2))
@@ -232,5 +230,5 @@ def __get_download_url(is_release: bool) -> tuple[str, str]:
     return download_url, download_url.split('/')[-1]
 
 if __name__ == '__main__':
-    install_path = Path('C:/Users/linbo/Desktop/downloa').resolve(strict=True)
-    print(install_path)
+    run_configs.setup_env()
+    get_release_info({'refresh': 'true'})
