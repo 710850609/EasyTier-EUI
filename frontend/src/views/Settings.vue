@@ -42,11 +42,17 @@
             <var-option v-for="item in etVersionList" :key="item.version" :label="item.version" :value="item.version">
               <var-cell :title="item.version" border>
                 <template #extra>
-                  <var-badge 
-                    :type="item.prerelease ? 'warning' : 'success'" 
-                    position="right-bottom" 
-                    :value="item.prerelease ? '预发' : '稳定'">
-                  </var-badge>
+                  <div style="display: flex; align-items: center;">
+                    <var-chip :type="item.download_count > 100000 ? 'success' : (item.download_count > 10000 ? 'primary' : 'danger')"  size="mini" style="writing-mode: horizontal-tb; white-space: nowrap;">
+                      <var-icon name="download" size="16" />
+                      {{ item.download_count }}
+                    </var-chip>
+                    <var-badge 
+                      :type="item.prerelease ? 'warning' : 'success'" 
+                      position="right-bottom" 
+                      :value="item.prerelease ? '预发' : '稳定'">
+                    </var-badge>
+                  </div>
                 </template>
               </var-cell>
             </var-option>
@@ -55,14 +61,21 @@
             <var-icon 
               name="refresh" 
               :class="{ 'is-spinning': isFetchingVersionList }"
-              @click.stop="refreshVersionList" 
+              @click.stop="getEtReleaseInfo()" 
             />
           </template>
         </var-select>
       </div>
       <div class="setting-row">
         <div class="setting-actions">
+          <!-- <var-chip v-if="hasNewVersion" type="primary" size="small" plain>
+            选择版本更新内容
+          </var-chip> -->
           <var-chip v-if="hasNewVersion" type="warning" size="small" plain>有新版本</var-chip>
+           <var-button type="primary" size="small" @click="handleShowEtChangeLog()">
+            <var-icon name="information-outline" />
+            选择版本更新内容
+          </var-button>
           <var-button type="primary" size="small" @click="installEtCore(true)" auto-loading>
             <var-icon name="download" />
             安装
@@ -199,7 +212,7 @@
         <div class="version-info-block">
           <span class="setting-label">
             稳定版本
-            <var-icon name="help-circle-outline" size="18" color="var(--color-primary)" 
+            <var-icon name="information-outline" size="18" color="var(--color-primary)" 
             @click="setupShowReleaseInfo(euiRelease)" />
           </span>
           <span class="version-value">{{ euiRelease.version }}</span>
@@ -214,7 +227,7 @@
         <div class="version-info-block">
           <span class="setting-label">
             最新版本
-            <var-icon name="help-circle-outline" size="18" color="var(--color-primary)" 
+            <var-icon name="information-outline" size="18" color="var(--color-primary)" 
             @click="setupShowReleaseInfo(euiPreRelease)" />
           </span>          
           <span class="version-value">{{ euiPreRelease.version }}</span>
@@ -325,13 +338,21 @@
   <var-popup :default-style="false" v-model:show="showEuiReleaseInfo">
     <var-result type="info" class="release-result">
       <template #image>
-        <span class="release-version">更新内容<p>{{ euiReleaseInfo.version }}</p></span>
-        <div class="release-desc">
-          <p v-for="item in euiReleaseInfo.desc.split('\n').filter(i => i.trim())" :key="item">{{ '🌀' + item.substring(1) }}</p>
-        </div>
+         <MarkdownRenderer :content="`# 更新内容 \n ### ${ euiReleaseInfo.version}\n \n` + euiReleaseInfo.changelog" class="markdown-renderer" />
       </template>
       <template #footer>
         <var-button type="info" @click="showEuiReleaseInfo = false">关闭</var-button>
+      </template>
+    </var-result>
+  </var-popup>
+  
+  <var-popup :default-style="false" v-model:show="showEtChangeLog">
+    <var-result type="info" class="release-result">
+      <template #image>
+        <MarkdownRenderer :content="etChangeLog" class="markdown-renderer" />
+      </template>
+      <template #footer>
+        <var-button type="info" @click="showEtChangeLog = false">关闭</var-button>
       </template>
     </var-result>
   </var-popup>
@@ -339,11 +360,12 @@
 </template>
 
 <script setup>
+import MarkdownRenderer from '../components/MarkdownRenderer.vue'
 import { themeOptions, setThemeMode, themeMode } from '../config/theme.js'
 import { VCONSOLE_ENABLED_KEY } from '../config/storage-keys.js'
 import toast from '../components/toast.js'
 import api from '../utils/api.js'
-import { getLatestVersionWithCache } from '../utils/github.js'
+// import { getLatestVersionWithCache } from '../utils/github.js'
 import SvgIcon from '@jamescoyle/vue-icon'
 import { mdiBrightness6, mdiAccessPointNetwork, mdiDevTo, mdiShieldLock, mdiMapOutline, mdiInformation } from '@mdi/js'
 
@@ -368,6 +390,8 @@ const etLogLevel = ref('info')
 const euiRelease = ref({})
 const euiPreRelease = ref({})
 const showEuiReleaseInfo = ref(false)
+const showEtChangeLog = ref(false)
+const etChangeLog = ref('')
 const euiReleaseInfo = ref({})
 const logLevelOptions = ref([
   { value: 'off', label: '禁用' }, // cli 是 disabled
@@ -464,32 +488,27 @@ const getEtVersion = async () => {
   }
 }
 
-const getEtVersionList = async (useCache = true, showTip = true) => {
+const getEtReleaseInfo = async (refresh = false, showTip = true) => {
   isFetchingVersionList.value = true
   try {
-    const resp = await api.etCore.getVersionList({'refresh': !useCache})
+    const resp = await api.etCore.getVersionList({'refresh': refresh})
     etVersionList.value = resp.data.versions || []
     // etVersionList.value = await getLatestVersionWithCache('easyTier/easytier', useCache)
     etVersion.value.latest_version = etVersionList.value[0]?.version || ''
     if (!etVersion.value.selected_version) {
       etVersion.value.selected_version = etVersion.value.latest_version
     }
-    if (!useCache && showTip) {      
+    if (refresh && showTip) {      
       toast.success('内核可选版本已刷新')
     }
     if (new Date().getTime() - resp.data.create_time > 1000 * 60 * 60 * 24) {
-      getEtVersionList(false, false)
+      getEtReleaseInfo(true, false)
     }
   } catch (e) {
     console.error('获取版本列表失败:', e)
   } finally {
     isFetchingVersionList.value = false
   }
-}
-
-// 刷新版本列表（强制不使用缓存）
-const refreshVersionList = async () => {
-  await getEtVersionList(false)
 }
 
 const installEtCore = async () => {
@@ -597,6 +616,13 @@ const setupShowReleaseInfo = (info) => {
   showEuiReleaseInfo.value = true
 }
 
+const handleShowEtChangeLog = () => {
+  const selectedVersion = etVersion.value.selected_version
+  etChangeLog.value = etVersionList.value.find(item => item.version === selectedVersion)?.changelog || ''
+  console.log(etChangeLog.value)
+  showEtChangeLog.value = true
+}
+
 onMounted(() => {
   // 从 localStorage 加载 VConsole 开关状态
   const enabled = localStorage.getItem(VCONSOLE_ENABLED_KEY) === 'true'
@@ -607,7 +633,7 @@ onMounted(() => {
     showDevContent.value = true
   }  
   getEtVersion()
-  getEtVersionList()
+  getEtReleaseInfo()
   getEuiInfo()
   getEtLogLevel()
   getReleaseInfo()
@@ -875,6 +901,12 @@ onMounted(() => {
   display: block;
   /* font-family: monospace; */
   margin-bottom: 20px;
+}
+
+.markdown-renderer {
+  padding: 16px;
+  max-height: 400px;
+  overflow-y: auto;
 }
 
 .release-desc {

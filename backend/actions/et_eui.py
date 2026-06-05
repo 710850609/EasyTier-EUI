@@ -84,7 +84,7 @@ def get_release_info(params: dict, *kwargs):
                     total_download += download_count
                     platform_arch = filename.replace('EasyTier-EUI-', '').replace(f'-{version}', '').replace('.zip', '').replace('.fpk', '')
                     assets[platform_arch] = {'download_url': download_url, 'download_count': download_count}
-                info = {'version': version, 'download_count': item_download_count, 'assets': assets, 'desc': item.get('body')}
+                info = {'version': version, 'download_count': item_download_count, 'assets': assets, 'changelog': item.get('body')}
                 if item['prerelease']:
                     release_info['latest_prerelease'] = info
                 else:

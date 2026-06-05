@@ -20,6 +20,7 @@
     "@varlet/touch-emulator": "^3.14.0",
     "@varlet/ui": "^3.3.2",
     "codemirror": "^6.0.2",
+    "markdown-it": "^14.2.0",
     "vconsole": "^3.15.1",
     "vue": "^3.5.30",
     "vue-codemirror6": "^1.5.0"

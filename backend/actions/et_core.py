@@ -49,7 +49,7 @@ def version(*kwargs):
 
 def get_release_info(params: dict, *kwargs):
     params = params or {}
-    refresh = params.get('refresh', False)
+    refresh = params.get('refresh', 'false').lower() == 'true'
     release_file = Path(run_configs.data_dir()).joinpath('et_release.json')
     release_info = None
     if os.path.exists(release_file):
@@ -60,47 +60,53 @@ def get_release_info(params: dict, *kwargs):
     cache_time = 1000 * 60
     if refresh or release_info is None or cur_time - release_info.get('update_time', 0) > cache_time:
         total_download = 0
-        release_info = {'update_time': cur_time, 'total_download': total_download, 'latest_release': {}, 'latest_prerelease': {}}
-        releases = github_util.get_api('https://api.github.com/repos/easyTier/easyTier/releases?per_page=100')
+        versions = []
+        release_info = {'update_time': cur_time, 'total_download': total_download, 'versions': versions}
+        releases = github_util.get_api('https://api.github.com/repos/EasyTier/EasyTier/releases?per_page=100')
         for item in releases:
             item_download_count = 0
-            if not release_info['latest_prerelease'] or not release_info['latest_release']:
-                assets = {}
-                version = item.get('name')
-                for asset in item['assets']:
-                    filename = asset.get('name')
-                    download_url = asset.get('browser_download_url')
-                    download_count = asset.get('download_count', 0)
-                    item_download_count += download_count
-                    total_download += download_count
-                    platform_arch = filename.replace('EasyTier-EUI-', '').replace(f'-{version}', '').replace('.zip', '').replace('.apk', '')
-                    assets[platform_arch] = {'download_url': download_url, 'download_count': download_count}
-                info = {'version': version, 'download_count': item_download_count, 'assets': assets, 'desc': item.get('body')}
-                if item['prerelease']:
-                    release_info['latest_prerelease'] = info
-                else:
-                    release_info['latest_release'] = info
-            else:
-                total_download += sum([asset.get('download_count', 0) for asset in item['assets']])
-            release_info['total_download'] = total_download
+            assets = {}
+            ver = item.get('name')
+            info = {'version': ver, 'prerelease': item['prerelease'], 'download_count': item_download_count, 'assets': assets, 'changelog': item.get('body')}
+            versions.append(info)
+            for asset in item['assets']:
+                download_count = asset.get('download_count', 0)
+                item_download_count += download_count
+                total_download += download_count
+                filename = asset.get('name')
+                # 只取核心包 只陪部分平台架构
+                need_platform = ['linux', 'windows', 'macos']
+                need_arch = ['x86_64', 'aarch64', 'armv7', 'riscv64']
+                if filename.startswith('easytier-') and filename.endswith(f'{ver}.zip'):
+                    platform_arch = filename.replace('easytier-', '').replace(f'-{ver}.zip', '')
+                    t_p_a = platform_arch.split('-')
+                    if t_p_a[0] in need_platform and t_p_a[1] in need_arch:
+                        assets[platform_arch] = {'download_url': asset.get('browser_download_url', ''), 'download_count': download_count}
+            info['download_count'] = item_download_count
         with open(release_file, "w", encoding="utf-8") as f:
             f.write(json.dumps(release_info, ensure_ascii=False, indent=2))
     return release_info
 
 def version_list(params: dict, *kwargs):
-    refresh = (params or {}).get('refresh', 'false').lower() == 'true'
-    version_file = Path(run_configs.data_dir()).joinpath('et_versions.json')
-    release_info = {'create_time': int(time.time() * 1000), 'versions': []}
-    if not version_file.exists() or refresh:
-        releases = github_util.get_api('https://api.github.com/repos/easyTier/easytier/releases')
-        for item in releases:
-            release_info['versions'].append({'version': item.get('name'), 'prerelease': item.get('prerelease')})
-        with open(version_file, "w", encoding="utf-8") as f:
-            f.write(json.dumps(release_info, ensure_ascii=False, indent=2))
-    else:
-        with open(version_file, "r", encoding="utf-8") as f:
-            release_info = json.load(f)
+    release_info = get_release_info(params)
+    for ver in release_info.get('versions', []):
+        del ver['assets']
+        pass
     return release_info
+
+    # refresh = (params or {}).get('refresh', 'false').lower() == 'true'
+    # version_file = Path(run_configs.data_dir()).joinpath('et_versions.json')
+    # release_info = {'create_time': int(time.time() * 1000), 'versions': []}
+    # if not version_file.exists() or refresh:
+    #     releases = github_util.get_api('https://api.github.com/repos/EasyTier/EasyTier/releases')
+    #     for item in releases:
+    #         release_info['versions'].append({'version': item.get('name'), 'prerelease': item.get('prerelease')})
+    #     with open(version_file, "w", encoding="utf-8") as f:
+    #         f.write(json.dumps(release_info, ensure_ascii=False, indent=2))
+    # else:
+    #     with open(version_file, "r", encoding="utf-8") as f:
+    #         release_info = json.load(f)
+    # return release_info
 
 def install(data, *kwargs):
     et_version = data['version']
@@ -166,4 +172,6 @@ def __unzip(zip_file, unzip_dir):
 if __name__ == '__main__':
     run_configs.setup_env()
     log_util.setup_log(log_level="DEBUG")
-    get_release_info({})
+    # get_release_info({'refresh': 'true'})
+    print(version_list({}))
+

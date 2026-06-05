@@ -253,8 +253,9 @@ export const api = {
   // ET 核心相关
   etCore: {
     getVersion: () => get('/et_core/version'),
-    install: (data) => post('/et_core/install', data),
+    // getReleaseInfo: (data) => get('/et_core/get_release_info', data),
     getVersionList: (params = {}) => get('/et_core/version_list', params),
+    install: (data) => post('/et_core/install', data),
     getEtLogLevel: (params = {}) => get('/et_core/get_log_level', params),
     setEtLogLevel: (params = {}) => post('/et_core/set_log_level', params),
   },
