@@ -75,19 +75,21 @@ def get_release_info(params: dict, *kwargs):
             item_download_count = 0
             assets = {}
             ver = item.get('name')
+            is_latest_prerelease = item['prerelease'] and not release_info['latest_prerelease']
+            is_prerelease = not item['prerelease'] and not release_info['latest_release']
             for asset in item['assets']:
                 download_count = asset.get('download_count', 0)
                 item_download_count += download_count
                 total_download += download_count
-                if (item['prerelease'] and not release_info['latest_prerelease']) or (not item['prerelease'] and not release_info['latest_release']):
+                if is_latest_prerelease or is_prerelease:
                     filename = asset.get('name')
                     download_url = asset.get('browser_download_url')
                     platform_arch = filename.replace('EasyTier-EUI-', '').replace(f'-{ver}', '').replace('.zip', '').replace('.fpk', '')
                     assets[platform_arch] = {'download_url': download_url, 'download_count': download_count}
                     info = {'version': ver, 'download_count': item_download_count, 'assets': assets, 'changelog': item.get('body')}
-                    if item['prerelease']:
+                    if is_latest_prerelease:
                         release_info['latest_prerelease'] = info
-                    else:
+                    elif is_prerelease:
                         release_info['latest_release'] = info
             release_info['total_download'] = total_download
         with open(release_file, "w", encoding="utf-8") as f:
@@ -232,3 +234,4 @@ def __get_download_url(is_release: bool) -> tuple[str, str]:
 if __name__ == '__main__':
     run_configs.setup_env()
     get_release_info({'refresh': 'true'})
+    # __get_download_url(True)

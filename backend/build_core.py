@@ -198,7 +198,7 @@ def build_executable(build_ver:str = None, one_file:bool = True):
         webview_logo_path = os.path.join(PROJECT_DIR, 'assets', 'icon.ico')
         cmd.extend([
             "--hidden-import", "webview",
-            "--add-data", f"{webview_logo_path}{separator}assets/icon.ico",
+            "--add-data", f"{webview_logo_path}{separator}assets",
             str(PROJECT_DIR / "main_ui.py"),
         ])
     
