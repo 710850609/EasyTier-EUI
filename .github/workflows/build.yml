@@ -6,7 +6,7 @@ on:
       no-draft:
         description: '对外公布下载(No Draft)'
         type: boolean
-        default: false
+        default: true
       build-fnos:
         description: '构建 FnOS (多架构)'
         type: boolean
@@ -22,7 +22,7 @@ on:
       build_macos_x64:
         description: '构建 macOS (x86_64, Intel)'
         type: boolean
-        default: false
+        default: true
       build_linux_amd64:
         description: '构建 Linux (AMD64)'
         type: boolean
@@ -30,15 +30,15 @@ on:
       build_linux_arm64:
         description: '构建 Linux (ARM64)'
         type: boolean
-        default: false
+        default: true
       build_linux_riscv64:
         description: '构建 Linux (RISC-V 64)'
         type: boolean
-        default: false
+        default: true
       build_linux_armv7:
         description: '构建 Linux (ARMv7)'
         type: boolean
-        default: false
+        default: true
 
 env:
   PYTHON_VERSION: '3.12'
