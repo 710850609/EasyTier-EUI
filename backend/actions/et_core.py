@@ -14,7 +14,7 @@ import utils.common_util as common_util
 import utils.github_util as github_util
 from actions import services
 from http_dispatcher.dispatcher import HttpException
-from utils import run_configs, et_run_info
+from utils import run_configs, et_run_info, log_util
 
 
 def get_log_level(params:dict, *kwargs):
@@ -45,6 +45,47 @@ def version(*kwargs):
     raw_version = raw_version.replace('easytier-core ', '')
     et_version = raw_version[:raw_version.index('-')]
     return { 'version': f'v{et_version}', 'raw_version': raw_version }
+
+
+def get_release_info(params: dict, *kwargs):
+    params = params or {}
+    refresh = params.get('refresh', False)
+    release_file = Path(run_configs.data_dir()).joinpath('et_release.json')
+    release_info = None
+    if os.path.exists(release_file):
+        with open(release_file, "r", encoding="utf-8") as f:
+            release_info = json.load(f)
+
+    cur_time = int(time.time() * 1000)
+    cache_time = 1000 * 60
+    if refresh or release_info is None or cur_time - release_info.get('update_time', 0) > cache_time:
+        total_download = 0
+        release_info = {'update_time': cur_time, 'total_download': total_download, 'latest_release': {}, 'latest_prerelease': {}}
+        releases = github_util.get_api('https://api.github.com/repos/easyTier/easyTier/releases?per_page=100')
+        for item in releases:
+            item_download_count = 0
+            if not release_info['latest_prerelease'] or not release_info['latest_release']:
+                assets = {}
+                version = item.get('name')
+                for asset in item['assets']:
+                    filename = asset.get('name')
+                    download_url = asset.get('browser_download_url')
+                    download_count = asset.get('download_count', 0)
+                    item_download_count += download_count
+                    total_download += download_count
+                    platform_arch = filename.replace('EasyTier-EUI-', '').replace(f'-{version}', '').replace('.zip', '').replace('.apk', '')
+                    assets[platform_arch] = {'download_url': download_url, 'download_count': download_count}
+                info = {'version': version, 'download_count': item_download_count, 'assets': assets, 'desc': item.get('body')}
+                if item['prerelease']:
+                    release_info['latest_prerelease'] = info
+                else:
+                    release_info['latest_release'] = info
+            else:
+                total_download += sum([asset.get('download_count', 0) for asset in item['assets']])
+            release_info['total_download'] = total_download
+        with open(release_file, "w", encoding="utf-8") as f:
+            f.write(json.dumps(release_info, ensure_ascii=False, indent=2))
+    return release_info
 
 def version_list(params: dict, *kwargs):
     refresh = (params or {}).get('refresh', 'false').lower() == 'true'
@@ -121,3 +162,8 @@ def __unzip(zip_file, unzip_dir):
                     dst.write(src.read())
     logging.info(f"解压完成: {zip_file} -> {unzip_temp_dir}")
     return unzip_temp_dir
+
+if __name__ == '__main__':
+    run_configs.setup_env()
+    log_util.setup_log(log_level="DEBUG")
+    get_release_info({})

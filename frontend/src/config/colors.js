@@ -69,6 +69,8 @@ export const freshLightTheme = {
 
   // Dialog 样式
   '--dialog-title-color': '#0284c7',
+  '--result-background': '#fff',
+  '--result-description-color': 'var(--color-text)',
 }
 
 // 清新蓝绿 - 暗色主题
@@ -136,4 +138,6 @@ export const freshDarkTheme = {
 
   // Dialog 样式
   '--dialog-title-color': '#0284c7',
+  '--result-background': '#1e293b',
+  '--result-description-color': 'var(--color-text)',
 }

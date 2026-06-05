@@ -12,8 +12,8 @@ from utils import run_configs, github_util, et_run_info
 def eui_info(*kwargs):
     platform = 'trim' if run_configs.is_fn_system() else sys.platform
     install_path = Path(run_configs.core_dir()).parent
-    if platform == 'trim':
-        install_path = install_path.parent
+    # 解析符号链接，获取真实路径
+    install_path = install_path.resolve()
     return {
         'build_version': run_configs.build_version(),
         'install_path': str(install_path),

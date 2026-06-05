@@ -1,18 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import gzip
 import json
 import logging
 import os
+import platform
 import shutil
 import sys
-import platform
 import tarfile
 import time
 import zipfile
 from pathlib import Path
-
-import psutil
 
 import actions.configs as configs
 import utils.common_util as common_util
@@ -20,6 +17,7 @@ import utils.github_util as github_util
 from actions import services
 from http_dispatcher.dispatcher import HttpResponse
 from utils import run_configs
+
 
 def update(params: dict, *kwargs):
     params = params or {}
@@ -58,21 +56,44 @@ def update(params: dict, *kwargs):
         common_util.run_cmd(cmd)
     pass
 
-
-
-def version_list(params: dict, *kwargs):
+def get_release_info(params: dict, *kwargs):
+    params = params or {}
     refresh = params.get('refresh', False)
-    version_file = Path(run_configs.data_dir()).joinpath('et_versions.json')
-    release_info = {'create_time': time.time(), 'versions': []}
-    if not version_file.exists() or refresh:
-        releases = github_util.get_api('https://api.github.com/repos/10850609/EasyTier-EUI/releases')
-        for item in releases:
-            release_info['versions'].append({'version': item.get('name'), 'prerelease': item.get('prerelease')})
-        with open(version_file, "w", encoding="utf-8") as f:
-            f.write(json.dumps(release_info, ensure_ascii=False, indent=2))
-    else:
-        with open(version_file, "r", encoding="utf-8") as f:
+    release_file = Path(run_configs.data_dir()).joinpath('eui_release.json')
+    release_info = None
+    if os.path.exists(release_file):
+        with open(release_file, "r", encoding="utf-8") as f:
             release_info = json.load(f)
+
+    cur_time = int(time.time() * 1000)
+    cache_time = 1000 * 60
+    if refresh or release_info is None or cur_time - release_info.get('update_time', 0) > cache_time:
+        total_download = 0
+        release_info = {'update_time': cur_time, 'total_download': total_download, 'latest_release': {}, 'latest_prerelease': {}}
+        releases = github_util.get_api('https://api.github.com/repos/710850609/EasyTier-EUI/releases?per_page=100')
+        for item in releases:
+            item_download_count = 0
+            if not release_info['latest_prerelease'] or not release_info['latest_release']:
+                assets = {}
+                version = item.get('name')
+                for asset in item['assets']:
+                    filename = asset.get('name')
+                    download_url = asset.get('browser_download_url')
+                    download_count = asset.get('download_count', 0)
+                    item_download_count += download_count
+                    total_download += download_count
+                    platform_arch = filename.replace('EasyTier-EUI-', '').replace(f'-{version}', '').replace('.zip', '').replace('.fpk', '')
+                    assets[platform_arch] = {'download_url': download_url, 'download_count': download_count}
+                info = {'version': version, 'download_count': item_download_count, 'assets': assets, 'desc': item.get('body')}
+                if item['prerelease']:
+                    release_info['latest_prerelease'] = info
+                else:
+                    release_info['latest_release'] = info
+            else:
+                total_download += sum([asset.get('download_count', 0) for asset in item['assets']])
+            release_info['total_download'] = total_download
+        with open(release_file, "w", encoding="utf-8") as f:
+            f.write(json.dumps(release_info, ensure_ascii=False, indent=2))
     return release_info
 
 def download_easytier_eui(params:dict, *kwargs):
@@ -197,32 +218,19 @@ def __get_download_url(is_release: bool) -> tuple[str, str]:
     arch_name = arch_map.get(machine.lower())
     if run_configs.is_fn_system():
         sys_name = 'fnos'
-    release_infos = github_util.get_api("https://api.github.com/repos/710850609/EasyTier-EUI/releases")
-    release_info = {}
-    for item in release_infos:
-        prerelease = item.get('prerelease', '')
-        if prerelease and not is_release:
-            release_info = item
-            break
-        if not prerelease and is_release:
-            release_info = item
-            break
-    if not release_info or not release_info.get('assets', []):
-        raise HttpResponse(f"没有可下载版本")
+    try:
+        release_infos = get_release_info({'refresh': True})
+    except Exception as e:
+        logging.exception(f"获取release信息失败，尝试使用本地缓存")
+        release_infos = get_release_info({'refresh': False})
 
-    assets = release_info.get('assets', [])
-    package_prefix = f"EasyTier-EUI-{sys_name}-{arch_name}"
-    download_url = ''
-    filename = ''
-    for asset in assets:
-        if asset.get('name', '').startswith(package_prefix):
-            download_url = asset.get('browser_download_url', '')
-            filename = asset.get('name', '')
-            break
-    if not download_url:
+    latest_info = release_infos.get('latest_release', {}) if is_release else release_infos.get('latest_prerelease', {})
+    asset = latest_info.get('assets', {}).get(f"{sys_name}-{arch_name}", {})
+    download_url = asset.get('download_url', '')
+    if not download_url or download_url == '':
         raise HttpResponse(f"没有可下载链接")
-    return download_url, filename
+    return download_url, download_url.split('/')[-1]
 
 if __name__ == '__main__':
-    run_configs.setup_env()
-    update({'ver_tag': 'release'})
+    install_path = Path('C:/Users/linbo/Desktop/downloa').resolve(strict=True)
+    print(install_path)

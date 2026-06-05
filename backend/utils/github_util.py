@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+import copy
 import json
 import logging
 import re
@@ -11,6 +12,7 @@ from typing import Optional, List, Tuple
 
 import requests
 
+from http_dispatcher.dispatcher import HttpException
 from utils import run_configs
 
 
@@ -94,24 +96,28 @@ def download_raw_file(download_url:str, timeout:int = 10, proxy_url_list:Optiona
 def get_api(url: str, proxy_url: str = ""):
     """获取 GitHub API 数据"""
     try:
+        req_url = copy.copy(url)
         if proxy_url and proxy_url != '':
-            url = proxy_url + '/' + url
-        response = requests.get(url, timeout=10)
+            req_url = proxy_url + '/' + req_url
+        response = requests.get(req_url, timeout=10)
+        if response.status_code == 404:
+            raise HttpException(f"请求资源不存在: {req_url}")
         response.raise_for_status()
         data = response.json()
         return data
     except requests.exceptions.RequestException as e:
         logging.error(f"获取 API 数据失败: {e}")
-        api_proxy_urls = get_proxy_urls()
-        if len(api_proxy_urls) > 0:
-            logging.info(f"尝试使用 API 加速地址: {api_proxy_urls[0]['url']}")
-            proxy_url = api_proxy_urls[0]["url"]
-            return get_api(url, proxy_url)
+        if not proxy_url or proxy_url == '':
+            proxy_urls = get_proxy_urls(refresh=True)
+            api_proxy_urls = [item['url'] for item in proxy_urls if item['supports_api']]
+            for api_proxy_url in api_proxy_urls:
+                logging.info(f"尝试使用 API 加速地址: {api_proxy_url}")
+                try:
+                    return get_api(url, api_proxy_url)
+                except requests.exceptions.RequestException as e:
+                    logging.error(f"获取 API 数据失败: {e}")
         else:
             raise e
-    except Exception as e:
-        logging.error(f"获取 API 数据失败: {e}")
-        return None
 
 def get_proxy_urls(refresh:bool = False) -> list:
     """获取 GitHub 代理列表"""
@@ -139,7 +145,7 @@ def get_proxy_urls(refresh:bool = False) -> list:
     logging.info(f"获取到远程代理URL: {url_list}")
     url_list = check_proxy_url(url_list)
     url_list = [item for item in url_list if item['status'] == 'ok']
-
+    logging.debug(f"GitHub加速地址检测结果: {url_list}")
     if url_list and len(url_list) > 0:
         with open(proxy_file_path, 'w', encoding="utf-8") as f:
             f.write(json.dumps({'sources': url_list, 'create_time': cur_time}, indent=2))

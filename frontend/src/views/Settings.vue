@@ -6,7 +6,7 @@
         <svg-icon type="mdi" :path="mdiBrightness6" size="24" color="var(--color-primary)"></svg-icon>
         <!-- <var-icon name="palette" size="24" color="var(--color-primary)" /> -->
         <span class="block-title">外观设置</span>
-      </div>  
+      </div>
       <var-divider />
       <div class="theme-options">
         <div 
@@ -25,22 +25,12 @@
     <!-- 内核设置 -->
     <var-paper class="setting-block" :elevation="1">
       <div class="block-header">
-        <!-- <var-icon name="lock" size="24" color="var(--color-primary)" /> -->
         <svg-icon type="mdi" :path="mdiShieldLock" size="24" color="var(--color-primary)"></svg-icon>
         <span class="block-title">内核-EasyTier</span>
       </div>
       <var-divider />
-      <!-- 当前版本信息 -->
       <div class="setting-row">
-        <span class="setting-label">当前版本</span>
-        <div v-if="isFetchingEtCoreVersion">
-          <var-loading type="wave" />
-        </div>
-        <span v-else class="setting-value">{{ etVersion.version || '未知' }}</span>
-      </div>
-      <var-divider />
-      <div class="setting-row">
-        <span class="setting-label">可选版本</span>
+        <span class="setting-label">当前版本 {{ etVersion.version || '未知' }}</span>
         <var-select 
           class="setting-select" 
           variant="outlined" 
@@ -94,9 +84,6 @@
           label-key="label"
           value-key="value"
         >
-          <!-- <var-option label="信息" value="info" />
-          <var-option label="警告" value="warn" />
-          <var-option label="错误" value="error" /> -->
         </var-select>
       </div>
     </var-paper>
@@ -193,6 +180,87 @@
       </var-cell>
     </var-paper>
 
+    <!-- 版本 -->
+    <var-paper class="setting-block" :elevation="1">
+      <div class="block-header" 
+        @mousedown="startPress"
+        @mouseup="cancelPress"
+        @mouseleave="cancelPress"
+        @touchstart.prevent="startPress"
+        @touchend="cancelPress"
+        @touchcancel="cancelPress"
+        @touchmove="cancelPress">
+        <svg-icon type="mdi" :path="mdiMapOutline" size="24" color="var(--color-primary)"></svg-icon>
+        <span class="block-title">版本</span>
+      </div>
+      <var-divider />
+      
+      <div class="setting-row">
+        <div class="version-info-block">
+          <span class="setting-label">
+            稳定版本
+            <var-icon name="help-circle-outline" size="18" color="var(--color-primary)" 
+            @click="setupShowReleaseInfo(euiRelease)" />
+          </span>
+          <span class="version-value">{{ euiRelease.version }}</span>
+        </div>
+        <var-button type="primary" size="small" @click="installEuiVersion('prerelease')" auto-loading
+           v-if="buildVersion !== euiRelease.version">
+          <var-icon name="download" />
+          安装
+        </var-button>
+      </div>
+      <div class="setting-row">
+        <div class="version-info-block">
+          <span class="setting-label">
+            最新版本
+            <var-icon name="help-circle-outline" size="18" color="var(--color-primary)" 
+            @click="setupShowReleaseInfo(euiPreRelease)" />
+          </span>          
+          <span class="version-value">{{ euiPreRelease.version }}</span>
+        </div>
+        <var-button type="primary" size="small" @click="installEuiVersion('prerelease')" auto-loading
+          v-if="buildVersion !== euiPreRelease.version" >
+          <var-icon name="download" />
+          安装
+        </var-button>
+      </div>
+      <div class="setting-row">
+        <div class="version-info-block">
+          <span class="setting-label">当前版本</span>
+          <span class="version-value">{{ buildVersion }}</span>
+        </div>
+        <var-button type="primary" size="small" @click="getReleaseInfo(true)" auto-loading>
+          <var-icon name="refresh" />
+          检查更新
+        </var-button>
+      </div>
+      
+      <!-- <div class="about-section">
+        <div class="version-row">
+          <img :src="'https://img.shields.io/badge/%E5%BD%93%E5%89%8D%20%E7%89%88%E6%9C%AC-v' + buildVersion.replace('-', '--') + '-green'" />
+        </div>        
+        <div class="version-row">
+          <a href="https://github.com/710850609/EasyTier-EUI/releases" target="_blank">
+            <img alt="最新版" src="https://img.shields.io/github/v/tag/710850609/EasyTier-EUI?color=orange&logo=github&label=最新版" />
+          </a>
+          <var-button type="primary" size="small" @click="installEuiVersion('prerelease')" auto-loading>
+            <var-icon name="download" />
+            安装
+          </var-button>
+        </div>        
+        <div class="version-row">
+          <a href="https://github.com/710850609/EasyTier-EUI/releases/latest" target="_blank">
+            <img alt="稳定版" src="https://img.shields.io/github/v/release/710850609/EasyTier-EUI?color=blue&logo=github&label=稳定版" />
+          </a>
+          <var-button type="primary" size="small" @click="installEuiVersion('release')" auto-loading>
+            <var-icon name="download" />
+            安装
+          </var-button>
+        </div>
+      </div> -->
+    </var-paper>
+
     <!-- 关于 -->
     <var-paper class="setting-block" :elevation="1">
       <div class="block-header" 
@@ -203,19 +271,18 @@
         @touchend="cancelPress"
         @touchcancel="cancelPress"
         @touchmove="cancelPress">
-        <var-icon name="information" size="24" color="var(--color-info)" />
+        <svg-icon type="mdi" :path="mdiInformation" size="24" color="var(--color-primary)"></svg-icon>
         <span class="block-title">关于</span>
-      </div>      
+      </div>
+      <var-divider />
       <!-- 版本信息卡片 -->
       <div class="about-version-card">
         <div class="version-main">
           <span class="version-name">易组网</span>
-          <img alt="下载量" src="https://img.shields.io/github/downloads/710850609/EasyTier-EUI/total?color=blue&label=下载量" />
         </div>
         <div class="version-actions">
           <a href='https://github.com/710850609/EasyTier-EUI' target="_blank">
             <img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/710850609/EasyTier-EUI?style=flat&label=%E7%82%B9%20Stars">
-
           </a>
           <var-chip elevation="1" @click="showRewardCdoe = true" type="info" size="small">打赏</var-chip>
         </div>
@@ -223,45 +290,14 @@
       
       <!-- 简介 -->
       <div class="about-section">
-        <!-- <div class="about-title">简介</div> -->
         <div class="about-content">
           <p>简化 EasyTier 使用的 UI 界面，降低组网门槛，快速访问异地网络设备。</p>
           <p>享受 EasyTier 免费、不限设备数量、支持多类型终端等优势。</p>
+          <img alt="下载量" src="https://img.shields.io/github/downloads/710850609/EasyTier-EUI/total?color=blue&label=下载量" />
         </div>
-      </div>
-      
-      <!-- 安装路径 -->
-      <div class="about-section">
-        <!-- 最新版本 -->
-        <div class="version-row">
-          <a href="https://github.com/710850609/EasyTier-EUI/releases" target="_blank">
-            <img alt="最新版" src="https://img.shields.io/github/v/tag/710850609/EasyTier-EUI?color=orange&logo=github&label=最新版" />
-          </a>
-          <var-button type="primary" size="small" @click="installEuiVersion('prerelease')" auto-loading>
-            <var-icon name="download" />
-            安装
-          </var-button>
-        </div>        
-        <!-- 稳定版本 -->
-        <div class="version-row">
-          <a href="https://github.com/710850609/EasyTier-EUI/releases/latest" target="_blank">
-            <img alt="稳定版" src="https://img.shields.io/github/v/release/710850609/EasyTier-EUI?color=blue&logo=github&label=稳定版" />
-          </a>
-          <var-button type="primary" size="small" @click="installEuiVersion('release')" auto-loading>
-            <var-icon name="download" />
-            安装
-          </var-button>
-        </div>  
-        <div class="version-row">
-          <img :src="'https://img.shields.io/badge/%E5%BD%93%E5%89%8D%20%E7%89%88%E6%9C%AC-v' + buildVersion.replace('-', '--') + '-green'" />
-          <!-- <span class="about-title">当前版本</span> -->
-          <!-- <var-chip type="primary" size="small">{{ buildVersion }}</var-chip> -->
-        </div>    
-        
         <div class="version-row">
           <span class="about-title">安装路径</span>
           <var-chip type="primary" size="small">{{ installPath }}</var-chip>
-          <!-- <code class="path-code">{{ installPath }}</code> -->
         </div>
       </div>
     </var-paper>
@@ -275,12 +311,27 @@
   </div>
 
   <var-popup :default-style="false" v-model:show="showRewardCdoe">
-    <var-result class="result" description="点Stars或是打赏 感谢您的肯定">
+    <var-result description="点Stars或是打赏 感谢您的肯定">
       <template #image>
-        <img src="../../public/images/reward_code.jpg" style="width: 50%; height: 50%;" />
+        <img src="../../public/images/reward_code.jpg" style="width: 50%; height: 50%; border-radius: 50%; object-fit: cover;" />
       </template>
       <template #footer>
         <var-button type="info" @click="showRewardCdoe = false">关闭</var-button>
+      </template>
+    </var-result>
+  </var-popup>
+
+  <!-- 弹窗更新说明 -->
+  <var-popup :default-style="false" v-model:show="showEuiReleaseInfo">
+    <var-result type="info" class="release-result">
+      <template #image>
+        <span class="release-version">更新内容<p>{{ euiReleaseInfo.version }}</p></span>
+        <div class="release-desc">
+          <p v-for="item in euiReleaseInfo.desc.split('\n').filter(i => i.trim())" :key="item">{{ '🌀' + item.substring(1) }}</p>
+        </div>
+      </template>
+      <template #footer>
+        <var-button type="info" @click="showEuiReleaseInfo = false">关闭</var-button>
       </template>
     </var-result>
   </var-popup>
@@ -294,7 +345,7 @@ import toast from '../components/toast.js'
 import api from '../utils/api.js'
 import { getLatestVersionWithCache } from '../utils/github.js'
 import SvgIcon from '@jamescoyle/vue-icon'
-import { mdiBrightness6, mdiAccessPointNetwork, mdiDevTo, mdiShieldLock } from '@mdi/js'
+import { mdiBrightness6, mdiAccessPointNetwork, mdiDevTo, mdiShieldLock, mdiMapOutline, mdiInformation } from '@mdi/js'
 
 const dev_toggle_timer = ref(null);
 const showDevContent = ref(false)
@@ -314,8 +365,10 @@ const installPath = ref('')
 const showRewardCdoe = ref(false)
 const platform = ref('')
 const etLogLevel = ref('info')
-const euiHasNewVersion = ref(false)
-const isCheckingEuiUpdate = ref(false)
+const euiRelease = ref({})
+const euiPreRelease = ref({})
+const showEuiReleaseInfo = ref(false)
+const euiReleaseInfo = ref({})
 const logLevelOptions = ref([
   { value: 'off', label: '禁用' }, // cli 是 disabled
   { value: 'error', label: '错误' },
@@ -326,7 +379,12 @@ const logLevelOptions = ref([
 ])
 
 const startPress = (e) => {
-  dev_toggle_timer.value = setTimeout(() => {  }, 3000);
+  dev_toggle_timer.value = setTimeout(() => { 
+    getGithubMirrors()
+    loadPeerSource()
+    showDevContent.value = !showDevContent.value
+    toast.success(`开发者选项已${showDevContent.value ? '开启' : '关闭'}`)
+  }, 3000);
 };
 
 const cancelPress = () => {
@@ -520,6 +578,25 @@ const setEtLogLevel = async (level) => {
   }
 }
 
+const getReleaseInfo = (refresh=false) => {
+  return new Promise((resolve, reject) => {
+    api.etEui.getReleaseInfo({'refresh': refresh}).then((data) => {
+      euiRelease.value = data.data.latest_release
+      euiPreRelease.value = data.data.latest_prerelease
+      if (refresh) {
+        toast.success('已获取最新版本信息')
+      }
+    }).finally((error) => {
+      resolve()
+    })
+  })
+}
+
+const setupShowReleaseInfo = (info) => {
+  euiReleaseInfo.value = info
+  showEuiReleaseInfo.value = true
+}
+
 onMounted(() => {
   // 从 localStorage 加载 VConsole 开关状态
   const enabled = localStorage.getItem(VCONSOLE_ENABLED_KEY) === 'true'
@@ -531,10 +608,9 @@ onMounted(() => {
   }  
   getEtVersion()
   getEtVersionList()
-  getGithubMirrors()
   getEuiInfo()
-  loadPeerSource()
   getEtLogLevel()
+  getReleaseInfo()
 })
 </script>
 
@@ -661,18 +737,36 @@ onMounted(() => {
   align-items: center;
   justify-content: space-between;
   padding: 12px 0;
-  gap: 16px;
+  gap: 12px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.setting-row:last-child {
+  border-bottom: none;
+}
+
+.version-info-block {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.version-value {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--color-text-secondary);
 }
 
 .setting-label {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   color: var(--color-text);
   flex: 1;
 }
 
 .setting-select {
-  flex: 3;
+  flex: 2;
   min-width: 160px;
 }
 
@@ -697,8 +791,6 @@ onMounted(() => {
   align-items: center;
   justify-content: space-between;
   padding: 16px;
-  background: var(--color-primary-container);
-  border-radius: 12px;
   margin-bottom: 16px;
 }
 
@@ -709,8 +801,8 @@ onMounted(() => {
 }
 
 .version-name {
-  font-size: 20px;
-  font-weight: 700;
+  font-size: 16px;
+  font-weight: 500;
   color: var(--color-on-primary-container);
 }
 
@@ -774,6 +866,36 @@ onMounted(() => {
   justify-content: space-between;
   padding: 6px 0;
 }
+  
+.release-version {
+  font-size: 22px;
+  font-weight: 1000;
+  color: var(--color-primary);
+  text-align: center;
+  display: block;
+  /* font-family: monospace; */
+  margin-bottom: 20px;
+}
+
+.release-desc {
+  text-align: left;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.release-desc p {
+  font-size: 14px;
+  line-height: 1.7;
+  margin: 6px 0;
+  padding-left: 16px;
+  position: relative;
+}
+
+.release-desc p::before {
+  position: absolute;
+  left: 0;
+  color: var(--color-primary);
+}
 
 /* 移动端响应式 */
 @media (max-width: 480px) {
@@ -807,5 +929,6 @@ onMounted(() => {
     font-size: 12px;
     padding: 6px 10px;
   }
+
 }
 </style>
