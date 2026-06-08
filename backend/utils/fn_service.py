@@ -34,8 +34,12 @@ def status():
         data = f.readline()
         if data == str(boot_time_timestamp):
             return 0
-        logging.info(f"文件 {_fn_check_file} 内容是 {data}，与当前开机时间 {boot_time_timestamp} 不一致，应用未运行")
+        if abs(float(data) - boot_time_timestamp) < 2:
+            logging.warning(f"文件 {_fn_check_file} 内容是 {data}，与当前开机时间 {boot_time_timestamp} 不一致，但误差在2秒内，应用正在运行")
+            return 0
+        logging.error(f"当次获取开机时间和上次记录开机时间差超过2秒，判定应用未运行")
         return 3
+
 
 def start():
     """

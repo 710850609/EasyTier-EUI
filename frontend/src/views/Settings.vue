@@ -234,35 +234,31 @@
           <span class="version-value">{{ buildVersion }}</span>
         </div>
         <var-button type="primary" size="small" @click="getReleaseInfo(true)" auto-loading>
-          <var-icon name="refresh" />
+          <var-icon name="refresh" size="18" />
           检查更新
         </var-button>
       </div>
-      
-      <!-- <div class="about-section">
-        <div class="version-row">
-          <img :src="'https://img.shields.io/badge/%E5%BD%93%E5%89%8D%20%E7%89%88%E6%9C%AC-v' + buildVersion.replace('-', '--') + '-green'" />
-        </div>        
-        <div class="version-row">
-          <a href="https://github.com/710850609/EasyTier-EUI/releases" target="_blank">
-            <img alt="最新版" src="https://img.shields.io/github/v/tag/710850609/EasyTier-EUI?color=orange&logo=github&label=最新版" />
-          </a>
-          <var-button type="primary" size="small" @click="installEuiVersion('prerelease')" auto-loading>
-            <var-icon name="download" />
-            安装
-          </var-button>
-        </div>        
-        <div class="version-row">
-          <a href="https://github.com/710850609/EasyTier-EUI/releases/latest" target="_blank">
-            <img alt="稳定版" src="https://img.shields.io/github/v/release/710850609/EasyTier-EUI?color=blue&logo=github&label=稳定版" />
-          </a>
-          <var-button type="primary" size="small" @click="installEuiVersion('release')" auto-loading>
-            <var-icon name="download" />
-            安装
-          </var-button>
-        </div>
-      </div> -->
     </var-paper>
+
+    <!-- 其他 -->
+    <var-paper class="setting-block" :elevation="1">
+      <div class="block-header">
+        <svg-icon type="mdi" :path="mdiTextBoxOutline" size="24" color="var(--color-primary)"></svg-icon>
+        <span class="block-title">其他</span>
+      </div>
+      <var-divider />
+      <div class="setting-row">
+        <div class="version-info-block">
+          <span class="setting-label">
+            清理缓存
+          </span>          
+        </div>
+        <var-button type="primary" size="small" @click="deleteCache" auto-loading >
+          <var-icon name="delete" size="18" />
+          删除
+        </var-button>
+      </div>
+    </var-paper>    
 
     <!-- 关于 -->
     <var-paper class="setting-block" :elevation="1">
@@ -287,14 +283,14 @@
           <a href='https://github.com/710850609/EasyTier-EUI' target="_blank">
             <img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/710850609/EasyTier-EUI?style=flat&label=%E7%82%B9%20Stars">
           </a>
-          <var-chip elevation="1" @click="showRewardCdoe = true" type="info" size="small">打赏</var-chip>
+          <!-- <var-chip elevation="1" @click="showRewardCdoe = true" type="info" size="small">打赏</var-chip> -->
         </div>
       </div>
       
       <!-- 简介 -->
       <div class="about-section">
         <div class="about-content">
-          <p>简化 EasyTier 使用的 UI 界面</p>
+          <p>简化 <a href="https://easytier.cn/" target="_blank" style="text-decoration: none;">EasyTier</a> 使用的 UI 界面</p>
           <p>降低组网门槛，快速访问异地网络设备</p>
           <p>享受 EasyTier 免费、不限设备数量、支持多类型终端等优势</p>
           <img alt="下载量" src="https://img.shields.io/github/downloads/710850609/EasyTier-EUI/total?color=blue&label=下载量" />
@@ -358,7 +354,7 @@ import toast from '../components/toast.js'
 import api from '../utils/api.js'
 // import { getLatestVersionWithCache } from '../utils/github.js'
 import SvgIcon from '@jamescoyle/vue-icon'
-import { mdiBrightness6, mdiAccessPointNetwork, mdiDevTo, mdiShieldLock, mdiMapOutline, mdiInformation } from '@mdi/js'
+import { mdiBrightness6, mdiAccessPointNetwork, mdiDevTo, mdiShieldLock, mdiMapOutline, mdiInformation, mdiTextBoxOutline } from '@mdi/js'
 
 const dev_toggle_timer = ref(null);
 const showDevContent = ref(false)
@@ -612,6 +608,16 @@ const handleShowEtChangeLog = () => {
   etChangeLog.value = etVersionList.value.find(item => item.version === selectedVersion)?.changelog || ''
   console.log(etChangeLog.value)
   showEtChangeLog.value = true
+}
+
+const deleteCache = async () => {
+  return new Promise((resolve, reject) => {
+    api.settings.deleteCache().then(data => {
+      toast.success(data.data || '缓存已删除')
+    }).finally(() => {
+      resolve()
+    })
+  })
 }
 
 onMounted(() => {

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import logging
+import shutil
 import sys
 import time
 from pathlib import Path
@@ -30,6 +31,29 @@ def github_mirrors(params:dict, *kwargs):
     except Exception as e:
         logging.warning(f"读取代理配置失败: {e}")
         raise HttpException(f"读取代理配置失败: {e}") from e
+
+def delete_cache(*kwargs):
+    download_path = Path(run_configs.data_dir(), 'download')
+    total_bytes = 0
+    if download_path.exists():
+        for entry in download_path.rglob('*'):
+            try:
+                if entry.is_file() and not entry.is_symlink():
+                    total_bytes += entry.stat().st_size
+                    entry.unlink()
+                    logging.info(f"删除缓存文件: {entry}")
+            except (OSError, PermissionError):
+                pass
+    logging.info(f"删除缓存目录: {download_path}, 共删除 {total_bytes} 字节")
+    if total_bytes == 0:
+        return f"缓存已删除干净"
+    units = ["B", "KB", "MB", "GB", "TB"]
+    i = 0
+    while total_bytes >= 1024 and i < len(units) - 1:
+        total_bytes /= 1024
+        i += 1
+    size = f"{total_bytes:.2f} {units[i]}"
+    return f"缓存已删除 {size}"
 
 def shutdown(*kwargs):
     import os

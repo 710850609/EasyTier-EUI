@@ -264,6 +264,7 @@ export const api = {
     shutdown: () => post('/settings/shutdown'),
     getEuiInfo: () => get('/settings/eui_info'),
     getGithubMirrors: (params = {}) => get('/settings/github_mirrors', params),
+    deleteCache: () => post('/settings/delete_cache'),
   }
 }
 
