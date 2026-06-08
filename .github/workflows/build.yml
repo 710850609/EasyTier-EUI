@@ -171,12 +171,6 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Cache pip
-        uses: actions/cache@v4
-        with:
-          path: %LocalAppData%\pip\Cache
-          key: win64-pip-${{ hashFiles('backend/requirements-base.txt', 'backend/requirements-gui.txt') }}
-
       - name: Install UPX
         run: |
           choco install upx
@@ -188,8 +182,20 @@ jobs:
           name: frontend-dist
           path: frontend/dist
 
+      - name: Get pip cache dir
+        id: pip-cache
+        shell: bash
+        run: echo "dir=$(pip cache dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pip-cache.outputs.dir }}
+          key: win64-pip-${{ hashFiles('backend/requirements-base.txt', 'backend/requirements-gui.txt') }}
+
       - name: Build
-        run: cd backend && python build.py --et_ver "${{ needs.build-info.outputs.et_ver }}" --build_ver "${{ needs.build-info.outputs.version }}" --github_proxy_url "" --pip_cache_dir %LocalAppData%\pip\Cache
+        run: cd backend && python build.py --et_ver "${{ needs.build-info.outputs.et_ver }}" --build_ver "${{ needs.build-info.outputs.version }}" --github_proxy_url "" --pip_cache_dir "${{ steps.pip-cache.outputs.dir }}"
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
