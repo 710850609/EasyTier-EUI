@@ -7,7 +7,10 @@
         </div>
       </div>
       <div class="version-info">
-        <var-cell>安装应用，并导出飞牛上配置toml文件后。把toml配置文件内容复制黏贴到easytier中，并启动网络即可。</var-cell>
+        <var-cell>
+          <p>安装应用，从易组网分享配置后，到鸿蒙上黏贴配置</p>
+          <p>启动网络即可</p>
+        </var-cell>
         <var-cell>
           其他使用说明，请访问 
           <var-link type="primary" href="https://easytier.cn/guide/gui/easytier-harmonyos.html" target="_blank" underline="none">

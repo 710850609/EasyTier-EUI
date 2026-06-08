@@ -26,7 +26,24 @@
     <var-paper class="setting-block" :elevation="1">
       <div class="block-header">
         <svg-icon type="mdi" :path="mdiShieldLock" size="24" color="var(--color-primary)"></svg-icon>
-        <span class="block-title">内核-EasyTier</span>
+        <span class="block-title">内核 EasyTier</span>
+      </div>
+      <var-divider />
+      <div class="setting-row">
+        <span class="setting-label">日志级别</span>
+        <var-select 
+          class="setting-select" 
+          placeholder="请选择日志级别" 
+          v-model="etLogLevel" 
+          variant="outlined"
+          size="small"
+          :on-change="setEtLogLevel"
+          :line="true"
+          :options="logLevelOptions"
+          label-key="label"
+          value-key="value"
+        >
+        </var-select>
       </div>
       <var-divider />
       <div class="setting-row">
@@ -68,36 +85,16 @@
       </div>
       <div class="setting-row">
         <div class="setting-actions">
-          <!-- <var-chip v-if="hasNewVersion" type="primary" size="small" plain>
-            选择版本更新内容
-          </var-chip> -->
           <var-chip v-if="hasNewVersion" type="warning" size="small" plain>有新版本</var-chip>
-           <var-button type="primary" size="small" @click="handleShowEtChangeLog()">
-            <var-icon name="information-outline" />
-            选择版本更新内容
-          </var-button>
           <var-button type="primary" size="small" @click="installEtCore(true)" auto-loading>
             <var-icon name="download" />
             安装
           </var-button>
+           <var-button type="primary" size="small" @click="handleShowEtChangeLog()">
+            <var-icon name="information-outline" />
+            更新内容
+          </var-button>
         </div>
-      </div>
-      <var-divider />
-      <div class="setting-row">
-        <span class="setting-label">日志级别</span>
-        <var-select 
-          class="setting-select" 
-          placeholder="请选择日志级别" 
-          v-model="etLogLevel" 
-          variant="outlined"
-          size="small"
-          :on-change="setEtLogLevel"
-          :line="true"
-          :options="logLevelOptions"
-          label-key="label"
-          value-key="value"
-        >
-        </var-select>
       </div>
     </var-paper>
 
@@ -195,14 +192,7 @@
 
     <!-- 版本 -->
     <var-paper class="setting-block" :elevation="1">
-      <div class="block-header" 
-        @mousedown="startPress"
-        @mouseup="cancelPress"
-        @mouseleave="cancelPress"
-        @touchstart.prevent="startPress"
-        @touchend="cancelPress"
-        @touchcancel="cancelPress"
-        @touchmove="cancelPress">
+      <div class="block-header">
         <svg-icon type="mdi" :path="mdiMapOutline" size="24" color="var(--color-primary)"></svg-icon>
         <span class="block-title">版本</span>
       </div>
@@ -304,8 +294,9 @@
       <!-- 简介 -->
       <div class="about-section">
         <div class="about-content">
-          <p>简化 EasyTier 使用的 UI 界面，降低组网门槛，快速访问异地网络设备。</p>
-          <p>享受 EasyTier 免费、不限设备数量、支持多类型终端等优势。</p>
+          <p>简化 EasyTier 使用的 UI 界面</p>
+          <p>降低组网门槛，快速访问异地网络设备</p>
+          <p>享受 EasyTier 免费、不限设备数量、支持多类型终端等优势</p>
           <img alt="下载量" src="https://img.shields.io/github/downloads/710850609/EasyTier-EUI/total?color=blue&label=下载量" />
         </div>
         <div class="version-row">

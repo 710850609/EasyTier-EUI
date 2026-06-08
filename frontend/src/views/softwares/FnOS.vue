@@ -12,7 +12,7 @@
         </div>
       </div>
       <div class="version-info">
-        <var-cell>安装后，输入相同网络名、网络密码、初始化节点，保存启动，即可组网</var-cell>
+        <var-cell>安装后，输入相同网络名、网络密码、对应初始化节点，保存启动，即可组网</var-cell>
         <var-cell>
           <var-link type="primary" underline="none" href="https://github.com/710850609/EasyTier-EUI/releases" target="_blank"><img src="https://img.shields.io/github/v/release/710850609/EasyTier-EUI?color=blue&logo=github&label=稳定版" /></var-link>
         </var-cell>

@@ -232,7 +232,7 @@ const activeTab = ref('columnsFilter')
 const loadingSkeleton = ref(true)
 
 // 默认选中的列
-const selectedColumns = ref(['ipv4', 'hostname', 'cost', 'lat_ms', 'loss_rate', 'rx_bytes', 'tx_bytes'])
+const selectedColumns = ref(['ipv4', 'hostname', 'cost', 'tunnel_proto','lat_ms', 'loss_rate', 'rx_bytes', 'tx_bytes', 'nat_type'])
 // 默认选中的节点类型
 const selectedNodeTypes = ref(['normal'])
 // 刷新速度
