@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import logging
-import shutil
 import sys
 import time
 from pathlib import Path
 
 from http_dispatcher.dispatcher import HttpException
-from utils import run_configs, github_util, et_run_info
+from utils import run_configs, github_util
 
 
 def eui_info(*kwargs):

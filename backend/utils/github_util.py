@@ -37,29 +37,31 @@ def get_latest_version(api_url) -> str:
         logging.error(f"获取 manager 版本失败: {e}")
         raise
 
-def get_github_proxy() -> str:
-    """获取 GitHub 代理 URL"""
-    try:
-        github_proxy_file = run_configs.github_proxy_file()
-        if not Path(github_proxy_file).exists():
-            logging.warning(f"GitHub加速配置文件不存在: {github_proxy_file}，不使用加速")
-            return None
-        cfg_path = Path(github_proxy_file)
-        if cfg_path.exists():
-            content = cfg_path.read_text().strip()
-            # 去除空行
-            lines = [l.strip() for l in content.split('\n') if l.strip()]
-            return lines[0] if lines else ""
-    except Exception as e:
-        logging.warning(f"读取代理配置失败: {e}")
-    return ""
+# def get_github_proxy() -> str:
+#     """获取 GitHub 代理 URL"""
+#     try:
+#         github_proxy_file = run_configs.github_proxy_file()
+#         if not Path(github_proxy_file).exists():
+#             logging.warning(f"GitHub加速配置文件不存在: {github_proxy_file}，不使用加速")
+#             return None
+#         cfg_path = Path(github_proxy_file)
+#         if cfg_path.exists():
+#             content = cfg_path.read_text().strip()
+#             # 去除空行
+#             lines = [l.strip() for l in content.split('\n') if l.strip()]
+#             return lines[0] if lines else ""
+#     except Exception as e:
+#         logging.warning(f"读取代理配置失败: {e}")
+#     return ""
 
 def get_download_url_proxy(url: str) -> str:
     """获取 GitHub 代理 URL"""
-    proxy_url = get_github_proxy()
-    if proxy_url and proxy_url != '':
-        logging.info(f"使用加速地址: {proxy_url}")
-        url = proxy_url + '/' + url
+    proxy_urls = get_proxy_urls()
+    if proxy_urls and len(proxy_urls) > 0:
+        proxy_url = proxy_urls[0]["url"]
+        if proxy_url and proxy_url != '':
+            logging.info(f"使用加速地址: {proxy_url}")
+            url = proxy_url + '/' + url
     return url
 
 

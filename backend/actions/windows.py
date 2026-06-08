@@ -11,8 +11,8 @@ import actions.configs as configs
 import utils.common_util as common_util
 import utils.et_util as et_util
 import utils.github_util as github_util
-from utils import run_configs
 from http_dispatcher.dispatcher import HttpResponse
+from utils import run_configs
 
 
 def download_mgr_pro(params:dict, *kwargs):

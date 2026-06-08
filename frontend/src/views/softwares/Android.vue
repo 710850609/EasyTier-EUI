@@ -109,10 +109,18 @@
 </template>
 
 <script setup>
-import { downloadEasyTierApk } from '../../utils/github.js'
+// import { downloadEasyTierApk } from '../../utils/github.js'
+import { api } from '../../utils/api.js'
 
-const download = (prerelease) => {
-  return downloadEasyTierApk(prerelease)
+const download = (arch, prerelease) => {
+  // downloadEasyTierApk(prerelease)
+  return new Promise((resolve, reject) => {
+    api.etApp.getDownloadUrl({platform:'app', arch, prerelease}).then((resp) => {
+      window.open(resp.data, '_blank')
+    }).finally(() => {
+      resolve()
+    })
+  })
 }
 
 </script>

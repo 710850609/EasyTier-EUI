@@ -82,6 +82,10 @@ def get_release_info(params: dict, *kwargs):
                     t_p_a = platform_arch.split('-')
                     if t_p_a[0] in need_platform and t_p_a[1] in need_arch:
                         assets[platform_arch] = {'download_url': asset.get('browser_download_url', ''), 'download_count': download_count}
+                elif filename.startswith('app-') and filename.endswith('-release.apk'):
+                    platform_arch = filename.replace('-release.apk', '')
+                    assets[platform_arch] = {'download_url': asset.get('browser_download_url', ''),
+                                             'download_count': download_count}
             info['download_count'] = item_download_count
         with open(release_file, "w", encoding="utf-8") as f:
             f.write(json.dumps(release_info, ensure_ascii=False, indent=2))
@@ -172,6 +176,6 @@ def __unzip(zip_file, unzip_dir):
 if __name__ == '__main__':
     run_configs.setup_env()
     log_util.setup_log(log_level="DEBUG")
-    # get_release_info({'refresh': 'true'})
-    print(version_list({}))
+    get_release_info({'refresh': 'true'})
+    # print(version_list({}))
 

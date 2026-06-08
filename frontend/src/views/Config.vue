@@ -1103,7 +1103,7 @@ onMounted(async () => {
 
 .toolbar {
   flex-shrink: 0;
-  margin: 24px 16px 0;
+  margin: 24px 16px 8px;
   padding: 16px 20px;
   border-radius: 12px;
 }
@@ -1193,7 +1193,7 @@ onMounted(async () => {
 .content-area {
   flex: 1;
   overflow-y: auto;
-  padding: 0 16px;
+  padding: 0 16px 10px;
   margin-top: 4px;
   position: relative;
 }
@@ -1454,7 +1454,7 @@ onMounted(async () => {
 
 /* ===== 高级设置样式 ===== */
 .flags-section-paper {
-  margin-top: 8px;
+  /* margin-top: 8px; */
   border-radius: 16px;
   overflow: hidden;
 }
@@ -1712,7 +1712,7 @@ onMounted(async () => {
 :deep(.var-form) {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  /* gap: 16px; */
 }
 
 :deep(.var-collapse-item__content) {

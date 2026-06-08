@@ -265,7 +265,11 @@ export const api = {
     getEuiInfo: () => get('/settings/eui_info'),
     getGithubMirrors: (params = {}) => get('/settings/github_mirrors', params),
     deleteCache: () => post('/settings/delete_cache'),
-  }
+  },
+  // et app
+  etApp: {
+    getDownloadUrl: (params = {}) => get('/et_app/get_download_url', params),
+  },
 }
 
 // 导出基础配置
