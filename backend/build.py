@@ -69,17 +69,18 @@ def install_deps(pip_cache_dir:str = ""):
             python_path = os.path.join(venv_dir, "bin", "python")
         pip_cmd = f'"{pip_path}"'
         print(f"  使用虚拟环境 Python: {python_path}")
-
-    print("  更新 pip")
-    run_command(f'{python_path} -m pip install --upgrade pip')
-    # 安装依赖（带清华镜像）
-    mirror = "-i https://pypi.tuna.tsinghua.edu.cn/simple"
-    print("  安装 pyinstaller qrcode 依赖")
-    if not run_command(f'{pip_cmd} install pyinstaller qrcode {mirror}'):
-        raise Exception(f"安装失败: {pip_cmd}")
     pip_cache = ''
     if pip_cache_dir and os.path.exists(pip_cache_dir):
         pip_cache = f"--cache-dir {pip_cache_dir}"
+
+    print("  更新 pip")
+    run_command(f'{python_path} -m pip install {pip_cache} --upgrade pip')
+
+    # 安装依赖（带清华镜像）
+    mirror = "-i https://pypi.tuna.tsinghua.edu.cn/simple"
+    print("  安装 pyinstaller qrcode 依赖")
+    if not run_command(f'{pip_cmd} install {pip_cache} pyinstaller qrcode {mirror}'):
+        raise Exception(f"安装失败: {pip_cmd}")
     print("  安装 base 依赖")
     if not run_command(f'{pip_cmd} install {pip_cache} -r requirements-base.txt {mirror}'):
         raise Exception(f"安装失败: {pip_cmd}")
