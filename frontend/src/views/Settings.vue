@@ -141,55 +141,6 @@
       </var-cell>
     </var-paper> -->
 
-    <!-- 开发者选项 -->
-    <var-paper class="setting-block" :elevation="1" v-if="showDevContent">
-      <div class="block-header">
-        <!-- <var-icon name="wrench" size="24" color="var(--color-primary)" /> -->
-        <svg-icon type="mdi" :path="mdiDevTo" size="24" color="var(--color-primary)"></svg-icon>
-        <span class="block-title">开发者选项</span>
-      </div>      
-      <var-divider />
-      <var-cell>
-        <template #description>移动端页面调试</template>
-        <template #extra>
-          <var-switch v-model="vConsoleEnabled" @change="toggleVConsole" />
-        </template>
-      </var-cell>
-      <var-cell>
-        <template #description>使用测试社区节点</template>
-        <template #extra>
-          <var-switch v-model="testPeerSourceEnabled" :loading="changingPeerSource" @change="togglePeerSource" />
-        </template>
-      </var-cell>
-      
-      <var-cell>
-        GitHub加速地址
-        <!-- <var-loading type="wave" v-if="isFetchingGithubMirrors" /> -->
-      </var-cell>
-      <var-cell>
-        <var-select v-model="githubMirror" variant="outlined" size="small" :line="true">
-          <var-option v-for="item in githubMirrors" :key="item.url" :value="item.url" :label="item.label">
-            <var-cell border style="display: flex;">
-              <template #description>
-                {{ item.label }} 
-                <var-chip type="warning" size="mini" plain v-if="item.desc">{{ item.desc }}</var-chip>
-              </template>
-              <template #extra>
-                <span v-if="item.delay > 0"> {{ item.delay }}s </span>
-              </template>
-            </var-cell>
-          </var-option>
-          <template #append-icon>
-            <var-icon 
-              name="refresh" 
-              :class="{ 'is-spinning': isFetchingGithubMirrors }"
-              @click.stop="getGithubMirrors(true)" 
-            />
-          </template>
-        </var-select>
-      </var-cell>
-    </var-paper>
-
     <!-- 版本 -->
     <var-paper class="setting-block" :elevation="1">
       <div class="block-header">
@@ -259,6 +210,47 @@
         </var-button>
       </div>
     </var-paper>    
+
+    <!-- 开发者选项 -->
+    <var-paper class="setting-block" :elevation="1" v-if="showDevContent">
+      <div class="block-header">
+        <!-- <var-icon name="wrench" size="24" color="var(--color-primary)" /> -->
+        <svg-icon type="mdi" :path="mdiDevTo" size="24" color="var(--color-primary)"></svg-icon>
+        <span class="block-title">开发者选项</span>
+      </div>      
+      <var-divider />
+      <div class="setting-row">
+        <span class="setting-label">移动端页面调试</span>
+        <var-switch v-model="vConsoleEnabled" @change="toggleVConsole" />
+      </div>
+      <div class="setting-row">
+        <span class="setting-label">使用测试社区节点</span>
+        <var-switch v-model="testPeerSourceEnabled" :loading="changingPeerSource" @change="togglePeerSource" />
+      </div>
+      <div class="setting-row">
+        <span class="setting-label">查看GitHub加速</span>
+        <var-select v-model="githubMirror" variant="outlined" size="small" :line="true" class="setting-select">
+          <var-option v-for="item in githubMirrors" :key="item.url" :value="item.url" :label="item.label">
+            <var-cell border style="display: flex;">
+              <template #description>
+                {{ item.label }} 
+                <var-chip type="warning" size="mini" plain v-if="item.desc">{{ item.desc }}</var-chip>
+              </template>
+              <template #extra>
+                <span v-if="item.delay > 0"> {{ item.delay }}s </span>
+              </template>
+            </var-cell>
+          </var-option>
+          <template #append-icon>
+            <var-icon 
+              name="refresh" 
+              :class="{ 'is-spinning': isFetchingGithubMirrors }"
+              @click.stop="getGithubMirrors(true)" 
+            />
+          </template>
+        </var-select>
+      </div>
+    </var-paper>
 
     <!-- 关于 -->
     <var-paper class="setting-block" :elevation="1">

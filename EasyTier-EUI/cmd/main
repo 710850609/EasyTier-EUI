@@ -97,7 +97,8 @@ fn_service() {
     result=$(eval "$cmd" 2>&1)   # 2>&1 将 stderr 也合并到 stdout（根据需求可选）
     local return_code=$?
     # 处理 echo 默认不支持\n换行
-    msg=$(printf "invoke ${action}\n  cmd: ${cmd}\n  return_code: ${return_code}\n  result : ${result}")
+#    msg=$(printf "invoke ${action}\n  cmd: ${cmd}\n  return_code: ${return_code}\n  result : ${result}")
+    msg=$(printf "invoke ${action}  -->>  return_code: ${return_code}, result: ${result}")
     log_msg "${msg}"
     if [[ $return_code != 0 ]] && [[ ! ($action == 'status' && $return_code == 3) ]]; then
       echo $(printf "调用 ${action} 返回结果码 ${return_code} \n${result}") > $TRIM_TEMP_LOGFILE

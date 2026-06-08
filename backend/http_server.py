@@ -157,6 +157,7 @@ if __name__ == '__main__':
     run_configs.setup_env()
     log_util.setup_log(log_file=os.path.join(run_configs.log_dir(), 'app.log'), log_level=logging.DEBUG,
                        enabled_console=run_configs.is_local_mode())
+    logging.info(f"运行的构建版本：{run_configs.build_version()}")
     import argparse
     parser = argparse.ArgumentParser(description='CGI Proxy HTTP Server')
     parser.add_argument('--host', default='127.0.0.1', help='Host to bind to (default: 127.0.0.1)')

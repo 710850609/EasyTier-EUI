@@ -99,7 +99,7 @@ def __load_data(reload:bool = False) -> Dict[str, EtRunInfo]:
                 except Exception as e:
                     logging.exception(f'加载元数据异常: {value}')
         j_data = {k: v.__dict__ for k, v in __data.items()}
-        logging.info(f"加载元数据： {json.dumps(j_data, ensure_ascii=False)}")
+        logging.debug(f"加载元数据： {json.dumps(j_data, ensure_ascii=False)}")
     return __data
 
 def __save_data(data:Dict[str, EtRunInfo]):
