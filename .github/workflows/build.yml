@@ -278,52 +278,81 @@ jobs:
   build-linux-arm64:
     if: ${{ github.event.inputs.build_linux_arm64 == 'true' }}
     needs: [ build-frontend, build-info ]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@v4
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          platforms: arm64
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'  # 缓存 pip 依赖
+
+      - name: Upgrade pip
+        run: pip install --upgrade pip
+
       - name: Download frontend
         uses: actions/download-artifact@v4
         with:
           name: frontend-dist
           path: frontend/dist
-      - name: Build custom environment image
-        uses: docker/build-push-action@v5
-        with:
-          context: .github/docker
-          file: .github/docker/linux-buildenv.Dockerfile
-          platforms: linux/arm64
-#          build-args: |
-#            PYTHON_VERSION=${{ env.PYTHON_VERSION }}
-          tags: linux-buildenv:arm64
-          load: true
-          cache-from: type=gha,scope=linux-buildenv-arm64
-          cache-to: type=gha,mode=max,scope=linux-buildenv-arm64
-      - name: Build in ARM64 container
-        run: |
-          docker run --rm --platform linux/arm64 \
-            -v ${{ github.workspace }}:/workspace \
-            -w /workspace \
-            -e CI=true \
-            -e GITHUB_ACTIONS=true \
-            -e ET_VER=${{ needs.build-info.outputs.et_ver }} \
-            -e BUILD_VER=${{ needs.build-info.outputs.version }} \
-            linux-buildenv:arm64 \
-            bash -c '
-              export PIP_ROOT_USER_ACTION=ignore
-              cd backend &&
-              python3 build.py --et_ver "${ET_VER}" --build_ver "${BUILD_VER}" --github_proxy_url ""
-            '
+
+      - name: Build
+        run: cd backend && python3 build.py --et_ver "${{ needs.build-info.outputs.et_ver }}" --build_ver "${{ needs.build-info.outputs.version }}" --github_proxy_url ""
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: linux-arm64
           path: backend/dist/*.zip
+
+#  build-linux-arm64:
+#    if: ${{ github.event.inputs.build_linux_arm64 == 'true' }}
+#    needs: [ build-frontend, build-info ]
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v4
+#      - name: Set up QEMU
+#        uses: docker/setup-qemu-action@v3
+#        with:
+#          platforms: arm64
+#      - name: Set up Docker Buildx
+#        uses: docker/setup-buildx-action@v3
+#      - name: Download frontend
+#        uses: actions/download-artifact@v4
+#        with:
+#          name: frontend-dist
+#          path: frontend/dist
+#      - name: Build custom environment image
+#        uses: docker/build-push-action@v5
+#        with:
+#          context: .github/docker
+#          file: .github/docker/linux-buildenv.Dockerfile
+#          platforms: linux/arm64
+##          build-args: |
+##            PYTHON_VERSION=${{ env.PYTHON_VERSION }}
+#          tags: linux-buildenv:arm64
+#          load: true
+#          cache-from: type=gha,scope=linux-buildenv-arm64
+#          cache-to: type=gha,mode=max,scope=linux-buildenv-arm64
+#      - name: Build in ARM64 container
+#        run: |
+#          docker run --rm --platform linux/arm64 \
+#            -v ${{ github.workspace }}:/workspace \
+#            -w /workspace \
+#            -e CI=true \
+#            -e GITHUB_ACTIONS=true \
+#            -e ET_VER=${{ needs.build-info.outputs.et_ver }} \
+#            -e BUILD_VER=${{ needs.build-info.outputs.version }} \
+#            linux-buildenv:arm64 \
+#            bash -c '
+#              export PIP_ROOT_USER_ACTION=ignore
+#              cd backend &&
+#              python3 build.py --et_ver "${ET_VER}" --build_ver "${BUILD_VER}" --github_proxy_url ""
+#            '
+#      - name: Upload artifact
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: linux-arm64
+#          path: backend/dist/*.zip
 
   build-linux-riscv64:
     if: ${{ github.event.inputs.build_linux_riscv64 == 'true' }}
@@ -335,13 +364,16 @@ jobs:
         uses: docker/setup-qemu-action@v3
         with:
           platforms: riscv64
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+
       - name: Download frontend
         uses: actions/download-artifact@v4
         with:
           name: frontend-dist
           path: frontend/dist
+
       - name: Build custom environment image
         uses: docker/build-push-action@v5
         with:
@@ -355,10 +387,18 @@ jobs:
           load: true
           cache-from: type=gha,scope=linux-buildenv-riscv64
           cache-to: type=gha,mode=max,scope=linux-buildenv-riscv64
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: riscv64-pip-${{ hashFiles('backend/requirements-base.txt', 'backend/requirements-gui.txt') }}
+
       - name: Build in RISC-V64 container
         run: |
           docker run --rm --platform linux/riscv64 \
             -v ${{ github.workspace }}:/workspace \
+            -v ~/.cache/pip:/root/.cache/pip \
             -w /workspace \
             -e CI=true \
             -e GITHUB_ACTIONS=true \
@@ -368,7 +408,7 @@ jobs:
             bash -c '
               export PIP_ROOT_USER_ACTION=ignore
               cd backend &&
-              python3 build.py --et_ver "${ET_VER}" --build_ver "${BUILD_VER}" --github_proxy_url ""
+              python3 build.py --et_ver "${ET_VER}" --build_ver "${BUILD_VER}" --github_proxy_url "" --pip_cache_dir /root/.cache/pip
             '
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -389,11 +429,13 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+
       - name: Download frontend
         uses: actions/download-artifact@v4
         with:
           name: frontend-dist
           path: frontend/dist
+
       - name: Build custom environment image
         uses: docker/build-push-action@v5
         with:
@@ -407,10 +449,17 @@ jobs:
           cache-from: type=gha,scope=linux-buildenv-armv7
           cache-to: type=gha,mode=max,scope=linux-buildenv-armv7
 
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: armv7-pip-${{ hashFiles('backend/requirements-base.txt', 'backend/requirements-gui.txt') }}
+
       - name: Build in ARMv7 container
         run: |
           docker run --rm --platform linux/arm/v7 \
             -v ${{ github.workspace }}:/workspace \
+            -v ~/.cache/pip:/root/.cache/pip \
             -w /workspace \
             -e CI=true \
             -e GITHUB_ACTIONS=true \
@@ -420,7 +469,7 @@ jobs:
             sh -c '
               export PIP_ROOT_USER_ACTION=ignore
               cd backend &&
-              python3 build.py --et_ver "${ET_VER}" --build_ver "${BUILD_VER}" --github_proxy_url ""
+              python3 build.py --et_ver "${ET_VER}" --build_ver "${BUILD_VER}" --github_proxy_url "" --pip_cache_dir /root/.cache/pip
             '
       - name: Upload artifact
         uses: actions/upload-artifact@v4

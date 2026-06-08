@@ -39,7 +39,7 @@ def run_command(cmd, cwd=None):
         print(result.stdout)
     return True
 
-def install_deps():
+def install_deps(pip_cache_dir:str = ""):
     """安装依赖"""
     print(" 安装依赖...")
     # 检测是否在 CI 环境
@@ -77,16 +77,18 @@ def install_deps():
     print("  安装 pyinstaller qrcode 依赖")
     if not run_command(f'{pip_cmd} install pyinstaller qrcode {mirror}'):
         raise Exception(f"安装失败: {pip_cmd}")
-
+    pip_cache = ''
+    if pip_cache_dir and os.path.exists(pip_cache_dir):
+        pip_cache = f"--cache-dir {pip_cache_dir}"
     print("  安装 base 依赖")
-    if not run_command(f'{pip_cmd} install -r requirements-base.txt {mirror}'):
+    if not run_command(f'{pip_cmd} install {pip_cache} -r requirements-base.txt {mirror}'):
         raise Exception(f"安装失败: {pip_cmd}")
 
     if sys.platform == "linux":
         print(f"当前是 Linux 环境跳过安装 gui 依赖")
     else:
         print("  安装 gui 依赖")
-        if not run_command(f'{pip_cmd} install -r requirements-gui.txt {mirror}'):
+        if not run_command(f'{pip_cmd} install {pip_cache} -r requirements-gui.txt {mirror}'):
             raise Exception(f"安装失败: {pip_cmd}")
     return python_path, pip_cmd
 
@@ -98,16 +100,23 @@ if __name__ == "__main__":
     parser.add_argument('--et_ver', default='', help='easytier 版本号')
     parser.add_argument('--build_ver', default='', help='构建版本号')
     parser.add_argument('--github_proxy_url', default="https://ghfast.top", help='GitHub加速连接')
+    parser.add_argument('--pip_cache_dir', default="", help='pip缓存目录')
     args = parser.parse_args()
     et_ver = args.et_ver
     build_ver = args.build_ver
     github_proxy_url = args.github_proxy_url
+    pip_cache_dir = args.pip_cache_dir
     print(f"et_ver: {et_ver}")
     print(f"build_ver: {build_ver}")
     print(f"github_proxy_url: {github_proxy_url}")
+    print(f"pip_cache_dir: {pip_cache_dir}")
 
-    python_path, pip_cmd = install_deps()
+    python_path, pip_cmd = install_deps(pip_cache_dir)
     print("", flush=True)
     build_script_path = os.path.join(os.path.dirname(__file__), "build_core.py")
-    result = subprocess.run([str(python_path), build_script_path,  "--et_ver", et_ver, "--build_ver", build_ver, "--github_proxy_url", github_proxy_url])
+    result = subprocess.run([str(python_path), build_script_path,
+                             "--et_ver", et_ver,
+                             "--build_ver", build_ver,
+                             "--github_proxy_url", github_proxy_url,
+                             ])
     sys.exit(result.returncode)

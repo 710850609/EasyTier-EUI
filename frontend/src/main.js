@@ -2,6 +2,7 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import '@varlet/ui/es/style'
 import '@varlet/touch-emulator'
+import { api } from './utils/api.js'
 
 const originalAddEventListener = EventTarget.prototype.addEventListener
 EventTarget.prototype.addEventListener = function (type, listener, options) {
@@ -19,5 +20,11 @@ EventTarget.prototype.addEventListener = function (type, listener, options) {
   originalAddEventListener.call(this, type, listener, opts)
 }
 
+const updateTitle = () => {
+  api.settings.getEuiInfo()
+  .then(res => document.title = `易组网 ${res.data.build_version}`)
+}
+
 const app = createApp(App)
 app.mount('#app')
+updateTitle()
