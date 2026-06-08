@@ -208,22 +208,32 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Set up Python (x86_64)
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           architecture: 'x64'
-      - name: Upgrade pip (x86_64)
-        run: arch -x86_64 pip install --upgrade pip
+
+#      - name: Upgrade pip (x86_64)
+#        run: arch -x86_64 pip install --upgrade pip
+
       - name: Download frontend
         uses: actions/download-artifact@v4
         with:
           name: frontend-dist
           path: frontend/dist
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: mac-amd64-pip-${{ hashFiles('backend/requirements-base.txt', 'backend/requirements-gui.txt') }}
+
       - name: Build (x86_64)
         run: |
           cd backend
-          arch -x86_64 python3 build.py --et_ver "${{ needs.build-info.outputs.et_ver }}" --build_ver "${{ needs.build-info.outputs.version }}" --github_proxy_url ""
+          arch -x86_64 python3 build.py --et_ver "${{ needs.build-info.outputs.et_ver }}" --build_ver "${{ needs.build-info.outputs.version }}" --github_proxy_url "" --pip_cache_dir ~/.cache/pip
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -236,20 +246,28 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           architecture: arm64
-      - name: Upgrade pip
-        run: pip install --upgrade pip
+
       - name: Download frontend
         uses: actions/download-artifact@v4
         with:
           name: frontend-dist
           path: frontend/dist
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: mac-arm64-pip-${{ hashFiles('backend/requirements-base.txt', 'backend/requirements-gui.txt') }}
+
       - name: Build
-        run: cd backend && python3 build.py --et_ver "${{ needs.build-info.outputs.et_ver }}" --build_ver "${{ needs.build-info.outputs.version }}" --github_proxy_url ""
+        run: cd backend && python3 build.py --et_ver "${{ needs.build-info.outputs.et_ver }}" --build_ver "${{ needs.build-info.outputs.version }}" --github_proxy_url "" --pip_cache_dir ~/.cache/pip
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -267,17 +285,20 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Upgrade pip
-        run: pip install --upgrade pip
-
       - name: Download frontend
         uses: actions/download-artifact@v4
         with:
           name: frontend-dist
           path: frontend/dist
 
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: linux-amd64-pip-${{ hashFiles('backend/requirements-base.txt', 'backend/requirements-gui.txt') }}
+
       - name: Build
-        run: cd backend && python3 build.py --et_ver "${{ needs.build-info.outputs.et_ver }}" --build_ver "${{ needs.build-info.outputs.version }}" --github_proxy_url ""
+        run: cd backend && python3 build.py --et_ver "${{ needs.build-info.outputs.et_ver }}" --build_ver "${{ needs.build-info.outputs.version }}" --github_proxy_url "" --pip_cache_dir ~/.cache/pip
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -299,10 +320,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: riscv64-pip-${{ hashFiles('backend/requirements-base.txt', 'backend/requirements-gui.txt') }}
-
-      - name: Upgrade pip
-        run: pip install --upgrade pip
+          key: linux-arm64-pip-${{ hashFiles('backend/requirements-base.txt', 'backend/requirements-gui.txt') }}
 
       - name: Download frontend
         uses: actions/download-artifact@v4
@@ -311,7 +329,8 @@ jobs:
           path: frontend/dist
 
       - name: Build
-        run: cd backend && python3 build.py --et_ver "${{ needs.build-info.outputs.et_ver }}" --build_ver "${{ needs.build-info.outputs.version }}" --github_proxy_url ""  --pip_cache_dir ~/.cache/pip
+        run: cd backend && python3 build.py --et_ver "${{ needs.build-info.outputs.et_ver }}" --build_ver "${{ needs.build-info.outputs.version }}" --github_proxy_url "" --pip_cache_dir ~/.cache/pip
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -374,6 +393,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
         with:
