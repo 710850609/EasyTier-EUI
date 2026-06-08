@@ -171,8 +171,11 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Upgrade pip
-        run: python.exe -m pip install --upgrade pip
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: %LocalAppData%\pip\Cache
+          key: win64-pip-${{ hashFiles('backend/requirements-base.txt', 'backend/requirements-gui.txt') }}
 
       - name: Install UPX
         run: |
@@ -186,7 +189,7 @@ jobs:
           path: frontend/dist
 
       - name: Build
-        run: cd backend && python build.py --et_ver "${{ needs.build-info.outputs.et_ver }}" --build_ver "${{ needs.build-info.outputs.version }}" --github_proxy_url ""
+        run: cd backend && python build.py --et_ver "${{ needs.build-info.outputs.et_ver }}" --build_ver "${{ needs.build-info.outputs.version }}" --github_proxy_url "" --pip_cache_dir %LocalAppData%\pip\Cache
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -285,7 +288,12 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          cache: 'pip'  # 缓存 pip 依赖
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: riscv64-pip-${{ hashFiles('backend/requirements-base.txt', 'backend/requirements-gui.txt') }}
 
       - name: Upgrade pip
         run: pip install --upgrade pip
@@ -297,7 +305,7 @@ jobs:
           path: frontend/dist
 
       - name: Build
-        run: cd backend && python3 build.py --et_ver "${{ needs.build-info.outputs.et_ver }}" --build_ver "${{ needs.build-info.outputs.version }}" --github_proxy_url ""
+        run: cd backend && python3 build.py --et_ver "${{ needs.build-info.outputs.et_ver }}" --build_ver "${{ needs.build-info.outputs.version }}" --github_proxy_url ""  --pip_cache_dir ~/.cache/pip
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
