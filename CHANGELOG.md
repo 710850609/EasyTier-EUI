@@ -22,6 +22,8 @@
 - 优化：【应用】Linux、安卓、macos 的EasyTier GUI下载速度，自动加上加速下载地址
 - 新增：【设置】界面支持删除缓存
 - 新增：【应用-Linux】界面支持下载EasyTier GUI rpm包
+----
+- 优化：GitHub资源缓存使用，避免高度访问出现限制
 
  
 
