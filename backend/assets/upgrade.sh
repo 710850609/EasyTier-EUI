@@ -18,7 +18,7 @@ done
 
 # 替换文件
 mv -f "$UPDATE_DIR/$APP_NAME" "$APP_DIR/$APP_NAME"
-mv -f "$UPDATE_DIR/_internal" "$APP_DIR/_internal"
+#mv -f "$UPDATE_DIR/_internal" "$APP_DIR/_internal"
 
 # 清理更新目录
 rm -rf "$UPDATE_DIR"
