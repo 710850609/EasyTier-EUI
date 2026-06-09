@@ -66,8 +66,12 @@ def get_release_info(params: dict, *kwargs):
             release_info = json.load(f)
 
     cur_time = int(time.time() * 1000)
+    cur_diff_time = cur_time - release_info.get('update_time', 0)
     cache_time = 1000 * 60
-    if refresh or release_info is None or cur_time - release_info.get('update_time', 0) > cache_time:
+    if refresh or release_info is None or cur_diff_time > cache_time:
+        if refresh and cur_diff_time < 1000 * 60 * 10 and release_info is not None:
+            logging.info(f'上次刷新时间距离当前时间仅隔 {cur_diff_time} ms, 直接返回上次刷新结果')
+            return release_info
         total_download = 0
         release_info = {'update_time': cur_time, 'total_download': total_download, 'latest_release': {}, 'latest_prerelease': {}}
         releases = github_util.get_api('https://api.github.com/repos/710850609/EasyTier-EUI/releases?per_page=100')

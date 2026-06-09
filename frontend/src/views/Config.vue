@@ -208,8 +208,8 @@
                             <div class="peer-primary-uri">
                               {{ peer.uri }}
                             </div>
-                            <!-- <span style="font-size: 12px; color: var(--color-primary);">{{ peer.hostname || '' }}</span> -->
-                            <span v-if="peer.src_uri != peer.uri && peer.dynamic">{{ peer.src_uri }}</span>
+                            <span style="font-size: 12px; color: var(--color-primary);">{{ peer.hostname || '' }}</span>
+                            <!-- <span v-if="peer.src_uri != peer.uri && peer.dynamic">{{ peer.src_uri }}</span> -->
                             <div class="peer-secondary-uri">
                               <span class="peer-tag latency-tag" :class="peer.latency < 500 ? (peer.latency < 100 ? 'latency-good' : 'latency-normal') : 'latency-bad'"  
                                 v-if="peer.latency > 0">
@@ -651,8 +651,6 @@ const addPeer = () => {
   if (!peer) return
   publicPeerOptions.value.unshift({ uri: peer, src_uri: peer, latency: -1, status: -1 })
   config.value.peer.unshift(peer)
-  console.log(config.value.peer)
-  console.log(publicPeerOptions.value)
   customPeer.value = ''
 }
 
@@ -812,6 +810,12 @@ const checkPeers = () => {
     api.peers.checkPeers({ 'profile': selectedConfig.value }).then(data => {
       publicPeerOptions.value = data.data
       toast.success('检测节点可用状态成功')
+      console.log(config.value.peer)
+      publicPeerOptions.value.sort((a, b) => {
+        const aIn = config.value.peer.includes(a.uri);
+        const bIn = config.value.peer.includes(b.uri);
+        return bIn - aIn;
+      });
     }).catch(() => {
       toast.error('检测节点可用状态失败')
     }).finally(() => {
