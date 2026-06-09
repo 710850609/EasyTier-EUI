@@ -45,7 +45,7 @@
         >
         </var-select>
       </div>
-      <var-divider />
+      <!-- <var-divider /> -->
       <div class="setting-row">
         <span class="setting-label">当前版本 {{ etVersion.version || '未知' }}</span>
         <var-select 
@@ -95,6 +95,15 @@
             更新内容
           </var-button>
         </div>
+      </div>
+      <!-- <var-divider /> -->
+      <div class="setting-row" @click="window.open('https://easytier.cn', '_blank')">
+        <span class="setting-label">
+          EasyTier文档
+        </span>
+        <a href="https://easytier.cn" target="_blank" style="text-decoration: none;">
+          <var-icon name="share" />
+        </a>
       </div>
     </var-paper>
 
@@ -199,15 +208,19 @@
       </div>
       <var-divider />
       <div class="setting-row">
-        <div class="version-info-block">
-          <span class="setting-label">
-            清理缓存
-          </span>          
-        </div>
+        <span class="setting-label">
+          清理缓存
+        </span>
         <var-button type="primary" size="small" @click="deleteCache" auto-loading >
           <var-icon name="delete" size="18" />
           删除
         </var-button>
+      </div>
+      <div class="setting-row">
+        <span class="setting-label">
+          安装路径
+        </span>
+        <var-chip type="primary" size="small">{{ installPath }}</var-chip>
       </div>
     </var-paper>    
 
@@ -275,7 +288,7 @@
           <a href='https://github.com/710850609/EasyTier-EUI' target="_blank">
             <img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/710850609/EasyTier-EUI?style=flat&label=%E7%82%B9%20Stars">
           </a>
-          <!-- <var-chip elevation="1" @click="showRewardCdoe = true" type="info" size="small">打赏</var-chip> -->
+          <var-chip elevation="1" @click="showRewardCdoe = true" type="info" size="small">打赏</var-chip>
         </div>
       </div>
       
@@ -286,10 +299,6 @@
           <p>降低组网门槛，快速访问异地网络设备</p>
           <p>享受 EasyTier 免费、不限设备数量、支持多类型终端等优势</p>
           <img alt="下载量" src="https://img.shields.io/github/downloads/710850609/EasyTier-EUI/total?color=blue&label=下载量" />
-        </div>
-        <div class="version-row">
-          <span class="about-title">安装路径</span>
-          <var-chip type="primary" size="small">{{ installPath }}</var-chip>
         </div>
       </div>
     </var-paper>
@@ -315,18 +324,18 @@
 
   <!-- 弹窗更新说明 -->
   <var-popup :default-style="false" v-model:show="showEuiReleaseInfo">
-    <var-result type="info" class="release-result">
+    <var-result type="info">
       <template #image>
          <MarkdownRenderer :content="`# 更新内容 \n ### ${ euiReleaseInfo.version}\n \n` + euiReleaseInfo.changelog" class="markdown-renderer" />
       </template>
       <template #footer>
-        <var-button type="info" @click="showEuiReleaseInfo = false">关闭</var-button>
+        <var-button type="info" @click="showEuiReleaseInfo = false" style="margin: 10px;">关闭</var-button>
       </template>
     </var-result>
   </var-popup>
   
   <var-popup :default-style="false" v-model:show="showEtChangeLog">
-    <var-result type="info" class="release-result">
+    <var-result type="info">
       <template #image>
         <MarkdownRenderer :content="etChangeLog" class="markdown-renderer" />
       </template>
@@ -752,7 +761,7 @@ onMounted(() => {
   align-items: center;
   justify-content: space-between;
   padding: 12px 0;
-  gap: 12px;
+  gap: 6px;
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -774,7 +783,7 @@ onMounted(() => {
 }
 
 .setting-label {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--color-text);
   flex: 1;
@@ -894,28 +903,8 @@ onMounted(() => {
 
 .markdown-renderer {
   padding: 16px;
-  max-height: 400px;
-  overflow-y: auto;
-}
-
-.release-desc {
-  text-align: left;
   max-height: 600px;
   overflow-y: auto;
-}
-
-.release-desc p {
-  font-size: 14px;
-  line-height: 1.7;
-  margin: 6px 0;
-  padding-left: 16px;
-  position: relative;
-}
-
-.release-desc p::before {
-  position: absolute;
-  left: 0;
-  color: var(--color-primary);
 }
 
 /* 移动端响应式 */

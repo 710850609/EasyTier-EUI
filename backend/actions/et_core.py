@@ -74,18 +74,27 @@ def get_release_info(params: dict, *kwargs):
                 item_download_count += download_count
                 total_download += download_count
                 filename = asset.get('name')
-                # 只取核心包 只陪部分平台架构
                 need_platform = ['linux', 'windows', 'macos']
                 need_arch = ['x86_64', 'aarch64', 'armv7', 'riscv64']
                 if filename.startswith('easytier-') and filename.endswith(f'{ver}.zip'):
+                    # 只取核心包 只适配部分平台架构
                     platform_arch = filename.replace('easytier-', '').replace(f'-{ver}.zip', '')
                     t_p_a = platform_arch.split('-')
                     if t_p_a[0] in need_platform and t_p_a[1] in need_arch:
                         assets[platform_arch] = {'download_url': asset.get('browser_download_url', ''), 'download_count': download_count}
                 elif filename.startswith('app-') and filename.endswith('-release.apk'):
-                    platform_arch = filename.replace('-release.apk', '')
-                    assets[platform_arch] = {'download_url': asset.get('browser_download_url', ''),
-                                             'download_count': download_count}
+                    # 只取安卓应用包
+                    platform_arch = filename.replace('app-', '').replace('release.', '')
+                    assets[platform_arch] = {'download_url': asset.get('browser_download_url', ''), 'download_count': download_count}
+                elif filename.startswith('easytier-gui') :
+                    # 只取gui包
+                    rel_ver = ver.replace('v', '')
+                    platform_arch = filename.replace(f'easytier-gui_{rel_ver}_', '')
+                    platform_arch = platform_arch.replace(f'easytier-gui-{rel_ver}-1.', '') # 针对rpm包 特殊处理 easytier-gui-2.6.4-1.x86_64.rpm
+                    platform_arch = platform_arch.replace(f'-setup', '') # 针对exe包 特殊处理 easytier-gui_2.6.4_x86-setup.exe
+                    platform_arch = platform_arch.replace('.', '-')
+                    assets[platform_arch] = {'download_url': asset.get('browser_download_url', ''), 'download_count': download_count}
+
             info['download_count'] = item_download_count
         with open(release_file, "w", encoding="utf-8") as f:
             f.write(json.dumps(release_info, ensure_ascii=False, indent=2))

@@ -32,7 +32,7 @@
           <var-button type="primary" size="normal" block @click="downloadEasyTierEui('linux', 'aarch64')" auto-loading>
             <template #default>
               <var-icon name="download"/>
-              aarch64版
+              arm64版
             </template>
           </var-button>
           <var-button type="primary" size="normal" block @click="downloadEasyTierEui('linux', 'riscv64')" auto-loading>
@@ -88,35 +88,33 @@
             <span class="item-title">x86_64 deb</span>
           </div>
           <div class="item-actions">
-            <var-button type="primary" size="normal" @click="download('amd64.deb', true)" auto-loading>
+            <var-button type="primary" size="normal" @click="download('deb', 'amd64', true)" auto-loading>
               <var-icon name="download"  />
               最新版
             </var-button>
-            <var-button type="primary" size="normal" @click="download('amd64.deb', false)" auto-loading>
+            <var-button type="primary" size="normal" @click="download('deb', 'amd64', false)" auto-loading>
               <var-icon name="download"  />
               稳定版
             </var-button>
           </div>
         </var-paper>
-
-        <!-- aarch64 deb -->
+        <!-- amd64 rpm -->
         <var-paper class="download-item" :elevation="3">
           <div class="item-header">
             <var-icon name="package" size="24" />
-            <span class="item-title">Arm64 deb</span>
+            <span class="item-title">x86_64 rpm</span>
           </div>
           <div class="item-actions">
-            <var-button type="primary" size="normal" @click="download('arm64.deb', true)" auto-loading>
+            <var-button type="primary" size="normal" @click="download('rpm', 'x86_64', true)" auto-loading>
               <var-icon name="download"  />
               最新版
             </var-button>
-            <var-button type="primary" size="normal" @click="download('arm64.deb', false)" auto-loading>
+            <var-button type="primary" size="normal" @click="download('rpm', 'x86_64', false)" auto-loading>
               <var-icon name="download"  />
               稳定版
             </var-button>
           </div>
         </var-paper>
-
         <!-- amd64 AppImage -->
         <var-paper class="download-item" :elevation="3">
           <div class="item-header">
@@ -124,11 +122,45 @@
             <span class="item-title">x86_64 AppImage</span>
           </div>
           <div class="item-actions">
-            <var-button type="primary" size="normal" @click="download('amd64.AppImage', true)" auto-loading>
+            <var-button type="primary" size="normal" @click="download('AppImage', 'amd64', true)" auto-loading>
               <var-icon name="download"  />
               最新版
             </var-button>
-            <var-button type="primary" size="normal" @click="download('amd64.AppImage', false)" auto-loading>
+            <var-button type="primary" size="normal" @click="download('AppImage', 'amd64', false)" auto-loading>
+              <var-icon name="download"  />
+              稳定版
+            </var-button>
+          </div>
+        </var-paper>
+        <!-- arm64 deb -->
+        <var-paper class="download-item" :elevation="3">
+          <div class="item-header">
+            <var-icon name="package" size="24" />
+            <span class="item-title">arm64 deb</span>
+          </div>
+          <div class="item-actions">
+            <var-button type="primary" size="normal" @click="download('deb', 'arm64', true)" auto-loading>
+              <var-icon name="download"  />
+              最新版
+            </var-button>
+            <var-button type="primary" size="normal" @click="download('deb', 'arm64', false)" auto-loading>
+              <var-icon name="download"  />
+              稳定版
+            </var-button>
+          </div>
+        </var-paper>
+        <!-- aarch64 rpm -->
+        <var-paper class="download-item" :elevation="3">
+          <div class="item-header">
+            <var-icon name="package" size="24" />
+            <span class="item-title">arm64 rpm</span>
+          </div>
+          <div class="item-actions">
+            <var-button type="primary" size="normal" @click="download('rpm', 'aarch64', true)" auto-loading>
+              <var-icon name="download"  />
+              最新版
+            </var-button>
+            <var-button type="primary" size="normal" @click="download('rpm', 'aarch64', false)" auto-loading>
               <var-icon name="download"  />
               稳定版
             </var-button>
@@ -158,10 +190,17 @@
 <script setup>
 import toast from '../../components/toast.js'
 import { api } from '../../utils/api.js'
-import { downloadEasyTierGUI } from '../../utils/github.js'
+// import { downloadEasyTierGUI } from '../../utils/github.js'
 
-const download = (arch, prerelease) => {
-  return downloadEasyTierGUI(arch, prerelease)
+const download = (type, arch, prerelease) => {
+  // return downloadEasyTierGUI(type, arch, prerelease)  
+  return new Promise((resolve, reject) => {
+    api.etApp.getDownloadUrl({type: type, arch: arch, prerelease: prerelease}).then((resp) => {
+      window.open(resp.data, '_blank')
+    }).finally(() => {
+      resolve()
+    })
+  })
 }
 
 

@@ -36,7 +36,7 @@
         <var-paper class="download-item" :elevation="3">
           <div class="item-header">
             <var-icon name="package" size="24" />
-            <span class="item-title">arm-64(常见机型)</span>
+            <span class="item-title">arm64(常见机型)</span>
           </div>
           <div class="item-actions">
             <var-button type="primary" size="normal" @click="download('arm64', true)" auto-loading>
@@ -115,7 +115,7 @@ import { api } from '../../utils/api.js'
 const download = (arch, prerelease) => {
   // downloadEasyTierApk(prerelease)
   return new Promise((resolve, reject) => {
-    api.etApp.getDownloadUrl({platform:'app', arch, prerelease}).then((resp) => {
+    api.etApp.getDownloadUrl({type:'apk', arch, prerelease}).then((resp) => {
       window.open(resp.data, '_blank')
     }).finally(() => {
       resolve()

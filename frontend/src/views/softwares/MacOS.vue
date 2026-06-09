@@ -74,11 +74,11 @@
             <span class="item-title">Apple芯片</span>
           </div>
           <div class="item-actions">
-            <var-button type="primary" size="normal" @click="download('aarch64.dmg', true)" auto-loading>
+            <var-button type="primary" size="normal" @click="download('dmg', 'aarch64', true)" auto-loading>
               <var-icon name="download"/>
               最新版
             </var-button>
-            <var-button type="primary" size="normal" @click="download('aarch64.dmg', false)" auto-loading>
+            <var-button type="primary" size="normal" @click="download('dmg', 'aarch64', false)" auto-loading>
               <var-icon name="download"/>
               稳定版
             </var-button>
@@ -90,11 +90,11 @@
             <span class="item-title">Intel芯片</span>
           </div>
           <div class="item-actions">
-            <var-button type="primary" size="normal" @click="download('x64.dmg', true)" auto-loading>
+            <var-button type="primary" size="normal" @click="download('dmg', 'x64', true)" auto-loading>
               <var-icon name="download" />
               最新版
             </var-button>
-            <var-button type="primary" size="normal" @click="download('x64.dmg', false)" auto-loading>
+            <var-button type="primary" size="normal" @click="download('dmg', 'x64', false)" auto-loading>
               <var-icon name="download"/>
               稳定版
             </var-button>
@@ -124,10 +124,17 @@
 <script setup>
 import toast from '../../components/toast.js'
 import { api } from '../../utils/api.js'
-import { downloadEasyTierGUI } from '../../utils/github.js'
+// import { downloadEasyTierGUI } from '../../utils/github.js'
 
-const download = (arch, prerelease) => {
-  return downloadEasyTierGUI(arch, prerelease)
+const download = (type, arch, prerelease) => {
+  // return downloadEasyTierGUI(arch, prerelease)
+  return new Promise((resolve, reject) => {
+    api.etApp.getDownloadUrl({type: type, arch: arch, prerelease: prerelease}).then((resp) => {
+      window.open(resp.data, '_blank')
+    }).finally(() => {
+      resolve()
+    })
+  })
 }
 
 const showConfigSelectDialog = ref(false)
