@@ -17,7 +17,7 @@ import sys
 import time
 
 from actions import peers
-from utils import run_configs
+from utils import run_configs, log_util
 
 
 def get_random_string(length=16):
@@ -318,6 +318,8 @@ def check_peers_available_use_connector(bin_path, rpc_port):
 
 if __name__ == "__main__":
     run_configs.setup_env()
+    log_util.setup_log(enabled_console=True)
     peer_list = peers.public_peers({})
     peer_uris = [peer['uri'] for peer in peer_list]
-    check_peers(run_configs.core_dir(), peer_uris, max_wait_second=5)
+    aa = check_peers(run_configs.core_dir(), peer_uris, max_wait_second=15)
+    print(json.dumps(aa, ensure_ascii=False, indent=2))

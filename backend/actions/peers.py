@@ -3,6 +3,8 @@
 
 import json
 import logging
+import os.path
+import time
 from pathlib import Path
 
 import tomlkit
@@ -18,7 +20,8 @@ def check_peers(params: dict, *kwargs):
     检查节点是否可用
     :param: 请求数据（可选）
     """
-    profile = (params or {}).get('profile')
+    params = params or {}
+    profile = params.get('profile', '')
     peer_list = public_peers(data = {'profile': profile, 'refresh': 'false'})
     if len(peer_list) == 0:
         peer_list = public_peers(data = {'profile': profile, 'refresh': 'true'})
@@ -77,6 +80,8 @@ def set_peer_source(params: dict, *kwargs):
     else:
         test_peer_mark_file.unlink(missing_ok=True)
         logging.info(f"禁用测试节点源")
+    Path(run_configs.et_peer_check_result_file()).unlink(missing_ok=True)
+    Path(run_configs.et_peer_meta_file()).unlink(missing_ok=True)
     __get_public_peers(refresh=True)
 
 def get_peer_source(*kwargs):
@@ -114,7 +119,7 @@ def __get_public_peers(refresh=False) -> list[dict]:
         uri_set = set()
         for uri, item in meta_data.get("peers", {}).items():
             real_uri = item.get('uri', '').strip()
-            if len(real_uri) > 0 and uri not in uri_set:
+            if len(real_uri) > 0 and uri not in uri_set and item.get('status', 0) == 1:
                 uri_set.add(uri)
                 dynamic = real_uri and uri != real_uri
                 result.append(PeersCheckResult(uri, real_uri, dynamic=dynamic))
@@ -123,7 +128,6 @@ def __get_public_peers(refresh=False) -> list[dict]:
         __sort_peers(peers)
         with open(peer_check_result_file, "w", encoding="utf-8") as f:
             f.write(json.dumps(peers, ensure_ascii=False, indent=2))
-
     return peers
 
 def __save_peer_check_result(peers: list[dict|PeersCheckResult], sort: bool=False) -> list[dict]:
@@ -139,9 +143,18 @@ def __download_peers():
     test_peer_mark_file = Path(run_configs.data_dir(), 'test-peer-source')
     if test_peer_mark_file.exists():
         peer_meta_url = peer_meta_url.replace('.json', '-test.json')
+    peer_meta_file = run_configs.et_peer_meta_file()
+    if os.path.exists(peer_meta_file):
+        with open(peer_meta_file, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        cache_time = 1000 * 60
+        download_diff_time = int(time.time() * 1000) - data.get('downloadTime', 0)
+        if download_diff_time < cache_time:
+            logging.info(f"节点元数据 { download_diff_time } ms前下载，未超过缓存时间 { cache_time } ms，直接使用")
+            return data
     try:
         data = github_util.download_raw_file(peer_meta_url, timeout=10)
-        peer_meta_file = run_configs.et_peer_meta_file()
+        data['downloadTime'] = int(time.time() * 1000)
         with open(peer_meta_file, "w", encoding="utf-8") as f:
             f.write(json.dumps(data, ensure_ascii=False, indent=2))
         return data

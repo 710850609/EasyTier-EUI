@@ -11,6 +11,11 @@
       "status": 1,
       "updateTime": 1776731675,
       "uri": "udp://us01.225284.xyz:11010"
+    },
+    "txt://0.ethub1.v6.army": {
+      "status": 1,
+      "updateTime": 1780997981,
+      "uri": "tcp://48358fc41fb646b191767b8180b8e429.20091222.xyz:11010"
     }
   }
 }

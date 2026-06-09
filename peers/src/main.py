@@ -8,6 +8,6 @@ from check_peers import check
 from update_txt_records import update
 
 if __name__ == "__main__":
-    fetch()
+    # fetch()
     check()
     update()

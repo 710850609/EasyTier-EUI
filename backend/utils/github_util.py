@@ -110,7 +110,7 @@ def get_api(url: str, proxy_url: str = ""):
     except requests.exceptions.RequestException as e:
         logging.error(f"获取 API 数据失败: {e}")
         if not proxy_url or proxy_url == '':
-            proxy_urls = get_proxy_urls(refresh=True)
+            proxy_urls = get_proxy_urls()
             api_proxy_urls = [item['url'] for item in proxy_urls if item['supports_api']]
             for api_proxy_url in api_proxy_urls:
                 logging.info(f"尝试使用 API 加速地址: {api_proxy_url}")
@@ -330,7 +330,7 @@ def download_release_file(
     """
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    check_result = get_proxy_urls(refresh=False)
+    check_result = get_proxy_urls()
     if len(check_result) == 0:
         logging.info(f"无可用加速地址，开始重新获取镜像地址...")
         check_result = get_proxy_urls(refresh=True)

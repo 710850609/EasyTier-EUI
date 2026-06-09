@@ -233,7 +233,7 @@
                     <var-icon 
                       name="refresh" 
                       :class="{ 'is-spinning': isRefreshingPublicPeerOptions }"
-                      @click.stop="refreshPublicPeerOptions"
+                      @click.stop="refreshPublicPeerOptions(true)"
                     />
                   </template>
                 </var-select>
@@ -785,10 +785,10 @@ const saveToml = () => {
   })
 }
 
-const refreshPublicPeerOptions = () => {
+const refreshPublicPeerOptions = (refresh = false) => {
   isRefreshingPublicPeerOptions.value = true
   return new Promise((resolve, reject) => {
-    api.peers.publicPeers({ 'profile': selectedConfig.value, 'refresh': true }).then(async (data) => {
+    api.peers.publicPeers({ 'profile': selectedConfig.value, 'refresh': refresh }).then(async (data) => {
       publicPeerOptions.value = data.data
       toast.success('已获取最新节点')
       await checkPeers()
@@ -807,7 +807,7 @@ const checkPeers = () => {
     }
     const checkToast = toast.info('开始检测节点可用状态，这可能需要一些时间，请稍后...', 30000)
     isPeerChecking.value = true
-    api.peers.checkPeers({ 'profile': selectedConfig.value }).then(data => {
+    api.peers.checkPeers({ 'profile': selectedConfig.value, 'refresh': true }).then(data => {
       publicPeerOptions.value = data.data
       toast.success('检测节点可用状态成功')
       console.log(config.value.peer)
@@ -1018,7 +1018,7 @@ const setupShowMode = async (mode) => {
       fastSettingMode.value = true
       if (publicPeerOptions.value.length == 0 || publicPeerOptions.value[0].status != 1) {
         isLoadingConfig.value = true
-        await refreshPublicPeerOptions()
+        await refreshPublicPeerOptions(false)
         isLoadingConfig.value = false
       }
       const peers = publicPeerOptions.value.slice(0, 3).map(e => e.uri)

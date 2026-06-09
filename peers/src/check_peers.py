@@ -239,8 +239,8 @@ def check_peers(peer_list, max_wait_time = 10):
             
             time.sleep(2)
             result = check_peers_available(bin_path, rpc_port)
-            fail_list = result['fail'] if len(result['fail']) > 0 else peer_list
-            result['fail'] = fail_list if len(result['fail']) == 0 and len(result['success']) == 0 else peer_list
+            # fail_list = result['fail'] if len(result['fail']) > 0 else peer_list
+            result['fail'] = [ item for item in peer_list if item not in result.get('success', [])]
             if len(result['fail']) == 0:
                 break
             print(f"继续等待未连接节点: {result['fail']}")
@@ -419,7 +419,7 @@ def check():
     print("=" * 60)
     print("检测节点连通性")
     print("=" * 60)
-    result = check_peers(peer_source, 10)
+    result = check_peers(peer_source, 20)
     print("检测结果: " + json.dumps(result, ensure_ascii=False, indent=2))
     success_peers = result['success'] or []
     peer_meta = {}

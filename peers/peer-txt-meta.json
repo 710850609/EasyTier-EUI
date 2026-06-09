@@ -1,16 +1,156 @@
 {
-  "count": 2,
-  "updateTime": 1776731675,
+  "count": 26,
+  "updateTime": 1780997981,
   "peers": {
-    "tcp://225284.xyz:11010": {
+    "txt://0.ethub1.v6.army": {
       "status": 1,
-      "updateTime": 1776731675,
+      "updateTime": 1780997981,
+      "uri": "tcp://48358fc41fb646b191767b8180b8e429.20091222.xyz:11010"
+    },
+    "txt://1.ethub1.v6.army": {
+      "status": 1,
+      "updateTime": 1780997981,
+      "uri": "tcp://47.121.195.130:11010"
+    },
+    "txt://2.ethub1.v6.army": {
+      "status": 0,
+      "updateTime": 1780997981,
       "uri": "tcp://225284.xyz:11010"
     },
-    "udp://us01.225284.xyz:11010": {
+    "txt://3.ethub1.v6.army": {
       "status": 1,
-      "updateTime": 1776731675,
+      "updateTime": 1780997981,
+      "uri": "tcp://5.253.39.0:11010"
+    },
+    "txt://4.ethub1.v6.army": {
+      "status": 1,
+      "updateTime": 1780997981,
+      "uri": "udp://ec.6mahua.top:11010"
+    },
+    "txt://5.ethub1.v6.army": {
+      "status": 1,
+      "updateTime": 1780997981,
+      "uri": "tcp://103.39.66.78:30310"
+    },
+    "txt://6.ethub1.v6.army": {
+      "status": 1,
+      "updateTime": 1780997981,
+      "uri": "tcp://47.96.28.190:9994"
+    },
+    "txt://7.ethub1.v6.army": {
+      "status": 1,
+      "updateTime": 1780997981,
+      "uri": "tcp://39.108.52.138:11010"
+    },
+    "txt://8.ethub1.v6.army": {
+      "status": 1,
+      "updateTime": 1780997981,
+      "uri": "tcp://boi.de5.net:11010"
+    },
+    "txt://9.ethub1.v6.army": {
+      "status": 1,
+      "updateTime": 1780997981,
+      "uri": "udp://mukongyun.top:11010"
+    },
+    "txt://0.ethub2.v6.army": {
+      "status": 1,
+      "updateTime": 1780997981,
+      "uri": "tcp://47.108.52.1:11012"
+    },
+    "txt://1.ethub2.v6.army": {
+      "status": 0,
+      "updateTime": 1780997981,
       "uri": "udp://us01.225284.xyz:11010"
+    },
+    "txt://2.ethub2.v6.army": {
+      "status": 1,
+      "updateTime": 1780997981,
+      "uri": "tcp://49.232.65.33:11010"
+    },
+    "txt://3.ethub2.v6.army": {
+      "status": 1,
+      "updateTime": 1780997981,
+      "uri": "tcp://et.sumnight.online:11012"
+    },
+    "txt://4.ethub2.v6.army": {
+      "status": 1,
+      "updateTime": 1780997981,
+      "uri": "tcp://183.230.36.171:11010"
+    },
+    "txt://5.ethub2.v6.army": {
+      "status": 1,
+      "updateTime": 1780997981,
+      "uri": "tcp://easytier.weiai.org.cn:11010"
+    },
+    "txt://6.ethub2.v6.army": {
+      "status": 1,
+      "updateTime": 1780997981,
+      "uri": "tcp://jp-et.lctn.cc.cd:11010"
+    },
+    "txt://7.ethub2.v6.army": {
+      "status": 0,
+      "updateTime": 1780997981,
+      "uri": "wss://bj-eo-et.teleseon.cn/"
+    },
+    "txt://8.ethub2.v6.army": {
+      "status": 0,
+      "updateTime": 1780997981,
+      "uri": "wss://et.chinokou.cn/"
+    },
+    "txt://9.ethub2.v6.army": {
+      "status": 1,
+      "updateTime": 1780997981,
+      "uri": "tcp://et.akinachan.com:11010"
+    },
+    "txt://0.ethub3.v6.army": {
+      "status": 1,
+      "updateTime": 1780997981,
+      "uri": "udp://225284.xyz:11010"
+    },
+    "txt://1.ethub3.v6.army": {
+      "status": 1,
+      "updateTime": 1780997981,
+      "uri": "tcp://et.117657.xyz:11010"
+    },
+    "txt://2.ethub3.v6.army": {
+      "status": 1,
+      "updateTime": 1780997981,
+      "uri": "tcp://et.fpfast.top:48625"
+    },
+    "txt://3.ethub3.v6.army": {
+      "status": 1,
+      "updateTime": 1780997981,
+      "uri": "udp://et.ruixuan.online:11010"
+    },
+    "txt://4.ethub3.v6.army": {
+      "status": 1,
+      "updateTime": 1780997981,
+      "uri": "tcp://47.92.208.217:11010"
+    },
+    "txt://5.ethub3.v6.army": {
+      "status": 1,
+      "updateTime": 1780997981,
+      "uri": "udp://boi.de5.net:11010"
+    },
+    "txt://6.ethub3.v6.army": {
+      "status": 1,
+      "updateTime": 1780997981,
+      "uri": "tcp://et.dnjjs.com:11010"
+    },
+    "txt://7.ethub3.v6.army": {
+      "status": 1,
+      "updateTime": 1780997981,
+      "uri": "tcp://et1.fuis.top:11010"
+    },
+    "txt://8.ethub3.v6.army": {
+      "status": 1,
+      "updateTime": 1780997981,
+      "uri": "tcp://et.ruixuan.online:11010"
+    },
+    "txt://9.ethub3.v6.army": {
+      "status": 1,
+      "updateTime": 1780997981,
+      "uri": "tcp://et.sbgov.cn:11010"
     }
   }
 }
