@@ -5,7 +5,7 @@
         <div class="platform-info">
           <h2>
             易组网
-            <var-badge type="info">
+            <var-badge type="primary">
                <template #value>推荐</template>
             </var-badge>
           </h2>

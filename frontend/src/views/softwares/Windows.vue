@@ -5,7 +5,7 @@
         <div class="platform-info">
           <h2>
             易组网
-            <var-badge type="info">
+            <var-badge type="primary">
                <template #value>新手推荐</template>
             </var-badge>
           </h2>
@@ -99,11 +99,11 @@
             <span class="item-title">64位系统(Intel/AMD CPU)</span>
           </div>
           <div class="item-actions">
-            <var-button type="primary" size="normal" @click="downloadGithub('x64-setup.exe', true)" auto-loading>
+            <var-button type="primary" size="normal" @click="download('exe', 'x64', true)" auto-loading>
               <var-icon name="download"/>
               最新版
             </var-button>
-            <var-button type="primary" size="normal" @click="downloadGithub('x64-setup.exe', false)" auto-loading>
+            <var-button type="primary" size="normal" @click="download('exe', 'x64', false)" auto-loading>
               <var-icon name="download"/>
               稳定版
             </var-button>
@@ -115,11 +115,11 @@
             <span class="item-title">32位系统(Intel/AMD CPU)</span>
           </div>
           <div class="item-actions">
-            <var-button type="primary" size="normal" @click="downloadGithub('x86-setup.exe', true)" auto-loading>
+            <var-button type="primary" size="normal" @click="download('exe', 'x86', true)" auto-loading>
               <var-icon name="download"/>
               最新版
             </var-button>
-            <var-button type="primary" size="normal" @click="downloadGithub('x86-setup.exe', false)" auto-loading>
+            <var-button type="primary" size="normal" @click="download('exe', 'x86', false)" auto-loading>
               <var-icon name="download"/>
               稳定版
             </var-button>
@@ -128,14 +128,14 @@
         <var-paper class="download-item" :elevation="3">
           <div class="item-header">
             <var-icon name="package" size="24" />
-            <span class="item-title">64位系统(Arm CPU)</span>
+            <span class="item-title">64位系统(arm CPU)</span>
           </div>
           <div class="item-actions">
-            <var-button type="primary" size="normal" @click="downloadGithub('arm64-setup.exe', true)" auto-loading>
+            <var-button type="primary" size="normal" @click="download('exe', 'arm64', true)" auto-loading>
               <var-icon name="download" />
               最新版
             </var-button>
-            <var-button type="primary" size="normal" @click="downloadGithub('arm64-setup.exe', false)" auto-loading>
+            <var-button type="primary" size="normal" @click="download('exe', 'arm64', false)" auto-loading>
               <var-icon name="download"/>
               稳定版
             </var-button>
@@ -149,6 +149,7 @@
         v-model="selectedConfig"
         variant="outlined"
         class="config-select"
+        size="small"
       >
         <var-option
           v-for="config in configFiles"
@@ -165,7 +166,7 @@
 <script setup>
 import toast from '../../components/toast.js'
 import { api } from '../../utils/api.js'
-import { downloadEasyTierGUI } from '../../utils/github.js'
+// import { downloadEasyTierGUI } from '../../utils/github.js'
 
 const showConfigSelectDialog = ref(false)
 const configFiles = ref([])
@@ -211,8 +212,15 @@ const downloadApp = () => {
   }
 }
 
-const downloadGithub = (arch, prerelease) => {
-  return downloadEasyTierGUI(arch, prerelease)
+const download = (type, arch, prerelease) => {
+  // return downloadEasyTierGUI(type, arch, prerelease)  
+  return new Promise((resolve, reject) => {
+    api.etApp.getDownloadUrl({type: type, arch: arch, prerelease: prerelease}).then((resp) => {
+      window.open(resp.data, '_blank')
+    }).finally(() => {
+      resolve()
+    })
+  })
 }
 </script>
 

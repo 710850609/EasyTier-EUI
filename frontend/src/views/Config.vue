@@ -57,31 +57,46 @@
             <div class="config-actions-group" v-if="selectedConfig">
               <var-button size="small" type="primary" @click="showCreateDialog = true; showMode = 1;" v-if="showMode === 0">新增</var-button>
               <var-button size="small" type="primary" @click="startEditName" :loading="isRenaming" v-if="showMode === 0">改名</var-button>
-              <var-button size="small" type="danger" @click="showDeleteDialog = true" :loading="isDeletingConfig" v-if="showMode === 0">删除</var-button>
+              <!-- <var-button size="small" type="danger" @click="showDeleteDialog = true" :loading="isDeletingConfig" v-if="showMode === 0">删除</var-button> -->
               <var-button size="small" type="danger" @click="exitAddMode" :loading="isDeletingConfig" v-if="showMode !== 0">退出新增</var-button>
+              <label class="toggle-item">
+                <var-loading v-if="changingAutostart" size="small" />
+                <label class="switch-wrapper" v-if="!changingAutostart">
+                  <input type="checkbox" :checked="currentConfigAutostart" @change="(e) => handleSwitchChange(currentConfigData, 'autostart', e.target.checked)" />
+                  <span class="switch-slider"></span>
+                </label>
+                <span class="toggle-label">自启</span>
+              </label>
             </div>
           </div>
-
+          <var-divider class="toolbar-divider" />
           <div class="toolbar-group toolbar-status" v-if="selectedConfig">
             <div class="toolbar-toggles">
-              <label class="toggle-item">
+              <!-- <label class="toggle-item">
                 <span class="toggle-label">开机自启</span>
                 <var-loading v-if="changingAutostart" size="small" />
                 <label class="switch-wrapper" v-if="!changingAutostart">
                   <input type="checkbox" :checked="currentConfigAutostart" @change="(e) => handleSwitchChange(currentConfigData, 'autostart', e.target.checked)" />
                   <span class="switch-slider"></span>
                 </label>
-              </label>
+              </label> --> 
+              <div class="toggle-item">
+                <var-button type="primary" size="small" @click="saveConfig" auto-loading>保存配置</var-button>
+                <var-button type="primary" size="small" @click="openCodePage" auto-loading v-if="showMode === 0">编辑文件</var-button>
+                <var-button type="primary" size="small" @click="showShareConfigType = true" v-if="showMode === 0">分享网络</var-button>
+                <var-button size="small" type="danger" @click="showDeleteDialog = true" :loading="isDeletingConfig" v-if="showMode === 0">删除</var-button>
+
+              </div>
             </div>
           </div>
         </div>
         
-        <var-divider />
+        <!-- <var-divider />
         <div class="toolbar-row toolbar-actions">
           <var-button type="primary" size="small" @click="saveConfig" auto-loading>保存配置</var-button>
           <var-button type="primary" size="small" @click="openCodePage" auto-loading v-if="showMode === 0">编辑文件</var-button>
           <var-button type="primary" size="small" @click="showShareConfigType = true" v-if="showMode === 0">分享网络</var-button>
-        </div>
+        </div> -->
       </var-paper>
 
       <div class="content-area" v-if="selectedConfig || fastSettingMode">
@@ -1108,6 +1123,10 @@ onMounted(async () => {
   border-radius: 12px;
 }
 
+.toolbar-divider {
+  display: none;
+}
+
 .toolbar-row {
   display: flex;
   align-items: center;
@@ -1153,7 +1172,7 @@ onMounted(async () => {
 .config-actions-group {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 1px;
   margin-left: 4px;
 }
 
@@ -1806,6 +1825,9 @@ onMounted(async () => {
     border-radius: 10px;
   }
 
+  .toolbar-divider {
+    display: flex;
+  }
   .toolbar-row {
     gap: 8px;
   }

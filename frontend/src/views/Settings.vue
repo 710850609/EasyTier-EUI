@@ -90,7 +90,7 @@
             <var-icon name="download" />
             安装
           </var-button>
-           <var-button type="primary" size="small" @click="handleShowEtChangeLog()">
+           <var-button type="primary" size="small" @click="handleShowEtChangeLog()" v-if="etVersion.selected_version != ''">
             <var-icon name="information-outline" />
             更新内容
           </var-button>
@@ -102,7 +102,7 @@
           EasyTier文档
         </span>
         <a href="https://easytier.cn" target="_blank" style="text-decoration: none;">
-          <var-icon name="share" />
+          <var-icon name="share" color="var(--color-primary)" />
         </a>
       </div>
     </var-paper>
@@ -168,7 +168,7 @@
           <span class="version-value">{{ euiRelease.version }}</span>
         </div>
         <var-button type="primary" size="small" @click="installEuiVersion('prerelease')" auto-loading
-           v-if="buildVersion !== euiRelease.version">
+           v-if="buildVersion !== euiRelease.version && euiRelease.version != ''">
           <var-icon name="download" />
           安装
         </var-button>
@@ -183,7 +183,7 @@
           <span class="version-value">{{ euiPreRelease.version }}</span>
         </div>
         <var-button type="primary" size="small" @click="installEuiVersion('prerelease')" auto-loading
-          v-if="buildVersion !== euiPreRelease.version" >
+          v-if="buildVersion !== euiPreRelease.version && euiPreRelease.version != ''">
           <var-icon name="download" />
           安装
         </var-button>
@@ -295,7 +295,7 @@
       <!-- 简介 -->
       <div class="about-section">
         <div class="about-content">
-          <p>简化 <a href="https://easytier.cn/" target="_blank" style="text-decoration: none;">EasyTier</a> 使用的 UI 界面</p>
+          <p>简化 EasyTier 使用的 UI 界面</p>
           <p>降低组网门槛，快速访问异地网络设备</p>
           <p>享受 EasyTier 免费、不限设备数量、支持多类型终端等优势</p>
           <img alt="下载量" src="https://img.shields.io/github/downloads/710850609/EasyTier-EUI/total?color=blue&label=下载量" />
@@ -591,7 +591,7 @@ const getReleaseInfo = (refresh=false) => {
       euiRelease.value = data.data.latest_release
       euiPreRelease.value = data.data.latest_prerelease
       if (refresh) {
-        toast.success('已获取最新版本信息')
+        toast.success('易组网在线版本信息已更新')
       }
     }).finally((error) => {
       resolve()
@@ -607,7 +607,6 @@ const setupShowReleaseInfo = (info) => {
 const handleShowEtChangeLog = () => {
   const selectedVersion = etVersion.value.selected_version
   etChangeLog.value = etVersionList.value.find(item => item.version === selectedVersion)?.changelog || ''
-  console.log(etChangeLog.value)
   showEtChangeLog.value = true
 }
 
@@ -631,10 +630,10 @@ onMounted(() => {
     showDevContent.value = true
   }  
   getEtVersion()
-  getEtReleaseInfo()
+  getEtReleaseInfo(false)
   getEuiInfo()
   getEtLogLevel()
-  getReleaseInfo()
+  getReleaseInfo(false)
 })
 </script>
 
@@ -890,20 +889,10 @@ onMounted(() => {
   justify-content: space-between;
   padding: 6px 0;
 }
-  
-.release-version {
-  font-size: 22px;
-  font-weight: 1000;
-  color: var(--color-primary);
-  text-align: center;
-  display: block;
-  /* font-family: monospace; */
-  margin-bottom: 20px;
-}
 
 .markdown-renderer {
   padding: 16px;
-  max-height: 600px;
+  max-height: 560px;
   overflow-y: auto;
 }
 

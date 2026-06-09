@@ -36,7 +36,11 @@
         <var-paper class="download-item" :elevation="3">
           <div class="item-header">
             <var-icon name="package" size="24" />
-            <span class="item-title">arm64(常见机型)</span>
+            <span class="item-title">arm64
+              <var-badge type="primary">
+                 <template #value>常见机型</template>
+              </var-badge>
+            </span>
           </div>
           <div class="item-actions">
             <var-button type="primary" size="normal" @click="download('arm64', true)" auto-loading>
@@ -54,7 +58,11 @@
         <var-paper class="download-item" :elevation="3">
           <div class="item-header">
             <var-icon name="package" size="24" />
-            <span class="item-title">arm(古老机型)</span>
+            <span class="item-title">arm
+              <var-badge type="primary">
+                 <template #value>古老机型</template>
+              </var-badge>
+            </span>
           </div>
           <div class="item-actions">
             <var-button type="primary" size="normal" @click="download('arm', true)" auto-loading>

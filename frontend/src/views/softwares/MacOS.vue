@@ -5,7 +5,7 @@
         <div class="platform-info">
           <h2>
             易组网
-            <var-badge type="info">
+            <var-badge type="primary">
                <template #value>预览</template>
             </var-badge>
           </h2>
@@ -108,6 +108,7 @@
         v-model="selectedConfig"
         variant="outlined"
         class="config-select"
+        size="small"
       >
         <var-option
           v-for="config in configFiles"

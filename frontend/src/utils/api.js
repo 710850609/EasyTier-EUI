@@ -248,7 +248,7 @@ export const api = {
   etEui: {
     getDownloadEasyTierEuiUrl: (data) => getFullUrl('/et_eui/download_easytier_eui', data),
     update: (data) => post('/et_eui/update', data),
-    getReleaseInfo: (data) => post('/et_eui/get_release_info', data),
+    getReleaseInfo: (data) => get('/et_eui/get_release_info', data),
   },
   // ET 核心相关
   etCore: {
