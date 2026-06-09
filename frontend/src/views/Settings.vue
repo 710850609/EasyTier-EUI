@@ -627,6 +627,8 @@ onMounted(() => {
   // 如果之前开启过，自动加载
   if (enabled) {
     loadVConsole()
+    loadPeerSource()
+    getGithubMirrors()
     showDevContent.value = true
   }  
   getEtVersion()
