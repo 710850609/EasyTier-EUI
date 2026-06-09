@@ -66,7 +66,7 @@ def get_release_info(params: dict, *kwargs):
             release_info = json.load(f)
 
     cur_time = int(time.time() * 1000)
-    cur_diff_time = cur_time - release_info.get('update_time', 0)
+    cur_diff_time = cur_time - (release_info or {}).get('update_time', 0)
     cache_time = 1000 * 60
     if refresh or release_info is None or cur_diff_time > cache_time:
         if refresh and cur_diff_time < 1000 * 60 * 10 and release_info is not None:

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import logging
+import shutil
 import sys
 import time
 from pathlib import Path
@@ -39,10 +40,9 @@ def delete_cache(*kwargs):
             try:
                 if entry.is_file() and not entry.is_symlink():
                     total_bytes += entry.stat().st_size
-                    entry.unlink()
-                    logging.info(f"删除缓存文件: {entry}")
             except (OSError, PermissionError):
                 pass
+    shutil.rmtree(download_path, ignore_errors=True)
     logging.info(f"删除缓存目录: {download_path}, 共删除 {total_bytes} 字节")
     if total_bytes == 0:
         return f"缓存已删除干净"

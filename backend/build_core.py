@@ -141,6 +141,7 @@ def build_executable(build_ver:str = None, one_file:bool = True):
         "--hidden-import", "requests",
         "--hidden-import", "psutil",
         "--hidden-import", "actions.configs",
+        "--hidden-import", "actions.et_app",
         "--hidden-import", "actions.et_core",
         "--hidden-import", "actions.et_eui",
         "--hidden-import", "actions.monitor",
