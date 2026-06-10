@@ -63,6 +63,7 @@ const downloadEasyTierEui = (platform, arch) => {
   border-radius: 16px;
   margin-bottom: 20px;
   text-align: center;
+  background: var(--color-surface-container) !important;
 }
 
 .platform-header {
