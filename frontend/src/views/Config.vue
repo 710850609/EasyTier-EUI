@@ -190,7 +190,6 @@
                         placeholder="输入自定义节点，例如 tcp://1.2.3.4:11010" 
                         size="small" 
                         v-model="customPeer" 
-                        blur-color="var(--color-primary)" 
                         class="peer-custom-field"
                       />
                       <var-button type="primary" size="small" @click="addPeer">添加</var-button>
@@ -1143,6 +1142,7 @@ onMounted(async () => {
   margin: 24px 16px 8px;
   padding: 16px 20px;
   border-radius: 12px;
+  background: var(--color-surface-container) !important;
 }
 
 .toolbar-divider {
@@ -1336,7 +1336,7 @@ onMounted(async () => {
   gap: 8px;
   padding: 12px 16px;
   border-bottom: 1px solid var(--color-border);
-  background: var(--color-surface-container-high);
+  /* background: var(--color-surface-container-high); */
 }
 
 .peer-custom-field {
@@ -1498,6 +1498,7 @@ onMounted(async () => {
   /* margin-top: 8px; */
   border-radius: 16px;
   overflow: hidden;
+  background: var(--color-surface-container) !important;
 }
 
 :deep(.flags-section .var-collapse-item) {

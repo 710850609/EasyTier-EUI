@@ -642,6 +642,8 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* var-select 下拉框毛玻璃效果 - 样式已移至全局样式文件 */
+
 .settings-page {
   padding: 16px;
   max-width: 800px;

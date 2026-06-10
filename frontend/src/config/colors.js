@@ -60,6 +60,9 @@ export const freshLightTheme = {
   '--color-outline': '#7dd3fc',
   '--color-outline-variant': '#bae6fd',
 
+  // Checkbox 样式
+  '--checkbox-unchecked-color': '#94a3b8',
+
   // Snackbar/Toast 样式
   '--snackbar-background': '#e2e8f0',
   '--snackbar-color': '#1e293b',
@@ -128,6 +131,9 @@ export const freshDarkTheme = {
   // 边框和轮廓
   '--color-outline': '#475569',
   '--color-outline-variant': '#334155',
+
+  // Checkbox 样式
+  '--checkbox-unchecked-color': 'rgba(255, 255, 255, 0.4)',
 
   // Snackbar/Toast 样式
   '--snackbar-background': '#1e293b',
