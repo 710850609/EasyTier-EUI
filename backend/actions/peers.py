@@ -138,7 +138,7 @@ def __save_peer_check_result(peers: list[dict|PeersCheckResult], sort: bool=Fals
         f.write(json.dumps(dict_peers, ensure_ascii=False, indent=2))
     return dict_peers
 
-def __download_peers():
+def __download_peers() ->dict:
     peer_meta_url = f"https://raw.githubusercontent.com/710850609/EasyTier-EUI/refs/heads/main/configs/peers.json"
     test_peer_mark_file = Path(run_configs.data_dir(), 'test-peer-source')
     if test_peer_mark_file.exists():

@@ -156,12 +156,13 @@ def build_server(host:str, port:int=5666, open_browser:bool=False) -> ThreadedHT
 if __name__ == '__main__':
     permissions_util.elevate()
     run_configs.setup_env()
-    log_util.setup_log(log_file=os.path.join(run_configs.log_dir(), 'app.log'), log_level=logging.DEBUG,
-                       enabled_console=not run_configs.is_package_mode())
+    is_package_mode = run_configs.is_package_mode()
+    log_util.setup_log(log_file=os.path.join(run_configs.log_dir(), 'app.log'),
+                       log_level=logging.INFO if is_package_mode else logging.DEBUG,
+                       enabled_console=not is_package_mode)
     import argparse
     parser = argparse.ArgumentParser(description='CGI Proxy HTTP Server')
     parser.add_argument('--host', default='127.0.0.1', help='Host to bind to (default: 127.0.0.1)')
-    # parser.add_argument('--host', default='', help='Host to bind to (default: 127.0.0.1)')
     parser.add_argument('--port', type=int, default=5666, help='Port to bind to (default: 5666)')
     args = parser.parse_args()
 

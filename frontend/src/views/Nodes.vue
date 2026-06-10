@@ -11,6 +11,7 @@
             v-model="selectedConfig"
             @change="handleConfigChange"
             placeholder="选择配置"
+            blur-color="var(--color-primary)"
           >
             <var-option
               v-for="cfg in configList"

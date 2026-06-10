@@ -40,6 +40,7 @@
               placeholder="选择配置"
               variant="outlined"
               size="small"
+              blur-color="var(--color-primary)"
               @change="onConfigSwitch"
             >
               <var-option
@@ -123,6 +124,7 @@
                     size="small"
                     :rules="[(v) => !!v || '网络名称不能为空']"
                     blur-color="var(--color-primary)"
+                    variant="outlined"
                   >
                     <template #prepend-icon>
                       <svg-icon type="mdi" :path="mdilAccount"></svg-icon>
@@ -138,6 +140,7 @@
                     :rules="[(v) => !!v || '网络密码不能为空']"
                     size="small"
                     blur-color="var(--color-primary)"
+                    variant="outlined"
                   >
                     <template #prepend-icon>
                       <svg-icon type="mdi" :path="mdilLock" />
@@ -228,7 +231,7 @@
                       </var-cell>
                       </var-option>
                     </div>
-                  </template>                  
+                  </template>
                   <template #append-icon>
                     <var-icon 
                       name="refresh" 
@@ -532,7 +535,7 @@
     <var-popup position="top" v-model:show="showPublicPeerTip">
       <div class="help-content">
         <p class="help-paragraph"><span class="help-bold">初始节点</span>：用于发现组网设备，数据来自网络社区</p>
-        <p class="help-paragraph"><span class="help-bold">动态节点</span>：原始节点经过TXT协议转换而来</p>
+        <p class="help-paragraph"><span class="help-bold">动态节点</span>：原始节点经过TXT协议转换而来。为后续支持社区节点下线时，在不重启服务情况下，持续组网</p>
         <!-- <p class="help-paragraph"><span class="help-bold">动态节点</span>：原始节点经过TXT协议转换而来。易组网在线维护数据，解决节点下线后，设备不重启的情况下持续在线。</p> -->
         <p class="help-paragraph"><span class="help-bold">节点刷新</span>：在线获取易组网维护的初始节点数据</p>
         <p class="help-paragraph"><span class="help-bold">节点检测</span>：基于易组网本地设备网络，检测节点的是否可用、延迟、是否可转发</p>

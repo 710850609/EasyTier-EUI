@@ -98,7 +98,7 @@ def check_peers(bin_path, peer_list, max_wait_second = 10):
     time.sleep(0.5)
     if process.poll() is not None:
         logging.info(f"进程启动失败，返回码: {process.returncode}")
-        return {'success': [], 'fail': peer_list}
+        return {'success': {}, 'fail': peer_list}
     
     logging.info(f"检测进程启动成功，PID: {process.pid}")
     
@@ -231,7 +231,7 @@ def check_peers_available_use_peer(bin_path, rpc_port, peer_list:list):
                 result['latency'] = max(1, latency_us // 1000)
                 # 此节点数据为毫秒，当大于500ms, 只能取到500
                 # result['latency_ms'] = item.get('route', {}).get('path_latency', [])
-                result['dynamic'] = uri.lower().startswith('http') or uri.lower().startswith('txt')
+                result['dynamic'] = uri.lower().startswith('txt')
                 if uri in fail_peers:
                     fail_peers.remove(uri)
                     success_peers[uri] = result
