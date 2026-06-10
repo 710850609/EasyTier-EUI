@@ -148,6 +148,7 @@ def build_server(host:str, port:int=5666, open_browser:bool=False) -> ThreadedHT
     if open_browser:
         try:
             webbrowser.open_new_tab(access_url)
+            logging.info(f"已打开本地设备浏览器，请在浏览器上访问")
         except Exception as e:
             logging.error(f"打开本地设备不支持浏览器访问: {e}")
     return http_server
@@ -162,7 +163,7 @@ if __name__ == '__main__':
                        enabled_console=not is_package_mode)
     import argparse
     parser = argparse.ArgumentParser(description='CGI Proxy HTTP Server')
-    parser.add_argument('--host', default='127.0.0.1', help='Host to bind to (default: 127.0.0.1)')
+    parser.add_argument('--host', default='0.0.0.0', help='Host to bind to (default: 0.0.0.0)')
     parser.add_argument('--port', type=int, default=5666, help='Port to bind to (default: 5666)')
     args = parser.parse_args()
 
