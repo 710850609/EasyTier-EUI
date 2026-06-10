@@ -193,7 +193,7 @@
           <span class="setting-label">当前版本</span>
           <span class="version-value">{{ buildVersion }}</span>
         </div>
-        <var-button type="primary" size="small" @click="getReleaseInfo(true)" auto-loading>
+        <var-button type="primary" size="small" @click="getEuiReleaseInfo(true)" auto-loading>
           <var-icon name="refresh" size="18" />
           检查更新
         </var-button>
@@ -326,7 +326,7 @@
   <var-popup :default-style="false" v-model:show="showEuiReleaseInfo">
     <var-result type="info">
       <template #image>
-         <MarkdownRenderer :content="`# 更新内容 \n ### ${ euiReleaseInfo.version}\n \n` + euiReleaseInfo.changelog" class="markdown-renderer" />
+         <MarkdownRenderer :content="`# 更新内容 \n ### ${ euiReleaseInfo.version} 【↓${euiReleaseDownloadCount}】\n \n` + euiReleaseInfo.changelog" class="markdown-renderer" />
       </template>
       <template #footer>
         <var-button type="info" @click="showEuiReleaseInfo = false" style="margin: 10px;">关闭</var-button>
@@ -381,6 +381,7 @@ const showEuiReleaseInfo = ref(false)
 const showEtChangeLog = ref(false)
 const etChangeLog = ref('')
 const euiReleaseInfo = ref({})
+const euiReleaseDownloadCount = ref(0)
 const logLevelOptions = ref([
   { value: 'off', label: '禁用' }, // cli 是 disabled
   { value: 'error', label: '错误' },
@@ -585,7 +586,7 @@ const setEtLogLevel = async (level) => {
   }
 }
 
-const getReleaseInfo = (refresh=false) => {
+const getEuiReleaseInfo = (refresh=false) => {
   return new Promise((resolve, reject) => {
     api.etEui.getReleaseInfo({'refresh': refresh}).then((data) => {
       euiRelease.value = data.data.latest_release
@@ -601,6 +602,7 @@ const getReleaseInfo = (refresh=false) => {
 
 const setupShowReleaseInfo = (info) => {
   euiReleaseInfo.value = info
+  euiReleaseDownloadCount.value = info.download_count
   showEuiReleaseInfo.value = true
 }
 
@@ -631,11 +633,11 @@ onMounted(() => {
     getGithubMirrors()
     showDevContent.value = true
   }  
-  getEtVersion()
   getEtReleaseInfo(false)
-  getEuiInfo()
+  getEuiReleaseInfo(false)
+  getEtVersion()
   getEtLogLevel()
-  getReleaseInfo(false)
+  getEuiInfo()
 })
 </script>
 

@@ -128,8 +128,9 @@ class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
         super().__init__(server_address, RequestHandlerClass)
         # 也可以在这里做其他初始化
 
-def build_server(host:str, port:int=5666, open_browser:bool=False, base_uri=None) -> Optional[ThreadedHTTPServer]:
+def build_server(host:str, port:int=5666, open_browser:bool=False) -> ThreadedHTTPServer:
     """启动 HTTP 服务器"""
+    logging.info(f"运行的构建版本：{run_configs.build_version()}")
     if not host:
         host = '0.0.0.0'
     logging.info(f"HTTP服务启动中....")
@@ -156,8 +157,7 @@ if __name__ == '__main__':
     permissions_util.elevate()
     run_configs.setup_env()
     log_util.setup_log(log_file=os.path.join(run_configs.log_dir(), 'app.log'), log_level=logging.DEBUG,
-                       enabled_console=run_configs.is_local_mode())
-    logging.info(f"运行的构建版本：{run_configs.build_version()}")
+                       enabled_console=not run_configs.is_package_mode())
     import argparse
     parser = argparse.ArgumentParser(description='CGI Proxy HTTP Server')
     parser.add_argument('--host', default='127.0.0.1', help='Host to bind to (default: 127.0.0.1)')
@@ -165,7 +165,7 @@ if __name__ == '__main__':
     parser.add_argument('--port', type=int, default=5666, help='Port to bind to (default: 5666)')
     args = parser.parse_args()
 
-    server = build_server(args.host, args.port, open_browser=not run_configs.is_local_mode())
+    server = build_server(args.host, args.port, open_browser=run_configs.is_package_mode())
     try:
         server.serve_forever()
     except KeyboardInterrupt:

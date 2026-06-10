@@ -136,8 +136,11 @@ def fn_check_file() -> str:
     """
     return os.path.join(data_dir(), 'fn_check.txt')
 
-def is_local_mode() -> bool:
-    return not getattr(sys, 'frozen', False)
+def is_package_mode() -> bool:
+    """
+    检查是否为打包模式运行
+    """
+    return getattr(sys, 'frozen', False)
 
 def upgrade_script_path() -> str:
     if sys.platform == 'win32':

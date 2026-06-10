@@ -19,7 +19,6 @@ class WebWin:
         self.is_window_visible = False
         host = '127.0.0.1'
         port = 5666
-        """主线程运行 webview，托盘在后台线程"""
         self.web_server = WebServer(host=host, port=port)
         threading.Thread(target=self.web_server.run, daemon=True).start()
 

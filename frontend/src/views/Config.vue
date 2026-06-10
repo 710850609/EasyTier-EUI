@@ -276,8 +276,13 @@
                         <var-checkbox v-model="config.flags[feature.key]">
                           {{ feature.label }}
                         </var-checkbox>
-                        <var-tooltip :content="feature.tooltip" v-if="feature.tooltip">
+                        <var-tooltip v-if="feature.tooltip" teleport="body">
                           <var-icon name="help-circle-outline" size="16" class="help-icon" />
+                          <template #content>
+                            <div class="tooltip-multiline">
+                              {{ feature.tooltip }}
+                            </div>
+                          </template>
                         </var-tooltip>
                       </div>
                     </div>
@@ -297,19 +302,29 @@
 
                   <div class="input-row">
                     <div class="input-section">
-                      <div class="section-subtitle">TUN接口名称
-                        <var-tooltip content="当多个网络同时使用相同的TUN接口名称时，将会在设置TUN的IP时产生冲突" :offset-x="160">
+                      <var-tooltip trigger="click">
+                        <div class="section-subtitle">TUN接口名称
                           <var-icon name="help-circle-outline" size="16" class="help-icon" />
-                        </var-tooltip>
-                      </div>
+                        </div>
+                        <template #content>
+                          <div class="tooltip-multiline">
+                            当多个网络同时使用相同的TUN接口名称时，将会在设置TUN的IP时产生冲突
+                          </div>
+                        </template>
+                      </var-tooltip>
                       <var-input v-model="config.flags.dev_name" placeholder="留空自动生成随机名称" variant="outlined" size="small" />
                     </div>
                     <div class="input-section">
-                      <div class="section-subtitle">MTU
-                        <var-tooltip content="TUN设备的MTU，默认加密: 1360，不加密: 1380。取值范围 400 ~ 1380" :offset-x="160">
+                      <var-tooltip trigger="click">
+                        <div class="section-subtitle">MTU
                           <var-icon name="help-circle-outline" size="16" class="help-icon" />
-                        </var-tooltip>
-                      </div>
+                        </div>
+                        <template #content>
+                          <div class="tooltip-multiline">
+                            TUN设备的MTU，取值范围 400 ~ 1380<br/>默认加密: 1360，不加密: 1380。
+                          </div>
+                        </template>
+                      </var-tooltip>
                       <var-input
                         v-model="mtuStr"
                         type="number"
@@ -323,11 +338,11 @@
 
                   <div class="input-row">
                     <div class="input-section">
-                      <div class="section-subtitle">线程数
-                        <var-tooltip content="仅当开启多线程时生效，取值必须大于2" :offset-x="60">
+                      <var-tooltip content="仅当开启多线程时生效，取值必须大于2" trigger="click">
+                        <div class="section-subtitle">线程数
                           <var-icon name="help-circle-outline" size="16" class="help-icon" />
-                        </var-tooltip>
-                      </div>
+                        </div>
+                      </var-tooltip>
                       <var-input
                         v-model="multiThreadCountStr"
                         placeholder="留空默认为2"
@@ -353,11 +368,11 @@
 
                   <div class="input-row">
                     <div class="input-section">
-                      <div class="section-subtitle">转发白名单网络
-                        <var-tooltip content="仅转发白名单网络的流量，支持通配*符字符串。多个网络名称间可以使用英文空格间隔" :offset-x="60">
+                      <var-tooltip content="仅转发白名单网络的流量，支持通配*符字符串。多个网络名称间可以使用英文空格间隔" trigger="click">
+                          <div class="section-subtitle">转发白名单网络
                           <var-icon name="help-circle-outline" size="16" class="help-icon" />
-                        </var-tooltip>
-                      </div>
+                        </div>
+                      </var-tooltip>
                       <var-input
                         v-model="config.flags.relay_network_whitelist"
                         multiple
@@ -422,8 +437,8 @@
 
                   <div class="input-section">
                     <div class="section-subtitle">监听地址
-                      <var-tooltip content="部分协议需要较高版本支持，具体可加ET群咨询" :offset-x="50">
-                        <var-icon name="help-circle-outline" size="16" class="help-icon" />
+                      <var-tooltip content="部分协议需要较高版本支持" trigger="click">
+                          <var-icon name="help-circle-outline" size="16" class="help-icon" />
                       </var-tooltip>
                     </div>
                     <var-select
@@ -618,7 +633,7 @@ const featureSwitches = [
   { key: 'enable_encryption', label: '启用加密', tooltip: '开启数据传输加密，提高安全性但性能降低' },
   { key: 'enable_ipv6', label: '启用 IPv6', tooltip: '开启 IPv6 支持' },
   { key: 'no_tun', label: '无 TUN 模式', tooltip: '不使用 TUN 设备。' },
-  { key: 'accept_dns', label: '启用魔法 DNS', tooltip: '启用魔法DNS，可使用域名访问其他节点，例如：<主机名>.et.net。 魔法 DNS 目前仅支持在 Windows 和 MacOS 上自动配置系统 DNS，Linux 上需要手动配置 DNS 服务器为 100.100.100.101 才可正常使用' },
+  { key: 'accept_dns', label: '启用魔法 DNS', tooltip: '启用魔法DNS，可使用域名访问其他节点，例如：<主机名>.et.net。魔法 DNS 目前仅支持在 Windows 和 MacOS 上自动配置系统 DNS，Linux 上需要手动配置 DNS 服务器为 100.100.100.101 才可正常使用' },
   { key: 'relay_all_peer_rpc', label: '转发 RPC 包', tooltip: '允许转发 RPC 数据包' },
   { key: 'bind_device', label: '仅使用物理网卡', tooltip: '只使用物理网卡进行通信，排除虚拟网卡' },
   { key: 'user_stack', label: '使用用户态协议栈', tooltip: '使用用户态网络协议栈代替内核协议栈' },
@@ -1559,6 +1574,12 @@ onMounted(async () => {
   gap: 16px;
 }
 
+.tooltip-multiline {
+  white-space: pre-line;   /* 识别 \n 换行 */
+  line-height: 1.6;        /* 行间距 */
+  max-width: 300px;
+}
+
 /* ===== 代码编辑器 ===== */
 .code-editor-popup {
   :deep(.var-popup__content) {
@@ -1917,6 +1938,11 @@ onMounted(async () => {
 
   .editor-title {
     font-size: 14px;
+  }
+  
+  :global(.var-tooltip__content-container.var-tooltip--default) {
+    margin-left: 20px !important;
+    --tooltip-border-radius: 10px
   }
 }
 
