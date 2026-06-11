@@ -169,7 +169,7 @@
           <span class="version-value">{{ euiRelease.version }}</span>
         </div>
         <var-button type="primary" size="small" @click="installEuiVersion('prerelease')" auto-loading
-           v-if="buildVersion !== euiRelease.version && euiRelease.version != ''">
+           v-if="euiRelease?.version && buildVersion !== euiRelease.version">
           <var-icon name="download" />
           安装
         </var-button>
@@ -184,7 +184,7 @@
           <span class="version-value">{{ euiPreRelease.version }}</span>
         </div>
         <var-button type="primary" size="small" @click="installEuiVersion('prerelease')" auto-loading
-          v-if="buildVersion !== euiPreRelease.version && euiPreRelease.version != ''">
+          v-if="euiPreRelease?.version && buildVersion !== euiPreRelease.version">
           <var-icon name="download" />
           安装
         </var-button>
@@ -603,7 +603,7 @@ const getEuiReleaseInfo = (refresh=false) => {
 }
 
 const setupShowReleaseInfo = (info) => {
-  if (!info) {
+  if (!info?.version) {
     return
   }
   euiReleaseInfo.value = info
