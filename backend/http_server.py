@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
+import atexit
 import json
 import logging
 import os
@@ -10,6 +10,8 @@ import webbrowser
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from socketserver import ThreadingMixIn
 from typing import Optional
+
+import psutil
 
 from http_dispatcher import dispatcher
 from utils import run_configs, log_util, ip_util, qrcode_util, permissions_util
@@ -128,9 +130,47 @@ class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
         super().__init__(server_address, RequestHandlerClass)
         # 也可以在这里做其他初始化
 
-def build_server(host:str, port:int=5666, open_browser:bool=False) -> ThreadedHTTPServer:
+def _acquire_instance_lock() -> bool:
+    """获取单实例锁（PID 文件），失败则说明已有实例在运行"""
+    pid_file = os.path.join(run_configs.data_dir(), 'server.pid')
+    if os.path.exists(pid_file):
+        try:
+            with open(pid_file, 'r') as f:
+                existing_pid = int(f.read().strip())
+            if psutil.pid_exists(existing_pid):
+                return False
+            else:
+                os.remove(pid_file)
+        except (ValueError, OSError):
+            os.remove(pid_file)
+
+    os.makedirs(os.path.dirname(pid_file), exist_ok=True)
+    with open(pid_file, 'w') as f:
+        f.write(str(os.getpid()))
+    return True
+
+
+def _release_instance_lock():
+    """释放单实例锁"""
+    pid_file = os.path.join(run_configs.data_dir(), 'server.pid')
+    if os.path.exists(pid_file):
+        try:
+            with open(pid_file, 'r') as f:
+                pid = int(f.read().strip())
+            if pid == os.getpid():
+                os.remove(pid_file)
+        except (ValueError, OSError):
+            pass
+
+def build(host:str, port:int=5666, open_browser:bool=False) -> Optional[ThreadedHTTPServer]:
     """启动 HTTP 服务器"""
     logging.info(f"运行的构建版本：{run_configs.build_version()}")
+
+    if not _acquire_instance_lock():
+        logging.warning(f"HTTP 服务已在运行中，不能重复启动")
+        return None
+    atexit.register(_release_instance_lock)
+
     if not host:
         host = '0.0.0.0'
     if host == '0.0.0.0' and run_configs.get_run_mode() == 0:
@@ -156,6 +196,16 @@ def build_server(host:str, port:int=5666, open_browser:bool=False) -> ThreadedHT
             logging.error(f"打开本地设备不支持浏览器访问: {e}")
     return http_server
 
+def serve_forever(http_server:ThreadedHTTPServer) -> None:
+    """启动 HTTP 服务器"""
+    try:
+        http_server.serve_forever()
+    except KeyboardInterrupt:
+        logging.info("Server stopped by user")
+        http_server.shutdown()
+    finally:
+        _release_instance_lock()
+
 
 if __name__ == '__main__':
     permissions_util.elevate()
@@ -169,10 +219,8 @@ if __name__ == '__main__':
     parser.add_argument('--host', default='0.0.0.0', help='Host to bind to (default: 0.0.0.0)')
     parser.add_argument('--port', type=int, default=5666, help='Port to bind to (default: 5666)')
     args = parser.parse_args()
-
-    server = build_server(args.host, args.port, open_browser=run_mode == 1)
-    try:
-        server.serve_forever()
-    except KeyboardInterrupt:
-        logging.info("Server stopped by user")
-        server.shutdown()
+    http_server = build(args.host, args.port, open_browser=run_mode == 1)
+    if http_server:
+        serve_forever(http_server)
+    else:
+        sys.exit(1)

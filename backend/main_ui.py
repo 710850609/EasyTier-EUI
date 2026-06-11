@@ -68,9 +68,9 @@ class WebServer:
     def run(self):
         """在后台线程启动 HTTP 服务器"""
         try:
-            self.server = http_server.build_server(self.host, self.port, open_browser=False)
-            logging.info(f"HTTP 服务启动: http://{self.host}:{self.port}")
-            self.server.serve_forever()
+            self.server = http_server.build(self.host, self.port, open_browser=False)
+            if self.server:
+                http_server.serve_forever(self.server)
         except Exception as e:
             logging.error(f"服务器错误: {e}")
         finally:

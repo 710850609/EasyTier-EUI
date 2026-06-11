@@ -603,8 +603,11 @@ const getEuiReleaseInfo = (refresh=false) => {
 }
 
 const setupShowReleaseInfo = (info) => {
+  if (!info) {
+    return
+  }
   euiReleaseInfo.value = info
-  euiReleaseDownloadCount.value = info.download_count
+  euiReleaseDownloadCount.value = info.download_count || 0
   showEuiReleaseInfo.value = true
 }
 

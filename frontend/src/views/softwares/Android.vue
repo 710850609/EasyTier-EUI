@@ -37,7 +37,7 @@
           <div class="item-header">
             <var-icon name="package" size="24" />
             <span class="item-title">arm64
-              <var-badge type="primary">
+              <var-badge color="var(--color-surface-container-highest)">
                  <template #value>常见机型</template>
               </var-badge>
             </span>
@@ -59,7 +59,7 @@
           <div class="item-header">
             <var-icon name="package" size="24" />
             <span class="item-title">arm
-              <var-badge type="primary">
+              <var-badge color="var(--color-surface-container-highest)">
                  <template #value>古老机型</template>
               </var-badge>
             </span>
