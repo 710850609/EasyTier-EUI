@@ -1,0 +1,9 @@
+# 支持api
+https://gh.felicity.ac.cn
+https://gh-proxy.org
+https://github.dpik.top
+https://gh.dpik.top
+# 不支持api
+https://ghfast.top
+https://ghproxy.net
+https://github-proxy.memory-echoes.cn https://gh.b52m.cn
