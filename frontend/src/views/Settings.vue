@@ -84,14 +84,14 @@
           </template>
         </var-select>
       </div>
-      <div class="setting-row">
+      <div class="setting-row" v-if="etVersion.selected_version != ''">
         <div class="setting-actions">
           <var-chip v-if="hasNewVersion" type="warning" size="small" plain>有新版本</var-chip>
           <var-button type="primary" size="small" @click="installEtCore(true)" auto-loading>
             <var-icon name="download" />
             安装
           </var-button>
-           <var-button type="primary" size="small" @click="handleShowEtChangeLog()" v-if="etVersion.selected_version != ''">
+           <var-button type="primary" size="small" @click="handleShowEtChangeLog()">
             <var-icon name="information-outline" />
             更新内容
           </var-button>
@@ -313,7 +313,7 @@
   <div>      
   </div>
 
-  <var-popup :default-style="false" v-model:show="showRewardCdoe">
+  <var-popup v-model:show="showRewardCdoe">
     <var-result description="点Stars或是打赏 感谢您的肯定">
       <template #image>
         <img src="../../public/images/reward_code.jpg" style="width: 50%; height: 50%; border-radius: 50%; object-fit: cover;" />
@@ -325,7 +325,7 @@
   </var-popup>
 
   <!-- 弹窗更新说明 -->
-  <var-popup :default-style="false" v-model:show="showEuiReleaseInfo">
+  <var-popup v-model:show="showEuiReleaseInfo">
     <var-result type="info">
       <template #image>
          <MarkdownRenderer :content="`# 更新内容 \n ### ${ euiReleaseInfo.version} 【↓${euiReleaseDownloadCount}】\n \n` + euiReleaseInfo.changelog" class="markdown-renderer" />

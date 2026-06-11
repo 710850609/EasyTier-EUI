@@ -134,26 +134,32 @@ html.dark {
 /* var-popup 背景适配 - 磨砂玻璃效果（必须在 var-paper 之前定义） */
 .var-popup__content,
 .var-popup__content[var-popup-cover] {
-  background: rgba(var(--color-surface-container-rgb, 224, 242, 254), 0.6) !important;
-  backdrop-filter: blur(12px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(12px) saturate(180%) !important;
+  background: rgba(var(--color-surface-container-rgb, 224, 242, 254), 0.5) !important;
+  backdrop-filter: blur(18px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(180%) !important;
 }
 
 /* 底部弹出层磨砂玻璃效果 */
-.var-popup--bottom .var-popup__content,
-.var-popup--bottom .var-popup__content[var-popup-cover] {
-  background: rgba(var(--color-surface-container-rgb, 224, 242, 254), 0.6) !important;
-  backdrop-filter: blur(12px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(12px) saturate(180%) !important;
+.var-popup--bottom {
+  /* background: rgba(var(--color-surface-container-rgb, 224, 242, 254), 0.5) !important;
+  backdrop-filter: blur(18px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(180%) !important; */
   border-radius: 16px 16px 0 0 !important;
 }
 
 /* 顶部弹出层磨砂玻璃效果 */
-.var-popup--top .var-popup__content,
-.var-popup--top .var-popup__content[var-popup-cover] {
-  background: rgba(var(--color-surface-container-rgb, 224, 242, 254), 0.6) !important;
-  backdrop-filter: blur(12px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(12px) saturate(180%) !important;
+.var-popup--top {
+  /* background: rgba(var(--color-surface-container-rgb, 224, 242, 254), 0.5) !important;
+  backdrop-filter: blur(18px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(180%) !important; */
+  border-radius: 0 0 16px 16px !important;
+}
+
+.var-popup--center {
+  /* background: rgba(var(--color-surface-container-rgb, 224, 242, 254), 0.5) !important;
+  backdrop-filter: blur(18px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(180%) !important; */
+  border-radius: 16px 16px 16px 16px !important;
 }
 
 /* var-paper 背景适配 */
@@ -162,6 +168,7 @@ html.dark {
 }
 
 /* popup 内的 paper 保持透明 */
+.var-popup__content .var-result,
 .var-popup__content .var-paper {
   background: transparent !important;
   box-shadow: none !important;
