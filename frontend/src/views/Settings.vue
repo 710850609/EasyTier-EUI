@@ -78,6 +78,7 @@
             <var-icon 
               name="refresh" 
               :class="{ 'is-spinning': isFetchingVersionList }"
+              color="var(--color-primary)"
               @click.stop="getEtReleaseInfo(true)" 
             />
           </template>
@@ -259,6 +260,7 @@
               name="refresh" 
               :class="{ 'is-spinning': isFetchingGithubMirrors }"
               @click.stop="getGithubMirrors(true)" 
+              color="var(--color-primary)"
             />
           </template>
         </var-select>
@@ -374,7 +376,7 @@ const buildVersion = ref('')
 const installPath = ref('')
 const showRewardCdoe = ref(false)
 const platform = ref('')
-const etLogLevel = ref('info')
+const etLogLevel = ref('error')
 const euiRelease = ref({})
 const euiPreRelease = ref({})
 const showEuiReleaseInfo = ref(false)

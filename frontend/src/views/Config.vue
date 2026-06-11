@@ -123,7 +123,6 @@
                     placeholder="网络名称"
                     size="small"
                     :rules="[(v) => !!v || '网络名称不能为空']"
-                    blur-color="var(--color-primary)"
                     variant="outlined"
                   >
                     <template #prepend-icon>
@@ -139,7 +138,6 @@
                     :type="showPassword ? 'text' : 'password'"
                     :rules="[(v) => !!v || '网络密码不能为空']"
                     size="small"
-                    blur-color="var(--color-primary)"
                     variant="outlined"
                   >
                     <template #prepend-icon>
@@ -180,7 +178,6 @@
                   multiple
                   :placeholder="`${config.peer.length} 个节点，用于发现组网设备`"
                   :chip="true"
-                  blur-color="var(--color-primary)"
                   class="peer-select"
                 >
                   <template #default>
@@ -235,7 +232,8 @@
                     <var-icon 
                       name="refresh" 
                       :class="{ 'is-spinning': isRefreshingPublicPeerOptions }"
-                      @click.stop="refreshPublicPeerOptions(true)"
+                      color="var(--color-primary)"
+                      @click.stop="refreshPublicPeerOptions(true, true)"
                     />
                   </template>
                 </var-select>
@@ -802,13 +800,18 @@ const saveToml = () => {
   })
 }
 
-const refreshPublicPeerOptions = (refresh = false) => {
+const refreshPublicPeerOptions = (refresh = false, doCheck = false) => {
   isRefreshingPublicPeerOptions.value = true
   return new Promise((resolve, reject) => {
     api.peers.publicPeers({ 'profile': selectedConfig.value, 'refresh': refresh }).then(async (data) => {
       publicPeerOptions.value = data.data
-      toast.success('已获取最新节点')
-      await checkPeers()
+      if (refresh) {
+        toast.success('已获取最新节点')
+      }
+      const hasAvailable = data.data.filter(e => e.status == 1).length > 0
+      if (doCheck || !hasAvailable) {
+        await checkPeers()
+      }
     }).finally(() => {
       isRefreshingPublicPeerOptions.value = false
       resolve()
@@ -1035,12 +1038,13 @@ const setupShowMode = async (mode) => {
       fastSettingMode.value = true
       if (publicPeerOptions.value.length == 0 || publicPeerOptions.value[0].status != 1) {
         isLoadingConfig.value = true
-        await refreshPublicPeerOptions(false)
+        await refreshPublicPeerOptions(true, true)
         isLoadingConfig.value = false
       }
       const peers = publicPeerOptions.value.slice(0, 3).map(e => e.uri)
       config.value.peer.unshift(...peers)
     } else if (mode === 2) {
+      refreshPublicPeerOptions(false, false)
       showCreateDialog.value = true
     }
   }).finally(() => {
@@ -1243,7 +1247,8 @@ onMounted(async () => {
   margin: 0 0 16px;
   padding: 20px;
   border-radius: 16px;
-  background: var(--color-surface-container) !important;
+  /* background: var(--color-surface-container) !important; */
+  background: var(--color-surface) !important;
 }
 
 .merged-section {
@@ -1498,7 +1503,8 @@ onMounted(async () => {
   /* margin-top: 8px; */
   border-radius: 16px;
   overflow: hidden;
-  background: var(--color-surface-container) !important;
+  /* background: var(--color-surface-container) !important; */
+  background: var(--color-surface) !important;
 }
 
 :deep(.flags-section .var-collapse-item) {
@@ -1836,6 +1842,14 @@ onMounted(async () => {
 
 .is-spinning {
   animation: spin 1s linear infinite;
+}
+
+:deep(.var-menu.var--box.var-select__menu) {
+  background: var(--color-surface) !important;
+}
+
+:deep(.config-switcher .var-menu.var--box.var-select__menu) {
+  background: var(--color-surface-container) !important;
 }
 
 /* ===== 响应式 ===== */

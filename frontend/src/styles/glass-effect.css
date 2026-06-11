@@ -2,10 +2,10 @@
 html body .var-select__scroller,
 html body .var-select__scroller.var-elevation--3 {
   /* 使用 Varlet 主题变量，自动适配明暗模式 */
-  --select-scroller-background: rgba(var(--color-surface-container-rgb, 30, 30, 30), 0.7) !important;
-  background: rgba(var(--color-surface-container-rgb, 30, 30, 30), 0.7) !important;
-  background-color: rgba(var(--color-surface-container-rgb, 30, 30, 30), 0.7) !important;
-  backdrop-filter: blur(12px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(12px) saturate(180%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  --select-scroller-background: rgba(var(--color-surface-container-rgb, 30, 30, 30), 0.6) !important;
+  background: rgba(var(--color-surface-container-rgb, 30, 30, 30), 0.6) !important;
+  background-color: rgba(var(--color-surface-container-rgb, 30, 30, 30), 0.6) !important;
+  backdrop-filter: blur(10px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(10px) saturate(180%) !important;
+  border: 0px solid rgba(255, 255, 255, 0.1) !important;
 }

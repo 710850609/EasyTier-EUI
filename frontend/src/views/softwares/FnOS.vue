@@ -103,7 +103,7 @@ const downloadEasyTierEui = (platform, arch) => {
 .download-item {
   padding: 20px;
   border-radius: 12px;
-  background: var(--color-surface-container) !important;
+  background: var(--color-surface-container-high) !important;
   display: flex;
   flex-direction: column;
 }
