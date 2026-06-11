@@ -133,6 +133,9 @@ def build_server(host:str, port:int=5666, open_browser:bool=False) -> ThreadedHT
     logging.info(f"运行的构建版本：{run_configs.build_version()}")
     if not host:
         host = '0.0.0.0'
+    if host == '0.0.0.0' and run_configs.get_run_mode() == 0:
+        # 优化本地启动速度，默认绑定 127.0.0.1
+        host = '127.0.0.1'
     logging.info(f"HTTP服务启动中....")
     http_server = ThreadedHTTPServer((host, port), CGIProxyHandler)
     logging.info(f"Starting HTTP server on {host}, port: {port}")
@@ -157,17 +160,17 @@ def build_server(host:str, port:int=5666, open_browser:bool=False) -> ThreadedHT
 if __name__ == '__main__':
     permissions_util.elevate()
     run_configs.setup_env()
-    is_package_mode = run_configs.is_package_mode()
+    run_mode = run_configs.get_run_mode()
     log_util.setup_log(log_file=os.path.join(run_configs.log_dir(), 'app.log'),
-                       log_level=logging.INFO if is_package_mode else logging.DEBUG,
-                       enabled_console=not is_package_mode)
+                       log_level=logging.INFO if run_mode > 0 else logging.DEBUG,
+                       enabled_console=run_mode == 0)
     import argparse
     parser = argparse.ArgumentParser(description='CGI Proxy HTTP Server')
     parser.add_argument('--host', default='0.0.0.0', help='Host to bind to (default: 0.0.0.0)')
     parser.add_argument('--port', type=int, default=5666, help='Port to bind to (default: 5666)')
     args = parser.parse_args()
 
-    server = build_server(args.host, args.port, open_browser=run_configs.is_package_mode())
+    server = build_server(args.host, args.port, open_browser=run_mode == 1)
     try:
         server.serve_forever()
     except KeyboardInterrupt:

@@ -87,9 +87,9 @@ class WebServer:
 if __name__ == '__main__':
     permissions_util.elevate()
     run_configs.setup_env()
-    is_package_mode = run_configs.is_package_mode()
+    run_mode = run_configs.get_run_mode()
     log_util.setup_log(log_file=os.path.join(run_configs.log_dir(), 'app.log'),
-                       log_level=logging.INFO if is_package_mode else logging.DEBUG,
-                       enabled_console=not is_package_mode)
+                       log_level=logging.INFO if run_mode > 0 else logging.DEBUG,
+                       enabled_console=run_mode == 0)
     ver = run_configs.build_version()
     win = WebWin(f'易组网 {ver}')

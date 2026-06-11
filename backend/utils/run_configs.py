@@ -19,6 +19,7 @@ UPGRADE_SCRIPT_PATH:str = None
 
 
 _is_inited_evn = False
+_run_mode = 0
 
 def setup_env():
     global _is_inited_evn
@@ -38,18 +39,21 @@ def setup_env():
         DATA_DIR = os.getenv('DATA_DIR', f"{TRIM_PKGVAR}")
         LOG_DIR = os.getenv('LOG_DIR', f"{TRIM_PKGVAR}/logs")
         FRONTEND_PATH = os.path.join(TRIM_APPDEST, 'frontend')
+        _run_mode = 2
     elif getattr(sys, 'frozen', False):
         # _MEIPASS 是 PyInstaller 解压资源的临时目录
         WORK_DIR = str(Path(os.path.dirname(sys.executable)).absolute())
         Path(WORK_DIR).mkdir(parents=True, exist_ok=True)
         FRONTEND_PATH = os.path.abspath(os.path.join(sys._MEIPASS, 'frontend'))
         UPGRADE_SCRIPT_PATH = os.path.abspath(os.path.join(sys._MEIPASS, 'assets'))
+        _run_mode = 1
     else:
         project_root_path = Path(__file__).absolute().parent.parent.parent
         WORK_DIR = str(project_root_path.joinpath('temp').joinpath('EasyTier-EUI').absolute())
         Path(WORK_DIR).mkdir(parents=True, exist_ok=True)
         FRONTEND_PATH = str(project_root_path.joinpath('frontend').joinpath('dist'))
         UPGRADE_SCRIPT_PATH = Path(__file__).absolute().parent.parent.joinpath('assets')
+        _run_mode = 0
 
     if WORK_DIR:
         CORE_DIR = os.path.join(WORK_DIR, 'core')
@@ -136,11 +140,14 @@ def fn_check_file() -> str:
     """
     return os.path.join(data_dir(), 'fn_check.txt')
 
-def is_package_mode() -> bool:
+def get_run_mode() -> int:
     """
-    检查是否为打包模式运行
+    获取运行模式
+    0 ： 本地开发模式
+    1 ： 打包模式
+    2 ： 飞牛系统模式
     """
-    return getattr(sys, 'frozen', False)
+    return _run_mode
 
 def upgrade_script_path() -> str:
     if sys.platform == 'win32':
