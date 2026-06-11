@@ -82,7 +82,7 @@ app_info() {
   if git ls-remote --tags origin "refs/tags/$CHANGE_VER*" | grep -q .; then
     echo "存在 $CHANGE_VER 开头的 tag"
     # 指定东八区时间，确保GitHub action构建时间与本地时间一致
-    version="${version}-$(TZ='Etc/GMT-8' date +'%Y%m%d%H%M%S')"
+    version="${version}-$(TZ='Asia/Shanghai' date +'%Y%m%d%H%M%S')"
   else
     echo "不存在 $CHANGE_VER 开头的 tag"
     prerelease='false'

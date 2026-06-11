@@ -73,8 +73,8 @@ jobs:
             echo "错误：build-info.sh 或 version-util.sh 不存在" >&2
             exit 1
           fi
-          
-          echo '是否正式版: '$([[ "${prerelease}" == "false" ]] && echo "是" || echo "否")
+          # 使用英文，避免 $() 执行导致乱码
+          echo '是否正式版: '$([[ "${prerelease}" == "false" ]] && echo "Yes" || echo "No")
           echo "内置 EasyTier 版本: ${et_ver}"            
           echo "构建版本: ${build_ver}"            
           echo "变更日志: ${release_notes}"
