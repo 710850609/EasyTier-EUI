@@ -44,8 +44,7 @@ def update(params: dict, *kwargs):
         frontend_path = Path(run_configs.core_dir()).parent.joinpath('frontend')
         shutil.copytree(os.path.join(app_dir, 'frontend'), frontend_path, dirs_exist_ok=True)
         logging.info(f"更新frontend： {frontend_path}")
-        run_configs.core_dir()
-        cmd = f"${backend_path}/.venv/bin/pip install --no-index --find-links=${backend_path}/wheels -r ${backend_path}/requirements-base.txt"
+        cmd = f"{backend_path}/.venv/bin/pip install --no-index --find-links={backend_path}/wheels -r {backend_path}/requirements-base.txt"
         common_util.run_cmd(cmd)
         logging.info(f"安装依赖完成")
         logging.info(f"更新到 {ver_tag} 版本完成")
