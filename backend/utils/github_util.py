@@ -14,6 +14,7 @@ import requests
 
 from http_dispatcher.dispatcher import HttpException
 from utils import run_configs
+from utils.dns_util import get_dns_txt_records
 
 
 def get_latest_version(api_url) -> str:
@@ -128,23 +129,26 @@ def get_proxy_urls(refresh:bool = False) -> list:
     if not refresh and proxy_file_path.exists():
         with open(proxy_file_path, 'r', encoding="utf-8") as f:
             cache_data = json.load(f)
-            if cache_data and len(cache_data.get('sources', [])) > 0 and cur_time - cache_data.get('create_time', 0) < 1000 * 60 * 60 * 24:
+            if cache_data and len(cache_data.get('sources', [])) > 0 and cur_time - cache_data.get('create_time', 0) < 1000 * 60 * 60:
                 logging.info(f"使用缓存代理列表: {cache_data.get('sources', [])}")
                 return cache_data.get('sources', [])
 
     #  https://github.akams.cn/
-    default_proxy_urls = [
-        "https://gh.felicity.ac.cn",
-        "https://gh-proxy.org",
-        "https://github.dpik.top",
-        "https://gh.dpik.top",
-    ]
-    src_url = 'https://raw.githubusercontent.com/710850609/EasyTier-EUI/refs/heads/main/configs/github-proxy-urls.json'
-    url_list = download_raw_file(src_url, proxy_url_list=default_proxy_urls)
-    if not url_list or len(url_list) == 0:
-        logging.info(f"获取github文件失败: {src_url}, 使用默认URL")
-        url_list = default_proxy_urls
-    logging.info(f"获取到远程代理URL: {url_list}")
+    url_list = get_dns_txt_records('github-proxy.v6.army')
+    # default_proxy_urls = [
+    #     "https://gh.felicity.ac.cn",
+    #     "https://gh-proxy.org",
+    #     "https://github.dpik.top",
+    #     "https://gh.dpik.top",
+    # ]
+    # src_url = 'https://raw.githubusercontent.com/710850609/EasyTier-EUI/refs/heads/main/configs/github-proxy-urls.json'
+    # url_list = download_raw_file(src_url, proxy_url_list=default_proxy_urls)
+    # if not url_list or len(url_list) == 0:
+    #     logging.info(f"获取github文件失败: {src_url}, 使用默认URL")
+    #     url_list = default_proxy_urls
+    # logging.info(f"获取到远程代理URL: {url_list}")
+    logging.info(f"获取到GitHub 加速地址: {url_list}")
+    url_list = [{'url': item} for item in url_list]
     url_list = check_proxy_url(url_list)
     url_list = [item for item in url_list if item['status'] == 'ok']
     logging.debug(f"GitHub加速地址检测结果: {url_list}")
