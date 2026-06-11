@@ -87,22 +87,32 @@ class CGIProxyHandler(BaseHTTPRequestHandler):
                 'HTTP_X_REAL_IP': self.headers.get('X-Real-IP', ''),
             })
 
-            # 添加所有以 HTTP_ 开头的自定义头
+            # 只覆盖 dispatcher 需要的 CGI 变量，避免全量 copy/clear/update
+            cgi_env_keys = {
+                'REQUEST_METHOD', 'QUERY_STRING', 'REQUEST_URI', 'SERVER_PROTOCOL',
+                'SERVER_NAME', 'SERVER_PORT', 'CONTENT_TYPE', 'CONTENT_LENGTH',
+                'HTTP_HOST', 'HTTP_USER_AGENT', 'HTTP_ACCEPT', 'HTTP_ACCEPT_ENCODING',
+                'HTTP_ACCEPT_LANGUAGE', 'HTTP_COOKIE', 'HTTP_REFERER',
+                'HTTP_X_FORWARDED_FOR', 'HTTP_X_REAL_IP',
+            }
+            backup = {}
+            for key in cgi_env_keys:
+                backup[key] = os.environ.get(key)
+            os.environ.update(env)
             for header, value in self.headers.items():
                 header_key = f"HTTP_{header.upper().replace('-', '_')}"
                 if header_key not in env:
-                    env[header_key] = value
-
-            # 保存原始环境变量，避免污染全局环境
-            original_env = os.environ.copy()
+                    env[header_key] = header_key
+                    backup[header_key] = os.environ.get(header_key)
+                    os.environ[header_key] = value
             try:
-                # 临时设置环境变量供 dispatcher 使用
-                os.environ.update(env)
                 resp = dispatcher.http_handle(base_uri=BASE_URI, body_data=stdin_data, cgi_module=False)
             finally:
-                # 恢复原始环境变量
-                os.environ.clear()
-                os.environ.update(original_env)
+                for key, original_value in backup.items():
+                    if original_value is None:
+                        os.environ.pop(key, None)
+                    else:
+                        os.environ[key] = original_value
             self.send_response(resp.status_code)
             if resp.headers is not None:
                 for key, value in resp.headers.items():
@@ -111,7 +121,8 @@ class CGIProxyHandler(BaseHTTPRequestHandler):
             # 发送内容
             if resp.file:
                 with open(resp.file, "rb") as f:
-                    self.wfile.write(f.read())
+                    while chunk := f.read(65536):
+                        self.wfile.write(chunk)
             else:
                 self.wfile.write(json.dumps(resp.json, ensure_ascii=False, indent=2).encode())
 
@@ -138,6 +149,7 @@ def _acquire_instance_lock() -> bool:
             with open(pid_file, 'r') as f:
                 existing_pid = int(f.read().strip())
             if psutil.pid_exists(existing_pid):
+                logging.warning(f"HTTP 服务已在运行中，{pid_file} 【{existing_pid}】")
                 return False
             else:
                 os.remove(pid_file)

@@ -200,7 +200,7 @@ def get_request(base_uri="", body_data=None, cgi_module=True) -> HttpRequest:
         for param in query_string.split('&'):
             if '=' in param:
                 key, value = param.split('=', 1)
-                query_params[key] = value
+                query_params[unquote(key)] = unquote(value)
         if request_data is None:
             request_data = query_params
         else:

@@ -16,10 +16,11 @@ from pathlib import Path
 import psutil
 
 
+_ANSI_PATTERN = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+
 def strip_ansi(text):
     """去除 ANSI 转义序列"""
-    ansi_pattern = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
-    return ansi_pattern.sub('', text)
+    return _ANSI_PATTERN.sub('', text)
 
 class ProcessManager:
 

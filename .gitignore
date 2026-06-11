@@ -51,6 +51,8 @@ frontend/lerna-debug.log*
 frontend/node_modules
 frontend/dist
 frontend/dist-ssr
+frontend/.env
+frontend/.env.local
 frontend/auto-imports.d.ts
 frontend/components.d.ts
 
