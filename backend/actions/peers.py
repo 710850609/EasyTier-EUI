@@ -63,7 +63,7 @@ def public_peers(data:dict, *kwargs):
                     uri = item["uri"]
                     if uri not in uri_set:
                         uri_set.add(uri)
-                        peers.insert(0, {'uri': uri, 'src_uri': uri, 'relay': -1, 'latency': -1, 'status': -1, 'owner': '11 ' })
+                        peers.insert(0, {'uri': uri, 'src_uri': uri, 'relay': -1, 'latency': -1, 'status': -1, 'owner': '' })
         except Exception as e:
             logging.error(f"解析配置文件失败: {e}")
             # 配置文件解析失败时，返回空列表，不影响获取公共节点

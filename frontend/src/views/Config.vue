@@ -546,8 +546,8 @@
             </thead>
             <tbody>
               <tr v-for="item in publicPeerOptions" :key="item.uri">
-                <td>{{ item.uri }}</td>
-                <td>{{ item.owner || '匿名' }}</td>
+                <td v-if="item.owner !== ''">{{ item.uri }}</td>
+                <td v-if="item.owner !== ''">{{ item.owner }}</td>
               </tr>
             </tbody>
           </var-table>
