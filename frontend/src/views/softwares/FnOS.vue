@@ -44,7 +44,6 @@ import { api } from '../../utils/api.js'
 const downloadEasyTierEui = (platform, arch) => {
   return new Promise((resolve, reject) => {
     let url = api.etEui.getDownloadEasyTierEuiUrl({platform: platform, 'arch': arch})
-    console.log(url)
     window.open(url, '_blank')
     resolve()
   })

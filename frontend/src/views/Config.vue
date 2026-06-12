@@ -537,7 +537,7 @@
         <p class="help-paragraph"><span class="help-bold">节点检测</span>：基于易组网本地设备网络，检测节点的是否可用、延迟、是否可转发</p>
         <div style="margin-top: 20px;">
           <p class="help-paragraph"><span class="help-bold">感谢以下社区节点服务提供者</span></p>
-          <var-table scroller-height="300px">
+          <var-table scroller-height="280px">
             <thead>
               <tr>
                 <th>社区节点</th>
@@ -846,7 +846,6 @@ const checkPeers = () => {
     api.peers.checkPeers({ 'profile': selectedConfig.value, 'refresh': true }).then(data => {
       publicPeerOptions.value = data.data
       toast.success('检测节点可用状态成功')
-      console.log(config.value.peer)
       publicPeerOptions.value.sort((a, b) => {
         const aIn = config.value.peer.includes(a.uri);
         const bIn = config.value.peer.includes(b.uri);

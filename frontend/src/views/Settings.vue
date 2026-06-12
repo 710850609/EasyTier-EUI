@@ -108,49 +108,6 @@
       </div>
     </var-paper>
 
-    <!-- 网络设置 -->
-    <!-- <var-paper class="setting-block" :elevation="1" style="display: none;">
-      <div class="block-header">
-        <svg-icon type="mdi" :path="mdiAccessPointNetwork"  color="var(--color-primary)"></svg-icon>
-        <span class="block-title">网络</span>
-      </div>      
-      <var-divider />
-      <var-cell>
-        GitHub加速地址
-        <var-loading type="wave" v-if="isFetchingGithubMirrors" />
-      </var-cell>
-      <var-cell>
-        <var-select v-model="githubMirror" variant="outlined" size="small" :line="true">
-          <var-option v-for="item in githubMirrors" :key="item.url" :value="item.url" :label="item.label">
-            <var-cell border style="display: flex;">
-              <template #description>
-                {{ item.label }} 
-                <var-chip type="warning" size="mini" plain v-if="item.desc">{{ item.desc }}</var-chip>
-              </template>
-              <template #extra>
-                <span v-if="item.delay > 0"> {{ item.delay }}s </span>
-              </template>
-            </var-cell>
-          </var-option>
-          <template #append-icon>
-            <var-icon 
-              name="refresh" 
-              :class="{ 'is-spinning': isFetchingGithubMirrors }"
-              @click.stop="getGithubMirrors(true)" 
-            />
-          </template>
-        </var-select>
-      </var-cell>
-      <var-cell>
-        <template #extra>          
-          <var-button type="primary" size="small" @click="getGithubMirrors(true)" auto-loading style="min-width: 80px;">
-            <var-icon name="download" />
-            更新
-          </var-button>
-        </template>
-      </var-cell>
-    </var-paper> -->
-
     <!-- 版本 -->
     <var-paper class="setting-block" :elevation="1">
       <div class="block-header">
@@ -604,14 +561,12 @@ const setupShowEuiReleaseInfo = (releaseType) => {
   if (!releaseType || !info) {
     return
   }
-  console.log(info)
   euiChangeMarkdonwn.value = `
 # ${ info.version }
 >  ${formatDate(euiReleaseInfo.value.update_time)} 下载量  ${info.download_count }
 ## 更新内容 
 ${ info.changelog }
 `
-  console.log(euiChangeMarkdonwn.value)
   showEuiReleaseInfo.value = true
 }
 
@@ -959,5 +914,9 @@ onMounted(() => {
     padding: 6px 10px;
   }
 
+  .var-option :deep(.var-cell.var-cell--border) {
+    /* 下拉框 左右无边距 */
+    padding: 0px 0px 0px 0px !important;
+  }
 }
 </style>

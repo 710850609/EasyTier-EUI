@@ -519,7 +519,6 @@ const handleConfigChange = async () => {
   allNodes.value = []
   nodesPoller.stop()
   cancelAllRequests()
-  console.log('serviceRunning.value', serviceRunning.value)
   if (serviceRunning.value) {
     loadingSkeleton.value = true
     dataLoading.value = false

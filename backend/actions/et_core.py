@@ -47,7 +47,7 @@ def version(*kwargs):
     return { 'version': f'v{et_version}', 'raw_version': raw_version }
 
 
-def get_release_info(params: dict, *kwargs):
+def get_release_info(params: dict, *kwargs) -> dict:
     params = params or {}
     refresh = params.get('refresh', 'false').lower() == 'true'
     release_file = Path(run_configs.data_dir()).joinpath('et_release.json')
@@ -62,7 +62,7 @@ def get_release_info(params: dict, *kwargs):
     if refresh or release_info is None:
         if cur_diff_time < cache_time and release_info is not None:
             logging.info(f'上次刷新时间距离当前时间仅隔 {cur_diff_time} ms, 直接返回上次刷新结果')
-            return release_info
+            return release_info or {}
         total_download = 0
         versions = []
         release_info = {'update_time': cur_time, 'total_download': total_download, 'versions': versions}
@@ -100,6 +100,7 @@ def get_release_info(params: dict, *kwargs):
                     assets[platform_arch] = {'download_url': asset.get('browser_download_url', ''), 'download_count': download_count}
 
             info['download_count'] = item_download_count
+        release_info['total_download'] = total_download
         with open(release_file, "w", encoding="utf-8") as f:
             f.write(json.dumps(release_info, ensure_ascii=False, indent=2))
     return release_info
