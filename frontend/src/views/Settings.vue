@@ -159,32 +159,31 @@
       </div>
       <var-divider />
       
-      <div class="setting-row">
+      <div class="setting-row" v-if="euiReleaseInfo?.latest_release?.version">
         <div class="version-info-block">
           <span class="setting-label">
             稳定版本
             <var-icon name="information-outline" size="18" color="var(--color-primary)" 
-            @click="setupShowReleaseInfo(euiRelease)" />
+            @click="setupShowEuiReleaseInfo('latest_release')" />
           </span>
-          <span class="version-value">{{ euiRelease.version }}</span>
+          <span class="version-value">{{ euiReleaseInfo.latest_release.version }}</span>
         </div>
-        <var-button type="primary" size="small" @click="installEuiVersion('prerelease')" auto-loading
-           v-if="euiRelease?.version && buildVersion !== euiRelease.version">
+        <var-button type="primary" size="small" @click="installEuiVersion('release')" auto-loading
+           v-if="euiReleaseInfo?.latest_release?.version && buildVersion !== euiReleaseInfo.latest_release.version">
           <var-icon name="download" />
           安装
         </var-button>
       </div>
-      <div class="setting-row">
+      <div class="setting-row" v-if="euiReleaseInfo?.latest_prerelease?.version">
         <div class="version-info-block">
           <span class="setting-label">
             最新版本
             <var-icon name="information-outline" size="18" color="var(--color-primary)" 
-            @click="setupShowReleaseInfo(euiPreRelease)" />
+            @click="setupShowEuiReleaseInfo('latest_prerelease')" />
           </span>          
-          <span class="version-value">{{ euiPreRelease.version }}</span>
+          <span class="version-value">{{ euiReleaseInfo.latest_prerelease.version }}</span>
         </div>
-        <var-button type="primary" size="small" @click="installEuiVersion('prerelease')" auto-loading
-          v-if="euiPreRelease?.version && buildVersion !== euiPreRelease.version">
+        <var-button type="primary" size="small" @click="installEuiVersion('prerelease')" auto-loading>
           <var-icon name="download" />
           安装
         </var-button>
@@ -328,7 +327,7 @@
   <var-popup v-model:show="showEuiReleaseInfo">
     <var-result type="info">
       <template #image>
-         <MarkdownRenderer :content="`${euiReleaseInfo.markdownData}`" class="markdown-renderer" />
+         <MarkdownRenderer :content="`${euiChangeMarkdonwn}`" class="markdown-renderer" />
       </template>
       <template #footer>
         <var-button type="info" @click="showEuiReleaseInfo = false" style="margin: 10px;">关闭</var-button>
@@ -377,12 +376,12 @@ const installPath = ref('')
 const showRewardCdoe = ref(false)
 const platform = ref('')
 const etLogLevel = ref('error')
+const euiReleaseInfo = ref({})
 const euiRelease = ref({})
-const euiPreRelease = ref({})
+const euiChangeMarkdonwn = ref('')
 const showEuiReleaseInfo = ref(false)
 const showEtChangeLog = ref(false)
 const etChangeLog = ref('')
-const euiReleaseInfo = ref({})
 const logLevelOptions = ref([
   { value: 'off', label: '禁用' }, // cli 是 disabled
   { value: 'error', label: '错误' },
@@ -449,6 +448,7 @@ const togglePeerSource = async (val) => {
   const data = { source: val ? 'test' : 'stable' }
   await api.peers.setPeerSource(data).then(() => {
     testPeerSourceEnabled.value = val
+    toast.success(`已切换到 ${val ? '测试' : '正式'} 社区节点`)
   }).finally(() => {
     changingPeerSource.value = false
   })
@@ -489,8 +489,7 @@ const getEtReleaseInfo = async (refresh = false, showTip = true) => {
       etVersion.value.selected_version = etVersion.value.latest_version
     }
     if (refresh && showTip) {      
-      toast.success(`${formatDate(new Date(resp.data.update_time))}\n内核可选版本已刷新`)
-
+      toast.success(`内核可选版本已刷新\n${formatDate(new Date(resp.data.update_time))}`)
     }
   } catch (e) {
     console.error('获取版本列表失败:', e)
@@ -588,10 +587,11 @@ const setEtLogLevel = async (level) => {
 const getEuiReleaseInfo = (refresh=false) => {
   return new Promise((resolve, reject) => {
     api.etEui.getReleaseInfo({'refresh': refresh}).then((data) => {
-      euiRelease.value = data.data.latest_release
-      euiPreRelease.value = data.data.latest_prerelease
+      euiReleaseInfo.value = data.data
+      // euiRelease.value = data.data.latest_release
+      // euiPreRelease.value = data.data.latest_prerelease
       if (refresh) {
-        toast.success(`${formatDate(data.data.update_time)}\n易组网在线版本已刷新`)
+        toast.success(`易组网在线版本已刷新\n${formatDate(data.data.update_time)}`)
       }
     }).finally((error) => {
       resolve()
@@ -599,20 +599,19 @@ const getEuiReleaseInfo = (refresh=false) => {
   })
 }
 
-const setupShowReleaseInfo = (info) => {
-  if (!info?.version) {
+const setupShowEuiReleaseInfo = (releaseType) => {
+  const info = euiReleaseInfo.value[releaseType]
+  if (!releaseType || !info) {
     return
   }
-  euiReleaseInfo.value = info
-  euiReleaseInfo.value.markdownData = `
-| 下载量 | 获取时间 | 
-|  :----:  | :----:  | 
-| ${info.download_count || '未知'} | ${formatDate(info.update_time)}  | 
-
-# 更新内容
-## ${ info.version }
+  console.log(info)
+  euiChangeMarkdonwn.value = `
+# ${ info.version }
+>  ${formatDate(euiReleaseInfo.value.update_time)} 下载量  ${info.download_count }
+## 更新内容 
 ${ info.changelog }
 `
+  console.log(euiChangeMarkdonwn.value)
   showEuiReleaseInfo.value = true
 }
 

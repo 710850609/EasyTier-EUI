@@ -537,7 +537,7 @@
         <p class="help-paragraph"><span class="help-bold">节点检测</span>：基于易组网本地设备网络，检测节点的是否可用、延迟、是否可转发</p>
         <div style="margin-top: 20px;">
           <p class="help-paragraph"><span class="help-bold">感谢以下社区节点服务提供者</span></p>
-          <var-table scroller-height="400px">
+          <var-table scroller-height="300px">
             <thead>
               <tr>
                 <th>社区节点</th>
@@ -1778,9 +1778,11 @@ onMounted(async () => {
   font-weight: bold;
 }
 
-.help-content .var-table__main {
+.help-content :deep(.var-table__main),
+.help-content :deep(.var-table) {
   border-radius: 16px 16px 16px 16px !important;
 }
+
 .help-content th {
   position: sticky;
   top: 0;
