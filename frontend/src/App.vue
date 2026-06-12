@@ -187,4 +187,12 @@ html.dark {
 .var-cell__description {
   color: var(--color-on-surface-variant) !important;
 }
+
+.markdown-content th {
+  /* markdown 表头透明 */
+  background: rgba(var(--color-surface-container-rgb, 224, 242, 254), 0.1) !important;
+}
+.toast-content {
+  white-space: pre-line;
+}
 </style>

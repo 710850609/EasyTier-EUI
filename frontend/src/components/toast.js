@@ -20,6 +20,7 @@ function createToast(message, type = 'default', duration = 3000) {
     type: typeMap[type] || '',
     position: 'top',
     duration: duration,
+    contentClass: 'toast-content',
     icon: () => type === 'loading' ? 'loading' : '',
     action: () =>
       h(Icon, {

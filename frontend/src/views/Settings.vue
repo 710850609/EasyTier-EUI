@@ -328,7 +328,7 @@
   <var-popup v-model:show="showEuiReleaseInfo">
     <var-result type="info">
       <template #image>
-         <MarkdownRenderer :content="`# 更新内容 \n ### ${ euiReleaseInfo.version} 【↓${euiReleaseDownloadCount}】\n \n` + euiReleaseInfo.changelog" class="markdown-renderer" />
+         <MarkdownRenderer :content="`${euiReleaseInfo.markdownData}`" class="markdown-renderer" />
       </template>
       <template #footer>
         <var-button type="info" @click="showEuiReleaseInfo = false" style="margin: 10px;">关闭</var-button>
@@ -383,7 +383,6 @@ const showEuiReleaseInfo = ref(false)
 const showEtChangeLog = ref(false)
 const etChangeLog = ref('')
 const euiReleaseInfo = ref({})
-const euiReleaseDownloadCount = ref(0)
 const logLevelOptions = ref([
   { value: 'off', label: '禁用' }, // cli 是 disabled
   { value: 'error', label: '错误' },
@@ -490,10 +489,8 @@ const getEtReleaseInfo = async (refresh = false, showTip = true) => {
       etVersion.value.selected_version = etVersion.value.latest_version
     }
     if (refresh && showTip) {      
-      toast.success('内核可选版本已刷新')
-    }
-    if (new Date().getTime() - resp.data.create_time > 1000 * 60 * 60 * 24) {
-      getEtReleaseInfo(true, false)
+      toast.success(`${formatDate(new Date(resp.data.update_time))}\n内核可选版本已刷新`)
+
     }
   } catch (e) {
     console.error('获取版本列表失败:', e)
@@ -594,7 +591,7 @@ const getEuiReleaseInfo = (refresh=false) => {
       euiRelease.value = data.data.latest_release
       euiPreRelease.value = data.data.latest_prerelease
       if (refresh) {
-        toast.success('易组网在线版本信息已更新')
+        toast.success(`${formatDate(data.data.update_time)}\n易组网在线版本已刷新`)
       }
     }).finally((error) => {
       resolve()
@@ -607,7 +604,15 @@ const setupShowReleaseInfo = (info) => {
     return
   }
   euiReleaseInfo.value = info
-  euiReleaseDownloadCount.value = info.download_count || 0
+  euiReleaseInfo.value.markdownData = `
+| 下载量 | 获取时间 | 
+|  :----:  | :----:  | 
+| ${info.download_count || '未知'} | ${formatDate(info.update_time)}  | 
+
+# 更新内容
+## ${ info.version }
+${ info.changelog }
+`
   showEuiReleaseInfo.value = true
 }
 
@@ -625,6 +630,21 @@ const deleteCache = async () => {
       resolve()
     })
   })
+}
+
+const formatDate = (date, sep = '-') => {
+    const f = new Intl.DateTimeFormat('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+    });
+    const p = f.formatToParts(date);
+    const get = (t) => p.find(x => x.type === t).value;
+    return `${get('year')}${sep}${get('month')}${sep}${get('day')} ${get('hour')}:${get('minute')}:${get('second')}`;
 }
 
 onMounted(() => {
