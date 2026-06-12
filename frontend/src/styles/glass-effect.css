@@ -8,4 +8,5 @@ html body .var-select__scroller.var-elevation--3 {
   backdrop-filter: blur(10px) saturate(180%) !important;
   -webkit-backdrop-filter: blur(10px) saturate(180%) !important;
   border: 0px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 16px 16px 16px 16px !important;
 }

@@ -533,9 +533,25 @@
       <div class="help-content">
         <p class="help-paragraph"><span class="help-bold">初始节点</span>：用于发现组网设备，数据来自网络社区</p>
         <p class="help-paragraph"><span class="help-bold">动态节点</span>：原始节点经过TXT协议转换而来。为后续支持社区节点下线时，在不重启服务情况下，持续组网</p>
-        <!-- <p class="help-paragraph"><span class="help-bold">动态节点</span>：原始节点经过TXT协议转换而来。易组网在线维护数据，解决节点下线后，设备不重启的情况下持续在线。</p> -->
         <p class="help-paragraph"><span class="help-bold">节点刷新</span>：在线获取易组网维护的初始节点数据</p>
         <p class="help-paragraph"><span class="help-bold">节点检测</span>：基于易组网本地设备网络，检测节点的是否可用、延迟、是否可转发</p>
+        <div style="margin-top: 20px;">
+          <p class="help-paragraph"><span class="help-bold">感谢以下社区节点服务提供者</span></p>
+          <var-table scroller-height="400px">
+            <thead>
+              <tr>
+                <th>社区节点</th>
+                <th>提供者</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="item in publicPeerOptions" :key="item.uri">
+                <td>{{ item.uri }}</td>
+                <td>{{ item.owner || '匿名' }}</td>
+              </tr>
+            </tbody>
+          </var-table>
+        </div>
       </div>
   </var-popup>
   </div>
@@ -1760,6 +1776,22 @@ onMounted(async () => {
 
 .help-bold {
   font-weight: bold;
+}
+
+.help-content .var-table__main {
+  border-radius: 16px 16px 16px 16px !important;
+}
+.help-content th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  color: var(--color-text) !important;
+  background: rgba(var(--color-surface-container-rgb, 224, 242, 254), 1) !important;
+}
+
+.help-content tr {
+  --table-tbody-td-text-color: var(--color-text) !important;
+  background: rgba(var(--color-surface-container-rgb, 224, 242, 254), 0.1) !important;
 }
 
 /* ===== Deep 覆盖 ===== */

@@ -63,7 +63,7 @@ def public_peers(data:dict, *kwargs):
                     uri = item["uri"]
                     if uri not in uri_set:
                         uri_set.add(uri)
-                        peers.insert(0, {'uri': uri, 'src_uri': uri, 'relay': -1, 'latency': -1, 'status': -1 })
+                        peers.insert(0, {'uri': uri, 'src_uri': uri, 'relay': -1, 'latency': -1, 'status': -1, 'owner': '11 ' })
         except Exception as e:
             logging.error(f"解析配置文件失败: {e}")
             # 配置文件解析失败时，返回空列表，不影响获取公共节点
@@ -122,7 +122,7 @@ def __get_public_peers(refresh=False) -> list[dict]:
             if len(real_uri) > 0 and uri not in uri_set and item.get('status', 0) == 1:
                 uri_set.add(uri)
                 dynamic = real_uri and uri != real_uri
-                result.append(PeersCheckResult(uri, real_uri, dynamic=dynamic))
+                result.append(PeersCheckResult(uri, real_uri, owner=item.get('owner', ''), dynamic=dynamic))
 
         peers = [item.__dict__ for item in result]
         __sort_peers(peers)
