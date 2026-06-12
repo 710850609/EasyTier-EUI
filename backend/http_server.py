@@ -176,37 +176,40 @@ def _release_instance_lock():
 
 def build(host:str, port:int=5666, open_browser:bool=False) -> Optional[ThreadedHTTPServer]:
     """启动 HTTP 服务器"""
-    logging.info(f"运行的构建版本：{run_configs.build_version()}")
+    try:
+        logging.info(f"运行的构建版本：{run_configs.build_version()}")
+        if not _acquire_instance_lock():
+            logging.warning(f"HTTP 服务已在运行中，不能重复启动")
+            return None
+        atexit.register(_release_instance_lock)
 
-    if not _acquire_instance_lock():
-        logging.warning(f"HTTP 服务已在运行中，不能重复启动")
-        return None
-    atexit.register(_release_instance_lock)
-
-    if not host:
-        host = '0.0.0.0'
-    if host == '0.0.0.0' and run_configs.get_run_mode() == 0:
-        # 优化本地启动速度，默认绑定 127.0.0.1
-        host = '127.0.0.1'
-    logging.info(f"HTTP服务启动中....")
-    http_server = ThreadedHTTPServer((host, port), CGIProxyHandler)
-    logging.info(f"Starting HTTP server on {host}, port: {port}")
-    logging.info(f"Virtual base URI: {BASE_URI}")
-    acc_host = http_server.server_address[0]
-    acc_port = http_server.server_address[1]
-    if acc_host == '0.0.0.0':
-        lan_ips = ip_util.get_lan_ips()
-        acc_host = lan_ips[0].get('ip') if len(lan_ips) > 0 else '127.0.0.1'
-    access_url = f"http://{acc_host}:{acc_port}"
-    qr_code = qrcode_util.create_str(access_url)
-    logging.info(f"Access URL {access_url} , QrCode: {qr_code}")
-    if open_browser:
-        try:
-            webbrowser.open_new_tab(access_url)
-            logging.info(f"已打开本地设备浏览器，请在浏览器上访问")
-        except Exception as e:
-            logging.error(f"打开本地设备不支持浏览器访问: {e}")
-    return http_server
+        if not host:
+            host = '0.0.0.0'
+        if host == '0.0.0.0' and run_configs.get_run_mode() == 0:
+            # 优化本地启动速度，默认绑定 127.0.0.1
+            host = '127.0.0.1'
+        logging.info(f"HTTP服务启动中....")
+        http_server = ThreadedHTTPServer((host, port), CGIProxyHandler)
+        logging.info(f"Starting HTTP server on {host}, port: {port}")
+        logging.info(f"Virtual base URI: {BASE_URI}")
+        acc_host = http_server.server_address[0]
+        acc_port = http_server.server_address[1]
+        if acc_host == '0.0.0.0':
+            lan_ips = ip_util.get_lan_ips()
+            acc_host = lan_ips[0].get('ip') if len(lan_ips) > 0 else '127.0.0.1'
+        access_url = f"http://{acc_host}:{acc_port}"
+        qr_code = qrcode_util.create_str(access_url)
+        logging.info(f"Access URL {access_url} , QrCode: {qr_code}")
+        if open_browser:
+            try:
+                webbrowser.open_new_tab(access_url)
+                logging.info(f"已打开本地设备浏览器，请在浏览器上访问")
+            except Exception as e:
+                logging.error(f"打开本地设备不支持浏览器访问: {e}")
+        return http_server
+    except Exception as e:
+        logging.error(f"HTTP 服务启动失败: {e}")
+        raise e
 
 def serve_forever(http_server:ThreadedHTTPServer) -> None:
     """启动 HTTP 服务器"""

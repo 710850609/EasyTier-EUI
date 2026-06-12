@@ -6,7 +6,7 @@
           <h2>
             易组网
             <var-badge type="primary">
-               <template #value>预览</template>
+               <template #value>推荐</template>
             </var-badge>
           </h2>
         </div>
@@ -15,6 +15,35 @@
         <var-cell>
           <p>集成当前配置，解压启动后启动服务即可组网</p>
           <p>自建初始节点，请自行修改配置</p>
+        </var-cell>
+        <var-cell>
+          <div class="eui-opt-desc-table-container">
+            <p style="margin-bottom: 12px;">使用简介</p>
+            <var-table class="eui-opt-desc-table">
+              <thead>
+                <tr>
+                  <th align="center">操作</th>
+                  <th align="center">有桌面环境</th>
+                  <th align="center">无桌面环境</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td align="center">启动命令</td>
+                  <td align="center"><code>sudo ./EasyTier-EUI</code></td>
+                  <td align="center"><code>sudo ./start.sh</code></td>
+                </tr>
+                <tr>
+                  <td align="center">停止命令</td>
+                  <td  colspan="2" align="center"><code>sudo ./stop.sh</code></td>
+                </tr>
+                <tr>
+                  <td align="center">停止操作</td>
+                  <td colspan="2" align="center">点击【设置】界面最底部的“关闭易组网”按钮</td>
+                </tr>
+              </tbody>
+            </var-table>
+          </div>
         </var-cell>
         <var-cell>
           <var-link type="primary" underline="none" href="https://github.com/710850609/EasyTier-EUI/releases" target="_blank"><img src="https://img.shields.io/github/v/release/710850609/EasyTier-EUI?color=blue&logo=github&label=稳定版" /></var-link>
@@ -320,5 +349,71 @@ const handleConfigConfirm = async () => {
 .item-actions .var-button {
   flex: 1;
   min-width: 90px;
+}
+
+/* 操作说明表格样式 */
+.eui-opt-desc-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: var(--color-surface-container-high);
+}
+
+.eui-opt-desc-table :deep(th) {
+  background: var(--color-surface-container-high);
+  color: var(--color-on-surface) !important;
+  font-weight: 600;
+  padding: 12px 16px;
+  text-align: center;
+  border-bottom: 1px solid var(--color-outline-variant);
+}
+
+.eui-opt-desc-table :deep(td) {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-outline-variant);
+  background: var(--color-surface-container-high);
+  color: var(--color-on-surface);
+  text-align: center;
+}
+
+.eui-opt-desc-table :deep(tr:last-child td) {
+  border-bottom: none;
+}
+
+.eui-opt-desc-table :deep(code) {
+  background: rgba(var(--color-primary-rgb), 0.15);
+  color: var(--color-primary);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-family: 'Fira Code', 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* 移动端响应式优化 */
+@media (max-width: 768px) {
+  .eui-opt-desc-table-container {
+    overflow-x: auto;
+    border-radius: 12px;
+  }
+
+  .eui-opt-desc-table {
+    min-width: 500px;
+    font-size: 12px;
+  }
+
+  .eui-opt-desc-table :deep(th),
+  .eui-opt-desc-table :deep(td) {
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+
+  .eui-opt-desc-table :deep(code) {
+    font-size: 12px;
+    padding: 2px 6px;
+  }
 }
 </style>

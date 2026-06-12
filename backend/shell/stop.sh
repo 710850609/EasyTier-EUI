@@ -18,7 +18,7 @@ if [ -f "$PID_FILE" ]; then
             sudo kill -9 "$PID"
         fi
     fi
-    rm -f "$PID_FILE"
+    sudo rm -f "$PID_FILE"
 fi
 
 # 2. 再通过进程名清理残留（兼容有/无 pkill 的环境）

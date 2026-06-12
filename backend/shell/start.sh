@@ -20,21 +20,20 @@ fi
 # 检查是否已在运行
 if [ -f "$PID_FILE" ]; then
     PID=$(cat "$PID_FILE")
-    if kill -0 "$PID" 2>/dev/null; then
+    if sudo kill -0 "$PID" 2>/dev/null; then
         echo "EasyTier-EUI 已在运行 (PID: $PID)"
         read -p "按 Enter 退出..."
         exit 1
     fi
-    rm -f "$PID_FILE"
+    sudo rm -f "$PID_FILE"
 fi
 
 # 启动（保留日志，获取真实 PID）
-echo "正在启动 EasyTier-EUI..."
+echo "正在尝试启动 EasyTier-EUI..."
 
 # 用 sudo 启动，但把真实 PID 写入文件
 sudo bash -c "
-    nohup '$EXECUTABLE' >> /dev/null 2>&1 &
-    echo \$! > '$PID_FILE'
+  sudo nohup '$EXECUTABLE' >> /dev/null 2>&1 &
 "
 
 # 检查是否真的启动了
@@ -43,7 +42,7 @@ sleep 3
 if [ -f "$PID_FILE" ]; then
     REAL_PID=$(cat "$PID_FILE")
     echo "获取到的 PID: $REAL_PID"
-    if kill -0 "$REAL_PID" 2>/dev/null; then
+    if sudo kill -0 "$REAL_PID" 2>/dev/null; then
         echo "EasyTier-EUI 已启动，PID: $REAL_PID"
         echo "启动信息：可点击URL跳浏览器访问，或是手机扫描二维码访问"
     else
