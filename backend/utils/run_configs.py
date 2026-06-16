@@ -25,7 +25,7 @@ def setup_env():
     global _is_inited_evn
     if _is_inited_evn:
         return
-    global FRONTEND_PATH, CONFIG_DIR, CORE_DIR, DATA_DIR, LOG_DIR, UPGRADE_SCRIPT_PATH
+    global FRONTEND_PATH, CONFIG_DIR, CORE_DIR, DATA_DIR, LOG_DIR, UPGRADE_SCRIPT_PATH, _run_mode
     # 是否在 PyInstaller 打包环境中
     WORK_DIR = None
     if is_fn_system():

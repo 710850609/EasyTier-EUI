@@ -51,7 +51,7 @@
         <var-select 
           class="setting-select" 
           variant="outlined" 
-          placeholder="选择版本" 
+          placeholder="可选版本" 
           size="small" 
           v-model="etVersion.selected_version"
         >
@@ -134,7 +134,7 @@
       <div class="setting-row" v-if="euiReleaseInfo?.latest_prerelease?.version">
         <div class="version-info-block">
           <span class="setting-label">
-            最新版本
+            预发版本
             <var-icon name="information-outline" size="18" color="var(--color-primary)" 
             @click="setupShowEuiReleaseInfo('latest_prerelease')" />
           </span>          

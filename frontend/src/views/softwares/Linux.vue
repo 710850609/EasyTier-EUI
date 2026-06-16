@@ -17,8 +17,10 @@
           <p>自建初始节点，请自行修改配置</p>
         </var-cell>
         <var-cell>
+          <p style="margin-bottom: 12px;">使用简介</p>
+        </var-cell>
+        <var-cell>
           <div class="eui-opt-desc-table-container">
-            <p style="margin-bottom: 12px;">使用简介</p>
             <var-table class="eui-opt-desc-table">
               <thead>
                 <tr>
@@ -29,17 +31,22 @@
               </thead>
               <tbody>
                 <tr>
-                  <td align="center">启动命令</td>
-                  <td align="center"><code>sudo ./EasyTier-EUI</code></td>
-                  <td align="center"><code>sudo ./start.sh</code></td>
-                </tr>
-                <tr>
-                  <td align="center">停止命令</td>
-                  <td  colspan="2" align="center"><code>sudo ./stop.sh</code></td>
+                  <td align="center">启动操作</td>
+                  <td align="center">双击运行<code>EasyTier-EUI</code></td>
+                  <td align="center">❌不支持</td>
                 </tr>
                 <tr>
                   <td align="center">停止操作</td>
                   <td colspan="2" align="center">点击【设置】界面最底部的“关闭易组网”按钮</td>
+                </tr>
+                <tr>
+                  <td align="center">启动命令</td>
+                  <td align="center"><code>./EasyTier-EUI</code></td>
+                  <td align="center"><code>./start.sh</code></td>
+                </tr>
+                <tr>
+                  <td align="center">停止命令</td>
+                  <td  colspan="2" align="center"><code>./stop.sh</code></td>
                 </tr>
               </tbody>
             </var-table>
@@ -51,7 +58,7 @@
       </div>
       <div>
         <var-divider />
-        <var-space :size="[20, 20]" justify="center">
+        <var-space class="eui-download-btn-group" :size="[20, 20]" justify="center">
           <var-button type="primary" size="normal" block @click="downloadEasyTierEui('linux', 'x86_64')" auto-loading>
             <template #default>
               <var-icon name="download"/>
@@ -414,6 +421,18 @@ const handleConfigConfirm = async () => {
   .eui-opt-desc-table :deep(code) {
     font-size: 12px;
     padding: 2px 6px;
+  }
+
+  /* 下载按钮移动端优化 */
+  .eui-download-btn-group {
+    display: grid !important;
+    grid-template-columns: repeat(2, 120px) !important;
+    gap: 12px !important;
+    width: 100% !important;
+  }
+
+  .eui-download-btn-group :deep(.var-button) {
+    width: 120px !important; 
   }
 }
 </style>
