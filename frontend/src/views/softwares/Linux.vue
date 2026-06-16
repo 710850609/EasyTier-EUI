@@ -6,7 +6,7 @@
           <h2>
             易组网
             <var-badge type="primary">
-               <template #value>推荐</template>
+               <template #value>新手推荐</template>
             </var-badge>
           </h2>
         </div>
@@ -365,33 +365,56 @@ const handleConfigConfirm = async () => {
   border-spacing: 0;
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  background: var(--color-surface-container-high);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background: var(--color-surface);
+  border: 1px solid var(--color-outline);
 }
 
 .eui-opt-desc-table :deep(th) {
-  background: var(--color-surface-container-high);
-  color: var(--color-on-surface) !important;
+  background: var(--color-surface-container);
+  color: var(--color-on-surface-container);
   font-weight: 600;
-  padding: 12px 16px;
+  padding: 14px 16px;
   text-align: center;
-  border-bottom: 1px solid var(--color-outline-variant);
+  border-bottom: 2px solid var(--color-outline);
+  border-left: 1px solid var(--color-outline-variant);
+}
+
+.eui-opt-desc-table :deep(th:first-child) {
+  border-left: none;
+}
+
+.eui-opt-desc-table :deep(th:last-child) {
+  border-right: 1px solid var(--color-outline-variant);
 }
 
 .eui-opt-desc-table :deep(td) {
-  padding: 12px 16px;
+  padding: 14px 16px;
   border-bottom: 1px solid var(--color-outline-variant);
-  background: var(--color-surface-container-high);
+  border-left: 1px solid var(--color-outline-variant);
+  background: var(--color-surface);
   color: var(--color-on-surface);
   text-align: center;
+}
+
+.eui-opt-desc-table :deep(td:first-child) {
+  border-left: none;
+}
+
+.eui-opt-desc-table :deep(td:last-child) {
+  border-right: 1px solid var(--color-outline-variant);
 }
 
 .eui-opt-desc-table :deep(tr:last-child td) {
   border-bottom: none;
 }
 
+.eui-opt-desc-table :deep(tr:hover td) {
+  background: var(--color-surface-container-low);
+}
+
 .eui-opt-desc-table :deep(code) {
-  background: rgba(var(--color-primary-rgb), 0.15);
+  background: rgba(var(--color-primary-rgb), 0.18);
   color: var(--color-primary);
   padding: 4px 10px;
   border-radius: 6px;

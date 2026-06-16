@@ -8,7 +8,7 @@
       </div>
       <div class="version-info">
         <var-cell>
-          <p>下载安装APK，从易组网分享配置后，到鸿蒙上黏贴配置</p>
+          <p>下载安装APK，从易组网分享配置后，到安卓上点击【编辑为文件】并黏贴保存配置</p>
           <p>启动网络即可</p>
         </var-cell>
         <var-cell>
@@ -37,7 +37,7 @@
           <div class="item-header">
             <var-icon name="package" size="24" />
             <span class="item-title">arm64
-              <var-badge color="var(--color-surface-container-highest)">
+              <var-badge color="var(--color-primary)">
                  <template #value>常见机型</template>
               </var-badge>
             </span>
@@ -59,7 +59,7 @@
           <div class="item-header">
             <var-icon name="package" size="24" />
             <span class="item-title">arm
-              <var-badge color="var(--color-surface-container-highest)">
+              <var-badge color="var(--color-primary)">
                  <template #value>古老机型</template>
               </var-badge>
             </span>

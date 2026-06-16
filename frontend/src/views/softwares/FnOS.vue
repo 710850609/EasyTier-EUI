@@ -6,20 +6,20 @@
           <h2>
             易组网
             <var-badge type="primary">
-               <template #value>推荐</template>
+               <template #value>新手推荐</template>
             </var-badge>
           </h2>
         </div>
       </div>
       <div class="version-info">
-        <var-cell>安装后，输入相同网络名、网络密码、对应初始化节点，保存启动，即可组网</var-cell>
+        <var-cell>安装后，从当前易组网分享网络，到飞牛易组网【配置】-【编辑文件】，黏贴并保存，启动后即可组网</var-cell>
         <var-cell>
           <var-link type="primary" underline="none" href="https://github.com/710850609/EasyTier-EUI/releases" target="_blank"><img src="https://img.shields.io/github/v/release/710850609/EasyTier-EUI?color=blue&logo=github&label=稳定版" /></var-link>
         </var-cell>
       </div>
       <div>
         <var-divider />
-        <var-space :size="[20, 20]" justify="center">
+        <var-space class="eui-download-btn-group" :size="[20, 20]" justify="center">
           <var-button type="primary" size="normal" block @click="downloadEasyTierEui('fnos', 'x86_64')" auto-loading>
             <template #default>
               <var-icon name="download"/>
@@ -131,5 +131,83 @@ const downloadEasyTierEui = (platform, arch) => {
 .item-actions .var-button {
   flex: 1;
   min-width: 90px;
+}
+
+/* 操作说明表格样式 */
+.eui-opt-desc-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: var(--color-surface-container-high);
+}
+
+.eui-opt-desc-table :deep(th) {
+  background: var(--color-surface-container-high);
+  color: var(--color-on-surface) !important;
+  font-weight: 600;
+  padding: 12px 16px;
+  text-align: center;
+  border-bottom: 1px solid var(--color-outline-variant);
+}
+
+.eui-opt-desc-table :deep(td) {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-outline-variant);
+  background: var(--color-surface-container-high);
+  color: var(--color-on-surface);
+  text-align: center;
+}
+
+.eui-opt-desc-table :deep(tr:last-child td) {
+  border-bottom: none;
+}
+
+.eui-opt-desc-table :deep(code) {
+  background: rgba(var(--color-primary-rgb), 0.15);
+  color: var(--color-primary);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-family: 'Fira Code', 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* 移动端响应式优化 */
+@media (max-width: 768px) {
+  .eui-opt-desc-table-container {
+    overflow-x: auto;
+    border-radius: 12px;
+  }
+
+  .eui-opt-desc-table {
+    min-width: 500px;
+    font-size: 12px;
+  }
+
+  .eui-opt-desc-table :deep(th),
+  .eui-opt-desc-table :deep(td) {
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+
+  .eui-opt-desc-table :deep(code) {
+    font-size: 12px;
+    padding: 2px 6px;
+  }
+
+  /* 下载按钮移动端优化 */
+  .eui-download-btn-group {
+    display: grid !important;
+    grid-template-columns: repeat(2, 120px) !important;
+    gap: 12px !important;
+    width: 100% !important;
+  }
+
+  .eui-download-btn-group :deep(.var-button) {
+    width: 120px !important; 
+  }
 }
 </style>
