@@ -530,12 +530,18 @@ def handle_elevated_run():
             logging.info(f"[Elevated] 工作目录: {working_dir}")
             logging.info(f"[Elevated] 模块参数: {module_args}")
 
-            # 使用 runpy 执行模块
-            import runpy
+            # 使用 importlib 执行模块，避免 runpy 在模块已被导入时的警告
+            import importlib
             original_argv = sys.argv
             sys.argv = [module_name] + module_args
             try:
-                runpy.run_module(module_name, run_name='__main__')
+                spec = importlib.util.find_spec(module_name)
+                if spec is None:
+                    raise ImportError(f"No module named {module_name}")
+                mod = importlib.util.module_from_spec(spec)
+                mod.__name__ = '__main__'
+                sys.modules[module_name] = mod
+                spec.loader.exec_module(mod)
             finally:
                 sys.argv = original_argv
 
