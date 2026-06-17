@@ -15,10 +15,11 @@ import psutil
 from http_dispatcher import dispatcher
 from utils import run_configs, log_util
 
-BASE_URI = "/cgi/ThirdParty/EasyTier-EUI/index.cgi"
-
 class CGIProxyHandler(BaseHTTPRequestHandler):
     """处理 HTTP 请求并转发给 CGI 脚本"""
+
+    base_uri = ''  # 默认值，build() 时可覆盖
+
     def log_message(self, format, *args):
         if sys.stdout is None:
             return
@@ -105,7 +106,7 @@ class CGIProxyHandler(BaseHTTPRequestHandler):
                     backup[header_key] = os.environ.get(header_key)
                     os.environ[header_key] = value
             try:
-                resp = dispatcher.http_handle(base_uri=BASE_URI, body_data=stdin_data, cgi_module=False)
+                resp = dispatcher.http_handle(base_uri=self.base_uri, body_data=stdin_data, cgi_module=False)
             finally:
                 for key, original_value in backup.items():
                     if original_value is None:
@@ -137,6 +138,7 @@ class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
 
     def __init__(self, server_address, RequestHandlerClass):
         super().__init__(server_address, RequestHandlerClass)
+
 
 def _acquire_instance_lock() -> bool:
     """获取单实例锁（PID 文件），失败则说明已有实例在运行"""
@@ -171,7 +173,7 @@ def _release_instance_lock():
         except (ValueError, OSError):
             pass
 
-def build(host:str, port:int=5666, open_browser:bool=False) -> Optional[ThreadedHTTPServer]:
+def build(host:str, port:int=5666, base_uri: str = '') -> Optional[ThreadedHTTPServer]:
     """构建 HTTP 服务器，不阻塞。由调用方调用 serve_forever() 进入事件循环"""
     try:
         if not _acquire_instance_lock():
@@ -186,6 +188,7 @@ def build(host:str, port:int=5666, open_browser:bool=False) -> Optional[Threaded
             # win本地开发模式下，默认绑定到 127.0.0.1，优化启动速度
             host = '127.0.0.1'
         logging.info(f"HTTP服务启动中....")
+        CGIProxyHandler.base_uri = base_uri
         server = ThreadedHTTPServer((host, port), CGIProxyHandler)
         logging.info(f"Starting HTTP server on {host}, port: {port}")
         # logging.info(f"Virtual base URI: {BASE_URI}")
@@ -204,9 +207,9 @@ def serve_forever(http_server:ThreadedHTTPServer) -> None:
     finally:
         _release_instance_lock()
 
-def start(host:str, port:int) -> None:
+def start(host:str, port:int, base_uri: str) -> None:
     """启动 HTTP 服务器"""
-    server = build(host, port)
+    server = build(host, port, base_uri)
     if server:
         serve_forever(server)
     else:
@@ -222,5 +225,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='CGI Proxy HTTP Server')
     parser.add_argument('--host', default='0.0.0.0', help='Host to bind to (default: 0.0.0.0)')
     parser.add_argument('--port', type=int, default=5666, help='Port to bind to (default: 5666)')
+    parser.add_argument('--base_uri', default='', help='Base URI for virtual requests (default: empty)')
     args = parser.parse_args()
-    start(args.host, args.port)
+    start(args.host, args.port, args.base_uri)

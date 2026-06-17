@@ -11,6 +11,8 @@ from utils import run_configs, log_util, permissions_util, ip_util, qrcode_util
 from utils.permissions_util import ServerHandle
 
 
+BASE_URI = "/cgi/ThirdParty/EasyTier-EUI/index.cgi"
+
 def start_server(host: str, port: int, exit_on_failure: bool = False) -> Optional[ServerHandle]:
     """启动 HTTP 服务（提权 + 启动），不打开浏览器。
 
@@ -20,7 +22,7 @@ def start_server(host: str, port: int, exit_on_failure: bool = False) -> Optiona
     if not permissions_util.is_admin():
         try:
             handle = permissions_util.run_elevated_module(
-                'http_server', args=[f'--host={host}', f'--port={port}'])
+                'http_dispatcher.http_server', args=[f'--host={host}', f'--port={port}', f'--base_uri={BASE_URI}'])
             if handle is None:
                 logging.error("提权进程启动失败，返回 None")
                 if exit_on_failure:
@@ -35,7 +37,7 @@ def start_server(host: str, port: int, exit_on_failure: bool = False) -> Optiona
             return None
     else:
         logging.info(f"当前用户已是管理员权限")
-        server = http_server.build(host, port, open_browser=False)
+        server = http_server.build(host, port, BASE_URI)
         if server is None:
             logging.error("HTTP 服务启动失败")
             if exit_on_failure:
@@ -48,7 +50,7 @@ def start_server(host: str, port: int, exit_on_failure: bool = False) -> Optiona
 def stop_server(handle: ServerHandle, port: int):
     import urllib.request
     try:
-        url = f'http://127.0.0.1:{port}{http_server.BASE_URI}/api/settings/shutdown'
+        url = f'http://127.0.0.1:{port}{BASE_URI}/api/settings/shutdown'
         logging.info(f"尝试通过 HTTP 请求关闭提权进程: {url}")
         req = urllib.request.Request(
             url,
