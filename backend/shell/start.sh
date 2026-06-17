@@ -31,9 +31,9 @@ fi
 # 启动（保留日志，获取真实 PID）
 echo "正在尝试启动 EasyTier-EUI..."
 
-# 用 sudo 启动，但把真实 PID 写入文件
-sudo bash -c "
-  sudo nohup '$EXECUTABLE' >> /dev/null 2>&1 &
+# 不使用 sudo 启动，尽量使用普通账户模式启动，尝试自动打开浏览器。把真实 PID 写入文件
+bash -c "
+  nohup '$EXECUTABLE' >> /dev/null 2>&1 &
 "
 
 # 检查是否真的启动了
