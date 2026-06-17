@@ -174,7 +174,7 @@ def build_executable(build_ver:str = None, one_file:bool = True):
         print("  [Linux] 不使用 WebView ...")
         cmd.extend([
             "--exclude-module", "webview",
-            str(PROJECT_DIR / "http_server.py"),
+            str(PROJECT_DIR / "main_noui.py"),
         ])
     else:
         print("  非 [Linux] 使用 WebView ...")

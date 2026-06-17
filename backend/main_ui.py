@@ -1,26 +1,27 @@
 import logging
 import os
 import sys
-import threading
 
 import webview
 
-import http_server
-from utils import run_configs, log_util, permissions_util
+import main_noui
+from utils import run_configs, log_util
 
 
 class WebWin:
     """主窗口 + 托盘组合控制器"""
 
-    def __init__(self, win_title: str, win_width: int = 1100, win_height: int = 750):
+    def __init__(self, host: str, port: int, win_title: str, win_width: int = 1100, win_height: int = 750):
         self.win_title = win_title
         self.win_width = win_width
         self.win_height = win_height
+        self.host = host
+        self.port = port
         self.is_window_visible = False
-        host = '127.0.0.1'
-        port = 5666
-        self.web_server = WebServer(host=host, port=port)
-        threading.Thread(target=self.web_server.run, daemon=True).start()
+        self.http_server = main_noui.start_server(host, port)
+        if self.http_server is None:
+            logging.error("已运行实例")
+            sys.exit(1)
 
         webview.settings['OPEN_EXTERNAL_LINKS_IN_BROWSER'] = True
         self.window = webview.create_window(
@@ -33,7 +34,7 @@ class WebWin:
         webview_data_dir = os.path.join(run_configs.data_dir(), 'webview')
         os.makedirs(webview_data_dir, exist_ok=True)
         webview.start(
-            private_mode=False, # # 关闭隐私模式，开启数据持久化
+            private_mode=False,
             storage_path=webview_data_dir,
             icon=icon_path,
             debug=not getattr(sys, 'frozen', False),
@@ -48,48 +49,29 @@ class WebWin:
             self.window.show()
             self.is_window_visible = True
 
-    def destroy(self):
-        if self.web_server:
-            self.web_server.stop()
+    def exit(self):
+        if self.http_server:
+            main_noui.stop_server(self.http_server, self.port)
         if self.window:
             self.window.destroy()
-
-    def exit(self):
-        """安全退出"""
-        self.destroy()
-
-class WebServer:
-    def __init__(self, host='127.0.0.1', port=5666, base_url=None):
-        self.host = host
-        self.port = port
-        self.base_url = base_url
-        self.server = None
-
-    def run(self):
-        """在后台线程启动 HTTP 服务器"""
-        try:
-            self.server = http_server.build(self.host, self.port, open_browser=False)
-            if self.server:
-                http_server.serve_forever(self.server)
-        except Exception as e:
-            logging.error(f"服务器错误: {e}")
-        finally:
-            if self.server:
-                self.server.server_close()
-
-    def stop(self):
-        if self.server:
-            logging.info("停止 Web 服务...")
-            self.server.shutdown()
-            self.server.server_close()
-
+            logging.info("关闭窗口")
 
 if __name__ == '__main__':
-    permissions_util.elevate()
     run_configs.setup_env()
     run_mode = run_configs.get_run_mode()
     log_util.setup_log(log_file=os.path.join(run_configs.log_dir(), 'app.log'),
                        log_level=logging.INFO if run_mode > 0 else logging.DEBUG,
                        enabled_console=run_mode == 0)
+    import argparse
+    parser = argparse.ArgumentParser(description='CGI Proxy HTTP Server')
+    parser.add_argument('--host', default='127.0.0.1', help='Host to bind to (default: 127.0.0.1)')
+    parser.add_argument('--port', type=int, default=5666, help='Port to bind to (default: 5666)')
+    args = parser.parse_args()
     ver = run_configs.build_version()
-    win = WebWin(f'易组网 {ver}')
+    win = None
+    try:
+        win = WebWin(args.host, args.port, f'易组网 {ver}')
+    finally:
+        if win:
+            win.exit()
+            sys.exit(0)

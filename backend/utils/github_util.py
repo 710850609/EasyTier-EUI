@@ -6,7 +6,11 @@ import logging
 import re
 import threading
 import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
+# 在进程退出时被首次导入，concurrent.futures 的懒加载机制触发了 threading._register_atexit，但此时 interpreter 已进入 shutdown 状态，报错
+try:
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+except RuntimeError:
+    pass
 from pathlib import Path
 from typing import Optional, List, Tuple
 
