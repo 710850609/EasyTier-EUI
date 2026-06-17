@@ -57,6 +57,8 @@ def stop_server(handle: ServerHandle, port: int):
             data=b'{}', headers={'Content-Type': 'application/json'}, method='POST')
         urllib.request.urlopen(req, timeout=3)
         logging.info("已通过 HTTP 请求关闭提权进程")
+    except KeyboardInterrupt:
+        pass
     except Exception as e:
         logging.warning(f"HTTP 关闭请求失败: {e}")
 
@@ -107,7 +109,10 @@ def run():
     except KeyboardInterrupt:
         pass
     finally:
-        stop_server(handle, args.port)
+        try:
+            stop_server(handle, args.port)
+        except KeyboardInterrupt:
+            pass
 
 
 if __name__ == '__main__':
