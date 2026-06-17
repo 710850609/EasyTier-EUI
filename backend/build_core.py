@@ -27,31 +27,35 @@ DIST_DIR = PROJECT_DIR / "dist"
 APP_NAME = "EasyTier-EUI"
 
 def run_command(cmd, cwd=None):
-    """执行命令并返回结果"""
+    """执行命令并返回结果，实时输出"""
     print(f"执行: {cmd}")
+    sys.stdout.flush()
     try:
         kwargs = {
             'shell': True,
             'cwd': cwd,
-            'capture_output': True,
+            'stdout': subprocess.PIPE,
+            'stderr': subprocess.STDOUT,
             'text': True,
             'encoding': 'utf-8',
             'errors': 'replace',
         }
         if sys.platform == 'win32':
             kwargs['creationflags'] = subprocess.CREATE_NO_WINDOW
-        # Windows 使用 utf-8 编码
-        encoding = 'utf-8' if sys.platform == "win32" else None
-        result = subprocess.run(cmd, **kwargs)
+        process = subprocess.Popen(cmd, **kwargs)
+        for line in process.stdout:
+            print(line, end='')
+            sys.stdout.flush()
+        returncode = process.wait()
+        if returncode != 0:
+            print(f"\n错误: 命令返回非零退出码 {returncode}")
+            sys.stdout.flush()
+            return False
+        return True
     except Exception as e:
         print(f"执行命令时出错: {e}")
+        sys.stdout.flush()
         return False
-    if result.returncode != 0:
-        print(f"错误: {result.stderr}")
-        return False
-    if result.stdout:
-        print(result.stdout)
-    return True
 
 def clean_build():
     """清理构建目录"""
