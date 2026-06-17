@@ -144,7 +144,12 @@ def install(data, *kwargs):
 
     stop_profiles = services.stop_all()
     for item in Path(os.path.join(unzip_temp_dir, f'easytier-{platform}-{arch}')).iterdir():
-        shutil.move(str(item), os.path.join(core_dir, item.name))
+        dst = os.path.join(core_dir, item.name)
+        shutil.move(str(item), dst)
+        if sys.platform != 'win32':
+            # unzip 出来是 rw-r--r-- ，需要添加执行权限
+            import stat
+            os.chmod(dst, os.stat(dst).st_mode | stat.S_IEXEC)
         logging.info(f"移动: {item.name}")
     Path(zip_file).unlink()
     shutil.rmtree(unzip_temp_dir)
@@ -192,4 +197,3 @@ if __name__ == '__main__':
     log_util.setup_log(log_level="DEBUG")
     get_release_info({'refresh': 'true'})
     # print(version_list({}))
-

@@ -134,7 +134,7 @@ def stop_all(*kwargs) -> List[str]:
         if status({'profile': info.profile}):
             if info.use_system_service:
                 system_service_profile = info.profile
-            elif info.autostart:
+            else:
                 logging.info(f"停止 EaysTier 核心服务：{info.profile}")
                 stop({'profile': info.profile})
             stop_profiles.append(info.profile)
