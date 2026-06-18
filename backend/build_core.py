@@ -185,8 +185,6 @@ def build_executable(build_ver:str = None, one_file:bool = True):
         print("  非 [Linux] 使用 WebView ...")
         if sys.platform == "win32":
             cmd.extend([
-                "--upx-exclude", "WebBrowserInterop.x86.dll",  # UPX 不支持压缩 .NET DLL
-                "--upx-exclude", "WebBrowserInterop.x64.dll",  # UPX 不支持压缩 .NET DLL
                 "--uac-admin",
             ])
         # 打包文件的图标路径
