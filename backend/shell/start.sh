@@ -59,7 +59,6 @@ if [ -f "$PID_FILE" ]; then
     REAL_PID=$(cat "$PID_FILE")
     if sudo kill -0 "$REAL_PID" 2>/dev/null; then
         log "EasyTier-EUI 已启动，PID: $REAL_PID"
-        [ -t 0 ] && echo "启动信息：可点击URL跳浏览器访问，或是手机扫描二维码访问"
     else
         log "警告：程序可能启动失败"
     fi
@@ -71,7 +70,7 @@ fi
 if [ -t 0 ] && [ -f "$LOG_FILE" ]; then
     echo ""
     echo "--- 启动日志 ---"
-    tail -20 "$LOG_FILE"
+    tail -25 "$LOG_FILE"
 fi
 
 # 终端提示（只在交互终端）
