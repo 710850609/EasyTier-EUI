@@ -71,7 +71,9 @@ if __name__ == '__main__':
     win = None
     try:
         win = WebWin(args.host, args.port, f'易组网 {ver}')
+    except BaseException:
+        logging.exception("程序异常退出")
+        raise
     finally:
         if win:
             win.exit()
-            sys.exit(0)

@@ -1,5 +1,6 @@
 import logging
 import os
+import signal
 import sys
 import time
 import webbrowser
@@ -90,6 +91,13 @@ def run():
     if handle is None:
         sys.exit(1)
 
+    # 注册 SIGINT 处理器，确保 Ctrl+C 始终能被捕获
+    _shutdown_requested = False
+    def _on_sigint(signum, frame):
+        nonlocal _shutdown_requested
+        _shutdown_requested = True
+    original_sigint = signal.signal(signal.SIGINT, _on_sigint)
+
     try:
         acc_host = args.host
         acc_port = args.port
@@ -108,14 +116,14 @@ def run():
             logging.info(f"已打开本地设备浏览器，请在浏览器上访问")
     except Exception as e:
         logging.error(f"打开本地设备不支持浏览器访问: {e}")
-    stop_event = threading.Event()
+
     try:
         logging.info("按 Ctrl+C 停止服务")
-        while not stop_event.is_set():
-            stop_event.wait(1)
-    except KeyboardInterrupt:
-        pass
+        while not _shutdown_requested:
+            time.sleep(1)
     finally:
+        # 恢复原始信号处理器
+        signal.signal(signal.SIGINT, original_sigint)
         try:
             stop_server(handle, args.port)
         except KeyboardInterrupt:
