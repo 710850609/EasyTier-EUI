@@ -38,23 +38,28 @@ if [ -f "$PID_FILE" ]; then
     sudo rm -f "$PID_FILE"
 fi
 
-# 启动（保留日志，获取真实 PID）
+# 启动 EasyTier-EUI（前台等待密码确认后，再后台化）
 log "正在尝试启动 EasyTier-EUI..."
+"$EXECUTABLE" >> /dev/null 2>&1 &
+LAUNCH_PID=$!
 
-# 不使用 sudo 启动，尽量使用普通账户模式启动，尝试自动打开浏览器。把真实 PID 写入文件
-bash -c "
-  nohup '$EXECUTABLE' >> /dev/null 2>&1 &
-"
+# 等待 EasyTier-EUI 完成提权（内部弹密码框，确认后原进程退出，新进程写 PID 文件）
+log "等待 EasyTier-EUI 启动..."
+WAIT_SEC=0
+while [ $WAIT_SEC -lt 30 ]; do
+    if [ -f "$PID_FILE" ]; then
+        break
+    fi
+    sleep 1
+    WAIT_SEC=$((WAIT_SEC + 1))
+    log "等待 EasyTier-EUI 启动 (已等待 $WAIT_SEC 秒)"
+done
 
-# 检查是否真的启动了
-log "等待 EasyTier-EUI 启动 (3 秒)"
-sleep 3
 if [ -f "$PID_FILE" ]; then
     REAL_PID=$(cat "$PID_FILE")
-    log "获取到的 PID: $REAL_PID"
     if sudo kill -0 "$REAL_PID" 2>/dev/null; then
         log "EasyTier-EUI 已启动，PID: $REAL_PID"
-        echo "启动信息：可点击URL跳浏览器访问，或是手机扫描二维码访问"
+        [ -t 0 ] && echo "启动信息：可点击URL跳浏览器访问，或是手机扫描二维码访问"
     else
         log "警告：程序可能启动失败"
     fi
@@ -62,13 +67,16 @@ else
     log "错误：未能获取进程 PID"
 fi
 
-# 显示日志
-if [ -f "$LOG_FILE" ]; then
+# 显示日志（只在交互终端）
+if [ -t 0 ] && [ -f "$LOG_FILE" ]; then
     echo ""
     echo "--- 启动日志 ---"
     tail -20 "$LOG_FILE"
 fi
 
-echo ""
-echo "程序已在后台运行，关闭此窗口不影响服务。关闭请运行 stop.sh"
-[ -t 0 ] && read -p "按 Enter 键关闭窗口..."
+# 终端提示（只在交互终端）
+if [ -t 0 ]; then
+    echo ""
+    echo "程序已在后台运行，关闭此窗口不影响服务。关闭请运行 stop.sh"
+    read -p "按 Enter 键关闭窗口..."
+fi
