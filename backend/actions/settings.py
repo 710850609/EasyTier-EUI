@@ -43,8 +43,8 @@ def delete_cache(*kwargs):
             except (OSError, PermissionError):
                 pass
     shutil.rmtree(download_path, ignore_errors=True)
-    logging.info(f"删除缓存目录: {download_path}, 共删除 {total_bytes} 字节")
     if total_bytes == 0:
+        logging.info(f"删除缓存目录: {download_path}, 共删除 0 字节")
         return f"缓存已删除干净"
     units = ["B", "KB", "MB", "GB", "TB"]
     i = 0
@@ -52,6 +52,7 @@ def delete_cache(*kwargs):
         total_bytes /= 1024
         i += 1
     size = f"{total_bytes:.2f} {units[i]}"
+    logging.info(f"删除缓存目录: {download_path}, 共删除 {size}")
     return f"缓存已删除 {size}"
 
 def shutdown(*kwargs):
