@@ -413,8 +413,12 @@ def copy_output(output_name, et_file, build_ver, one_file:bool):
                 dir_info = zipfile.ZipInfo(str(arch_name) + '/')
                 zf.writestr(dir_info, '')
             elif item.is_file():
-                # 打包文件
-                zf.write(item, arch_name)
+                # 打包文件，并保留 Unix 权限（external_attr 高 16 位存放文件 mode）
+                st = item.stat()
+                info = zipfile.ZipInfo.from_file(item, arch_name)
+                info.external_attr = (st.st_mode & 0xFFFF) << 16
+                with open(item, 'rb') as f:
+                    zf.writestr(info, f.read())
     return True, zipfile_name
 
 def main(et_ver:str=None, github_proxy_url:str=None, build_ver:str="", one_file:bool=True):

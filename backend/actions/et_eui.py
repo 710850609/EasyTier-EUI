@@ -55,7 +55,11 @@ def update(params: dict, *kwargs):
         app_path = Path(run_configs.core_dir()).parent
         shutil.copytree(os.path.join(extract_dir, 'EasyTier-EUI'), app_path.joinpath('_update'), dirs_exist_ok=True)
         upgrade_script = run_configs.upgrade_script_path()
-        cmd = [upgrade_script, str(app_path)]
+        if sys.platform != 'win32':
+            # PyInstaller --add-data 不保留执行权限，用 bash 执行避免依赖 +x
+            cmd = ['bash', upgrade_script, str(app_path)]
+        else:
+            cmd = [upgrade_script, str(app_path)]
         logging.info(f"执行升级脚本：{' '.join(cmd)}")
         common_util.run_cmd(cmd)
     pass
