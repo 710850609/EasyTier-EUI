@@ -13,51 +13,57 @@ APP_DIR="$1"
 UPDATE_DIR="$APP_DIR/_update"
 APP_NAME="EasyTier-EUI"
 LOG_DIR="$APP_DIR/logs"
+SCRIPT_NAME="upgrade.sh"
 
 mkdir -p "$LOG_DIR"
 
-# 输出同时写入终端和日志文件（参考 start.sh）
-exec > >(tee -a "$LOG_DIR/app.log") 2>&1
-echo "$(date '+%Y-%m-%d %H:%M:%S') === upgrade.sh 执行 ==="
+# 统一日志输出（同时输出到终端和日志文件）
+log() {
+    local msg="$(date '+%Y-%m-%d %H:%M:%S') - [ $SCRIPT_NAME ] - $*"
+    echo "$msg"
+    echo "$msg" >> "$LOG_DIR/app.log"
+}
 
-# 等待旧进程完全退出（最多等 3 秒）
+log "执行"
+
+# 等待旧进程完全退出（最多等 30 秒）
 WAIT_SEC=0
 while pgrep -x "$APP_NAME" > /dev/null 2>&1; do
-    if [ $WAIT_SEC -ge 3 ]; then
-        echo "等待超时，强制终止旧进程"
+    if [ $WAIT_SEC -ge 30 ]; then
+        log "等待超时，强制终止旧进程"
         killall -9 "$APP_NAME" > /dev/null 2>&1 || true
         sleep 2
         break
     fi
-    echo "等待旧进程退出... ($WAIT_SEC 秒)"
+    log "等待旧进程退出... ($WAIT_SEC 秒)"
     sleep 1
     WAIT_SEC=$((WAIT_SEC + 1))
 done
 
-echo "旧进程已退出，开始替换文件"
+log "旧进程已退出，开始替换文件"
 
 # 替换二进制
 if [ -f "$UPDATE_DIR/$APP_NAME" ]; then
     mv -f "$UPDATE_DIR/$APP_NAME" "$APP_DIR/$APP_NAME"
     chmod +x "$APP_DIR/$APP_NAME"
-    echo "二进制已替换"
+    log "二进制已替换"
 else
-    echo "错误: 更新文件不存在 $UPDATE_DIR/$APP_NAME"
+    log "错误: 更新文件不存在 $UPDATE_DIR/$APP_NAME"
     exit 1
 fi
 
 # 清理更新目录
 rm -rf "$UPDATE_DIR"
-echo "更新目录已清理"
+log "更新目录已清理"
 
 # 启动
 if [[ "$OSTYPE" == "darwin"* ]]; then
-    echo "在 macOS 上启动..."
+    log "在 macOS 上启动..."
     open "$APP_DIR/$APP_NAME"
 else
-    echo "在 Linux 上启动..."
+    log "在 Linux 上启动..."
     sudo "$APP_DIR/start.sh" &
-    echo "启动命令已执行"
+    log "启动命令已执行"
 fi
 
-echo "$(date '+%Y-%m-%d %H:%M:%S') 升级脚本完成"
+log "完成"

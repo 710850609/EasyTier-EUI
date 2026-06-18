@@ -5,23 +5,29 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 EXECUTABLE="$SCRIPT_DIR/EasyTier-EUI"
 PID_FILE="$SCRIPT_DIR/data/server.pid"
 LOG_FILE="$SCRIPT_DIR/logs/app.log"
+SCRIPT_NAME="stop.sh"
 
 mkdir -p "$SCRIPT_DIR/logs"
 
-# 输出同时写入终端和日志文件
-exec > >(tee -a "$LOG_FILE") 2>&1
-echo "$(date '+%Y-%m-%d %H:%M:%S') === stop.sh 执行 ==="
+# 统一日志输出（同时输出到终端和日志文件）
+log() {
+    local msg="$(date '+%Y-%m-%d %H:%M:%S') - [ $SCRIPT_NAME ] - $*"
+    echo "$msg"
+    echo "$msg" >> "$LOG_FILE"
+}
+
+log "执行"
 
 # 1. 先用 PID 文件尝试停止
 if [ -f "$PID_FILE" ]; then
     PID=$(cat "$PID_FILE")
     if sudo kill -0 "$PID" 2>/dev/null; then
-        echo "正在停止 PID $PID ..."
+        log "正在停止 PID $PID ..."
         sudo kill "$PID"
         sleep 1
         # 若仍存活，强制杀死
         if sudo kill -0 "$PID" 2>/dev/null; then
-            echo "强制停止 PID $PID ..."
+            log "强制停止 PID $PID ..."
             sudo kill -9 "$PID"
         fi
     fi
@@ -35,10 +41,10 @@ else
     # 回退方案：ps + grep + awk + kill
     PIDS=$(ps -eo pid,args | grep "$EXECUTABLE" | grep -v grep | awk '{print $1}')
     if [ -n "$PIDS" ]; then
-        echo "正在停止残留进程: $PIDS"
+        log "正在停止残留进程: $PIDS"
         sudo kill $PIDS 2>/dev/null
     fi
 fi
 
-echo "EasyTier-EUI 已停止"
+log "EasyTier-EUI 已停止"
 [ -t 0 ] && read -p "按 Enter 键关闭窗口..."
