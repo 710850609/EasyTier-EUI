@@ -1082,12 +1082,12 @@ const getLanIps = () => {
 }
 
 onMounted(async () => {
+  getLanIps()
   await loadConfigs()
   if (configList.value.length == 0) {
     return
   }
   selectedConfig.value = configList.value[0].profile
-  getLanIps()
   await loadConfig(configList.value[0].profile)
   api.peers.publicPeers({'profile': selectedConfig.value}).then(async data => {
     publicPeerOptions.value = data.data

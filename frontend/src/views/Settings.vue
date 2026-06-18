@@ -79,7 +79,7 @@
               name="refresh" 
               :class="{ 'is-spinning': isFetchingVersionList }"
               color="var(--color-primary)"
-              @click.stop="getEtReleaseInfo(true)" 
+              @click.stop="getEtReleaseInfo(true, true)" 
             />
           </template>
         </var-select>
@@ -124,7 +124,8 @@
             @click="setupShowEuiReleaseInfo('latest_release')" />
           </span>
           <span class="version-value">{{ euiReleaseInfo.latest_release.version }}</span>
-        </div>
+        </div>        
+        <var-chip type="warning" size="mini" plain v-if="buildVersion < euiReleaseInfo.latest_release.version">新版本</var-chip>
         <var-button type="primary" size="small" @click="installEuiVersion('release')" auto-loading
            v-if="euiReleaseInfo?.latest_release?.version && buildVersion !== euiReleaseInfo.latest_release.version">
           <var-icon name="download" />
@@ -140,6 +141,7 @@
           </span>          
           <span class="version-value">{{ euiReleaseInfo.latest_prerelease.version }}</span>
         </div>
+        <var-chip type="warning" size="mini" plain v-if="buildVersion < euiReleaseInfo.latest_prerelease.version">新版本</var-chip>
         <var-button type="primary" size="small" @click="installEuiVersion('prerelease')" auto-loading>
           <var-icon name="download" />
           安装
@@ -150,7 +152,7 @@
           <span class="setting-label">当前版本</span>
           <span class="version-value">{{ buildVersion }}</span>
         </div>
-        <var-button type="primary" size="small" @click="getEuiReleaseInfo(true)" auto-loading>
+        <var-button type="primary" size="small" @click="getEuiReleaseInfo(true, true)" auto-loading>
           <var-icon name="refresh" size="18" />
           检查更新
         </var-button>
@@ -541,13 +543,13 @@ const setEtLogLevel = async (level) => {
   }
 }
 
-const getEuiReleaseInfo = (refresh=false) => {
+const getEuiReleaseInfo = (refresh=false, showTip = true) => {
   return new Promise((resolve, reject) => {
     api.etEui.getReleaseInfo({'refresh': refresh}).then((data) => {
       euiReleaseInfo.value = data.data
       // euiRelease.value = data.data.latest_release
       // euiPreRelease.value = data.data.latest_prerelease
-      if (refresh) {
+      if (refresh && showTip) {
         toast.success(`易组网在线版本已刷新\n${formatDate(data.data.update_time)}`)
       }
     }).finally((error) => {
@@ -612,8 +614,8 @@ onMounted(() => {
     getGithubMirrors()
     showDevContent.value = true
   }  
-  getEtReleaseInfo(false)
-  getEuiReleaseInfo(false)
+  getEtReleaseInfo(true, false)
+  getEuiReleaseInfo(true, false)
   getEtVersion()
   getEtLogLevel()
   getEuiInfo()
