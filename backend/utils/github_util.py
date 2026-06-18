@@ -326,7 +326,8 @@ def download_release_file(
         output_path: str,
         desc: str = "",
         num_threads: int = 4,
-        timeout: int = 300
+        timeout: int = 300,
+        progress_callback=None
 ) -> None:
     """
     多镜像 + 分段并行下载。
@@ -335,6 +336,7 @@ def download_release_file(
     :param output_path: 保存路径
     :param desc: 进度描述
     :param num_threads: 分段并行数，默认 4
+    :param progress_callback: 进度回调 callback(percent: int, description: str)
     """
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -353,7 +355,7 @@ def download_release_file(
     if not usable_range_urls:
         # 全都不支持 Range，回退到单线程，挑第一个可用的
         logging.warning("没有地址支持 Range，回退到单线程下载")
-        _download_single(usable_urls[0], output_path, desc, timeout)
+        _download_single(usable_urls[0], output_path, desc, timeout, progress_callback)
         return
     logging.info(f"加速地址可用 {len(usable_urls)} 个，支持 Range 下载 {len(usable_range_urls)} 个")
     resp = requests.head(usable_range_urls[0], allow_redirects=True, timeout=timeout)
@@ -393,6 +395,8 @@ def download_release_file(
                         if p > last_percent[0]:
                             logging.info(f"{desc} 下载进度: {p}%")
                             last_percent[0] = p
+                            if progress_callback:
+                                progress_callback(p, desc)
                 return True
             logging.warning(f"URL 失败，切换镜像: {url}")
 
@@ -437,18 +441,23 @@ def download_release_file(
         raise
 
 
-def _download_single(url: str, output_path: Path, desc: str, timeout: int):
+def _download_single(url: str, output_path: Path, desc: str, timeout: int, progress_callback=None):
     """不支持 Range 时的单线程回退"""
     logging.info(f"{desc} 单线程下载: {url}")
     with requests.get(url, stream=True, timeout=timeout) as resp:
         resp.raise_for_status()
         total = int(resp.headers.get("content-length", 0))
         downloaded = 0
+        last_percent = -1
         with open(output_path, "wb") as f:
             for chunk in resp.iter_content(8192):
                 if chunk:
                     f.write(chunk)
                     downloaded += len(chunk)
-                    if total > 0 and downloaded % (1024 * 1024 * 5) == 0:  # 每5MB打一次日志
-                        logging.info(f"{desc} 进度: {int(downloaded / total * 100)}%")
+                    if total > 0:
+                        p = int(downloaded / total * 100)
+                        if p > last_percent:
+                            last_percent = p
+                            if progress_callback:
+                                progress_callback(p, desc)
     logging.info(f"{desc} 下载完成")

@@ -11,6 +11,8 @@ import time
 import zipfile
 from pathlib import Path
 
+import utils.download_manager as download_manager
+from utils.download_manager import DownloadTask
 import actions.configs as configs
 import utils.common_util as common_util
 import utils.github_util as github_util
@@ -118,32 +120,82 @@ def get_release_info(params: dict, *kwargs):
             f.write(json.dumps(release_info, ensure_ascii=False, indent=2))
     return release_info
 
-def download_easytier_eui(params:dict, *kwargs):
+def download_easytier_eui(params: dict, *kwargs):
     if not params:
-        raise HttpResponse(f"未指定platfrom和arch参数")
-    download_dir = os.path.join(run_configs.data_dir(), 'download')
-    et_lite_version = _get_et_eui_latest_version()
+        raise HttpResponse(f"未指定platform和arch参数")
     platform = params.get('platform', '')
     arch = params.get('arch', '')
     profile = params.get('profile', '')
-    et_lite_package = _get_et_eui_package(platform, arch, et_lite_version, download_dir)
+    if not platform or not arch:
+        raise HttpResponse(f"platform和arch参数不能为空")
+
+    download_id = download_manager.new_download_id()
+    task = DownloadTask(download_id, params)
+    task.update_progress(0, '正在初始化下载任务...')
+    download_manager.run_async_download(_do_download_easytier_eui, task, platform, arch, profile)
+    return HttpResponse(data={'download_id': download_id})
+
+
+def get_download_progress(params: dict, *kwargs):
+    download_id = params.get('download_id', '')
+    if not download_id:
+        raise HttpResponse(f"download_id参数不能为空")
+    progress = DownloadTask.load(download_id)
+    if progress is None:
+        raise HttpResponse(f"下载任务不存在: {download_id}")
+    progress.pop('file_path', None)
+    progress.pop('file_name', None)
+    return HttpResponse(data=progress)
+
+
+def download_result(params: dict, *kwargs):
+    download_id = params.get('download_id', '')
+    if not download_id:
+        raise HttpResponse(f"download_id参数不能为空")
+    progress = DownloadTask.load(download_id)
+    if progress is None:
+        raise HttpResponse(f"下载任务不存在: {download_id}")
+    status = progress.get('status')
+    if status == 0:
+        raise HttpResponse(f"下载尚未完成")
+    if status == 2:
+        raise HttpResponse(f"下载失败: {progress.get('description')}")
+    file_path = progress.get('file_path')
+    file_name = progress.get('file_name')
+    if not file_path or not os.path.exists(file_path):
+        raise HttpResponse(f"下载文件不存在")
+    return HttpResponse(file=file_path, download_name=file_name)
+
+
+def _do_download_easytier_eui(task: DownloadTask, platform: str, arch: str, profile: str):
+    download_dir = os.path.join(run_configs.data_dir(), 'download')
+    task.update_progress(5, '正在获取最新版本信息...')
+    et_lite_version = _get_et_eui_latest_version()
+    task.update_progress(10, f'获取到版本: {et_lite_version}，准备下载...')
+
+    def on_download_progress(percent, desc):
+        mapped = 10 + int(percent * 0.80)
+        task.update_progress(mapped, f'正在下载 EasyTier-EUI {et_lite_version}... ({percent}%)')
+
+    et_lite_package = _get_et_eui_package_async(platform, arch, et_lite_version, download_dir, on_download_progress)
+
     if platform == 'fnos':
-        return HttpResponse(file=et_lite_package, download_name=os.path.basename(et_lite_package))
+        task.update_progress(95, '下载完成，准备返回文件...')
+        task.set_completed(et_lite_package, os.path.basename(et_lite_package))
     else:
+        task.update_progress(90, '正在合并配置文件...')
         et_lite_filename = Path(et_lite_package).name
         output_file = f"{download_dir}/temp/{et_lite_filename.replace('.zip', '_merge.zip')}"
         _merge_package(profile, et_lite_package, output_file, download_dir)
-        return HttpResponse(file=output_file, download_name=et_lite_filename)
+        task.update_progress(95, '合并完成，准备返回文件...')
+        task.set_completed(output_file, et_lite_filename)
 
-def _get_et_eui_latest_version():
-    api_url = "https://api.github.com/repos/710850609/EasyTier-EUI/releases/latest"
-    return github_util.get_latest_version(api_url)
 
-def _get_et_eui_package(platform:str, arch:str, et_lite_version: str, download_dir: str):
+def _get_et_eui_package_async(platform: str, arch: str, et_lite_version: str, download_dir: str, progress_callback=None):
     support_platforms = ['windows', 'linux', 'macos', 'fnos']
     if platform not in support_platforms:
         raise HttpResponse(f"当前不支持 {platform} 平台下载，仅支持 {support_platforms}")
-    support_arches = ['x86_64', 'aarch64', 'riscv64']
+    support_arches = ['x86_64', 'aarch64', 'riscv64', 'armv71']
     if arch not in support_arches:
         raise HttpResponse(f"当前不支持 {arch} 架构下载，仅支持 {support_arches}")
 
@@ -158,10 +210,14 @@ def _get_et_eui_package(platform:str, arch:str, et_lite_version: str, download_d
     download_url = f"https://github.com/710850609/EasyTier-EUI/releases/download/{last_version}/{file_name}"
     logging.debug(f"不存在缓存，开始下载 {download_url}")
     download_temp_file = f"{download_dir}/temp/{file_name}.{int(time.time())}"
-    github_util.download_release_file(download_url, download_temp_file, Path(download_temp_file).name)
+    github_util.download_release_file(download_url, download_temp_file, Path(download_temp_file).name, progress_callback=progress_callback)
     common_util.move(download_temp_file, download_file)
     logging.debug(f"已下载： {download_file}")
     return download_file
+
+def _get_et_eui_latest_version():
+    api_url = "https://api.github.com/repos/710850609/EasyTier-EUI/releases/latest"
+    return github_util.get_latest_version(api_url)
 
     
 def _merge_package(profile, et_lite_package, output_file, unzip_dir):

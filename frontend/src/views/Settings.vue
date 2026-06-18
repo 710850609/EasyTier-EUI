@@ -86,7 +86,7 @@
       </div>
       <div class="setting-row" v-if="etVersion.selected_version != ''">
         <div class="setting-actions">
-          <var-chip v-if="hasNewVersion" type="warning" size="small" plain>有新版本</var-chip>
+          <var-chip v-if="hasNewVersion" type="warning" size="mini" plain>可升级</var-chip>
           <var-button type="primary" size="small" @click="installEtCore(true)" auto-loading>
             <var-icon name="download" />
             安装

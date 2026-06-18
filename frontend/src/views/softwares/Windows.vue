@@ -24,13 +24,17 @@
       <div>
         <var-divider />
         <var-space :size="[20, 20]" justify="center">
-          <var-button type="primary" size="normal" block @click="showSelectProfile('etEui')" :loading="downloadingEtEui">
+          <var-button type="primary" size="normal" block @click="showSelectProfile('etEui')" :loading="downloadingKey === 'windows-x86_64'">
             <template #default>
               <var-icon name="download"/>
               稳定版
             </template>
           </var-button>
         </var-space>
+        <div v-if="progress" class="download-progress">
+          <var-progress :value="progress.current_progress" :track="true" />
+          <p class="progress-desc">{{ progress.description }}</p>
+        </div>
       </div>
     </var-paper>
 
@@ -58,13 +62,17 @@
       <div>
         <var-divider />
         <var-space :size="[20, 20]" justify="center">
-          <var-button type="primary" size="normal" block @click="showSelectProfile('mgr')" :loading="downloadingMgrPro">
+          <var-button type="primary" size="normal" block @click="showSelectProfile('mgr')" :loading="mgrDownloadingKey === 'mgr'">
             <template #default>
               <var-icon name="download"/>
               稳定版
             </template>
           </var-button>
         </var-space>
+        <div v-if="mgrProgress" class="download-progress">
+          <var-progress :value="mgrProgress.current_progress" :track="true" />
+          <p class="progress-desc">{{ mgrProgress.description }}</p>
+        </div>
       </div>
     </var-paper>
 
@@ -170,14 +178,24 @@
 <script setup>
 import toast from '../../components/toast.js'
 import { api } from '../../utils/api.js'
-// import { downloadEasyTierGUI } from '../../utils/github.js'
+import { useAsyncDownload } from '../../utils/downloadProgress.js'
+
+const { startDownload, progress, downloadingKey } = useAsyncDownload(
+  api.etEui.startDownload,
+  api.etEui.getDownloadProgress,
+  api.etEui.getDownloadResultUrl,
+)
+
+const { startDownload: startMgrDownload, progress: mgrProgress, downloadingKey: mgrDownloadingKey } = useAsyncDownload(
+  api.windows.startMgrDownload,
+  api.windows.getMgrDownloadProgress,
+  api.windows.getMgrDownloadResultUrl,
+)
 
 const showConfigSelectDialog = ref(false)
 const configFiles = ref([])
 const selectedConfig = ref(null)
 const selectedApp = ref(null)
-const downloadingEtEui = ref(false)
-const downloadingMgrPro = ref(false)
 
 const showSelectProfile = async (app) => {
   selectedApp.value = app
@@ -196,28 +214,22 @@ const showSelectProfile = async (app) => {
 }
 
 const downloadApp = () => {
-  try {
-    if (selectedApp.value == 'mgr') {
-      downloadingMgrPro.value = true
-      let url = api.windows.getDownloadMgrProUrl({profile: selectedConfig.value || ''})
-      window.open(url, '_blank')
-    } else if (selectedApp.value == 'etEui') {
-      downloadingEtEui.value = true
-      const url = api.etEui.getDownloadEasyTierEuiUrl({platform: 'windows', 'arch': 'x86_64', profile: selectedConfig.value || ''})
-      window.open(url, '_blank')
-    } else {
-      toast.error('未知的待下载应用')
-      return
-    }
-  } finally {
-    downloadingMgrPro.value = false
-    downloadingEtEui.value = false
-    selectedConfig.value = null
+  if (selectedApp.value == 'mgr') {
+    startMgrDownload('mgr', { profile: selectedConfig.value || '' }).catch(err => {
+      console.error('下载失败:', err)
+    })
+  } else if (selectedApp.value == 'etEui') {
+    startDownload('windows-x86_64', { platform: 'windows', arch: 'x86_64', profile: selectedConfig.value || '' }).catch(err => {
+      console.error('下载失败:', err)
+    })
+  } else {
+    toast.error('未知的待下载应用')
+    return
   }
+  selectedConfig.value = null
 }
 
 const download = (type, arch, prerelease) => {
-  // return downloadEasyTierGUI(type, arch, prerelease)  
   return new Promise((resolve, reject) => {
     api.etApp.getDownloadUrl({type: type, arch: arch, prerelease: prerelease}).then((resp) => {
       window.open(resp.data, '_blank')
@@ -311,4 +323,14 @@ const download = (type, arch, prerelease) => {
   min-width: 90px;
 }
 
+.download-progress {
+  margin-top: 16px;
+  text-align: center;
+}
+
+.progress-desc {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--color-on-surface-variant);
+}
 </style>

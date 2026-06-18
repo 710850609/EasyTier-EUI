@@ -34,7 +34,7 @@ def get_download_url(system:str, arch: str, version: str=None):
     url = f"https://github.com/EasyTier/EasyTier/releases/download/v{version}/{get_package_name(system, arch, version)}"
     return github_util.get_download_url_proxy(url)
 
-def download_package(download_dir: str, system: str, arch: str, version: str=None):
+def download_package(download_dir: str, system: str, arch: str, version: str=None, progress_callback=None):
     if  version is None or version == '':
         version = get_latest_version()
     download_file_name = get_package_name(system, arch, version)
@@ -46,7 +46,7 @@ def download_package(download_dir: str, system: str, arch: str, version: str=Non
     logging.debug(f"不存在缓存，开始下载 {download_file}");
     download_url = f"https://github.com/EasyTier/EasyTier/releases/download/v{version}/{download_file_name}"
     download_temp_file = f"{download_dir}/temp/{download_file_name}.{int(time.time())}"
-    github_util.download_release_file(download_url, download_temp_file, download_file_name)
+    github_util.download_release_file(download_url, download_temp_file, download_file_name, progress_callback=progress_callback)
     common_util.move(download_temp_file, download_file)
     logging.debug(f"已下载： {download_file}")
     return download_file

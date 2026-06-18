@@ -20,19 +20,23 @@
       <div>
         <var-divider />
         <var-space class="eui-download-btn-group" :size="[20, 20]" justify="center">
-          <var-button type="primary" size="normal" block @click="downloadEasyTierEui('fnos', 'x86_64')" auto-loading>
+          <var-button type="primary" size="normal" block @click="downloadEasyTierEui('fnos', 'x86_64')" :loading="downloadingKey === 'fnos-x86_64'">
             <template #default>
               <var-icon name="download"/>
               x86_64版
             </template>
           </var-button>
-          <var-button type="primary" size="normal" block @click="downloadEasyTierEui('fnos', 'aarch64')" auto-loading>
+          <var-button type="primary" size="normal" block @click="downloadEasyTierEui('fnos', 'aarch64')" :loading="downloadingKey === 'fnos-aarch64'">
             <template #default>
               <var-icon name="download"/>
               aarch64版
             </template>
           </var-button>
         </var-space>
+        <div v-if="progress" class="download-progress">
+          <var-progress :value="progress.current_progress" :track="true" />
+          <p class="progress-desc">{{ progress.description }}</p>
+        </div>
       </div>
     </var-paper>
   </div>
@@ -40,12 +44,18 @@
 
 <script setup>
 import { api } from '../../utils/api.js'
+import { useAsyncDownload } from '../../utils/downloadProgress.js'
+
+const { startDownload, progress, downloadingKey } = useAsyncDownload(
+  api.etEui.startDownload,
+  api.etEui.getDownloadProgress,
+  api.etEui.getDownloadResultUrl,
+)
 
 const downloadEasyTierEui = (platform, arch) => {
-  return new Promise((resolve, reject) => {
-    let url = api.etEui.getDownloadEasyTierEuiUrl({platform: platform, 'arch': arch})
-    window.open(url, '_blank')
-    resolve()
+  if (downloadingKey.value) return
+  startDownload(`${platform}-${arch}`, { platform, arch }).catch(err => {
+    console.error('下载失败:', err)
   })
 }
 </script>
@@ -173,6 +183,17 @@ const downloadEasyTierEui = (platform, arch) => {
   font-family: 'Fira Code', 'JetBrains Mono', monospace;
   font-size: 13px;
   font-weight: 500;
+}
+
+.download-progress {
+  margin-top: 16px;
+  text-align: center;
+}
+
+.progress-desc {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--color-on-surface-variant);
 }
 
 /* 移动端响应式优化 */

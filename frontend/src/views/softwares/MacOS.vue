@@ -23,19 +23,23 @@
       <div>
         <var-divider />
         <var-space :size="[20, 20]" justify="center">
-          <var-button type="primary" size="normal" block @click="downloadEasyTierEui('macos', 'aarch64')" auto-loading>
+          <var-button type="primary" size="normal" block @click="downloadEasyTierEui('macos', 'aarch64')" :loading="downloadingKey === 'macos-aarch64'">
             <template #default>
               <var-icon name="download"/>
               Apple芯片版
             </template>
           </var-button>
-          <var-button type="primary" size="normal" block @click="downloadEasyTierEui('macos', 'x86_64')" auto-loading>
+          <var-button type="primary" size="normal" block @click="downloadEasyTierEui('macos', 'x86_64')" :loading="downloadingKey === 'macos-x86_64'">
             <template #default>
               <var-icon name="download"/>
               Intel芯片版
             </template>
           </var-button>
         </var-space>
+        <div v-if="progress" class="download-progress">
+          <var-progress :value="progress.current_progress" :track="true" />
+          <p class="progress-desc">{{ progress.description }}</p>
+        </div>
       </div>
     </var-paper>
 
@@ -125,10 +129,15 @@
 <script setup>
 import toast from '../../components/toast.js'
 import { api } from '../../utils/api.js'
-// import { downloadEasyTierGUI } from '../../utils/github.js'
+import { useAsyncDownload } from '../../utils/downloadProgress.js'
+
+const { startDownload, progress, downloadingKey } = useAsyncDownload(
+  api.etEui.startDownload,
+  api.etEui.getDownloadProgress,
+  api.etEui.getDownloadResultUrl,
+)
 
 const download = (type, arch, prerelease) => {
-  // return downloadEasyTierGUI(arch, prerelease)
   return new Promise((resolve, reject) => {
     api.etApp.getDownloadUrl({type: type, arch: arch, prerelease: prerelease}).then((resp) => {
       window.open(resp.data, '_blank')
@@ -145,6 +154,10 @@ const selectedPlatform = ref(null)
 const selectedArch = ref(null)
 
 const downloadEasyTierEui = async (platform, arch) => {
+  if (downloadingKey.value) {
+    toast.warning(`当前 ${downloadingKey.value} 正在下载中，请稍后`)
+    return
+  }
   const configs = await api.configs.listConfigFiles().then(resp => resp.data).catch(error => toast.error('获取配置失败:', error))
   let profile = ''
   selectedPlatform.value = platform
@@ -159,14 +172,16 @@ const downloadEasyTierEui = async (platform, arch) => {
     showConfigSelectDialog.value = true
     return
   }
-  const url = api.etEui.getDownloadEasyTierEuiUrl({platform: platform, 'arch': arch, profile: profile})
-  window.open(url, '_blank')
+  startDownload(`${platform}-${arch}`, { platform, arch, profile }).catch(err => {
+    console.error('下载失败:', err)
+  })
 }
 
 const handleConfigConfirm = async () => {
   if (selectedConfig.value) {
-    const url = api.etEui.getDownloadEasyTierEuiUrl({platform: selectedPlatform.value, 'arch': selectedArch.value, profile: selectedConfig.value || ''})
-    window.open(url, '_blank')
+    startDownload(`${selectedPlatform.value}-${selectedArch.value}`, { platform: selectedPlatform.value, arch: selectedArch.value, profile: selectedConfig.value || '' }).catch(err => {
+      console.error('下载失败:', err)
+    })
   }
   selectedConfig.value = null
 }
@@ -254,5 +269,16 @@ const handleConfigConfirm = async () => {
 .item-actions .var-button {
   flex: 1;
   min-width: 90px;
+}
+
+.download-progress {
+  margin-top: 16px;
+  text-align: center;
+}
+
+.progress-desc {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--color-on-surface-variant);
 }
 </style>

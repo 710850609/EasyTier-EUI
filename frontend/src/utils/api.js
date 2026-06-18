@@ -241,12 +241,18 @@ export const api = {
   
   // 窗口相关
   windows: {
-    getDownloadMgrProUrl: (data) => getFullUrl('/windows/download_mgr_pro', data)
+    getDownloadMgrProUrl: (data) => getFullUrl('/windows/download_mgr_pro', data),
+    startMgrDownload: (data) => post('/windows/download_mgr_pro', data),
+    getMgrDownloadProgress: (data) => get('/windows/get_download_mgr_pro_progress', data),
+    getMgrDownloadResultUrl: (data) => getFullUrl('/windows/download_mgr_pro_result', data),
   },
 
   // easytier-lite 相关
   etEui: {
     getDownloadEasyTierEuiUrl: (data) => getFullUrl('/et_eui/download_easytier_eui', data),
+    startDownload: (data) => post('/et_eui/download_easytier_eui', data),
+    getDownloadProgress: (data) => get('/et_eui/get_download_progress', data),
+    getDownloadResultUrl: (data) => getFullUrl('/et_eui/download_result', data),
     update: (data) => post('/et_eui/update', data),
     getReleaseInfo: (data) => get('/et_eui/get_release_info', data),
   },
