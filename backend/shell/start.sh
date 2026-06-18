@@ -10,10 +10,14 @@ LOG_FILE="$SCRIPT_DIR/logs/app.log"
 mkdir -p "$SCRIPT_DIR/logs"
 mkdir -p "$SCRIPT_DIR/data"
 
+# 输出同时写入终端和日志文件
+exec > >(tee -a "$LOG_FILE") 2>&1
+echo "$(date '+%Y-%m-%d %H:%M:%S') === start.sh 执行 ==="
+
 # 检查可执行文件
 if [ ! -x "$EXECUTABLE" ]; then
     echo "错误：找不到可执行文件 $EXECUTABLE" >&2
-    read -p "按 Enter 退出..."
+    [ -t 0 ] && read -p "按 Enter 退出..."
     exit 1
 fi
 
@@ -22,7 +26,7 @@ if [ -f "$PID_FILE" ]; then
     PID=$(cat "$PID_FILE")
     if sudo kill -0 "$PID" 2>/dev/null; then
         echo "EasyTier-EUI 已在运行 (PID: $PID)"
-        read -p "按 Enter 退出..."
+        [ -t 0 ] && read -p "按 Enter 退出..."
         exit 1
     fi
     sudo rm -f "$PID_FILE"
@@ -61,4 +65,4 @@ fi
 
 echo ""
 echo "程序已在后台运行，关闭此窗口不影响服务。关闭请运行 stop.sh"
-read -p "按 Enter 键关闭窗口..."
+[ -t 0 ] && read -p "按 Enter 键关闭窗口..."

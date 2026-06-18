@@ -4,6 +4,13 @@
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 EXECUTABLE="$SCRIPT_DIR/EasyTier-EUI"
 PID_FILE="$SCRIPT_DIR/data/server.pid"
+LOG_FILE="$SCRIPT_DIR/logs/app.log"
+
+mkdir -p "$SCRIPT_DIR/logs"
+
+# 输出同时写入终端和日志文件
+exec > >(tee -a "$LOG_FILE") 2>&1
+echo "$(date '+%Y-%m-%d %H:%M:%S') === stop.sh 执行 ==="
 
 # 1. 先用 PID 文件尝试停止
 if [ -f "$PID_FILE" ]; then
@@ -34,4 +41,4 @@ else
 fi
 
 echo "EasyTier-EUI 已停止"
-read -p "按 Enter 键关闭窗口..."
+[ -t 0 ] && read -p "按 Enter 键关闭窗口..."

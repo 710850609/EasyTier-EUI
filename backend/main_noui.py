@@ -43,7 +43,7 @@ def start_server(host: str, port: int, exit_on_failure: bool = False) -> Optiona
             if exit_on_failure:
                 sys.exit(1)
             return None
-        threading.Thread(target=http_server.serve_forever, args=(server,), daemon=False, name='http-server').start()
+        threading.Thread(target=http_server.serve_forever, args=(server,), daemon=True, name='http-server').start()
         logging.info(f"HTTP 服务已在后台线程启动")
         return ServerHandle(server=server)
 
@@ -61,6 +61,13 @@ def stop_server(handle: ServerHandle, port: int):
         pass
     except Exception as e:
         logging.warning(f"HTTP 关闭请求失败: {e}")
+    finally:
+        if handle._server is not None:
+            try:
+                handle.stop()
+                logging.info("已通过 handle.stop() 停止服务")
+            except Exception:
+                pass
 
 
 def run():
