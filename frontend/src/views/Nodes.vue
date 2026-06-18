@@ -556,6 +556,7 @@ const stopService = async () => {
   try {
     await api.services.stop(selectedConfig.value)
     toast.success('服务已停止')
+    allNodes.value = []
     serviceRunning.value = false
     const cfg = configList.value.find(c => c.profile === selectedConfig.value)
     if (cfg) cfg.running = false
