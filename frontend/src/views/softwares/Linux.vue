@@ -60,22 +60,21 @@
             </thead>
             <tbody>
               <tr>
+                <td align="center">启动命令</td>
+                <td colspan="2" align="center"><code>./start.sh</code></td>
+              </tr>
+              <tr>
+                <td align="center">停止命令</td>
+                <td colspan="2" align="center"><code>./stop.sh</code></td>
+              </tr>
+              <tr>
                 <td align="center">启动操作</td>
-                <td align="center">双击运行<code>EasyTier-EUI</code></td>
+                <td align="center">双击<code>EasyTier-EUI</code></td>
                 <td align="center">❌不支持</td>
               </tr>
               <tr>
                 <td align="center">停止操作</td>
                 <td colspan="2" align="center">点击【设置】界面最底部的“关闭易组网”按钮</td>
-              </tr>
-              <tr>
-                <td align="center">启动命令</td>
-                <td align="center"><code>./EasyTier-EUI</code></td>
-                <td align="center"><code>./start.sh</code></td>
-              </tr>
-              <tr>
-                <td align="center">停止命令</td>
-                <td  colspan="2" align="center"><code>./stop.sh</code></td>
               </tr>
             </tbody>
           </var-table>
