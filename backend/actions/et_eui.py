@@ -62,11 +62,14 @@ def update(params: dict, *kwargs):
             cmd = [upgrade_script, str(app_path)]
         logging.info(f"执行升级脚本：{' '.join(cmd)}")
         import subprocess as _sp
-        _sp.Popen(cmd, start_new_session=True,
-                  stdout=_sp.DEVNULL, stderr=_sp.DEVNULL)
+        import time as _time
+        if sys.platform != 'win32':
+            _sp.Popen(cmd, start_new_session=True,
+                      stdout=_sp.DEVNULL, stderr=_sp.DEVNULL)
+        else:
+            _sp.Popen(cmd, stdout=_sp.DEVNULL, stderr=_sp.DEVNULL)
         logging.info("升级脚本已脱离当前进程启动，即将退出当前进程")
         # 给升级脚本一点时间启动，然后优雅退出
-        import time as _time
         _time.sleep(0.5)
         os._exit(0)
     pass

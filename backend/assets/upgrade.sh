@@ -16,17 +16,14 @@ LOG_DIR="$APP_DIR/logs"
 
 mkdir -p "$LOG_DIR"
 
-# 所有输出重定向到日志文件，因为已脱离主进程，没有终端
-exec >> "$LOG_DIR/upgrade.log" 2>&1
-echo "========================================="
-echo "$(date '+%Y-%m-%d %H:%M:%S') 升级脚本启动"
-echo "APP_DIR=$APP_DIR"
-echo "========================================="
+# 输出同时写入终端和日志文件（参考 start.sh）
+exec > >(tee -a "$LOG_DIR/app.log") 2>&1
+echo "$(date '+%Y-%m-%d %H:%M:%S') === upgrade.sh 执行 ==="
 
-# 等待旧进程完全退出（最多等 5 秒）
+# 等待旧进程完全退出（最多等 3 秒）
 WAIT_SEC=0
 while pgrep -x "$APP_NAME" > /dev/null 2>&1; do
-    if [ $WAIT_SEC -ge 5 ]; then
+    if [ $WAIT_SEC -ge 3 ]; then
         echo "等待超时，强制终止旧进程"
         killall -9 "$APP_NAME" > /dev/null 2>&1 || true
         sleep 2
