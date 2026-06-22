@@ -1,0 +1,7 @@
+{
+    "defaults": {
+        "run-as": "package"
+    },
+    "username": "EasyTier-EUI.User",
+    "groupname": "EasyTier-EUI.User"
+}

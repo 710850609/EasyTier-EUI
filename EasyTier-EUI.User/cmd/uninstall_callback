@@ -1,0 +1,16 @@
+#!/bin/bash
+
+### This script is called after the user uninstalls the application.
+set -e
+
+source /var/apps/${TRIM_APPNAME}/cmd/common.sh
+
+if [[ "${wizard_data_action}" == "delete" ]]; then
+    rm -rf ${TRIM_APPDEST_VOL}/@appshare/${TRIM_APPNAME}
+    log_msg "删除 ${TRIM_PKGVAR}"
+    rm -rf "${TRIM_PKGVAR}"
+else
+    log_msg "卸载时保留数据"
+fi
+
+exit 0

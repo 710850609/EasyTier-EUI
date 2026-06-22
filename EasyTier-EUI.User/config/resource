@@ -1,0 +1,18 @@
+{
+    "data-share":
+    {
+        "shares":
+        [
+            {
+                "name": "EasyTier-EUI.User",
+                "permission":
+                {
+                    "rw":
+                    [
+                        "EasyTier-EUI.User"
+                    ]
+                }
+            }
+        ]
+    }
+}

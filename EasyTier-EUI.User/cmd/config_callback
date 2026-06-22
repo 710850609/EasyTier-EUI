@@ -1,0 +1,12 @@
+#!/bin/bash
+
+### This script is called after the user change environment variables in application setting page.
+set -e
+
+# source /var/apps/${TRIM_APPNAME}/cmd/common.sh
+
+# update_network
+# save_github_porxy_url
+# change_et_version
+
+exit 0
