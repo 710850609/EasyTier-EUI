@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 >nul 2>&1
 setlocal enabledelayedexpansion
 
 if "%~1"=="" (
@@ -14,6 +15,8 @@ set "SCRIPT_NAME=upgrade.bat"
 
 if not exist "%LOG_DIR%" mkdir "%LOG_DIR%"
 
+goto :main
+
 :: 统一日志输出（使用 wmic 获取 yyyy-MM-dd HH:mm:ss，跨语言区域一致）
 :log
 for /f "tokens=2 delims==" %%i in ('wmic os get localdatetime /value 2^>nul ^| find "="') do set "DT=%%i"
@@ -22,6 +25,7 @@ echo %TS% - [ %SCRIPT_NAME% ] - %~1
 echo %TS% - [ %SCRIPT_NAME% ] - %~1 >> "%LOG_FILE%"
 goto :eof
 
+:main
 call :log "执行"
 
 :: 等待旧进程完全退出（最多等 30 秒）
