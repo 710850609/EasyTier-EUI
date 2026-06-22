@@ -16,6 +16,7 @@ CORE_DIR:str = None
 DATA_DIR:str = None
 LOG_DIR:str = None
 UPGRADE_SCRIPT_PATH:str = None
+DEFAULT_TRIM_APPNAME:str = 'EasyTier-EUI'
 
 
 _is_inited_evn = False
@@ -25,11 +26,11 @@ def setup_env():
     global _is_inited_evn
     if _is_inited_evn:
         return
-    global FRONTEND_PATH, CONFIG_DIR, CORE_DIR, DATA_DIR, LOG_DIR, UPGRADE_SCRIPT_PATH, _run_mode
+    global FRONTEND_PATH, CONFIG_DIR, CORE_DIR, DATA_DIR, LOG_DIR, UPGRADE_SCRIPT_PATH, _run_mode, DEFAULT_TRIM_APPNAME
     # 是否在 PyInstaller 打包环境中
     WORK_DIR = None
     if is_fn_system():
-        TRIM_APPNAME = os.getenv('TRIM_APPNAME', 'EasyTier-EUI')
+        TRIM_APPNAME = os.getenv('TRIM_APPNAME', DEFAULT_TRIM_APPNAME)
         TRIM_APPDEST = os.getenv('TRIM_APPDEST', f'/var/apps/{TRIM_APPNAME}/target')
         TRIM_PKGVAR = os.getenv('TRIM_PKGVAR', f'/var/apps/{TRIM_APPNAME}/var')
         TRIM_SHARE_DIR = os.getenv('TRIM_SHARE_DIR', f'/var/apps/{TRIM_APPNAME}/shares/{TRIM_APPNAME}')
@@ -78,7 +79,7 @@ def setup_env():
     _is_inited_evn = True
 
 
-BUILD_VERSION = "1.0"
+BUILD_VERSION = "1.1.020604-20260622110044"
 
 
 def is_fn_system():

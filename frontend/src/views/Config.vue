@@ -242,7 +242,7 @@
               <var-cell v-if="fastSettingMode">
                 <div class="fast-setting-mode-hint">
                   <p>
-                    <span>默认使用社区节点用于发现组网节点。</span>
+                    <span>默认开机自启、使用社区节点用于发现组网节点。</span>
                     <var-icon name="help-circle-outline" size="12pt" @click="showPublicPeerTip = true" class="help-icon" />
                   </p>
                   <p>

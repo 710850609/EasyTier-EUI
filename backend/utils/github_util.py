@@ -117,12 +117,16 @@ def get_api(url: str, proxy_url: str = ""):
         if not proxy_url or proxy_url == '':
             proxy_urls = get_proxy_urls()
             api_proxy_urls = [item['url'] for item in proxy_urls if item['supports_api']]
+            if not api_proxy_urls:
+                logging.error("无可用 API 加速地址，无法获取 GitHub API 数据")
+                raise e
             for api_proxy_url in api_proxy_urls:
                 logging.info(f"尝试使用 API 加速地址: {api_proxy_url}")
                 try:
                     return get_api(url, api_proxy_url)
-                except requests.exceptions.RequestException as e:
-                    logging.error(f"获取 API 数据失败: {e}")
+                except requests.exceptions.RequestException as e2:
+                    logging.error(f"获取 API 数据失败: {e2}")
+            raise e
         else:
             raise e
 
@@ -139,6 +143,13 @@ def get_proxy_urls(refresh:bool = False) -> list:
 
     #  https://github.akams.cn/
     url_list = get_dns_txt_records('github-proxy.v6.army')
+    if not url_list:
+        logging.warning("DNS TXT 查询返回空，使用默认加速地址")
+        url_list = [
+            "https://ghfast.top",
+            "https://gh-proxy.com",
+            "https://gh.llkk.cc",
+        ]
     # default_proxy_urls = [
     #     "https://gh.felicity.ac.cn",
     #     "https://gh-proxy.org",

@@ -78,7 +78,7 @@ def update(params: dict, *kwargs):
 
 def get_release_info(params: dict, *kwargs):
     params = params or {}
-    refresh = params.get('refresh', False)
+    refresh = params.get('refresh', 'false').lower() == 'true'
     release_file = Path(run_configs.data_dir()).joinpath('eui_release.json')
     release_info = None
     if os.path.exists(release_file):
@@ -169,15 +169,21 @@ def download_result(params: dict, *kwargs):
 
 def _do_download_easytier_eui(task: DownloadTask, platform: str, arch: str, profile: str):
     download_dir = os.path.join(run_configs.data_dir(), 'download')
-    task.update_progress(5, '正在获取最新版本信息...')
-    et_lite_version = _get_et_eui_latest_version()
+    task.update_progress(5, '正在获取下载链接...')
+    release_info = get_release_info({'refresh': 'false'})
+    latest_release = release_info.get('latest_release', {})
+    et_lite_version = latest_release.get('version', '')
+    platform_arch_key = f'{platform}-{arch}'
+    download_url = latest_release.get('assets', {}).get(platform_arch_key, {}).get('download_url', '')
+    if not et_lite_version or not download_url:
+        raise HttpResponse(f"未找到 {platform_arch_key} 的下载链接")
     task.update_progress(10, f'获取到版本: {et_lite_version}，准备下载...')
 
     def on_download_progress(percent, desc):
         mapped = 10 + int(percent * 0.80)
         task.update_progress(mapped, f'正在下载 EasyTier-EUI {et_lite_version}... ({percent}%)')
 
-    et_lite_package = _get_et_eui_package_async(platform, arch, et_lite_version, download_dir, on_download_progress)
+    et_lite_package = _get_et_eui_package_async(platform, arch, et_lite_version, download_dir, download_url=download_url, progress_callback=on_download_progress)
 
     if platform == 'fnos':
         task.update_progress(95, '下载完成，准备返回文件...')
@@ -191,7 +197,7 @@ def _do_download_easytier_eui(task: DownloadTask, platform: str, arch: str, prof
         task.set_completed(output_file, et_lite_filename)
 
 
-def _get_et_eui_package_async(platform: str, arch: str, et_lite_version: str, download_dir: str, progress_callback=None):
+def _get_et_eui_package_async(platform: str, arch: str, et_lite_version: str, download_dir: str, download_url: str = None, progress_callback=None):
     support_platforms = ['windows', 'linux', 'macos', 'fnos']
     if platform not in support_platforms:
         raise HttpResponse(f"当前不支持 {platform} 平台下载，仅支持 {support_platforms}")
@@ -207,7 +213,8 @@ def _get_et_eui_package_async(platform: str, arch: str, et_lite_version: str, do
     if Path(download_file).exists():
         logging.debug(f"已存在缓存:{download_file}")
         return download_file
-    download_url = f"https://github.com/710850609/EasyTier-EUI/releases/download/{last_version}/{file_name}"
+    if not download_url:
+        download_url = f"https://github.com/710850609/EasyTier-EUI/releases/download/{last_version}/{file_name}"
     logging.debug(f"不存在缓存，开始下载 {download_url}")
     download_temp_file = f"{download_dir}/temp/{file_name}.{int(time.time())}"
     github_util.download_release_file(download_url, download_temp_file, Path(download_temp_file).name, progress_callback=progress_callback)

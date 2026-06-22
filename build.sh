@@ -1,7 +1,6 @@
 #!/bin/bash
 
 DOWNLOAD_FILE="unknown"
-BIN_DIR="EasyTier-EUI/app/bin"
 
 declare -A PARAMS
 # 默认值
@@ -9,6 +8,7 @@ PARAMS[build_all]="false"
 PARAMS[download_proxy]="true"
 PARAMS[proxy_url]="https://ghfast.top"
 PARAMS[arch]="x86_64"
+PARAMS[app_name]="EasyTier-EUI"
 # 解析 key=value 格式的参数
 for arg in "$@"; do
   if [[ "$arg" == *=* ]]; then
@@ -28,14 +28,23 @@ for arg in "$@"; do
   fi
 done
 
+if [[ "${PARAMS[app_name]}" != "EasyTier-EUI" && "${PARAMS[app_name]}" != "EasyTier-EUI.User" ]]; then
+  echo "错误：app_name 参数必须为 EasyTier-EUI 或 EasyTier-EUI.User"
+  exit 1
+fi
+
 build_all="${PARAMS[build_all]}"
 download_proxy="${PARAMS[download_proxy]}"
 proxy_url="${PARAMS[proxy_url]}"
 arch="${PARAMS[arch]}"
+app_name="${PARAMS[app_name]}"
+bin_dir="${app_name}/app/bin"
 echo "build_all: ${build_all}"
 echo "download_proxy: ${download_proxy}"
 echo "proxy_url: ${proxy_url}"
 echo "arch: ${arch}"
+echo "app_name: ${app_name}"
+echo "bin_dir: ${bin_dir}"
 
 
 # platform 取值 x86, arm, risc-v, all
@@ -96,10 +105,10 @@ build_backend() {
     ' "$target_file" > "${target_file}.tmp" && mv "${target_file}.tmp" "$target_file"
 
     echo "下载py依赖"
-    rm -rf EasyTier-EUI/app/backend
-    mkdir -p EasyTier-EUI/app/backend/wheels
-    # 下载 wheel 
-    app_script_path="EasyTier-EUI/app/backend"
+    rm -rf "${app_name}/app/backend"
+    mkdir -p "${app_name}/app/backend/wheels"
+    # 下载 wheel
+    app_script_path="${app_name}/app/backend"
     pip download \
         --only-binary=:all: \
         --platform $py_platform \
@@ -115,9 +124,11 @@ build_backend() {
     --exclude='assets' \
     --exclude='build.py' \
     --exclude='build_core.py' \
-    --exclude='http_server.py'  \
+    --exclude='http_dispatcher/http_server.py'  \
+    --exclude='main_noui.py'  \
     --exclude='main_ui.py'  \
     --exclude='requirements-gui.txt'  \
+    --exclude='shell' \
     --exclude='*.sh' \
     backend/ "${app_script_path}/"
 }
@@ -143,10 +154,10 @@ build_frontend() {
     else
       echo "已存在前端编译资源，跳过编译前端"
     fi
-    rm -rf EasyTier-EUI/app/frontend
-    mkdir -p EasyTier-EUI/app/frontend
-    cp -rf frontend/dist/* EasyTier-EUI/app/frontend/
-    echo '拷贝前端资源到app/frontend目录'
+    rm -rf "${app_name}/app/frontend"
+    mkdir -p "${app_name}/app/frontend"
+    cp -rf frontend/dist/* "${app_name}/app/frontend"
+    echo "拷贝前端资源到 ${app_name}/app/frontend 目录"
 }
 
 download_et() {
@@ -168,7 +179,6 @@ download_et() {
 }
 
 update_app() {
-    local bin_dir=$BIN_DIR
     local temp_dir="temp"
     bash -c "rm -rf ${bin_dir}" 2>&1
     bash -c "mkdir -p ${bin_dir}" 2>&1
@@ -178,6 +188,11 @@ update_app() {
     echo "开始复制应用文件"
     bash -c "cp -rf ${temp_dir}/easytier-linux-${et_platform}/easytier-cli ${bin_dir}" 2>&1
     bash -c "cp -rf ${temp_dir}/easytier-linux-${et_platform}/easytier-core ${bin_dir}" 2>&1
+    # User 版本：修改默认 APPNAME
+    if [ "${app_name}" == "EasyTier-EUI.User" ]; then
+        sed -i "s|DEFAULT_TRIM_APPNAME:str = 'EasyTier-EUI'|DEFAULT_TRIM_APPNAME:str = 'EasyTier-EUI.User'|" "${app_name}/app/backend/utils/run_configs.py"
+        echo "已修改 DEFAULT_TRIM_APPNAME 为 EasyTier-EUI.User"
+    fi
     echo "更新应用文件完成"
     echo "---------------------------------------"
 }
@@ -185,25 +200,25 @@ update_app() {
 
 build_fpk() {
     local fpk_version=$BUILD_VER
-    sed -i "s|^[[:space:]]*version[[:space:]]*=.*|version=${fpk_version}|" 'EasyTier-EUI/manifest'
+    sed -i "s|^[[:space:]]*version[[:space:]]*=.*|version=${fpk_version}|" "${app_name}/manifest"
     echo "设置 manifest 的 version 为: ${fpk_version}"
-    sed -i "s|^[[:space:]]*platform[[:space:]]*=.*|platform=${platform}|" 'EasyTier-EUI/manifest'
+    sed -i "s|^[[:space:]]*platform[[:space:]]*=.*|platform=${platform}|" "${app_name}/manifest"
     echo "设置 manifest 的 platform 为: ${platform}"
-    sed -i "s|^[[:space:]]*os_min_version[[:space:]]*=.*|os_min_version=${os_min_version}|" 'EasyTier-EUI/manifest'
+    sed -i "s|^[[:space:]]*os_min_version[[:space:]]*=.*|os_min_version=${os_min_version}|" "${app_name}/manifest"
     echo "设置 manifest 的 os_min_version 为: ${os_min_version}"
 
     echo "开始打包 fpk"
     if command -v fnpack >/dev/null 2>&1; then
         echo "使用系统已安装的 fnpack 进行打包"
-        fnpack build --directory EasyTier-EUI/  || { echo "打包失败"; exit 1; }
+        fnpack build --directory "${app_name}/"  || { echo "打包失败"; exit 1; }
     else
         echo "使用本地 fnpack 脚本进行打包"
-        ./fnpack.sh build --directory EasyTier-EUI || { echo "打包失败"; exit 1; }
+        ./fnpack.sh build --directory "${app_name}" || { echo "打包失败"; exit 1; }
     fi 
 
-    fpk_name="EasyTier-EUI-fnos-${arch}-${fpk_version}.fpk"
+    fpk_name="${app_name}-fnos-${arch}-${fpk_version}.fpk"
     rm -f "${fpk_name}"
-    mv EasyTier-EUI.fpk "${fpk_name}"
+    mv "${app_name}.fpk" "${fpk_name}"
     echo "打包完成: ${fpk_name}"
 }
 
@@ -212,6 +227,8 @@ build_backend
 build_frontend
 download_et
 update_app
+
+
 build_fpk
 
 exit 0

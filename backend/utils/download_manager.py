@@ -84,8 +84,14 @@ class DownloadTask:
         status_file = os.path.join(run_configs.data_dir(), 'download', 'tasks', f'{download_id}.json')
         if not os.path.exists(status_file):
             return None
-        with open(status_file, 'r', encoding='utf-8') as f:
-            return json.load(f)
+        try:
+            with open(status_file, 'r', encoding='utf-8') as f:
+                content = f.read().strip()
+                if not content:
+                    return None
+                return json.loads(content)
+        except (json.JSONDecodeError, IOError):
+            return None
 
 
 def new_download_id() -> str:
@@ -100,6 +106,26 @@ def run_async_download(target_func, task: DownloadTask, *args):
             logging.exception(f'异步下载任务失败: {task.download_id}')
             task.set_error(str(e))
 
-    thread = threading.Thread(target=_run, daemon=True)
-    thread.start()
+    if hasattr(os, 'fork'):
+        # Unix/CGI 模式：fork 子进程执行下载，父进程立即返回
+        # 避免 CGI 进程退出时 daemon 线程被强制终止
+        pid = os.fork()
+        if pid == 0:
+            # 子进程：关闭继承的 CGI stdio，避免 web server 等待管道关闭
+            os.closerange(0, 3)
+            devnull = os.open(os.devnull, os.O_RDWR)
+            os.dup2(devnull, 0)
+            os.dup2(devnull, 1)
+            os.dup2(devnull, 2)
+            os.close(devnull)
+            # 执行下载任务
+            try:
+                _run()
+            finally:
+                os._exit(0)
+        # 父进程：立即返回
+    else:
+        # Windows/HTTP Server 模式：使用 daemon 线程
+        thread = threading.Thread(target=_run, daemon=True)
+        thread.start()
     return task

@@ -54,11 +54,14 @@ export function useAsyncDownload(startDownloadFunc, queryProgressFunc, buildResu
               progress.value = null
             } else {
               toast.success(result.data.description + '\n开始下载')
-              // window.open 在 setInterval 异步回调里被浏览器拦截了（popup blocker 只允许用户直接点击触发）。
               const downloadUrl = buildResultUrl({ download_id: downloadId })
+              // 使用 <a> 标签点击触发下载，不会被 popup blocker 拦截
               const a = document.createElement('a')
               a.href = downloadUrl
+              a.download = ''
+              document.body.appendChild(a)
               a.click()
+              document.body.removeChild(a)
               progress.value = null
             }
           }

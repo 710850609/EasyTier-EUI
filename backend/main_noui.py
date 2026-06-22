@@ -81,12 +81,15 @@ def run():
                        enabled_console=run_mode == 0)
     # logging.info(f"前端路径: {os.path.join(sys._MEIPASS, 'frontend')}")
 
+    global BASE_URI
     import argparse
     parser = argparse.ArgumentParser(description='CGI Proxy HTTP Server')
     parser.add_argument('--host', default='0.0.0.0', help='Host to bind to (default: 0.0.0.0)')
     parser.add_argument('--port', type=int, default=5666, help='Port to bind to (default: 5666)')
+    parser.add_argument('--base_uri', default=BASE_URI, help=f'Base URI to use (default: {BASE_URI})')
     args = parser.parse_args()
 
+    BASE_URI = args.base_uri
     handle = start_server(args.host, args.port, exit_on_failure=True)
     if handle is None:
         sys.exit(1)
