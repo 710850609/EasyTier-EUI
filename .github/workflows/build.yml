@@ -441,7 +441,7 @@ jobs:
             linux-buildenv:riscv64 \
             bash -c '
               export PIP_ROOT_USER_ACTION=ignore
-              mkdir -p /root/.cache/pip
+              mkdir -p /root/.cache/pip && chown -R root:root /root/.cache/pip
               cd backend &&
               python3 build.py --et_ver "${ET_VER}" --build_ver "${BUILD_VER}" --github_proxy_url "" --pip_cache_dir /root/.cache/pip
             '
@@ -503,7 +503,7 @@ jobs:
             linux-buildenv:armv7 \
             sh -c '
               export PIP_ROOT_USER_ACTION=ignore
-              mkdir -p /root/.cache/pip
+              mkdir -p /root/.cache/pip && chown -R root:root /root/.cache/pip
               cd backend &&
               python3 build.py --et_ver "${ET_VER}" --build_ver "${BUILD_VER}" --github_proxy_url "" --pip_cache_dir /root/.cache/pip
             '
