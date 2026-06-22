@@ -57,11 +57,15 @@ def update(params: dict, *kwargs):
         app_path = Path(run_configs.core_dir()).parent
         shutil.copytree(os.path.join(extract_dir, 'EasyTier-EUI'), app_path.joinpath('_update'), dirs_exist_ok=True)
         upgrade_script = run_configs.upgrade_script_path()
+        # 复制升级脚本到安装目录，避免 PyInstaller 清理 temp 目录时脚本被删除
+        script_name = os.path.basename(upgrade_script)
+        persistent_script = os.path.join(str(app_path), script_name)
+        shutil.copy2(upgrade_script, persistent_script)
         if sys.platform != 'win32':
             # PyInstaller --add-data 不保留执行权限，用 bash 执行避免依赖 +x
-            cmd = ['bash', upgrade_script, str(app_path)]
+            cmd = ['bash', persistent_script, str(app_path)]
         else:
-            cmd = [upgrade_script, str(app_path)]
+            cmd = [persistent_script, str(app_path)]
         logging.info(f"执行升级脚本：{' '.join(cmd)}")
         import subprocess as _sp
         import time as _time
@@ -69,10 +73,12 @@ def update(params: dict, *kwargs):
             _sp.Popen(cmd, start_new_session=True,
                       stdout=_sp.DEVNULL, stderr=_sp.DEVNULL)
         else:
-            _sp.Popen(cmd, stdout=_sp.DEVNULL, stderr=_sp.DEVNULL)
+            _sp.Popen(cmd, stdout=_sp.DEVNULL, stderr=_sp.DEVNULL,
+                      cwd=str(app_path))
         logging.info("升级脚本已脱离当前进程启动，即将退出当前进程")
         # 给升级脚本一点时间启动，然后优雅退出
         _time.sleep(0.5)
+        logging.shutdown()
         os._exit(0)
     pass
 
