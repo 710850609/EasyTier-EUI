@@ -77,7 +77,8 @@ def install_deps(pip_cache_dir:str = ""):
         pip_cmd = f'"{pip_path}"'
         print(f"  使用虚拟环境 Python: {python_path}")
     pip_cache = ''
-    if pip_cache_dir and os.path.exists(pip_cache_dir):
+    if pip_cache_dir:
+        os.makedirs(pip_cache_dir, exist_ok=True)
         pip_cache = f"--cache-dir {pip_cache_dir}"
 
     print("  更新 pip")
