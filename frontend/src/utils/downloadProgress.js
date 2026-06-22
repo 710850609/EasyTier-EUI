@@ -55,13 +55,18 @@ export function useAsyncDownload(startDownloadFunc, queryProgressFunc, buildResu
             } else {
               toast.success(result.data.description + '\n开始下载')
               const downloadUrl = buildResultUrl({ download_id: downloadId })
-              // 使用 <a> 标签点击触发下载，不会被 popup blocker 拦截
-              const a = document.createElement('a')
-              a.href = downloadUrl
-              a.download = ''
-              document.body.appendChild(a)
-              a.click()
-              document.body.removeChild(a)
+              if (typeof window.pywebview !== 'undefined') {
+                // pywebview 模式：委托给系统浏览器下载
+                window.pywebview.api.window_open(downloadUrl)
+              } else {
+                // 浏览器模式：使用 <a> 标签点击触发下载，不会被 popup blocker 拦截
+                const a = document.createElement('a')
+                a.href = downloadUrl
+                a.download = ''
+                document.body.appendChild(a)
+                a.click()
+                document.body.removeChild(a)
+              }
               progress.value = null
             }
           }

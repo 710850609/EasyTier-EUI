@@ -1,6 +1,7 @@
 import logging
 import os
 import sys
+import webbrowser
 
 import webview
 
@@ -24,10 +25,18 @@ class WebWin:
             sys.exit(1)
 
         webview.settings['OPEN_EXTERNAL_LINKS_IN_BROWSER'] = True
+
+        class Api:
+            def window_open(self, url):
+                full_url = url if url.startswith('http') else f'http://{host}:{port}{url}'
+                logging.info(f"JS_API 浏览器打开地址: {full_url}")
+                webbrowser.open_new_tab(full_url)
+
         self.window = webview.create_window(
             self.win_title, f'http://{host}:{port}',
             width=self.win_width, height=self.win_height,
-            text_select=True
+            text_select=True,
+            js_api=Api()
         )
         res_dir = sys._MEIPASS if getattr(sys, 'frozen', False) else os.path.dirname(__file__)
         icon_path = os.path.join(os.path.abspath(res_dir), 'assets', 'icon.ico')
