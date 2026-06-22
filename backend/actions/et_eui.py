@@ -304,10 +304,10 @@ def __get_download_url(is_release: bool) -> tuple[str, str]:
     if run_configs.is_fn_system():
         sys_name = 'fnos'
     try:
-        release_infos = get_release_info({'refresh': True})
+        release_infos = get_release_info({'refresh': 'true'})
     except Exception as e:
         logging.exception(f"获取release信息失败，尝试使用本地缓存")
-        release_infos = get_release_info({'refresh': False})
+        release_infos = get_release_info({'refresh': 'false'})
 
     latest_info = release_infos.get('latest_release', {}) if is_release else release_infos.get('latest_prerelease', {})
     asset = latest_info.get('assets', {}).get(f"{sys_name}-{arch_name}", {})
