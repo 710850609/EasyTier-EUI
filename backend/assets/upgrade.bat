@@ -21,8 +21,8 @@ goto :main
 :log
 for /f "tokens=2 delims==" %%i in ('wmic os get localdatetime /value 2^>nul ^| find "="') do set "DT=%%i"
 set "TS=%DT:~0,4%-%DT:~4,2%-%DT:~6,2% %DT:~8,2%:%DT:~10,2%:%DT:~12,2%"
-echo %TS% - [ %SCRIPT_NAME% ] - %~1
-echo %TS% - [ %SCRIPT_NAME% ] - %~1 >> "%LOG_FILE%"
+echo %TS% - [%SCRIPT_NAME%] - %~1
+echo %TS% - [%SCRIPT_NAME%] - %~1 >> "%LOG_FILE%"
 goto :eof
 
 :sleep
@@ -79,3 +79,7 @@ call :log "启动 EasyTier-EUI..."
 start "" "%APP_DIR%\EasyTier-EUI.exe"
 
 call :log "完成"
+
+:: 删除脚本自身
+call :sleep 2
+start /b "" cmd /c "del /f /q "%~f0""

@@ -14,12 +14,13 @@ UPDATE_DIR="$APP_DIR/_update"
 APP_NAME="EasyTier-EUI"
 LOG_DIR="$APP_DIR/logs"
 SCRIPT_NAME="upgrade.sh"
+SCRIPT_PATH="$(realpath "$0" 2>/dev/null || readlink -f "$0" 2>/dev/null || echo "$0")"
 
 mkdir -p "$LOG_DIR"
 
 # 统一日志输出（同时输出到终端和日志文件）
 log() {
-    local msg="$(date '+%Y-%m-%d %H:%M:%S') - [ $SCRIPT_NAME ] - $*"
+    local msg="$(date '+%Y-%m-%d %H:%M:%S') - [$SCRIPT_NAME] - $*"
     echo "$msg"
     echo "$msg" >> "$LOG_DIR/app.log"
 }
@@ -67,3 +68,6 @@ else
 fi
 
 log "完成"
+
+# 删除脚本自身
+rm -f -- "$SCRIPT_PATH"
