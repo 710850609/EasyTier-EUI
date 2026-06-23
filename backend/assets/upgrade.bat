@@ -25,6 +25,12 @@ echo %TS% - [ %SCRIPT_NAME% ] - %~1
 echo %TS% - [ %SCRIPT_NAME% ] - %~1 >> "%LOG_FILE%"
 goto :eof
 
+:sleep
+REM 可靠睡眠等待，参数为秒数
+REM 用法: call :sleep 5
+powershell -NoProfile -Command "Start-Sleep -Seconds %~1"
+goto :eof
+
 :main
 call :log "执行"
 
@@ -36,11 +42,11 @@ if errorlevel 1 goto proc_exited
 if !WAIT_SEC! geq 30 (
     call :log "等待超时，强制终止旧进程"
     taskkill /f /im "EasyTier-EUI.exe" >nul 2>&1
-    timeout /t 3 /nobreak >nul
+    call :sleep 3
     goto proc_exited
 )
 call :log "等待旧进程退出... (!WAIT_SEC! 秒)"
-timeout /t 1 /nobreak >nul
+call :sleep 1
 set /a WAIT_SEC+=1
 goto wait_exit
 

@@ -19,7 +19,7 @@ import utils.github_util as github_util
 from actions import services
 from http_dispatcher.dispatcher import HttpResponse
 from utils import run_configs
-
+import re as _re
 
 def update(params: dict, *kwargs):
     params = params or {}
@@ -69,12 +69,14 @@ def update(params: dict, *kwargs):
         logging.info(f"执行升级脚本：{' '.join(cmd)}")
         import subprocess as _sp
         import time as _time
+        _clean_env = _clean_env_for_upgrade()
         if sys.platform != 'win32':
             _sp.Popen(cmd, start_new_session=True,
-                      stdout=_sp.DEVNULL, stderr=_sp.DEVNULL)
+                      stdout=_sp.DEVNULL, stderr=_sp.DEVNULL,
+                      cwd=str(app_path), env=_clean_env)
         else:
             _sp.Popen(cmd, stdout=_sp.DEVNULL, stderr=_sp.DEVNULL,
-                      cwd=str(app_path))
+                      cwd=str(app_path), env=_clean_env)
         logging.info("升级脚本已脱离当前进程启动，即将退出当前进程")
         # 给升级脚本一点时间启动，然后优雅退出
         _time.sleep(0.5)
@@ -321,6 +323,25 @@ def __get_download_url(is_release: bool) -> tuple[str, str]:
     if not download_url or download_url == '':
         raise HttpResponse(f"没有可下载链接")
     return download_url, download_url.split('/')[-1]
+
+def _clean_env_for_upgrade():
+    """为升级脚本准备干净的环境变量"""
+    logging.info(f"当前环境变量: {json.dumps(dict(os.environ), indent=0, ensure_ascii=False)}")
+    clean = {}
+    for k, v in os.environ.items():
+        # 过滤 PyInstaller 内部变量
+        if k.startswith('_PYI'):
+            continue
+        # 过滤 CGI/WebServer 注入的变量
+        if k.startswith(('REQUEST_', 'QUERY_', 'CONTENT_', 'HTTP_', 'SERVER_')):
+            continue
+        # 清理 PATH 中的 _MEI* 临时路径
+        if k.upper() == 'PATH':
+            v = _re.sub(r'[^;]*_MEI\d+[^;]*(;|$)', '', v).rstrip(';')
+            while ';;' in v:
+                v = v.replace(';;', ';')
+        clean[k] = v
+    return clean
 
 if __name__ == '__main__':
     run_configs.setup_env()
