@@ -15,7 +15,7 @@ from utils import check_peers as check_util, run_configs
 from utils import github_util
 
 
-def check_peers(params: dict, *kwargs):
+def check_peers(params: dict, *args, **kwargs):
     """
     检查节点是否可用
     :param: 请求数据（可选）
@@ -47,7 +47,7 @@ def check_peers(params: dict, *kwargs):
     return peer_list
 
 
-def public_peers(data:dict, *kwargs):
+def public_peers(data:dict, *args, **kwargs):
     data = data or {}
     refresh = data.get('refresh', 'false').lower() == 'true'
     profile = data.get('profile')
@@ -70,7 +70,7 @@ def public_peers(data:dict, *kwargs):
             pass
     return peers
 
-def set_peer_source(params: dict, *kwargs):
+def set_peer_source(params: dict, *args, **kwargs):
     params = params or {}
     source = params.get('source', '')
     test_peer_mark_file = Path(run_configs.data_dir(), 'test-peer-source')
@@ -84,7 +84,7 @@ def set_peer_source(params: dict, *kwargs):
     Path(run_configs.et_peer_meta_file()).unlink(missing_ok=True)
     __get_public_peers(refresh=True)
 
-def get_peer_source(*kwargs):
+def get_peer_source(*args, **kwargs):
     if Path(run_configs.data_dir(), 'test-peer-source').exists():
         return {'source': 'test'}
     return {'source': ''}

@@ -16,7 +16,7 @@ from utils import run_configs
 from utils import security
 from utils.validators import Validator
 
-def list_lan_ips(*kwargs):
+def list_lan_ips(*args, **kwargs):
     ips = ip_util.get_lan_ips()
     ip_list = []
     for item in ips:
@@ -26,7 +26,7 @@ def list_lan_ips(*kwargs):
         # ip_list.append(f"{arr[0]}.{arr[1]}.{arr[2]}.1/24")
     return ip_list
 
-def list_config_files(*kwargs):
+def list_config_files(*args, **kwargs):
     config_files = run_configs.et_config_files()
     result = []
     for profile in config_files:
@@ -39,7 +39,7 @@ def list_config_files(*kwargs):
         })
     return result
 
-def list_config_status(*kwargs):
+def list_config_status(*args, **kwargs):
     config_files = list_config_files()
     result = []
     for profile in config_files:
@@ -52,7 +52,7 @@ def list_config_status(*kwargs):
         result.append(profile)
     return result
 
-def delete(params, *kwargs):
+def delete(params, *args, **kwargs):
     profile, _ = Validator.not_empty(params, 'profile', '配置不能为空')
     profile = Validator.check_profile(profile)
     if services.status(params):
@@ -66,7 +66,7 @@ def delete(params, *kwargs):
     et_run_info.remove(profile)
 
 
-def rename(params, *kwargs):
+def rename(params, *args, **kwargs):
     old_profile, _ = Validator.not_empty(params, 'oldProfile', '旧配置名空')
     new_profile, _ = Validator.not_empty(params, 'newProfile', '新配置名空')
     old_profile = Validator.check_profile(old_profile)
@@ -88,7 +88,7 @@ def rename(params, *kwargs):
         raise e
     return {'name': new_profile.replace('.toml', ''), 'profile': new_profile}
 
-def save(data, *kwargs):
+def save(data, *args, **kwargs):
     profile = data.pop('_profile', None) if data else None
     profile = Validator.check_profile(profile, check_exists=False)
     et_config_file = run_configs.et_config_file(profile)
@@ -109,7 +109,7 @@ def save(data, *kwargs):
     et_run_info.save(profile, None, None, None)
 
 
-def save_toml(data: str, *kwargs):
+def save_toml(data: str, *args, **kwargs):
     try:
         profile = data.pop('_profile', None) if data else None
         if not profile:
@@ -132,7 +132,7 @@ def save_toml(data: str, *kwargs):
         logging.error(f"解析配置字符串失败: {e}")
         raise e
 
-def get(params, *kwargs):
+def get(params, *args, **kwargs):
     # 同时支持驼峰和下划线参数
     profile, _ = Validator.not_empty(params, 'profile', '未指定配置')
     profile = Validator.check_profile(profile)
@@ -143,21 +143,21 @@ def get(params, *kwargs):
             return doc
     return {}
 
-def get_toml(params=None, *kwargs):
+def get_toml(params=None, *args, **kwargs):
     profile, _ = Validator.not_empty(params, 'profile', '未指定配置')
     profile = Validator.check_profile(profile)
     et_config_file = run_configs.et_config_file(profile)
     with open(et_config_file, "r", encoding="utf-8") as f:
         return f.read()
 
-def download_share_config(params=None, *kwargs):
+def download_share_config(params=None, *args, **kwargs):
     profile, _ = Validator.not_empty(params, 'profile', '未指定配置')
     profile = Validator.check_profile(profile)
     tmp_file = copy(profile)
     logging.info(f"{tmp_file}")
     return HttpResponse(file=tmp_file, download_name="config.toml")
 
-def get_share_config_str(params=None, *kwargs):
+def get_share_config_str(params=None, *args, **kwargs):
     profile, _ = Validator.not_empty(params, 'profile', '未指定配置')
     profile = Validator.check_profile(profile)
     tmp_file = copy(profile)

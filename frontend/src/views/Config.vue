@@ -1,4 +1,4 @@
-<<template>
+<template>
   <div class="config-page">
     <div v-if="isLoadingConfigList" class="config-skeleton">
       <div class="skeleton-toolbar">
@@ -968,7 +968,7 @@ const confirmCreateConfig = () => {
   config.value.rpc_portal = '',
   config.value.listeners = []
   config.value.peer = []
-  config.value.flags = { bind_device: true, multi_thread: true, enable_ipv6: true }
+  config.value.flags = { ...config.value.flags, bind_device: true, multi_thread: true, enable_ipv6: true }
   config.value.proxy_network = []
   configList.value.push({ 'profile': profile, 'name': name, 'autostart': false })
   selectedConfig.value = profile
@@ -1082,6 +1082,10 @@ const getLanIps = () => {
 }
 
 onMounted(async () => {
+  // 如果是用户版（非管理员权限），则开启no_tun
+  if (window.location.href.includes('/cgi/ThirdParty/EasyTier-EUI.User/index.cgi')) {
+    config.value.flags.no_tun = true
+  }
   getLanIps()
   await loadConfigs()
   if (configList.value.length == 0) {

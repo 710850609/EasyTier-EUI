@@ -17,7 +17,7 @@ from utils.download_manager import DownloadTask
 from utils import run_configs
 
 
-def download_mgr_pro(params:dict, *kwargs):
+def download_mgr_pro(params:dict, *args, **kwargs):
     profile = params.get('profile', '') if params is not None else None
     download_id = download_manager.new_download_id()
     task = DownloadTask(download_id, params)
@@ -26,7 +26,7 @@ def download_mgr_pro(params:dict, *kwargs):
     return HttpResponse(data={'download_id': download_id})
 
 
-def get_download_mgr_pro_progress(params:dict, *kwargs):
+def get_download_mgr_pro_progress(params:dict, *args, **kwargs):
     download_id = params.get('download_id', '')
     if not download_id:
         raise HttpResponse(f"download_id参数不能为空")
@@ -38,7 +38,7 @@ def get_download_mgr_pro_progress(params:dict, *kwargs):
     return HttpResponse(data=progress)
 
 
-def download_mgr_pro_result(params:dict, *kwargs):
+def download_mgr_pro_result(params:dict, *args, **kwargs):
     download_id = params.get('download_id', '')
     if not download_id:
         raise HttpResponse(f"download_id参数不能为空")

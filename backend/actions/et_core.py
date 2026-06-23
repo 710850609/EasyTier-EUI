@@ -17,24 +17,24 @@ from http_dispatcher.dispatcher import HttpException
 from utils import run_configs, et_run_info, log_util
 
 
-def get_log_level(params:dict, *kwargs):
+def get_log_level(params:dict, *args, **kwargs):
     log_level = et_run_info.get_log_level()
     return log_level
 
-def set_log_level(params:dict, *kwargs):
+def set_log_level(params:dict, *args, **kwargs):
     params = params or {}
     log_level = params.get("level", 'error')
     et_run_info.set_log_level(log_level)
     services.change_log_level(log_level)
 
-def check_core(*kwargs):
+def check_core(*args, **kwargs):
     core_dir = run_configs.core_dir()
     ext = ".exe" if sys.platform == "win32" else ""
     cli_file = f'{core_dir}/easytier-cli{ext}'
     core_file = f'{core_dir}/easytier-core{ext}'
     return os.path.exists(cli_file) and os.path.exists(core_file)
 
-def version(*kwargs):
+def version(*args, **kwargs):
     if not check_core():
         raise HttpException('内核不存在，请先安装内核')
         
@@ -47,7 +47,7 @@ def version(*kwargs):
     return { 'version': f'v{et_version}', 'raw_version': raw_version }
 
 
-def get_release_info(params: dict, *kwargs) -> dict:
+def get_release_info(params: dict, *args, **kwargs) -> dict:
     params = params or {}
     refresh = params.get('refresh', 'false').lower() == 'true'
     release_file = Path(run_configs.data_dir()).joinpath('et_release.json')
@@ -105,7 +105,7 @@ def get_release_info(params: dict, *kwargs) -> dict:
             f.write(json.dumps(release_info, ensure_ascii=False, indent=2))
     return release_info
 
-def version_list(params: dict, *kwargs):
+def version_list(params: dict, *args, **kwargs):
     release_info = get_release_info(params)
     for ver in release_info.get('versions', []):
         del ver['assets']
@@ -126,7 +126,7 @@ def version_list(params: dict, *kwargs):
     #         release_info = json.load(f)
     # return release_info
 
-def install(data, *kwargs):
+def install(data, *args, **kwargs):
     et_version = data['version']
     if not et_version:
         raise HttpException('版本不能为空')

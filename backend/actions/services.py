@@ -41,7 +41,7 @@ def _get_process_manager(profile:str = None) -> Union[ProcessManager]:
             _pm[pm_key] = cur_pm
     return cur_pm
 
-def status(params=None, *kwargs) -> bool:
+def status(params=None, *args, **kwargs) -> bool:
     profile, _ = Validator.not_empty(params, 'profile', '配置不能为空')
     info = et_run_info.get(profile)
     if info is not None and info.use_system_service:
@@ -50,7 +50,7 @@ def status(params=None, *kwargs) -> bool:
         pm = _get_process_manager(profile)
         return pm.status()
 
-def stop(params=None, *kwargs):
+def stop(params=None, *args, **kwargs):
     profile, _ = Validator.not_empty(params, 'profile', '配置不能为空')
     info = et_run_info.get(profile)
     if info is not None and info.use_system_service:
@@ -65,7 +65,7 @@ def stop(params=None, *kwargs):
         pm = _get_process_manager(profile)
         pm.stop()
 
-def start(params=None, *kwargs):
+def start(params=None, *args, **kwargs):
     profile, _ = Validator.not_empty(params, 'profile', '配置不能为空')
     config_file = run_configs.et_config_file(profile)
     if not Path(config_file).exists():
@@ -100,13 +100,13 @@ def start(params=None, *kwargs):
         autostart = False if info is None else info.autostart
         et_run_info.save(profile, rpc_portal, autostart, False)
 
-def restart(params=None, *kwargs):
+def restart(params=None, *args, **kwargs):
     logging.info(f"重启ET服务...")
     if status(params):
        stop(params)
     start(params)
 
-def start_all(*kwargs):
+def start_all(*args, **kwargs):
     config_file_list = run_configs.et_config_files()
     if len(config_file_list) == 0:
         logging.info("暂无配置文件，跳过启动服务")
@@ -126,7 +126,7 @@ def start_all(*kwargs):
         logging.info(f"启动 EaysTier 系统注册服务：{system_service_profiles}")
         start({'profile': system_service_profiles[0]})
 
-def stop_all(*kwargs) -> List[str]:
+def stop_all(*args, **kwargs) -> List[str]:
     stop_profiles = []
     infos = et_run_info.get_all()
     system_service_profile = None
@@ -144,7 +144,7 @@ def stop_all(*kwargs) -> List[str]:
     logging.info(f"停止配置：{stop_profiles}")
     return stop_profiles
 
-def auto_start(params: Optional[dict]=None, keep_run_status:bool=True, *kwargs):
+def auto_start(params: Optional[dict]=None, keep_run_status:bool=True, *args, **kwargs):
     profile, _ = Validator.not_empty(params, 'profile', '配置不能为空')
     profile = Validator.check_profile(profile)
     is_enabled = params.get('enabled', False)

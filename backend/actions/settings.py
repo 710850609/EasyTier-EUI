@@ -10,7 +10,7 @@ from http_dispatcher.dispatcher import HttpException
 from utils import run_configs, github_util
 
 
-def eui_info(*kwargs):
+def eui_info(*args, **kwargs):
     platform = 'trim' if run_configs.is_fn_system() else sys.platform
     install_path = Path(run_configs.core_dir()).parent
     # 解析符号链接，获取真实路径
@@ -21,7 +21,7 @@ def eui_info(*kwargs):
         'platform': platform,
     }
 
-def github_mirrors(params:dict, *kwargs):
+def github_mirrors(params:dict, *args, **kwargs):
     try:
         params = params or {}
         refresh = params.get('refresh', 'false').lower() == 'true'
@@ -32,7 +32,7 @@ def github_mirrors(params:dict, *kwargs):
         logging.warning(f"读取代理配置失败: {e}")
         raise HttpException(f"读取代理配置失败: {e}") from e
 
-def delete_cache(*kwargs):
+def delete_cache(*args, **kwargs):
     download_path = Path(run_configs.data_dir(), 'download')
     total_bytes = 0
     if download_path.exists():
@@ -55,7 +55,7 @@ def delete_cache(*kwargs):
     logging.info(f"删除缓存目录: {download_path}, 共删除 {size}")
     return f"缓存已删除 {size}"
 
-def shutdown(*kwargs):
+def shutdown(*args, **kwargs):
     import os
     import threading
     logging.info("Received shutdown request, exiting...")

@@ -10,7 +10,7 @@ from utils import run_configs
 from utils.validators import Validator
 
 
-def list(params, *kwargs):
+def list(params, *args, **kwargs):
     """
     获取节点列表
     :param request_data: 请求数据（可选）

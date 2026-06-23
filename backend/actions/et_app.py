@@ -2,11 +2,11 @@
 # -*- coding: utf-8 -*-
 from actions import et_core
 from http_dispatcher.dispatcher import HttpException
-from utils import validators, github_util
+from utils import github_util
 from utils.validators import Validator
 
 
-def get_download_url(params: dict, *kwargs):
+def get_download_url(params: dict, *args, **kwargs):
     params = params or {}
     arch, _ = Validator.not_empty(params, 'arch')
     type, _ = Validator.not_empty(params, 'type')

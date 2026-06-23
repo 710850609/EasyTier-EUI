@@ -114,16 +114,50 @@ jobs:
           name: frontend-dist
           path: frontend/dist
 
+  build-frontend-user:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: 'frontend/package-lock.json'  # 指定路径
+
+      - name: Install dependencies
+        working-directory: frontend  # 在 frontend 目录执行
+        run: npm install
+
+      - name: Build frontend User Version
+        working-directory: frontend
+        run: npm run build-user
+
+      - name: Upload frontend artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-user-dist
+          path: frontend/dist
+
   build-fnos:
     if: ${{ github.event.inputs.build-fnos == 'true' }}
-    needs: [ build-frontend, build-info ]
+    needs: [ build-frontend, build-frontend-user, build-info ]
     strategy:
       matrix:
         include:
           - arch: x86_64
             runner: ubuntu-latest
+            app_name: 'EasyTier-EUI'
           - arch: aarch64
             runner: ubuntu-latest
+            app_name: 'EasyTier-EUI'
+          - arch: x86_64
+            runner: ubuntu-latest
+            app_name: 'EasyTier-EUI.User'
+          - arch: aarch64
+            runner: ubuntu-latest
+            app_name: 'EasyTier-EUI.User'
           # - arch: riscv64
           #   runner: ubuntu-latest
     runs-on: ${{ matrix.runner }}
@@ -137,7 +171,15 @@ jobs:
           cache: 'npm'
           cache-dependency-path: 'frontend/package-lock.json'  # 指定路径
 
+      - name: Download frontend (User)
+        if: ${{ matrix.app_name == 'EasyTier-EUI.User' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-user-dist
+          path: frontend/dist
+
       - name: Download frontend
+        if: ${{ matrix.app_name != 'EasyTier-EUI.User' }}
         uses: actions/download-artifact@v4
         with:
           name: frontend-dist
@@ -151,7 +193,7 @@ jobs:
           chmod +x ./version-util.sh 2>/dev/null || true
           chmod +x ./build-info.sh 2>/dev/null || true
           chmod +x ./build.sh 2>/dev/null || true
-          ./build.sh arch=${{ matrix.arch }} et_ver="${{ needs.build-info.outputs.et_ver }}" build_ver="${{ needs.build-info.outputs.version }}" build_all="false" download_proxy="false" 2>/dev/null || true
+          ./build.sh arch=${{ matrix.arch }} et_ver="${{ needs.build-info.outputs.et_ver }}" build_ver="${{ needs.build-info.outputs.version }}" build_all="false" download_proxy="false" app_name="${{ matrix.app_name }}" 2>/dev/null || true
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

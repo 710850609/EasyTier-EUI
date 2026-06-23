@@ -21,11 +21,13 @@ from http_dispatcher.dispatcher import HttpResponse
 from utils import run_configs
 import re as _re
 
-def update(params: dict, *kwargs):
+def update(params: dict, *args, **kwargs):
     params = params or {}
     ver_tag = params.get('ver_tag', '')
     if ver_tag not in ('release', 'prerelease'):
         raise HttpResponse(f"版本标签错误：{ver_tag}")
+    if kwargs.get('request_uri', '').startswith('/cgi/ThirdParty/EasyTier-EUI.User/'):
+        raise HttpResponse(f"用户版不支持自更新，请在标准版本中自更新")
     download_url, filename = __get_download_url(ver_tag == 'release')
     download_dir = os.path.join(run_configs.data_dir(), 'download')
     download_file = os.path.join(download_dir, filename)
@@ -84,7 +86,7 @@ def update(params: dict, *kwargs):
         os._exit(0)
     pass
 
-def get_release_info(params: dict, *kwargs):
+def get_release_info(params: dict, *args, **kwargs):
     params = params or {}
     refresh = params.get('refresh', 'false').lower() == 'true'
     release_file = Path(run_configs.data_dir()).joinpath('eui_release.json')
@@ -128,7 +130,7 @@ def get_release_info(params: dict, *kwargs):
             f.write(json.dumps(release_info, ensure_ascii=False, indent=2))
     return release_info
 
-def download_easytier_eui(params: dict, *kwargs):
+def download_easytier_eui(params: dict, *args, **kwargs):
     if not params:
         raise HttpResponse(f"未指定platform和arch参数")
     platform = params.get('platform', '')
@@ -144,7 +146,7 @@ def download_easytier_eui(params: dict, *kwargs):
     return HttpResponse(data={'download_id': download_id})
 
 
-def get_download_progress(params: dict, *kwargs):
+def get_download_progress(params: dict, *args, **kwargs):
     download_id = params.get('download_id', '')
     if not download_id:
         raise HttpResponse(f"download_id参数不能为空")
@@ -156,7 +158,7 @@ def get_download_progress(params: dict, *kwargs):
     return HttpResponse(data=progress)
 
 
-def download_result(params: dict, *kwargs):
+def download_result(params: dict, *args, **kwargs):
     download_id = params.get('download_id', '')
     if not download_id:
         raise HttpResponse(f"download_id参数不能为空")
@@ -230,9 +232,9 @@ def _get_et_eui_package_async(platform: str, arch: str, et_lite_version: str, do
     logging.debug(f"已下载： {download_file}")
     return download_file
 
-def _get_et_eui_latest_version():
-    api_url = "https://api.github.com/repos/710850609/EasyTier-EUI/releases/latest"
-    return github_util.get_latest_version(api_url)
+# def _get_et_eui_latest_version():
+#     api_url = "https://api.github.com/repos/710850609/EasyTier-EUI/releases/latest"
+#     return github_util.get_latest_version(api_url)
 
     
 def _merge_package(profile, et_lite_package, output_file, unzip_dir):

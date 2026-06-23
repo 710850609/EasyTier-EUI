@@ -258,7 +258,7 @@ def http_handle(base_uri="/", body_data=None, cgi_module=True) -> HttpResponse:
             # logging.debug(f"request: {request.__dict__}")
             module = importlib.import_module(module_name)
             func = getattr(module, function_name)
-            response = func(function_params)
+            response = func(function_params, **request.__dict__)
             if not isinstance(response, HttpResponse):
                 response = HttpResponse(data=response)
     except HttpException as e:
