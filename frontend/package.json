@@ -4,12 +4,12 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "dev": "set BASE_URI=/cgi/ThirdParty/EasyTier-EUI/index.cgi && vite dev",
-    "build": "set BASE_URI=/cgi/ThirdParty/EasyTier-EUI/index.cgi && vite build",
-    "preview": "set BASE_URI=/cgi/ThirdParty/EasyTier-EUI/index.cgi && vite preview",
-    "dev-user": "set BASE_URI=/cgi/ThirdParty/EasyTier-EUI.User/index.cgi && vite dev",
-    "build-user": "set BASE_URI=/cgi/ThirdParty/EasyTier-EUI.User/index.cgi && vite build",
-    "preview-user": "set BASE_URI=/cgi/ThirdParty/EasyTier-EUI.User/index.cgi && vite preview"
+    "dev": "cross-env BASE_URI=/cgi/ThirdParty/EasyTier-EUI/index.cgi vite dev",
+    "build": "cross-env BASE_URI=/cgi/ThirdParty/EasyTier-EUI/index.cgi vite build",
+    "preview": "cross-env BASE_URI=/cgi/ThirdParty/EasyTier-EUI/index.cgi vite preview",
+    "dev-user": "cross-env BASE_URI=/cgi/ThirdParty/EasyTier-EUI.User/index.cgi vite dev",
+    "build-user": "cross-env BASE_URI=/cgi/ThirdParty/EasyTier-EUI.User/index.cgi vite build",
+    "preview-user": "cross-env BASE_URI=/cgi/ThirdParty/EasyTier-EUI.User/index.cgi vite preview"
   },
   "dependencies": {
     "@codemirror/legacy-modes": "^6.5.2",
@@ -31,6 +31,7 @@
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.2.1",
     "@vue/compiler-sfc": "^3.5.13",
+    "cross-env": "^7.0.3",
     "unplugin-auto-import": "^21.0.0",
     "unplugin-vue-components": "^32.0.0",
     "vite": "^6.0.7",
