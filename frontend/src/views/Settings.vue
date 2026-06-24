@@ -256,7 +256,7 @@
       <!-- 版本信息卡片 -->
       <div class="about-version-card">
         <div class="version-main">
-          <span class="version-name">易组网</span>
+          <span class="version-name">易组网 {{ forUser ? '(用户版)' : '' }}</span>
         </div>
         <div class="version-actions">
           <a href='https://github.com/710850609/EasyTier-EUI' target="_blank">
@@ -346,6 +346,7 @@ const githubMirror = ref('')
 const githubMirrors = ref([])
 const buildVersion = ref('')
 const installPath = ref('')
+const forUser = ref(false)
 const showRewardCdoe = ref(false)
 const platform = ref('')
 const etLogLevel = ref('error')
@@ -509,6 +510,7 @@ const getEuiInfo = async () => {
     const { data } = await api.settings.getEuiInfo()
     buildVersion.value = data.build_version
     installPath.value = data.install_path
+    forUser.value = data.for_user
     platform.value = data.platform
   } catch (e) {
     console.error('获取版本号失败:', e)
@@ -518,7 +520,7 @@ const getEuiInfo = async () => {
 
 const installEuiVersion = (versionType) => {
   return new Promise(async (resolve, reject) => {
-    const oldVersion = buildVersion.value
+    let targetVersion = null
     updateProgress.value = { current_progress: 0, description: '正在准备更新...', status: 0, active: true }
     const loadingToast = toast.loading('正在更新中，请等待...')
     let pollErrorCount = 0
@@ -531,6 +533,9 @@ const installEuiVersion = (versionType) => {
         try {
           const { data: progress } = await api.etEui.getUpdateProgress({ update_id: updateId })
           pollErrorCount = 0
+          if (progress.update_version) {
+            targetVersion = progress.update_version
+          }
           updateProgress.value = { ...progress, active: true }
           loadingToast.content = `${progress.description} (${progress.current_progress}%)`
 
@@ -540,7 +545,7 @@ const installEuiVersion = (versionType) => {
             loadingToast.clear()
             toast.success(progress.description || '更新准备完成')
             resolve()
-            waitForRestart(oldVersion)
+            waitForRestart(targetVersion)
           } else if (progress.status === 2) {
             clearInterval(pollTimer)
             updateProgress.value = { ...progress, active: false }
@@ -550,12 +555,12 @@ const installEuiVersion = (versionType) => {
           }
         } catch (e) {
           pollErrorCount++
-          if (pollErrorCount >= 3) {
+          if (pollErrorCount >= 3 && targetVersion) {
             clearInterval(pollTimer)
             updateProgress.value = { ...updateProgress.value, active: false }
             loadingToast.clear()
             resolve()
-            waitForRestart(oldVersion)
+            waitForRestart(targetVersion)
           }
         }
       }, 1500)
@@ -567,7 +572,7 @@ const installEuiVersion = (versionType) => {
   })
 }
 
-const waitForRestart = (oldVersion) => {
+const waitForRestart = (targetVersion) => {
   const waitingToast = toast.loading('正在更新软件包，服务重启中，请稍后...')
   let retryCount = 0
 
@@ -575,7 +580,7 @@ const waitForRestart = (oldVersion) => {
     retryCount++
     try {
       const { data: euiInfo } = await api.settings.getEuiInfo()
-      if (euiInfo.build_version !== oldVersion) {
+      if (euiInfo.build_version === targetVersion) {
         clearInterval(checkRestart)
         waitingToast.clear()
         buildVersion.value = euiInfo.build_version
