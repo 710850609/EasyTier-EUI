@@ -232,7 +232,7 @@ def _do_download_easytier_eui(task: DownloadTask, platform: str, arch: str, prof
 
     def on_download_progress(percent, desc):
         mapped = 10 + int(percent * 0.80)
-        task.update_progress(mapped, f'正在下载 EasyTier-EUI {et_lite_version}({desc or '已下载' + percent + '%'})')
+        task.update_progress(mapped, f'正在下载 EasyTier-EUI {et_lite_version}({desc or "已下载" + percent + "%"})')
 
     et_lite_package = _get_et_eui_package_async(platform, arch, et_lite_version, download_dir, download_url=download_url, progress_callback=on_download_progress)
 

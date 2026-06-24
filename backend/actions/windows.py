@@ -63,7 +63,7 @@ def _do_download_mgr_pro(task: DownloadTask, profile: str):
 
     def on_et_download(percent, desc):
         mapped = 10 + int(percent * 0.40)
-        task.update_progress(mapped, f'正在下载EasyTier内核 {et_version}({desc or '已下载' + percent + '%'})')
+        task.update_progress(mapped, f'正在下载EasyTier内核 {et_version}({desc or "已下载" + percent + "%"})')
 
     et_package = et_util.download_package(download_dir, 'windows', 'x86_64', et_version, progress_callback=on_et_download)
     task.update_progress(50, f'EasyTier内核下载完成，获取EasyTier管理器版本...')
@@ -72,7 +72,7 @@ def _do_download_mgr_pro(task: DownloadTask, profile: str):
 
     def on_mgr_download(percent, desc):
         mapped = 55 + int(percent * 0.35)
-        task.update_progress(mapped, f'正在下载EasyTier管理器 {et_mgr_version}({desc or '已下载' + percent + '%'})')
+        task.update_progress(mapped, f'正在下载EasyTier管理器 {et_mgr_version}({desc or "已下载" + percent + "%"})')
 
     et_mgr_package = _get_et_mgr_package(et_mgr_version, download_dir, progress_callback=on_mgr_download)
     task.update_progress(90, f'下载完成，正在合并包...')
