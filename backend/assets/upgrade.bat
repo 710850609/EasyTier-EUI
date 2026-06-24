@@ -34,15 +34,15 @@ goto :eof
 :main
 call :log "执行"
 
-:: 等待旧进程完全退出（最多等 30 秒）
+:: 等待旧进程完全退出（最多等 10 秒）
 set WAIT_SEC=0
 :wait_exit
 tasklist /fi "imagename eq EasyTier-EUI.exe" 2>nul | find /i "EasyTier-EUI.exe" >nul
 if errorlevel 1 goto proc_exited
-if !WAIT_SEC! geq 30 (
+if !WAIT_SEC! geq 10 (
     call :log "等待超时，强制终止旧进程"
     taskkill /f /im "EasyTier-EUI.exe" >nul 2>&1
-    call :sleep 3
+    call :sleep 2
     goto proc_exited
 )
 call :log "等待旧进程退出... (!WAIT_SEC! 秒)"

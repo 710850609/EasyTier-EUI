@@ -11,8 +11,7 @@ import time
 import zipfile
 from pathlib import Path
 
-import utils.download_manager as download_manager
-from utils.download_manager import DownloadTask
+from utils.async_task import DownloadTask, UpdateTask
 import actions.configs as configs
 import utils.common_util as common_util
 import utils.github_util as github_util
@@ -28,43 +27,74 @@ def update(params: dict, *args, **kwargs):
         raise HttpResponse(f"版本标签错误：{ver_tag}")
     if kwargs.get('request_uri', '').startswith('/cgi/ThirdParty/EasyTier-EUI.User/'):
         raise HttpResponse(f"用户版不支持自更新，请在标准版本中自更新")
-    download_url, filename = __get_download_url(ver_tag == 'release')
+
+    task = UpdateTask(params)
+    task.update_progress(0, '正在初始化更新任务...')
+    task.start(_do_update, ver_tag)
+    return HttpResponse(data={'update_id': task.update_id})
+
+
+def _do_update(task: UpdateTask, ver_tag: str):
+    task.update_progress(5, '正在获取下载信息...')
+    download_url, filename, version = __get_download_url(ver_tag == 'release')
+    task.set_update_version(version)
     download_dir = os.path.join(run_configs.data_dir(), 'download')
     download_file = os.path.join(download_dir, filename)
+
     if not os.path.exists(download_file):
-        github_util.download_release_file(download_url, download_file)
+        task.update_progress(5, '开始下载更新包...')
+
+        def on_download_progress(percent, desc):
+            mapped = 5 + int(percent * 0.66)
+            task.update_progress(mapped, f'正在下载更新包，已下载{percent}%...')
+
+        github_util.download_release_file(download_url, download_file, progress_callback=on_download_progress)
+    else:
+        task.update_progress(71, '更新包已缓存，跳过下载')
+
     extract_dir = os.path.join(download_dir, 'temp', str(int(time.time())))
     if run_configs.is_fn_system():
-        # fpk是gzip压缩的文件
+        task.update_progress(75, '正在解压更新包...')
         os.makedirs(extract_dir, exist_ok=True)
         with tarfile.open(download_file, 'r:gz') as tar:
             tar.extractall(path=extract_dir)
         app_dir = os.path.join(extract_dir, 'app')
         with tarfile.open(os.path.join(extract_dir, 'app.tgz'), 'r:gz') as tar:
             tar.extractall(path=app_dir)
+
+        task.update_progress(85, '正在更新 backend...')
         backend_path = Path(run_configs.core_dir()).parent.joinpath('backend')
         shutil.copytree(os.path.join(app_dir, 'backend'), backend_path, dirs_exist_ok=True)
         logging.info(f"更新backend： {backend_path}")
+
+        task.update_progress(92, '正在更新 frontend...')
         frontend_path = Path(run_configs.core_dir()).parent.joinpath('frontend')
         shutil.copytree(os.path.join(app_dir, 'frontend'), frontend_path, dirs_exist_ok=True)
         logging.info(f"更新frontend： {frontend_path}")
+
+        task.update_progress(97, '正在安装依赖...')
         cmd = f"{backend_path}/.venv/bin/pip install --no-index --find-links={backend_path}/wheels -r {backend_path}/requirements-base.txt"
         common_util.run_cmd(cmd)
         logging.info(f"安装依赖完成")
         logging.info(f"更新到 {ver_tag} 版本完成")
-        pass
+        task.set_completed(f'更新到 {ver_tag} 版本完成')
     else:
+        task.update_progress(72, '正在停止服务...')
         services.stop_all()
+
+        task.update_progress(78, '正在解压更新包...')
         _extract_package(download_file, extract_dir)
+
+        task.update_progress(90, '正在复制更新文件...')
         app_path = Path(run_configs.core_dir()).parent
         shutil.copytree(os.path.join(extract_dir, 'EasyTier-EUI'), app_path.joinpath('_update'), dirs_exist_ok=True)
         upgrade_script = run_configs.upgrade_script_path()
-        # 复制升级脚本到安装目录，避免 PyInstaller 清理 temp 目录时脚本被删除
         script_name = os.path.basename(upgrade_script)
         persistent_script = os.path.join(str(app_path), script_name)
         shutil.copy2(upgrade_script, persistent_script)
+
+        task.update_progress(97, '正在启动升级脚本...')
         if sys.platform != 'win32':
-            # PyInstaller --add-data 不保留执行权限，用 bash 执行避免依赖 +x
             cmd = ['bash', persistent_script, str(app_path)]
         else:
             cmd = [persistent_script, str(app_path)]
@@ -80,11 +110,23 @@ def update(params: dict, *args, **kwargs):
             _sp.Popen(cmd, stdout=_sp.DEVNULL, stderr=_sp.DEVNULL,
                       cwd=str(app_path), env=_clean_env)
         logging.info("升级脚本已脱离当前进程启动，即将退出当前进程")
-        # 给升级脚本一点时间启动，然后优雅退出
-        _time.sleep(0.5)
-        logging.shutdown()
-        os._exit(0)
-    pass
+        task.set_completed('已下载更新包，即将更新并重启服务')
+        import threading
+        def _delayed_shutdown():
+            _time.sleep(1)
+            logging.shutdown()
+            os._exit(0)
+        threading.Thread(target=_delayed_shutdown, daemon=True).start()
+
+
+def get_update_progress(params: dict, *args, **kwargs):
+    update_id = params.get('update_id', '')
+    if not update_id:
+        raise HttpResponse(f"update_id参数不能为空")
+    progress = UpdateTask.load(update_id)
+    if progress is None:
+        raise HttpResponse(f"更新任务不存在: {update_id}")
+    return HttpResponse(data=progress)
 
 def get_release_info(params: dict, *args, **kwargs):
     params = params or {}
@@ -139,11 +181,10 @@ def download_easytier_eui(params: dict, *args, **kwargs):
     if not platform or not arch:
         raise HttpResponse(f"platform和arch参数不能为空")
 
-    download_id = download_manager.new_download_id()
-    task = DownloadTask(download_id, params)
+    task = DownloadTask(params)
     task.update_progress(0, '正在初始化下载任务...')
-    download_manager.run_async_download(_do_download_easytier_eui, task, platform, arch, profile)
-    return HttpResponse(data={'download_id': download_id})
+    task.start(_do_download_easytier_eui, platform, arch, profile)
+    return HttpResponse(data={'download_id': task.download_id})
 
 
 def get_download_progress(params: dict, *args, **kwargs):
@@ -291,7 +332,8 @@ def _extract_package(package_file:str, extract_dir:str):
                 with zf.open(info) as src, open(local_path, 'wb') as dst:
                     dst.write(src.read())
 
-def __get_download_url(is_release: bool) -> tuple[str, str]:
+def __get_download_url(is_release: bool) -> tuple[str, str, str]:
+    """获取下载链接, 文件名, 版本"""
     # 系统映射
     sys_map = {
         "win32": "windows",
@@ -324,7 +366,7 @@ def __get_download_url(is_release: bool) -> tuple[str, str]:
     download_url = asset.get('download_url', '')
     if not download_url or download_url == '':
         raise HttpResponse(f"没有可下载链接")
-    return download_url, download_url.split('/')[-1]
+    return download_url, download_url.split('/')[-1], latest_info.get('version', '')
 
 def _clean_env_for_upgrade():
     """为升级脚本准备干净的环境变量"""
@@ -332,7 +374,7 @@ def _clean_env_for_upgrade():
     clean = {}
     for k, v in os.environ.items():
         # 过滤 PyInstaller 内部变量
-        if k.startswith('_PYI'):
+        if k.startswith(('_PYI', 'LD_LIBRARY_PATH')):
             continue
         # 过滤 CGI/WebServer 注入的变量
         if k.startswith(('REQUEST_', 'QUERY_', 'CONTENT_', 'HTTP_', 'SERVER_')):

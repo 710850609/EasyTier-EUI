@@ -127,6 +127,7 @@
         </div>        
         <var-chip type="warning" size="mini" plain v-if="buildVersion < euiReleaseInfo.latest_release.version">新版本</var-chip>
         <var-button type="primary" size="small" @click="installEuiVersion('release')" auto-loading
+           :disabled="updateProgress.active"
            v-if="euiReleaseInfo?.latest_release?.version && buildVersion !== euiReleaseInfo.latest_release.version">
           <var-icon name="download" />
           安装
@@ -142,7 +143,8 @@
           <span class="version-value">{{ euiReleaseInfo.latest_prerelease.version }}</span>
         </div>
         <var-chip type="warning" size="mini" plain v-if="buildVersion < euiReleaseInfo.latest_prerelease.version">新版本</var-chip>
-        <var-button type="primary" size="small" @click="installEuiVersion('prerelease')" auto-loading>
+        <var-button type="primary" size="small" @click="installEuiVersion('prerelease')" auto-loading
+           :disabled="updateProgress.active">
           <var-icon name="download" />
           安装
         </var-button>
@@ -156,6 +158,18 @@
           <var-icon name="refresh" size="18" />
           检查更新
         </var-button>
+      </div>
+      <div class="setting-row" v-if="updateProgress.active" style="flex-direction: column; align-items: stretch;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+          <span style="font-size: 13px; color: var(--color-text-secondary);">{{ updateProgress.description }}</span>
+          <span style="font-size: 13px; color: var(--color-primary);">{{ updateProgress.current_progress }}%</span>
+        </div>
+        <var-progress 
+          :value="Number(updateProgress.current_progress) || 0" 
+          :color="'var(--color-primary)'"
+          line-width="6"
+          ripple
+        />
       </div>
     </var-paper>
 
@@ -286,7 +300,7 @@
   <var-popup v-model:show="showEuiReleaseInfo">
     <var-result type="info">
       <template #image>
-         <MarkdownRenderer :content="`${euiChangeMarkdonwn}`" class="markdown-renderer" />
+         <MarkdownRenderer :content="`${euiChangeMarkdown}`" class="markdown-renderer" />
       </template>
       <template #footer>
         <var-button type="info" @click="showEuiReleaseInfo = false" style="margin: 10px;">关闭</var-button>
@@ -337,7 +351,8 @@ const platform = ref('')
 const etLogLevel = ref('error')
 const euiReleaseInfo = ref({})
 const euiRelease = ref({})
-const euiChangeMarkdonwn = ref('')
+const euiChangeMarkdown = ref('')
+const updateProgress = ref({ current_progress: 0, description: '', status: -1, active: false })
 const showEuiReleaseInfo = ref(false)
 const showEtChangeLog = ref(false)
 const etChangeLog = ref('')
@@ -502,16 +517,81 @@ const getEuiInfo = async () => {
 }
 
 const installEuiVersion = (versionType) => {
-  return new Promise((resolve, reject) => {
-    api.etEui.update({ ver_tag: versionType })
-    .then((res) => {
-      toast.success(res.data || `更新成功`)
-      setTimeout(() => window.location.reload(), 1500)
-    })
-    .finally(() => {
-      resolve()
-    })
+  return new Promise(async (resolve, reject) => {
+    const oldVersion = buildVersion.value
+    updateProgress.value = { current_progress: 0, description: '正在准备更新...', status: 0, active: true }
+    const loadingToast = toast.loading('正在更新中，请等待...')
+    let pollErrorCount = 0
+
+    try {
+      const { data: updateResp } = await api.etEui.update({ ver_tag: versionType })
+      const updateId = updateResp.update_id
+
+      let pollTimer = setInterval(async () => {
+        try {
+          const { data: progress } = await api.etEui.getUpdateProgress({ update_id: updateId })
+          pollErrorCount = 0
+          updateProgress.value = { ...progress, active: true }
+          loadingToast.content = `${progress.description} (${progress.current_progress}%)`
+
+          if (progress.status === 1) {
+            clearInterval(pollTimer)
+            updateProgress.value = { ...progress, active: false }
+            loadingToast.clear()
+            toast.success(progress.description || '更新准备完成')
+            resolve()
+            waitForRestart(oldVersion)
+          } else if (progress.status === 2) {
+            clearInterval(pollTimer)
+            updateProgress.value = { ...progress, active: false }
+            loadingToast.clear()
+            toast.error(progress.description || '更新失败')
+            reject(new Error(progress.description))
+          }
+        } catch (e) {
+          pollErrorCount++
+          if (pollErrorCount >= 3) {
+            clearInterval(pollTimer)
+            updateProgress.value = { ...updateProgress.value, active: false }
+            loadingToast.clear()
+            resolve()
+            waitForRestart(oldVersion)
+          }
+        }
+      }, 1500)
+    } catch (e) {
+      updateProgress.value = { current_progress: 0, description: '', status: -1, active: false }
+      toast.error(e.message || '更新请求失败')
+      reject(e)
+    }
   })
+}
+
+const waitForRestart = (oldVersion) => {
+  const waitingToast = toast.loading('正在更新软件包，服务重启中，请稍后...')
+  let retryCount = 0
+
+  const checkRestart = setInterval(async () => {
+    retryCount++
+    try {
+      const { data: euiInfo } = await api.settings.getEuiInfo()
+      if (euiInfo.build_version !== oldVersion) {
+        clearInterval(checkRestart)
+        waitingToast.clear()
+        buildVersion.value = euiInfo.build_version
+        toast.success('更新完成')
+        // window.location.reload()
+      }
+    } catch (e) {
+      // 服务重启中，连接失败属于正常现象，忽略
+    }
+
+    if (retryCount >= 60) {
+      clearInterval(checkRestart)
+      waitingToast.clear()
+      toast.error('更新超时，请手动刷新页面检查')
+    }
+  }, 2000)
 }
 
 const shutdown = async () => {
@@ -563,10 +643,10 @@ const setupShowEuiReleaseInfo = (releaseType) => {
   if (!releaseType || !info) {
     return
   }
-  euiChangeMarkdonwn.value = `
+  euiChangeMarkdown.value = `
 # ${ info.version }
 >  ${formatDate(euiReleaseInfo.value.update_time)} 下载量  ${info.download_count }
-## 更新内容 
+## 更新内容
 ${ info.changelog }
 `
   showEuiReleaseInfo.value = true
@@ -613,7 +693,7 @@ onMounted(() => {
     loadPeerSource()
     getGithubMirrors()
     showDevContent.value = true
-  }  
+  }
   getEtReleaseInfo(true, false)
   getEuiReleaseInfo(true, false)
   getEtVersion()
@@ -890,27 +970,27 @@ onMounted(() => {
     gap: 12px;
     text-align: center;
   }
-  
+
   .version-main {
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: center;
   }
-  
+
   .version-name {
     font-size: 18px;
   }
-  
+
   .version-actions {
     flex-wrap: wrap;
     justify-content: center;
   }
-  
+
   .stats-row {
     flex-direction: column;
     align-items: flex-start;
   }
-  
+
   .path-code {
     font-size: 12px;
     padding: 6px 10px;

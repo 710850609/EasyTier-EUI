@@ -27,10 +27,10 @@ log() {
 
 log "执行"
 
-# 等待旧进程完全退出（最多等 30 秒）
+# 等待旧进程完全退出（最多等 10 秒）
 WAIT_SEC=0
 while pgrep -x "$APP_NAME" > /dev/null 2>&1; do
-    if [ $WAIT_SEC -ge 30 ]; then
+    if [ $WAIT_SEC -ge 10 ]; then
         log "等待超时，强制终止旧进程"
         killall -9 "$APP_NAME" > /dev/null 2>&1 || true
         sleep 2

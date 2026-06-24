@@ -11,19 +11,17 @@ import actions.configs as configs
 import utils.common_util as common_util
 import utils.et_util as et_util
 import utils.github_util as github_util
-import utils.download_manager as download_manager
+from utils.async_task import DownloadTask
 from http_dispatcher.dispatcher import HttpResponse
-from utils.download_manager import DownloadTask
 from utils import run_configs
 
 
 def download_mgr_pro(params:dict, *args, **kwargs):
     profile = params.get('profile', '') if params is not None else None
-    download_id = download_manager.new_download_id()
-    task = DownloadTask(download_id, params)
+    task = DownloadTask(params)
     task.update_progress(0, '正在初始化下载任务...')
-    download_manager.run_async_download(_do_download_mgr_pro, task, profile)
-    return HttpResponse(data={'download_id': download_id})
+    task.start(_do_download_mgr_pro, profile)
+    return HttpResponse(data={'download_id': task.download_id})
 
 
 def get_download_mgr_pro_progress(params:dict, *args, **kwargs):

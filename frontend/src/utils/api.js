@@ -254,6 +254,7 @@ export const api = {
     getDownloadProgress: (data) => get('/et_eui/get_download_progress', data),
     getDownloadResultUrl: (data) => getFullUrl('/et_eui/download_result', data),
     update: (data) => post('/et_eui/update', data),
+    getUpdateProgress: (data) => get('/et_eui/get_update_progress', data, {toastError: false}),
     getReleaseInfo: (data) => get('/et_eui/get_release_info', data),
   },
   // ET 核心相关
@@ -268,7 +269,7 @@ export const api = {
   // 设置相关
   settings: {
     shutdown: () => post('/settings/shutdown'),
-    getEuiInfo: () => get('/settings/eui_info'),
+    getEuiInfo: () => get('/settings/eui_info', {}, { toastError: false }),
     getGithubMirrors: (params = {}) => get('/settings/github_mirrors', params),
     deleteCache: () => post('/settings/delete_cache'),
   },
