@@ -520,6 +520,10 @@ const getEuiInfo = async () => {
 
 const installEuiVersion = (versionType) => {
   return new Promise(async (resolve, reject) => {
+    if (window.location.href.indexOf('/cgi/ThirdParty/EasyTier-EUI.User/index.cgi') !== -1) {
+      toast.error('用户版不支持自更新，仅非用户版支持')
+      return reject()
+    }
     let targetVersion = null
     updateProgress.value = { current_progress: 0, description: '正在准备更新...', status: 0, active: true }
     const loadingToast = toast.loading('正在更新中，请等待...')

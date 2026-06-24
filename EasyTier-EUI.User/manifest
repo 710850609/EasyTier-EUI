@@ -1,7 +1,7 @@
 appname               = EasyTier-EUI.User
 version=1.1.020604
 display_name          = 易组网(用户版)
-desc                  = `<p>简化 EasyTier 使用的UI界面，降低组网门槛，快速访问异地网络设备</p><p>享受 EasyTier 免费、不限设备数量、支持多类型终端等优势</p>更多EasyTier使用技巧，请查看 <a href="https://easytier.cn" target="_blank">官网文档</a></br></br><p><a href="/cgi/ThirdParty/EasyTier-EUI.User/index.cgi/index.html" target="_blank">Web界面快捷入口</a></p><p>易组网(用户版)以非root权限运行，不支持主动访问组网的其它节点，仅支持被其它节点被动访问</p>`
+desc                  = `<p>简化 EasyTier 使用的UI界面，降低组网门槛，快速访问异地网络设备</p><p>享受 EasyTier 免费、不限设备数量、支持多类型终端等优势</p><p>更多EasyTier使用技巧，请查看 <a href="https://easytier.cn" target="_blank">官网文档</a></p></br></br><p><a href="/cgi/ThirdParty/EasyTier-EUI.User/index.cgi/index.html" target="_blank">Web界面快捷入口</a></p></br><p>易组网(用户版)以非root权限运行，默认不支持主动访问组网的其它节点</p><p>如要体验完整功能，请安装非用户版本：</p><p>方式1：<a href='https://github.com/710850609/EasyTier-EUI/releases' target="_blank">Github仓库</a>下载并安装</p><p>方式2：进入易组网中的【应用】->【FnOS】菜单下载并安装</p>`
 platform=x86
 os_min_version=1.1.8
 source                = thirdparty
