@@ -588,8 +588,8 @@ const waitForRestart = (targetVersion) => {
         clearInterval(checkRestart)
         waitingToast.clear()
         buildVersion.value = euiInfo.build_version
-        toast.success('更新完成')
-        // window.location.reload()
+        toast.success('更新完成，即将刷新页面')
+        window.location.reload()
       }
     } catch (e) {
       // 服务重启中，连接失败属于正常现象，忽略
