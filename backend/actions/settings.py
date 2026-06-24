@@ -37,11 +37,10 @@ def delete_cache(*args, **kwargs):
     download_path = Path(run_configs.data_dir(), 'download')
     total_bytes = _delete_dir(download_path)
     logging.info(f"删除缓存目录: {download_path}, 累计删除 {total_bytes} 字节")
-    task_path = Path(run_configs.data_dir(), 'task')
-    total_bytes += _delete_dir(task_path)
-    logging.info(f"删除任务目录: {task_path}, 累计删除 {total_bytes} 字节")
+    tasks_path = Path(run_configs.data_dir(), 'tasks')
+    total_bytes += _delete_dir(tasks_path)
+    logging.info(f"删除任务目录: {tasks_path}, 累计删除 {total_bytes} 字节")
     if total_bytes == 0:
-        logging.info(f"删除缓存目录: {download_path}, 共删除 0 字节")
         return f"缓存已删除干净"
     units = ["B", "KB", "MB", "GB", "TB"]
     i = 0
