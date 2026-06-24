@@ -25,8 +25,8 @@ def get_latest_version():
     last_version = github_util.get_latest_version(api_url)
     if last_version < et_min_version:
         logging.debug(f"最新release小于 {et_min_version}, 使用 {et_min_version}")
-        last_version = et_min_version;
-    return last_version;
+        last_version = et_min_version
+    return last_version
 
 def get_download_url(system:str, arch: str, version: str=None):
     if version is None:
@@ -43,10 +43,8 @@ def download_package(download_dir: str, system: str, arch: str, version: str=Non
     if Path(download_file).exists():
         logging.debug(f"已存在缓存:{download_file}")
         return download_file;
-    logging.debug(f"不存在缓存，开始下载 {download_file}");
+    logging.debug(f"不存在缓存，开始下载 {download_file}")
     download_url = f"https://github.com/EasyTier/EasyTier/releases/download/v{version}/{download_file_name}"
-    download_temp_file = f"{download_dir}/temp/{download_file_name}.{int(time.time())}"
-    github_util.download_release_file(download_url, download_temp_file, download_file_name, progress_callback=progress_callback)
-    common_util.move(download_temp_file, download_file)
+    github_util.download_release_file(download_url, download_file, download_file_name, progress_callback=progress_callback)
     logging.debug(f"已下载： {download_file}")
     return download_file

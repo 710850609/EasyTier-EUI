@@ -12,7 +12,7 @@
 import { ref, computed, onUnmounted } from 'vue'
 import toast from '../components/toast.js'
 
-export function useAsyncDownload(startDownloadFunc, queryProgressFunc, buildResultUrl, pollInterval = 3000) {
+export function useAsyncDownload(startDownloadFunc, queryProgressFunc, buildResultUrl, pollInterval = 1500) {
   const downloadingKey = ref(null)
   const progress = ref(null)
   let pollTimer = null

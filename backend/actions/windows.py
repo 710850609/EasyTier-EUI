@@ -57,14 +57,13 @@ def download_mgr_pro_result(params:dict, *args, **kwargs):
 
 def _do_download_mgr_pro(task: DownloadTask, profile: str):
     download_dir = os.path.join(run_configs.data_dir(), 'download')
-    download_temp_dir = f"{download_dir}/temp"
     task.update_progress(5, '正在获取EasyTier版本信息...')
     et_version = et_util.get_latest_version()
     task.update_progress(10, f'获取到EasyTier版本: {et_version}，准备下载...')
 
     def on_et_download(percent, desc):
         mapped = 10 + int(percent * 0.40)
-        task.update_progress(mapped, f'正在下载EasyTier内核 {et_version}... ({percent}%)')
+        task.update_progress(mapped, f'正在下载EasyTier内核 {et_version}({desc or '已下载' + percent + '%'})')
 
     et_package = et_util.download_package(download_dir, 'windows', 'x86_64', et_version, progress_callback=on_et_download)
     task.update_progress(50, f'EasyTier内核下载完成，获取EasyTier管理器版本...')
@@ -73,10 +72,11 @@ def _do_download_mgr_pro(task: DownloadTask, profile: str):
 
     def on_mgr_download(percent, desc):
         mapped = 55 + int(percent * 0.35)
-        task.update_progress(mapped, f'正在下载EasyTier管理器 {et_mgr_version}... ({percent}%)')
+        task.update_progress(mapped, f'正在下载EasyTier管理器 {et_mgr_version}({desc or '已下载' + percent + '%'})')
 
     et_mgr_package = _get_et_mgr_package(et_mgr_version, download_dir, progress_callback=on_mgr_download)
     task.update_progress(90, f'下载完成，正在合并包...')
+    download_temp_dir = f"{download_dir}/temp"
     output_file = f"{download_temp_dir}/easytier-manager-pro-v{et_mgr_version}-v{et_version}.zip"
     _merge_package(profile, et_package, et_mgr_package, output_file, download_temp_dir)
     task.update_progress(95, f'合并完成，准备返回文件...')
@@ -97,9 +97,7 @@ def _get_et_mgr_package(et_mgr_version: str, download_dir: str, progress_callbac
         return download_file
     logging.debug(f"不存在缓存，开始下载 {download_file}")
     download_url = f"https://github.com/EasyTier/easytier-manager/releases/download/v{last_version}/easytier-manager-pro.zip"
-    download_temp_file = f"{download_dir}/temp/easytier-manager-pro-v{last_version}.zip.{int(time.time())}"
-    github_util.download_release_file(download_url, download_temp_file, f"easytier-windows-pro-v{last_version}.zip", progress_callback=progress_callback)
-    common_util.move(download_temp_file, download_file)
+    github_util.download_release_file(download_url, download_file, f"easytier-windows-pro-v{last_version}.zip", progress_callback=progress_callback)
     logging.debug(f"已下载： {download_file}")
     return download_file
 

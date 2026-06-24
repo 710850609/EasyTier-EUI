@@ -4,15 +4,17 @@ import copy
 import json
 import logging
 import re
+import shutil
 import threading
 import time
+import uuid
 # 在进程退出时被首次导入，concurrent.futures 的懒加载机制触发了 threading._register_atexit，但此时 interpreter 已进入 shutdown 状态，报错
 try:
     from concurrent.futures import ThreadPoolExecutor, as_completed
 except RuntimeError:
     pass
 from pathlib import Path
-from typing import Optional, List, Tuple
+from typing import Optional, List, Tuple, Callable
 
 import requests
 
@@ -130,7 +132,7 @@ def get_api(url: str, proxy_url: str = ""):
         else:
             raise e
 
-def get_proxy_urls(refresh:bool = False) -> list:
+def get_proxy_urls(refresh:bool = False, progress_callback:Optional[Callable[[int], str]] = None) -> list:
     """获取 GitHub 代理列表"""
     proxy_file_path = Path(run_configs.data_dir(), 'github_proxy.json')
     cur_time = int(time.time() * 1000)
@@ -142,6 +144,8 @@ def get_proxy_urls(refresh:bool = False) -> list:
                 return cache_data.get('sources', [])
 
     #  https://github.akams.cn/
+    if progress_callback:
+        progress_callback(0, '正在获取GitHub加速节点...')
     url_list = get_dns_txt_records('github-proxy.v6.army')
     if not url_list:
         logging.warning("DNS TXT 查询返回空，使用默认加速地址")
@@ -164,22 +168,33 @@ def get_proxy_urls(refresh:bool = False) -> list:
     # logging.info(f"获取到远程代理URL: {url_list}")
     logging.info(f"获取到GitHub 加速地址: {url_list}")
     url_list = [{'url': item} for item in url_list]
-    url_list = check_proxy_url(url_list)
+    if progress_callback:
+        progress_callback(0, '正在检测GitHub加速节点...')
+
+    url_list = check_proxy_url(url_list, progress_callback=progress_callback)
     url_list = [item for item in url_list if item['status'] == 'ok']
     logging.debug(f"GitHub加速地址检测结果: {url_list}")
+
+    if progress_callback:
+        progress_callback(0, f'检测到可用GitHub加速节点: {len(url_list)} 个')
     if url_list and len(url_list) > 0:
         with open(proxy_file_path, 'w', encoding="utf-8") as f:
             f.write(json.dumps({'sources': url_list, 'create_time': cur_time}, indent=2))
     return url_list
 
-def check_proxy_url(url_list:list, check_timeout:int = 3) -> list:
+def check_proxy_url(url_list:list, check_timeout:int = 3, progress_callback=None) -> list:
     """
     检查代理 URL 是否有效
     check_type: raw 或 api
     """
 
+    total = len(url_list)
+    done = 0
+    lock = threading.Lock()
+
     # ── 新增：并发测速 ──
     def _test_speed(item):
+        nonlocal done
         proxy = item["url"]
         result = {"url": proxy, "delay": -1, "status": "", "desc": "", "supports_range": False, "supports_api": False}
         # 使用 GitHub 轻量文件测试，HEAD 请求减少流量
@@ -224,55 +239,55 @@ def check_proxy_url(url_list:list, check_timeout:int = 3) -> list:
     return url_list
 
 
-def download_release_file_bak(url: str, output_path: str, desc: str = ""):
-    """下载文件，带进度显示"""
-    try:
-        url = get_download_url_proxy(url)
-        logging.info(f"开始下载: {url}")
-        logging.info(f"保存到: {output_path}")
-        # 确保 output_path 是 Path 对象（避免重复转换）
-        output_path = Path(output_path)
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-
-        # 使用流式下载
-        response = requests.get(url, stream=True, timeout=300)
-        response.raise_for_status()
-
-        # 验证响应内容类型
-        content_type = response.headers.get('content-type', '').lower()
-        content_length = response.headers.get('content-length', '0')
-
-        logging.info(f"Content-Type: {content_type}")
-        logging.info(f"Content-Length: {content_length}")
-
-        # 检查是否是ZIP文件或HTML页面
-        if 'text/html' in content_type or int(content_length) < 1000:
-            logging.error(f"下载的不是ZIP文件，Content-Type: {content_type}")
-            raise Exception(f"下载失败：代理返回的不是有效的文件")
-
-        total_size = int(content_length)
-        downloaded = 0
-
-        with open(output_path, 'wb') as f:
-            last_percent = -1  # 初始化在循环外
-            for chunk in response.iter_content(chunk_size=8192):
-                if chunk:
-                    f.write(chunk)
-                    downloaded += len(chunk)
-                    if total_size > 0:
-                        percent = (downloaded / total_size) * 100
-                        current_percent = int(percent)  # 取整
-                        # 每增加 1% 打印一次，且只打印一次
-                        if current_percent > last_percent:
-                            logging.debug(f"{desc} 下载进度: {current_percent}%")
-                            last_percent = current_percent
-
-        logging.info(f"下载成功: {output_path}")
-    except Exception as e:
-        logging.exception(f"下载失败")
-        if output_path.exists():
-            output_path.unlink()
-        raise Exception(f"下载失败：{e}") from e
+# def download_release_file_bak(url: str, output_path: str, desc: str = ""):
+#     """下载文件，带进度显示"""
+#     try:
+#         url = get_download_url_proxy(url)
+#         logging.info(f"开始下载: {url}")
+#         logging.info(f"保存到: {output_path}")
+#         # 确保 output_path 是 Path 对象（避免重复转换）
+#         output_path = Path(output_path)
+#         output_path.parent.mkdir(parents=True, exist_ok=True)
+#
+#         # 使用流式下载
+#         response = requests.get(url, stream=True, timeout=300)
+#         response.raise_for_status()
+#
+#         # 验证响应内容类型
+#         content_type = response.headers.get('content-type', '').lower()
+#         content_length = response.headers.get('content-length', '0')
+#
+#         logging.info(f"Content-Type: {content_type}")
+#         logging.info(f"Content-Length: {content_length}")
+#
+#         # 检查是否是ZIP文件或HTML页面
+#         if 'text/html' in content_type or int(content_length) < 1000:
+#             logging.error(f"下载的不是ZIP文件，Content-Type: {content_type}")
+#             raise Exception(f"下载失败：代理返回的不是有效的文件")
+#
+#         total_size = int(content_length)
+#         downloaded = 0
+#
+#         with open(output_path, 'wb') as f:
+#             last_percent = -1  # 初始化在循环外
+#             for chunk in response.iter_content(chunk_size=8192):
+#                 if chunk:
+#                     f.write(chunk)
+#                     downloaded += len(chunk)
+#                     if total_size > 0:
+#                         percent = (downloaded / total_size) * 100
+#                         current_percent = int(percent)  # 取整
+#                         # 每增加 1% 打印一次，且只打印一次
+#                         if current_percent > last_percent:
+#                             logging.debug(f"{desc} 下载进度: {current_percent}%")
+#                             last_percent = current_percent
+#
+#         logging.info(f"下载成功: {output_path}")
+#     except Exception as e:
+#         logging.exception(f"下载失败")
+#         if output_path.exists():
+#             output_path.unlink()
+#         raise Exception(f"下载失败：{e}") from e
 
 
 def _probe_url(url: str, timeout: int = 30) -> Tuple[bool, int, str]:
@@ -305,7 +320,9 @@ def _download_chunk(
         end: int,
         part_path: Path,
         timeout: int = 300,
-        max_retries: int = 3
+        max_retries: int = 3,
+        chunk_progress_callback=None,
+        reset_progress_callback=None
 ) -> bool:
     """
     下载文件的 [start, end] 字节段（两端闭合）。
@@ -314,6 +331,8 @@ def _download_chunk(
     headers = {"Range": f"bytes={start}-{end}"}
 
     for attempt in range(max_retries):
+        if reset_progress_callback:
+            reset_progress_callback()
         try:
             with requests.get(url, headers=headers, stream=True, timeout=timeout) as resp:
                 if resp.status_code not in (200, 206):
@@ -323,6 +342,8 @@ def _download_chunk(
                     for chunk in resp.iter_content(chunk_size=65536):
                         if chunk:
                             f.write(chunk)
+                            if chunk_progress_callback:
+                                chunk_progress_callback(len(chunk))
                 return True
         except Exception as e:
             logging.warning(f"分片下载失败 [{start}-{end}] 第{attempt + 1}次: {e}")
@@ -341,20 +362,24 @@ def download_release_file(
         progress_callback=None
 ) -> None:
     """
-    多镜像 + 分段并行下载。
+    多镜像 + 分段并行下载，支持并发下载同一文件（下载到 temp 目录，完成后原子移动）。
 
     :param download_url: GitHub 下载地址
-    :param output_path: 保存路径
+    :param output_path: 最终保存路径
     :param desc: 进度描述
     :param num_threads: 分段并行数，默认 4
     :param progress_callback: 进度回调 callback(percent: int, description: str)
     """
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    check_result = get_proxy_urls()
+
+    # 所有分片下载到临时目录，保证并发不冲突，原子移动到最终路径
+    temp_dir = output_path.parent / 'temp' / f'{uuid.uuid4().hex[:8]}'
+    temp_dir.mkdir(parents=True, exist_ok=True)
+    check_result = get_proxy_urls(refresh=True, progress_callback=progress_callback)
     if len(check_result) == 0:
         logging.info(f"无可用加速地址，开始重新获取镜像地址...")
-        check_result = get_proxy_urls(refresh=True)
+        check_result = get_proxy_urls(refresh=True, progress_callback=progress_callback)
 
     # ========== 1. 探测可用 URL 和文件大小 ==========
     usable_urls = [ item.get('url')  + '/' + download_url for item in check_result if item.get('delay') >= 0]
@@ -366,7 +391,8 @@ def download_release_file(
     if not usable_range_urls:
         # 全都不支持 Range，回退到单线程，挑第一个可用的
         logging.warning("没有地址支持 Range，回退到单线程下载")
-        _download_single(usable_urls[0], output_path, desc, timeout, progress_callback)
+        _download_single(usable_urls[0], temp_dir / output_path.name, desc, timeout, progress_callback)
+        shutil.move(str(temp_dir / output_path.name), str(output_path))
         return
     logging.info(f"加速地址可用 {len(usable_urls)} 个，支持 Range 下载 {len(usable_range_urls)} 个")
     resp = requests.head(usable_range_urls[0], allow_redirects=True, timeout=timeout)
@@ -381,33 +407,40 @@ def download_release_file(
     for i in range(0, total_size, chunk_size):
         start = i
         end = min(i + chunk_size - 1, total_size - 1)  # Range 是闭合区间
-        part_path = output_path.parent / f"{output_path.name}.part_{start}_{end}"
+        part_path = temp_dir / f"{output_path.name}.part_{start}_{end}"
         chunks.append((start, end, part_path))
 
     logging.info(f"{desc} 分片信息: {len(chunks)} 段, 总大小: {total_size}")
 
     # ========== 3. 并行下载（带故障转移） ==========
     progress_lock = threading.Lock()
-    downloaded_total = [0]  # 用 list 做可变引用
+    chunk_progress = {}  # {(start, end): bytes_downloaded}
     last_percent = [-1]
 
     def _download_with_fallback(start: int, end: int, part_path: Path) -> bool:
         """尝试所有可用 URL 下载该分片"""
         # 优先用 Range 支持的 URL，失败再试其他
         candidates = usable_range_urls + [u for u in usable_urls if u not in usable_range_urls]
+        chunk_key = (start, end)
+
+        def on_chunk_received(chunk_size):
+            with progress_lock:
+                chunk_progress[chunk_key] = chunk_progress.get(chunk_key, 0) + chunk_size
+                current = sum(chunk_progress.values())
+                if total_size > 0:
+                    p = int(current / total_size * 100)
+                    if p != last_percent[0]:
+                        logging.info(f"{desc} 分片下载进度: {p}%")
+                        last_percent[0] = p
+                        if progress_callback:
+                            progress_callback(p, f'分片下载进度: {p}%')
 
         for url in candidates:
             logging.debug(f"尝试下载 [{start}-{end}] from {url}")
-            if _download_chunk(url, start, end, part_path, timeout=timeout):
+            chunk_progress[chunk_key] = 0
+            if _download_chunk(url, start, end, part_path, timeout=timeout, chunk_progress_callback=on_chunk_received, reset_progress_callback=lambda: chunk_progress.update({chunk_key: 0})):
                 with progress_lock:
-                    downloaded_total[0] += (end - start + 1)
-                    if total_size > 0:
-                        p = int(downloaded_total[0] / total_size * 100)
-                        if p > last_percent[0]:
-                            logging.info(f"{desc} 下载进度: {p}%")
-                            last_percent[0] = p
-                            if progress_callback:
-                                progress_callback(p, desc)
+                    chunk_progress[chunk_key] = end - start + 1
                 return True
             logging.warning(f"URL 失败，切换镜像: {url}")
 
@@ -435,13 +468,16 @@ def download_release_file(
 
         # ========== 4. 合并文件 ==========
         logging.info(f"{desc} 下载完成，开始合并...")
-        with open(output_path, "wb") as outfile:
+        temp_file = temp_dir / output_path.name
+        with open(temp_file, "wb") as outfile:
             for start, end, part_path in chunks:
                 with open(part_path, "rb") as infile:
                     outfile.write(infile.read())
                 part_path.unlink(missing_ok=True)
 
-        logging.info(f"{desc} 合并完成: {output_path}")
+        logging.info(f"{desc} 合并完成: {temp_file}")
+        shutil.move(str(temp_file), str(output_path))
+        logging.info(f"{desc} 已移动到: {output_path}")
 
     except Exception:
         # 清理残片
@@ -450,6 +486,8 @@ def download_release_file(
         if output_path.exists():
             output_path.unlink(missing_ok=True)
         raise
+    finally:
+        shutil.rmtree(str(temp_dir), ignore_errors=True)
 
 
 def _download_single(url: str, output_path: Path, desc: str, timeout: int, progress_callback=None):
@@ -470,5 +508,6 @@ def _download_single(url: str, output_path: Path, desc: str, timeout: int, progr
                         if p > last_percent:
                             last_percent = p
                             if progress_callback:
-                                progress_callback(p, desc)
+                                logging.info(f"{desc} 单线程下载进度: {p}%")
+                                progress_callback(p, f'单线程下载进度: {p}%')
     logging.info(f"{desc} 下载完成")

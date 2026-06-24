@@ -48,7 +48,7 @@ def delete_cache(*args, **kwargs):
         total_bytes /= 1024
         i += 1
     size = f"{total_bytes:.2f} {units[i]}"
-    logging.info(f"删除缓存目录: {download_path}, 共删除 {size}")
+    logging.info(f"删除缓存目录: {download_path}, 任务目录: {tasks_path}, 累计删除 {size}")
     return f"缓存已删除 {size}"
 
 def _delete_dir(delete_path: Path):

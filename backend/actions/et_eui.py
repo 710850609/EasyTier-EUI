@@ -46,7 +46,7 @@ def _do_update(task: UpdateTask, ver_tag: str):
 
         def on_download_progress(percent, desc):
             mapped = 5 + int(percent * 0.66)
-            task.update_progress(mapped, f'正在下载更新包，已下载{percent}%...')
+            task.update_progress(mapped, f'正在下载更新包({desc or f"{percent}%"})...')
 
         github_util.download_release_file(download_url, download_file, progress_callback=on_download_progress)
     else:
@@ -232,7 +232,7 @@ def _do_download_easytier_eui(task: DownloadTask, platform: str, arch: str, prof
 
     def on_download_progress(percent, desc):
         mapped = 10 + int(percent * 0.80)
-        task.update_progress(mapped, f'正在下载 EasyTier-EUI {et_lite_version}... ({percent}%)')
+        task.update_progress(mapped, f'正在下载 EasyTier-EUI {et_lite_version}({desc or '已下载' + percent + '%'})')
 
     et_lite_package = _get_et_eui_package_async(platform, arch, et_lite_version, download_dir, download_url=download_url, progress_callback=on_download_progress)
 
@@ -267,9 +267,7 @@ def _get_et_eui_package_async(platform: str, arch: str, et_lite_version: str, do
     if not download_url:
         download_url = f"https://github.com/710850609/EasyTier-EUI/releases/download/{last_version}/{file_name}"
     logging.debug(f"不存在缓存，开始下载 {download_url}")
-    download_temp_file = f"{download_dir}/temp/{file_name}.{int(time.time())}"
-    github_util.download_release_file(download_url, download_temp_file, Path(download_temp_file).name, progress_callback=progress_callback)
-    common_util.move(download_temp_file, download_file)
+    github_util.download_release_file(download_url, download_file, Path(download_file).name, progress_callback=progress_callback)
     logging.debug(f"已下载： {download_file}")
     return download_file
 
