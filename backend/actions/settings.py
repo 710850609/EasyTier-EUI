@@ -19,6 +19,7 @@ def eui_info(*args, **kwargs):
         'build_version': run_configs.build_version(),
         'install_path': str(install_path),
         'platform': platform,
+        'for_user': run_configs.is_fn_system() and run_configs.DEFAULT_TRIM_APPNAME == 'EasyTier-EUI.User',
     }
 
 def github_mirrors(params:dict, *args, **kwargs):
@@ -34,15 +35,11 @@ def github_mirrors(params:dict, *args, **kwargs):
 
 def delete_cache(*args, **kwargs):
     download_path = Path(run_configs.data_dir(), 'download')
-    total_bytes = 0
-    if download_path.exists():
-        for entry in download_path.rglob('*'):
-            try:
-                if entry.is_file() and not entry.is_symlink():
-                    total_bytes += entry.stat().st_size
-            except (OSError, PermissionError):
-                pass
-    shutil.rmtree(download_path, ignore_errors=True)
+    total_bytes = _delete_dir(download_path)
+    logging.info(f"删除缓存目录: {download_path}, 累计删除 {total_bytes} 字节")
+    task_path = Path(run_configs.data_dir(), 'task')
+    total_bytes += _delete_dir(task_path)
+    logging.info(f"删除任务目录: {task_path}, 累计删除 {total_bytes} 字节")
     if total_bytes == 0:
         logging.info(f"删除缓存目录: {download_path}, 共删除 0 字节")
         return f"缓存已删除干净"
@@ -54,6 +51,18 @@ def delete_cache(*args, **kwargs):
     size = f"{total_bytes:.2f} {units[i]}"
     logging.info(f"删除缓存目录: {download_path}, 共删除 {size}")
     return f"缓存已删除 {size}"
+
+def _delete_dir(delete_path: Path):
+    total_bytes = 0
+    if delete_path.exists():
+        for entry in delete_path.rglob('*'):
+            try:
+                if entry.is_file() and not entry.is_symlink():
+                    total_bytes += entry.stat().st_size
+            except (OSError, PermissionError):
+                pass
+    shutil.rmtree(delete_path, ignore_errors=True)
+    return total_bytes
 
 def shutdown(*args, **kwargs):
     import os
