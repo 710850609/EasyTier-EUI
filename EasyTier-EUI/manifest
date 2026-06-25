@@ -1,7 +1,7 @@
 appname               = EasyTier-EUI
 version=0.9.020604
 display_name          = 易组网
-desc                  = `<p>简化 EasyTier 使用的UI界面，降低组网门槛，快速访问异地网络设备</p><p>享受 EasyTier 免费、不限设备数量、支持多类型终端等优势</p>更多EasyTier使用技巧，请查看 <a href="https://easytier.cn" target="_blank">官网文档</a></br></br><p><a href="/cgi/ThirdParty/EasyTier-EUI/index.cgi/index.html" target="_blank">易组网Web界面快捷入口</a></p>`
+desc                  = `<p>简化 EasyTier 使用的UI界面，降低组网门槛，快速访问异地网络设备</p><p>享受 EasyTier 免费、不限设备数量、支持多类型终端等优势</p>更多EasyTier使用技巧，请查看 <a href="https://easytier.cn" target="_blank">官网文档</a></br><p><a href="/cgi/ThirdParty/EasyTier-EUI/index.cgi/index.html" target="_blank">易组网Web界面快捷入口</a></p></br><p>其它设备要加入虚拟网络组网，请在【应用】菜单选择下载安装对应系统、架构的应用，按说明加入</p>`
 platform=x86
 os_min_version=1.1.8
 source                = thirdparty

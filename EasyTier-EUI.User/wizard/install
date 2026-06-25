@@ -8,7 +8,7 @@
             },
             {
                 "type": "tips",
-                "helpText": "此版本是用户版，以非root权限运行，EasyTier需root权限功能，将不能使用，具体以EasyTier官方代码为准"
+                "helpText": "此版本是用户版，以非root权限运行，EasyTier需root权限功能，将不能使用"
             }
         ]
     }
