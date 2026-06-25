@@ -253,7 +253,7 @@ export const api = {
     startDownload: (data) => post('/et_eui/download_easytier_eui', data),
     getDownloadProgress: (data) => get('/et_eui/get_download_progress', data),
     getDownloadResultUrl: (data) => getFullUrl('/et_eui/download_result', data),
-    update: (data) => post('/et_eui/update', data),
+    update: (data) => post('/et_eui/update', data, {}, {toastError: false}),
     getUpdateProgress: (data) => get('/et_eui/get_update_progress', data, {toastError: false}),
     getReleaseInfo: (data) => get('/et_eui/get_release_info', data),
   },
