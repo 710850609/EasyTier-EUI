@@ -132,7 +132,7 @@ def get_api(url: str, proxy_url: str = ""):
         else:
             raise e
 
-def get_proxy_urls(refresh:bool = False, progress_callback:Optional[Callable[[int], str]] = None) -> list:
+def get_proxy_urls(refresh:bool = False, progress_callback:Optional[Callable[[int, str], None]] = None) -> list:
     """获取 GitHub 代理列表"""
     proxy_file_path = Path(run_configs.data_dir(), 'github_proxy.json')
     cur_time = int(time.time() * 1000)
@@ -145,7 +145,7 @@ def get_proxy_urls(refresh:bool = False, progress_callback:Optional[Callable[[in
 
     #  https://github.akams.cn/
     if progress_callback:
-        progress_callback(0, '正在获取GitHub加速节点...')
+        progress_callback(0, '正在获取GitHub加速节点')
     url_list = get_dns_txt_records('github-proxy.v6.army')
     if not url_list:
         logging.warning("DNS TXT 查询返回空，使用默认加速地址")
@@ -169,7 +169,7 @@ def get_proxy_urls(refresh:bool = False, progress_callback:Optional[Callable[[in
     logging.info(f"获取到GitHub 加速地址: {url_list}")
     url_list = [{'url': item} for item in url_list]
     if progress_callback:
-        progress_callback(0, '正在检测GitHub加速节点...')
+        progress_callback(0, '正在检测GitHub加速节点')
 
     url_list = check_proxy_url(url_list, progress_callback=progress_callback)
     url_list = [item for item in url_list if item['status'] == 'ok']
@@ -359,7 +359,7 @@ def download_release_file(
         desc: str = "",
         num_threads: int = 4,
         timeout: int = 300,
-        progress_callback=None
+        progress_callback:Optional[Callable[[int, str], None]] = None
 ) -> None:
     """
     多镜像 + 分段并行下载，支持并发下载同一文件（下载到 temp 目录，完成后原子移动）。
@@ -368,6 +368,7 @@ def download_release_file(
     :param output_path: 最终保存路径
     :param desc: 进度描述
     :param num_threads: 分段并行数，默认 4
+    :param timeout: 请求超时时间，默认 300 秒
     :param progress_callback: 进度回调 callback(percent: int, description: str)
     """
     output_path = Path(output_path)
@@ -378,7 +379,7 @@ def download_release_file(
     temp_dir.mkdir(parents=True, exist_ok=True)
     check_result = get_proxy_urls(refresh=True, progress_callback=progress_callback)
     if len(check_result) == 0:
-        logging.info(f"无可用加速地址，开始重新获取镜像地址...")
+        logging.info(f"无可用加速地址，开始重新获取镜像地址")
         check_result = get_proxy_urls(refresh=True, progress_callback=progress_callback)
 
     # ========== 1. 探测可用 URL 和文件大小 ==========
@@ -391,7 +392,7 @@ def download_release_file(
     if not usable_range_urls:
         # 全都不支持 Range，回退到单线程，挑第一个可用的
         logging.warning("没有地址支持 Range，回退到单线程下载")
-        _download_single(usable_urls[0], temp_dir / output_path.name, desc, timeout, progress_callback)
+        _download_single(usable_urls[0], temp_dir / output_path.name, desc, timeout, progress_callback=progress_callback)
         shutil.move(str(temp_dir / output_path.name), str(output_path))
         return
     logging.info(f"加速地址可用 {len(usable_urls)} 个，支持 Range 下载 {len(usable_range_urls)} 个")
@@ -490,7 +491,7 @@ def download_release_file(
         shutil.rmtree(str(temp_dir), ignore_errors=True)
 
 
-def _download_single(url: str, output_path: Path, desc: str, timeout: int, progress_callback=None):
+def _download_single(url: str, output_path: Path, desc: str, timeout: int, progress_callback:Optional[Callable[[int, str], None]] = None):
     """不支持 Range 时的单线程回退"""
     logging.info(f"{desc} 单线程下载: {url}")
     with requests.get(url, stream=True, timeout=timeout) as resp:
