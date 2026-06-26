@@ -252,7 +252,7 @@ def _get_et_eui_package_async(platform: str, arch: str, et_lite_version: str, do
     support_platforms = ['windows', 'linux', 'macos', 'fnos']
     if platform not in support_platforms:
         raise HttpResponse(f"当前不支持 {platform} 平台下载，仅支持 {support_platforms}")
-    support_arches = ['x86_64', 'aarch64', 'riscv64', 'armv71']
+    support_arches = ['x86_64', 'aarch64', 'riscv64', 'armv7']
     if arch not in support_arches:
         raise HttpResponse(f"当前不支持 {arch} 架构下载，仅支持 {support_arches}")
 

@@ -7,9 +7,9 @@
         </div>
       </div>
       <div class="version-info">
-        <var-cell>如未安装TestFlight，请先安装TestFlight。再从链接安装EasyTier </var-cell>
+        <var-cell>如未安装TestFlight，请先安装TestFlight。再从下面按钮点击跳转下载安装EasyTier </var-cell>
         <var-cell>
-          <p>安装应用，从易组网分享配置后，到鸿蒙上黏贴配置</p>
+          <p>安装应用，从当前易组网分享配置后，到手机的Easytier应用上黏贴配置</p>
           <p>启动网络即可</p>
         </var-cell>
         <var-cell>

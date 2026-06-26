@@ -19,12 +19,13 @@ from utils.validators import Validator
 def list_lan_ips(*args, **kwargs):
     ips = ip_util.get_lan_ips()
     ip_list = []
+    ip_24list = []
     for item in ips:
         ip = item['ip']
         ip_list.append(f"{ip}/32")
-        # arr = ip.split('.')
-        # ip_list.append(f"{arr[0]}.{arr[1]}.{arr[2]}.1/24")
-    return ip_list
+        arr = ip.split('.')
+        ip_24list.append(f"{arr[0]}.{arr[1]}.{arr[2]}.0/24")
+    return ip_24list + ip_list
 
 def list_config_files(*args, **kwargs):
     config_files = run_configs.et_config_files()

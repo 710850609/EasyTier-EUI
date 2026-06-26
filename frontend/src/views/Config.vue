@@ -435,6 +435,70 @@
                     </div>
                   </div>
 
+                  <div class="input-row">
+                    <div class="input-section">
+                      <div class="section-subtitle">Socks5端口
+                        <var-tooltip content="提供Socks5服务的端口" trigger="click">
+                            <var-icon name="help-circle-outline" size="16" class="help-icon" />
+                        </var-tooltip>
+                      </div>
+                      <var-input
+                        v-model="config.socks5_proxy"
+                        placeholder="设置表示开启Socks5服务"
+                        variant="outlined"
+                        type="number"
+                        size="small"
+                      />
+                    </div>
+                    <div class="input-section">
+                      <var-tooltip content="转发所有流量的出口节点列表，虚拟PV4地址,优先级由列表顺序决定" trigger="click">
+                        <div class="section-subtitle">出口节点
+                          <var-icon name="help-circle-outline" size="16" class="help-icon" />
+                        </div>
+                      </var-tooltip>
+                      <var-select
+                        v-model="config.exit_nodes"
+                        placeholder="出口节点列表"
+                        :multiple="true"
+                        variant="outlined"
+                        :chip="true"
+                        size="small"
+                      >
+                        <var-cell>
+                          <template #icon>
+                            <svg-icon type="mdi" :path="mdilPencil" color="var(--color-primary)" />
+                          </template>
+                          <template #description>
+                            <var-input placeholder="输入固定的虚拟IP" size="mini" v-model="customExitNode" blur-color="var(--color-primary)" />
+                          </template>
+                          <template #extra>
+                            <var-button type="primary" size="small" @click="addExitNode">添加</var-button>
+                          </template>
+                        </var-cell>
+                        <var-option v-for="(e, index) in config.exit_nodes" :key="index" :label="e" :value="e" />
+                      </var-select>
+                    </div>
+                  </div>
+
+                  <div class="input-row">
+                    <div class="input-section">
+                      <var-tooltip content="限制当前实例整体入站流量的总接收速率，单位为字节每秒。留空表示不限速。" trigger="click">
+                        <div class="section-subtitle">实际接收限速
+                          <var-icon name="help-circle-outline" size="16" class="help-icon" />
+                        </div>
+                      </var-tooltip>
+                      <var-input
+                        v-model="config.flags.instance_recv_bps_limit"
+                        placeholder="接收限速，单位：B/s"
+                        variant="outlined"
+                        type="number"
+                        size="small"
+                      />
+                    </div>
+                    <div class="input-section">
+                    </div>
+                  </div>
+
                   <div class="input-section">
                     <div class="section-subtitle">监听地址
                       <var-tooltip content="部分协议需要较高版本支持" trigger="click">
@@ -598,6 +662,7 @@ const showCreateDialog = ref(false)
 const showRenameDialog = ref(false)
 const newConfigName = ref('')
 const editNameValue = ref('')
+const customExitNode = ref('')
 const encryptionAlgorithmList = ref(['aes-gcm','xor','chacha20','aes-gcm','aes-gcm-256','openssl-aes128-gcm','openssl-aes256-gcm','openssl-chacha20'])
 const defaultProtocolList = ref([{'label':'默认','value':''},{'label':'tcp','value':'tcp'},{'label':'udp','value':'udp'},{'label':'quic','value':'quic'},{'label':'wg','value':'wg'},{'label':'ws','value':'ws'},{'label':'wss','value':'wss'},{'label':'faketcp','value':'faketcp'}])
 const compressionOptions = ref([{'label':'无压缩','value':'none'},{'label':'zstd','value':'zstd'}])
@@ -610,6 +675,8 @@ const config = ref({
   listeners: [],
   peer: [],
   proxy_network: [],
+  exit_nodes: [],
+  socks5_proxy: null,
   flags: { 
     bind_device: true, 
     multi_thread: true, 
@@ -635,22 +702,24 @@ const featureSwitches = [
   { key: 'multi_thread', label: '启用多线程', tooltip: '启用多线程处理，提高性能' },
   { key: 'private_mode', label: '启用私有模式', tooltip: '启用私有模式，限制节点发现' },
   { key: 'enable_kcp_proxy', label: '启用 KCP 代理', tooltip: '使用 KCP 协议进行数据传输，提高弱网环境下的稳定性 (KCP 代理会优先于 QUIC 代理生效)' },
-  { key: 'enable_quic_proxy', label: '启用 QUIC 代理', tooltip: '使用 QUIC 协议进行代理传输' },
   { key: 'disable_kcp_input', label: '禁用 KCP 输入', tooltip: '关闭 KCP 协议的入站连接' },
+  { key: 'enable_quic_proxy', label: '启用 QUIC 代理', tooltip: '使用 QUIC 协议进行代理传输' },
   { key: 'disable_quic_input', label: '禁用 QUIC 输入', tooltip: '关闭 QUIC 协议的入站连接' },
+  { key: 'p2p_only', label: '仅 P2P', tooltip: '只允许 P2P 连接，不使用中继' },
+  { key: 'disable_p2p', label: '禁用 P2P', tooltip: '关闭点对点直连功能，所有流量通过中继' },
+  { key: 'lazy_p2p', label: '延迟 P2P', tooltip: '实际流量需要某个对等节点时才尝试建立 P2P 连接。开启 need_p2p 仍会主动连接' },
+  { key: 'need_p2p', label: '需要 P2P', tooltip: '即使其它节点使用 lazy_p2p, 也要求它们主动和当前节点建立 p2p 连接' },
   { key: 'disable_tcp_hole_punching', label: '禁用 TCP 打洞', tooltip: '关闭 TCP 协议的 NAT 打洞功能' },
   { key: 'disable_udp_hole_punching', label: '禁用 UDP 打洞', tooltip: '关闭 UDP 协议的 NAT 打洞功能' },
   { key: 'disable_sym_hole_punching', label: '禁用对称 NAT 打洞', tooltip: '关闭对称型 NAT 的打洞功能' },
   { key: 'use_smoltcp', label: '使用用户态协议栈', tooltip: '使用用户态TCP/IP协议栈，避免系统防火墙问题无法子网代理或KCP代理' },
   { key: 'proxy_forward_by_system', label: '系统转发', tooltip: '启用系统级 IP 转发' },
-  { key: 'p2p_only', label: '仅 P2P', tooltip: '只允许 P2P 连接，不使用中继' },
-  { key: 'disable_p2p', label: '禁用 P2P', tooltip: '关闭点对点直连功能，所有流量通过中继' },
   { key: 'enable_exit_node', label: '启用出口节点', tooltip: '允许此节点作为网络的出口' },
-  { key: 'enable_encryption', label: '启用加密', tooltip: '开启数据传输加密，提高安全性但性能降低' },
+  { key: 'relay_all_peer_rpc', label: '转发 RPC 包', tooltip: '允许转发所有对等节点的RPC数据包，即使对等节点不在转发网络白名单中。这可以帮助白名单外网络中的对等节点建立P2P连接' },
+  { key: 'enable_encryption', label: '启用加密', tooltip: '开启数据传输加密，提高安全性但性能降低。必须和对等节点设置一致' },
   { key: 'enable_ipv6', label: '启用 IPv6', tooltip: '开启 IPv6 支持' },
   { key: 'no_tun', label: '无 TUN 模式', tooltip: '不使用 TUN 设备。' },
   { key: 'accept_dns', label: '启用魔法 DNS', tooltip: '启用魔法DNS，可使用域名访问其他节点，例如：<主机名>.et.net。魔法 DNS 目前仅支持在 Windows 和 MacOS 上自动配置系统 DNS，Linux 上需要手动配置 DNS 服务器为 100.100.100.101 才可正常使用' },
-  { key: 'relay_all_peer_rpc', label: '转发 RPC 包', tooltip: '允许转发 RPC 数据包' },
   { key: 'bind_device', label: '仅使用物理网卡', tooltip: '只使用物理网卡进行通信，排除虚拟网卡' },
   { key: 'user_stack', label: '使用用户态协议栈', tooltip: '使用用户态网络协议栈代替内核协议栈' },
 ]
@@ -722,6 +791,7 @@ const saveConfig = () => {
         })
     }
     let data = { ...config.value }
+    data.socks5_proxy = ensureInt(data.socks5_proxy)
     if (fastSettingMode.value) {
       // 快速设置模式，配置文件名同网络名称
       const networkName = data.network_identity.network_name || '默认'
@@ -735,6 +805,12 @@ const saveConfig = () => {
     data.dhcp = !data.ipv4 || !(data.ipv4.trim())
     if (data.flags.enable_ipv6 === undefined) data.flags.enable_ipv6 = true
     if (data.flags.enable_encryption === undefined) data.flags.enable_encryption = true
+    if (data.socks5_proxy > 0) data.socks5_proxy = `socks5://0.0.0.0:${data.socks5_proxy}`
+    if (data.flags.instance_recv_bps_limit > 0) {
+      data.flags.instance_recv_bps_limit = ensureInt(data.flags.instance_recv_bps_limit)
+    } else {
+      data.flags.instance_recv_bps_limit = null
+    }
     api.configs.save(data).then(async res => {
       toast.success('保存配置成功')
       if (fastSettingMode.value) {
@@ -867,6 +943,9 @@ const loadConfig = (profile) => {
     const json = data.data
     json.peer = (json.peer || []).map(e => e.uri)
     json.proxy_network = (json.proxy_network || []).map(e => e.cidr)
+    if (json.socks5_proxy) {
+      json.socks5_proxy = json.socks5_proxy.replace('socks5://0.0.0.0:', '')
+    }
     if (json.listeners) {
       json.listeners.forEach(e => {
         if (!listenerOptions.value.includes(e)) listenerOptions.value.unshift(e)
@@ -874,6 +953,7 @@ const loadConfig = (profile) => {
     }
     if (json.flags?.mtu) json.flags.mtu = ensureInt(json.flags.mtu)
     if (json.flags?.multi_thread_count) json.flags.multi_thread_count = ensureInt(json.flags.multi_thread_count)
+    if (json.flags?.instance_recv_bps_limit) json.flags.instance_recv_bps_limit = ensureInt(json.flags.instance_recv_bps_limit)
     config.value = {
       ...config.value,
       ...json,
@@ -1079,6 +1159,22 @@ const getLanIps = () => {
   api.configs.getLanIps().then(data => {
     lanIps.value = data.data
   })
+}
+
+const addExitNode = () => {
+  if (!customExitNode.value.trim()) {
+    toast.warning('请输入出口节点')
+    return
+  }
+  if (!config.value.exit_nodes) {
+    config.value.exit_nodes = []
+  }
+  if (config.value.exit_nodes.includes(customExitNode.value.trim())) {
+    toast.warning(`出口节点已存在: ${customExitNode.value.trim()}`)
+    return
+  }
+  config.value.exit_nodes.push(customExitNode.value.trim())
+  customExitNode.value = ''
 }
 
 onMounted(async () => {
