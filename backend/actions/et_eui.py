@@ -79,8 +79,8 @@ def _do_update(task: UpdateTask, ver_tag: str):
         logging.info(f"更新到 {ver_tag} 版本完成")
         task.set_completed(f'更新到 {ver_tag} 版本完成')
     else:
-        task.update_progress(72, '正在停止服务...')
-        services.stop_all()
+        # task.update_progress(72, '正在停止服务...')
+        # services.stop_all()
 
         task.update_progress(78, '正在解压更新包...')
         _extract_package(download_file, extract_dir)

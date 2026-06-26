@@ -471,7 +471,7 @@
                           variant="outlined"
                           type="number"
                           size="small"
-                          :rules="(v) => (v === '' || v >= 2 && v <= 65535) || '端口范围[2, 65535]'"
+                          :rules="(v) => (!v || (v >= 2 && v <= 65535)) || '端口范围[2, 65535]'"
                         />
                       </div>
                       <div class="input-section">
@@ -534,7 +534,7 @@
                               <svg-icon type="mdi" :path="mdilPencil" color="var(--color-primary)" />
                             </template>
                             <template #description>
-                              <var-input placeholder="格式: 192.168.1.1/24 或 192.168.1.1/32 等" size="mini" v-model="customProxyNetwork" blur-color="var(--color-primary)" />
+                              <var-input placeholder="格式: 192.168.1.0/24 或 192.168.1.10/32 等" size="mini" v-model="customProxyNetwork" blur-color="var(--color-primary)" />
                             </template>
                             <template #extra>
                               <var-button type="primary" size="small" @click="addProxyNetwork">添加</var-button>
@@ -561,7 +561,7 @@
                       <div class="port-forward-table">
                         <div class="port-forward-row port-forward-header">
                           <div class="port-forward-cell">协议</div>
-                          <div class="port-forward-cell">本地IP端口</div>
+                          <div class="port-forward-cell">本地网络IP端口</div>
                           <div class="port-forward-cell">虚拟网络IP端口</div>
                           <div class="port-forward-cell port-forward-actions">操作</div>
                         </div>
@@ -902,7 +902,7 @@ const saveConfig = () => {
     if (data.flags.enable_ipv6 === undefined) data.flags.enable_ipv6 = true
     if (data.flags.enable_encryption === undefined) data.flags.enable_encryption = true
     data.socks5_proxy = ensureInt(data.socks5_proxy)
-    if (data.socks5_proxy > 0) {
+    if (data.socks5_proxy && !isNaN(data.socks5_proxy) && data.socks5_proxy > 0) {
       data.socks5_proxy = `socks5://0.0.0.0:${data.socks5_proxy}`
     } else {
       delete data.socks5_proxy
@@ -1056,7 +1056,6 @@ const loadConfig = (profile) => {
     if (json.flags?.multi_thread_count) json.flags.multi_thread_count = ensureInt(json.flags.multi_thread_count)
     if (json.flags?.instance_recv_bps_limit) json.flags.instance_recv_bps_limit = ensureInt(json.flags.instance_recv_bps_limit)
     config.value = {
-      ...config.value,
       ...json,
       hostname: json.hostname || undefined,
       ipv4: json.ipv4 || undefined,
@@ -1068,6 +1067,7 @@ const loadConfig = (profile) => {
       }
     }
     flagsOpen.value = ['']
+    forwardOpen.value = ['']
   }).finally(() => {
     isLoadingConfig.value = false
   })
