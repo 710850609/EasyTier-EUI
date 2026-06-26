@@ -46,7 +46,7 @@ def run_command(cmd, cwd=None):
         sys.stdout.flush()
         return False
 
-def install_deps(pip_cache_dir:str = ""):
+def install_deps(pip_cache_dir:str = "", pypi_mirror:str = ""):
     """安装依赖"""
     print(" 安装依赖...")
     # 检测是否在 CI 环境
@@ -85,7 +85,7 @@ def install_deps(pip_cache_dir:str = ""):
     run_command(f'{python_path} -m pip install {pip_cache} --upgrade pip')
 
     # 安装依赖（带清华镜像）
-    mirror = "-i https://pypi.tuna.tsinghua.edu.cn/simple"
+    mirror = f"-i {pypi_mirror}" if pypi_mirror else ""
     print("  安装 pyinstaller qrcode 依赖")
     if not run_command(f'{pip_cmd} install {pip_cache} pyinstaller qrcode {mirror}'):
         raise Exception(f"安装失败: {pip_cmd}")
@@ -110,22 +110,26 @@ if __name__ == "__main__":
     parser.add_argument('--build_ver', default='', help='构建版本号')
     parser.add_argument('--github_proxy_url', default="https://ghfast.top", help='GitHub加速连接')
     parser.add_argument('--pip_cache_dir', default="", help='pip缓存目录')
+    parser.add_argument('--pypi_mirror', default="https://pypi.tuna.tsinghua.edu.cn/simple", help='pypi镜像')
     args = parser.parse_args()
     et_ver = args.et_ver
     build_ver = args.build_ver
     github_proxy_url = args.github_proxy_url
     pip_cache_dir = args.pip_cache_dir
+    pypi_mirror = args.pypi_mirror
     print(f"et_ver: {et_ver}")
     print(f"build_ver: {build_ver}")
     print(f"github_proxy_url: {github_proxy_url}")
     print(f"pip_cache_dir: {pip_cache_dir}")
+    print(f"pypi_mirror: {pypi_mirror}")
 
-    python_path, pip_cmd = install_deps(pip_cache_dir)
+    python_path, pip_cmd = install_deps(pip_cache_dir, pypi_mirror)
     print("", flush=True)
     build_script_path = os.path.join(os.path.dirname(__file__), "build_core.py")
     result = subprocess.run([str(python_path), build_script_path,
                              "--et_ver", et_ver,
                              "--build_ver", build_ver,
                              "--github_proxy_url", github_proxy_url,
+                             "--pypi_mirror", pypi_mirror,
                              ])
     sys.exit(result.returncode)

@@ -68,7 +68,7 @@ def clean_build():
     BUILD_DIR.mkdir(parents=True, exist_ok=True)
     DIST_DIR.mkdir(parents=True, exist_ok=True)
 
-def install_deps():
+def install_deps(pypi_mirror:str = ""):
     """安装依赖"""
     print("[2/5] 安装依赖...")
     # 检测是否在虚拟环境中
@@ -419,13 +419,14 @@ def copy_output(output_name, et_file, build_ver, one_file:bool):
                     zf.writestr(info, f.read())
     return True, zipfile_name
 
-def main(et_ver:str=None, github_proxy_url:str=None, build_ver:str="", one_file:bool=True):
+def main(et_ver:str=None, github_proxy_url:str=None, build_ver:str="", one_file:bool=True, pypi_mirror:str = ""):
     """主函数"""
     print("=" * 50)
     print(f"{APP_NAME} Server 多平台打包")
     print(f"当前平台: {get_platform_name()}")
     print(f"et_ver: {et_ver}")
     print(f"build_ver: {build_ver}")
+    print(f"pypi_mirror: {pypi_mirror}")
     print(f"当前Python版本: {platform.python_version()}")
     print(f"当前Python: {sys.executable}")
     print(f"Python 路径: {sys.path}")
@@ -440,7 +441,7 @@ def main(et_ver:str=None, github_proxy_url:str=None, build_ver:str="", one_file:
     # 执行构建步骤
     clean_build()
 
-    if not install_deps():
+    if not install_deps(pypi_mirror):
         print("[错误] 依赖安装失败")
         sys.exit(1)
 
@@ -471,11 +472,14 @@ if __name__ == "__main__":
     parser.add_argument('--et_ver', default='', help='easytier 版本号', required=False)
     parser.add_argument('--build_ver', default='', help='构建版本号', required=False)
     parser.add_argument('--github_proxy_url', default="https://ghfast.top", help='GitHub加速连接', required=False)
+    parser.add_argument('--pypi_mirror', default="https://pypi.tuna.tsinghua.edu.cn/simple", help='pypi镜像')
     args = parser.parse_args()
     et_ver = args.et_ver
     build_ver = args.build_ver
     github_proxy_url = args.github_proxy_url
+    pypi_mirror = args.pypi_mirror
     print(f"et_ver: {et_ver}")
     print(f"github_proxy_url: {github_proxy_url}")
+    print(f"pypi_mirror: {pypi_mirror}")
 
-    main(et_ver, github_proxy_url, build_ver, one_file=True)
+    main(et_ver, github_proxy_url, build_ver, one_file=True, pypi_mirror=pypi_mirror)
