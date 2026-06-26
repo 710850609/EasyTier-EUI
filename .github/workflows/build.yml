@@ -348,21 +348,20 @@ jobs:
           path: backend/dist/*.zip
 
   build-linux-arm64:
+    # 使用docker方式指定 glibc 版本 2.28
     if: ${{ github.event.inputs.build_linux_arm64 == 'true' }}
     needs: [ build-frontend, build-info ]
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Cache pip
-        uses: actions/cache@v4
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
         with:
-          path: ~/.cache/pip
-          key: linux-arm64-pip-${{ hashFiles('backend/requirements-base.txt', 'backend/requirements-gui.txt') }}
+          platforms: arm64
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Download frontend
         uses: actions/download-artifact@v4
@@ -370,8 +369,42 @@ jobs:
           name: frontend-dist
           path: frontend/dist
 
-      - name: Build
-        run: cd backend && python3 build.py --et_ver "${{ needs.build-info.outputs.et_ver }}" --build_ver "${{ needs.build-info.outputs.version }}" --github_proxy_url "" --pip_cache_dir ~/.cache/pip
+      - name: Build custom environment image
+        uses: docker/build-push-action@v5
+        with:
+          context: .github/docker
+          file: .github/docker/linux-buildenv.Dockerfile
+          platforms: linux/arm64
+#          build-args: |
+#            PYTHON_VERSION=${{ env.PYTHON_VERSION }}
+          tags: linux-buildenv:arm64
+          load: true
+          cache-from: type=gha,scope=linux-buildenv-arm64
+          cache-to: type=gha,mode=max,scope=linux-buildenv-arm64
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: linux-arm64-pip-${{ hashFiles('backend/requirements-base.txt', 'backend/requirements-gui.txt') }}
+
+      - name: Build in ARM64 container
+        run: |
+          docker run --rm --platform linux/arm64 \
+            -v ${{ github.workspace }}:/workspace \
+            -v ~/.cache/pip:/root/.cache/pip \
+            -w /workspace \
+            -e CI=true \
+            -e GITHUB_ACTIONS=true \
+            -e ET_VER=${{ needs.build-info.outputs.et_ver }} \
+            -e BUILD_VER=${{ needs.build-info.outputs.version }} \
+            linux-buildenv:arm64 \
+            bash -c '
+              export PIP_ROOT_USER_ACTION=ignore
+              mkdir -p /root/.cache/pip && chown -R root:root /root/.cache/pip
+              cd backend &&
+              python3 build.py --et_ver "${ET_VER}" --build_ver "${BUILD_VER}" --github_proxy_url "" --pip_cache_dir /root/.cache/pip
+            '
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -380,6 +413,7 @@ jobs:
           path: backend/dist/*.zip
 
   build-linux-riscv64:
+    # 使用docker方式指定 glibc 版本 2.28
     if: ${{ github.event.inputs.build_linux_riscv64 == 'true' }}
     needs: [ build-frontend, build-info ]
     runs-on: ubuntu-latest
