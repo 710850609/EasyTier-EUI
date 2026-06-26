@@ -58,8 +58,8 @@
             <thead>
               <tr>
                 <th align="center">操作</th>
-                <th align="center">有桌面环境</th>
-                <th align="center">无桌面环境</th>
+                <th align="center">有图形界面</th>
+                <th align="center">无图形界面</th>
               </tr>
             </thead>
             <tbody>
@@ -73,12 +73,12 @@
               </tr>
               <tr>
                 <td align="center">启动操作</td>
-                <td align="center">双击<code>EasyTier-EUI</code></td>
+                <td align="center">运行<code>EasyTier-EUI</code></td>
                 <td align="center">❌不支持</td>
               </tr>
               <tr>
                 <td align="center">停止操作</td>
-                <td colspan="2" align="center">点击【设置】界面最底部的“关闭易组网”按钮</td>
+                <td colspan="2" align="center">进入【设置】界面，点击最底部的 <var-button type="danger" size="mini">关闭易组网</var-button>按钮</td>
               </tr>
             </tbody>
           </var-table>
