@@ -1,6 +1,7 @@
 # EasyTier-EUI
 
 ![Downloads](https://img.shields.io/github/downloads/710850609/EasyTier-EUI/total?color=blue)
+![Version](https://img.shields.io/github/v/release/710850609/EasyTier-EUI?color=blue)
 ![Version](https://img.shields.io/github/v/tag/710850609/EasyTier-EUI?color=blue)
 ![Stars](https://img.shields.io/github/stars/710850609/EasyTier-EUI?style=social)
 ![License](https://img.shields.io/github/license/710850609/EasyTier-EUI)

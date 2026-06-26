@@ -272,7 +272,7 @@
           <p>简化 EasyTier 使用的 UI 界面</p>
           <p>降低组网门槛，快速访问异地网络设备</p>
           <p>享受 EasyTier 免费、不限设备数量、支持多类型终端等优势</p>
-          <img alt="下载量" src="https://img.shields.io/github/downloads/710850609/EasyTier-EUI/total?color=blue&label=下载量" />
+          <img alt="下载量" src="https://img.shields.io/github/downloads/710850609/EasyTier-EUI/total?color=blue&label=GitHub下载量" />
         </div>
       </div>
     </var-paper>
@@ -656,7 +656,7 @@ const setupShowEuiReleaseInfo = (releaseType) => {
   }
   euiChangeMarkdown.value = `
 # ${ info.version }
->  ${formatDate(euiReleaseInfo.value.update_time)} 下载量  ${info.download_count }
+>  ${formatDate(euiReleaseInfo.value.update_time)} GitHub下载量  ${info.download_count }
 ## 更新内容
 ${ info.changelog }
 `
