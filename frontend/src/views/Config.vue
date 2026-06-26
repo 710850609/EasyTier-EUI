@@ -471,6 +471,7 @@
                           variant="outlined"
                           type="number"
                           size="small"
+                          :rules="(v) => (v === '' || v >= 2 && v <= 65535) || '端口范围[2, 65535]'"
                         />
                       </div>
                       <div class="input-section">
@@ -709,6 +710,7 @@
 
 <script setup>
 import { copyToClipboard } from '../utils/clipboard.js'
+import { validateIP, validateIPPort } from '../utils/validate.js'
 import { ref, computed, inject, onMounted, nextTick } from 'vue'
 import toast from '../components/toast.js'
 import { api } from '../utils/api.js'
@@ -859,6 +861,13 @@ const saveConfig = () => {
     const valid = await form.value.validate()
     if (!valid) {
       reject();
+      toast.error('初步校验不通过，请检查各项配置是否正确')
+      return
+    }
+    const pfError = validatePortForward()
+    if (pfError) {
+      reject();
+      toast.error(pfError)
       return
     }      
 
@@ -1258,6 +1267,11 @@ const addExitNode = () => {
     toast.warning('请输入出口节点')
     return
   }
+  const error = validateIP(customExitNode.value.trim(), '出口节点')
+  if (error) {
+    toast.warning(error)
+    return
+  }
   if (!config.value.exit_nodes) {
     config.value.exit_nodes = []
   }
@@ -1269,9 +1283,33 @@ const addExitNode = () => {
   customExitNode.value = ''
 }
 
+const validatePortForward = () => {
+  if (!config.value.port_forward) return null
+  const entries = config.value.port_forward
+  for (let i = 0; i < entries.length; i++) {
+    const item = entries[i]
+    if (!item.bind_addr || !item.bind_addr.trim()) {
+      return `端口转发[${i + 1}]本地IP端口不能为空`
+    }
+    const error1 = validateIPPort(item.bind_addr.trim(), `端口转发[${i + 1}]本地IP端口`)
+    if (error1) return error1
+    if (!item.dst_addr || !item.dst_addr.trim()) {
+      return `端口转发[${i + 1}]虚拟网络IP端口不能为空`
+    }
+    const error2 = validateIPPort(item.dst_addr.trim(), `端口转发[${i + 1}]虚拟网络IP端口`)
+    if (error2) return error2
+  }
+  return null
+}
+
 const addPortForward = () => {
   if (!config.value.port_forward) {
     config.value.port_forward = []
+  }
+  const error = validatePortForward()
+  if (error) {
+    toast.warning(error)
+    return
   }
   config.value.port_forward.push({ proto: 'tcp', bind_addr: '', dst_addr: '' })
 }
