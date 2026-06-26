@@ -878,8 +878,7 @@ const saveConfig = () => {
           toast.error('设置服务开机启动失败: ' + e.message)
         })
     }
-    let data = { ...config.value }
-    data.socks5_proxy = ensureInt(data.socks5_proxy)
+    let data = { ...config.value }  
     if (fastSettingMode.value) {
       // 快速设置模式，配置文件名同网络名称
       const networkName = data.network_identity.network_name || '默认'
@@ -893,11 +892,16 @@ const saveConfig = () => {
     data.dhcp = !data.ipv4 || !(data.ipv4.trim())
     if (data.flags.enable_ipv6 === undefined) data.flags.enable_ipv6 = true
     if (data.flags.enable_encryption === undefined) data.flags.enable_encryption = true
-    if (data.socks5_proxy > 0) data.socks5_proxy = `socks5://0.0.0.0:${data.socks5_proxy}`
+    data.socks5_proxy = ensureInt(data.socks5_proxy)
+    if (data.socks5_proxy > 0) {
+      data.socks5_proxy = `socks5://0.0.0.0:${data.socks5_proxy}`
+    } else {
+      delete data.socks5_proxy
+    }
     if (data.flags.instance_recv_bps_limit > 0) {
       data.flags.instance_recv_bps_limit = ensureInt(data.flags.instance_recv_bps_limit)
     } else {
-      data.flags.instance_recv_bps_limit = null
+      delete data.flags.instance_recv_bps_limit
     }
     api.configs.save(data).then(async res => {
       toast.success('保存配置成功')
