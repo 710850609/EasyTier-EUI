@@ -21,7 +21,7 @@
 
 ## 简介
 
-<p>简化使用EasyTier的一种UI界面，快速组网</p>
+<p>简化使用EasyTier的一种UI界面，快速组网（关闭UI后不影响组网运行）</p>
 <p>更合适于无公网IPv4场景</p>
 <p>飞牛版本基于CGI模式实现，不查看组网情况下，仅运行EasyTier核心服务，尽量减少内存使用</p>
 
@@ -40,7 +40,9 @@
   - FnOS (x86_64, aarch64)
   - FnOS 用户版 (x86_64, aarch64)
   - Windows (x86_64)
-  - Linux (x86_64, aarch64, riscv64) [Ubuntu20, UOS20(Debian10)]
+  - Linux (x86_64, aarch64, riscv64)
+    - 已验证支持最低版本：Ubuntu 20.04 / Debian 10 / UOS 20
+    - 支持有图形界面（GUI）和无图形界面（Headless）
   - MacOS (Intel, arm64) [未验证]
 - 支持多配置
 - 支持设置开机自启
