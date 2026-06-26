@@ -1370,6 +1370,7 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   padding-bottom: 20px;
+  background: linear-gradient(to bottom, var(--color-surface-container), var(--color-surface) 80px) !important;
 }
 
 .section-header {
@@ -1618,8 +1619,7 @@ onMounted(async () => {
   /* margin-top: 8px; */
   border-radius: 16px;
   overflow: hidden;
-  /* background: var(--color-surface-container) !important; */
-  background: var(--color-surface) !important;
+  background: linear-gradient(to bottom, var(--color-surface-container), var(--color-surface) 80px) !important;
 }
 
 :deep(.flags-section .var-collapse-item) {
