@@ -236,7 +236,7 @@ jobs:
           key: win64-pip-${{ hashFiles('backend/requirements-base.txt', 'backend/requirements-gui.txt') }}
 
       - name: Build
-        run: cd backend && python build.py --et_ver "${{ needs.build-info.outputs.et_ver }}" --build_ver "${{ needs.build-info.outputs.version }}" --github_proxy_url "" --pip_cache_dir "${{ steps.pip-cache.outputs.dir }}"
+        run: cd backend && python build.py --et_ver "${{ needs.build-info.outputs.et_ver }}" --build_ver "${{ needs.build-info.outputs.version }}" --github_proxy_url "" --pip_cache_dir "${{ steps.pip-cache.outputs.dir }}" --pypi_mirror ""
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -275,7 +275,7 @@ jobs:
       - name: Build (x86_64)
         run: |
           cd backend
-          arch -x86_64 python3 build.py --et_ver "${{ needs.build-info.outputs.et_ver }}" --build_ver "${{ needs.build-info.outputs.version }}" --github_proxy_url "" --pip_cache_dir ~/.cache/pip
+          arch -x86_64 python3 build.py --et_ver "${{ needs.build-info.outputs.et_ver }}" --build_ver "${{ needs.build-info.outputs.version }}" --github_proxy_url "" --pip_cache_dir ~/.cache/pip  --pypi_mirror ""
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -308,7 +308,7 @@ jobs:
           key: mac-arm64-pip-${{ hashFiles('backend/requirements-base.txt', 'backend/requirements-gui.txt') }}
 
       - name: Build
-        run: cd backend && python3 build.py --et_ver "${{ needs.build-info.outputs.et_ver }}" --build_ver "${{ needs.build-info.outputs.version }}" --github_proxy_url "" --pip_cache_dir ~/.cache/pip
+        run: cd backend && python3 build.py --et_ver "${{ needs.build-info.outputs.et_ver }}" --build_ver "${{ needs.build-info.outputs.version }}" --github_proxy_url "" --pip_cache_dir ~/.cache/pip  --pypi_mirror ""
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -340,7 +340,7 @@ jobs:
           key: linux-amd64-pip-${{ hashFiles('backend/requirements-base.txt', 'backend/requirements-gui.txt') }}
 
       - name: Build
-        run: cd backend && python3 build.py --et_ver "${{ needs.build-info.outputs.et_ver }}" --build_ver "${{ needs.build-info.outputs.version }}" --github_proxy_url "" --pip_cache_dir ~/.cache/pip
+        run: cd backend && python3 build.py --et_ver "${{ needs.build-info.outputs.et_ver }}" --build_ver "${{ needs.build-info.outputs.version }}" --github_proxy_url "" --pip_cache_dir ~/.cache/pip  --pypi_mirror ""
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -403,7 +403,7 @@ jobs:
               export PIP_ROOT_USER_ACTION=ignore
               mkdir -p /root/.cache/pip && chown -R root:root /root/.cache/pip
               cd backend &&
-              python3 build.py --et_ver "${ET_VER}" --build_ver "${BUILD_VER}" --github_proxy_url "" --pip_cache_dir /root/.cache/pip
+              python3 build.py --et_ver "${ET_VER}" --build_ver "${BUILD_VER}" --github_proxy_url "" --pip_cache_dir /root/.cache/pip  --pypi_mirror ""
             '
 
       - name: Upload artifact
@@ -469,7 +469,7 @@ jobs:
               export PIP_ROOT_USER_ACTION=ignore
               mkdir -p /root/.cache/pip && chown -R root:root /root/.cache/pip
               cd backend &&
-              python3 build.py --et_ver "${ET_VER}" --build_ver "${BUILD_VER}" --github_proxy_url "" --pip_cache_dir /root/.cache/pip
+              python3 build.py --et_ver "${ET_VER}" --build_ver "${BUILD_VER}" --github_proxy_url "" --pip_cache_dir /root/.cache/pip  --pypi_mirror ""
             '
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -531,7 +531,7 @@ jobs:
               export PIP_ROOT_USER_ACTION=ignore
               mkdir -p /root/.cache/pip && chown -R root:root /root/.cache/pip
               cd backend &&
-              python3 build.py --et_ver "${ET_VER}" --build_ver "${BUILD_VER}" --github_proxy_url "" --pip_cache_dir /root/.cache/pip
+              python3 build.py --et_ver "${ET_VER}" --build_ver "${BUILD_VER}" --github_proxy_url "" --pip_cache_dir /root/.cache/pip  --pypi_mirror ""
             '
       - name: Upload artifact
         uses: actions/upload-artifact@v4
