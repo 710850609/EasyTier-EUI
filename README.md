@@ -1,17 +1,44 @@
 # EasyTier-EUI
-![Downloads](https://img.shields.io/github/downloads/710850609/EasyTier-EUI/total?color=blue&label=Downloads)
-![Latest Version](https://img.shields.io/github/v/tag/710850609/EasyTier-EUI?color=blue&logo=github&label=Version)
+
+![Downloads](https://img.shields.io/github/downloads/710850609/EasyTier-EUI/total?color=blue)
+![Version](https://img.shields.io/github/v/tag/710850609/EasyTier-EUI?color=blue)
+![Stars](https://img.shields.io/github/stars/710850609/EasyTier-EUI?style=social)
+![License](https://img.shields.io/github/license/710850609/EasyTier-EUI)
 
 [//]: # ([![Ask DeepWiki]&#40;https://deepwiki.com/badge.svg&#41;]&#40;https://deepwiki.com/710850609/EasyTier-EUI&#41;)
 
+## 目录
+
+- [简介](#简介)
+- [快速开始](#快速开始)
+- [功能](#功能)
+- [界面](#界面)
+- [技术栈](#技术栈)
+- [其他链接](#其他链接)
+- [贡献](#贡献)
+- [支持项目](#支持项目)
+- [开源协议](#开源协议)
+
 ## 简介
+
 <p>简化使用EasyTier的一种UI界面，快速组网</p>
 <p>更合适于无公网IPv4场景</p>
 <p>飞牛版本基于CGI模式实现，不查看组网情况下，仅运行EasyTier核心服务，尽量减少内存使用</p>
 
+## 快速开始
+
+1. 前往 [Releases](https://github.com/710850609/EasyTier-EUI/releases) 页面，下载对应平台的安装包
+2. 运行程序包 ```EasyTier-EUI```
+3. 在「配置」页面添加组网配置，新手推荐快速模式配置，填入网络名和密钥即可
+4. 其它设备加入虚拟网络：在「应用」菜单，根据设备系统架构选择对应安装包，根据页面说明，加入组网
+5. 在「节点」页面查看组网状态，完成！
+
+
 ## 功能
+
 - 支持多平台
   - FnOS (x86_64, aarch64)
+  - FnOS 用户版 (x86_64, aarch64)
   - Windows (x86_64)
   - Linux (x86_64, aarch64, riscv64) [Ubuntu20, UOS20(Debian10)]
   - MacOS (Intel, arm64) [未验证]
@@ -20,28 +47,65 @@
 - 支持EasyTier常见设置项
 - 提供动态初始节点（数据来自网络社区）
 - 支持本地初始节点检测：可用性、延迟、可中转
+- UI自适应大、小屏幕，支持暗黑模式
 
 ## 界面
-### PC端界面
-<img src="assets/nodes-pc1.png" width="400" /><img src="assets/config-pc3.png" width="400" />
-<br>
-<img src="assets/nodes-pc2.png" width="400" /><img src="assets/config-pc1.png" width="400" />
-<br>
-<img src="assets/config-pc2.png" width="400" /><img src="assets/download-pc1.png" width="400" />
-<br>
-<img src="assets/setting-pc1.png" width="400" />
 
+### 大屏界面
 
-### 移动端界面
-<img src="assets/nodes-m1.png" height="300" /> <img src="assets/config-m2.png" height="300" /> <img src="assets/config-m1.png" height="300" /> <img src="assets/download-m1.png" height="300" /> <img src="assets/setting-m1.png" height="300" />
+| 节点管理 | 配置管理 |
+|----------|----------|
+| ![节点管理](assets/nodes-pc1.png) | ![配置管理](assets/config-pc3.png) |
+| ![节点管理](assets/nodes-pc2.png) | ![配置管理](assets/config-pc1.png) |
 
+| 配置管理 | 下载管理 |
+|----------|----------|
+| ![配置管理](assets/config-pc2.png) | ![下载管理](assets/download-pc1.png) |
+
+| 设置 |
+|------|
+| ![设置](assets/setting-pc1.png) |
+
+### 小屏界面
+
+| 节点管理 | 配置管理 | 配置管理 |
+|----------|----------|----------|
+| ![节点管理](assets/nodes-m1.png) | ![配置管理](assets/config-m2.png) | ![配置管理](assets/config-m1.png) |
+
+| 下载管理 | 设置 |
+|----------|------|
+| ![下载管理](assets/download-m1.png) | ![设置](assets/setting-m1.png) |
+
+## 技术栈
+
+| 层级   | 技术                                                                   |
+|------|----------------------------------------------------------------------|
+| 桌面框架 | [pywebview](https://pywebview.flowrl.com/)                                          |
+| 前端   | [Vue 3](https://vuejs.org/) + [Varlet UI](https://www.varletjs.com/) |
+| 后端   | [Python3](https://www.python.org/)                                       |
+| 组网内核 | [EasyTier](https://github.com/EasyTier/EasyTier)                     |
 
 ## 其他链接
-- <a href="https://github.com/EasyTier/EasyTier">EasyTier源码</a>
-- <a href="https://easytier.cn">EasyTier文档</a>
-- <a href="https://www.varletjs.com/#/zh-CN">Varlet文档</a>
 
-## 打赏
+- [EasyTier 源码](https://github.com/EasyTier/EasyTier)
+- [EasyTier 文档](https://easytier.cn)
+- [Varlet 文档](https://www.varletjs.com/#/zh-CN)
+
+## 贡献
+
+欢迎提交 Issue 和 Pull Request！
+
+- 🐛 [提交 Bug 反馈](https://github.com/710850609/EasyTier-EUI/issues/new?template=bug_report.yml)
+- ✨ [提出功能建议](https://github.com/710850609/EasyTier-EUI/issues/new?template=feature_request.yml)
+
+## 支持项目
+
+如果这个项目对你有帮助，欢迎 **Star ⭐** 支持一下！
+
 <p align="center">
   <img src="frontend/public/images/reward_code.jpg" width="200" />
 </p>
+
+## 开源协议
+
+本项目基于 [GPL-3.0 License](LICENSE) 开源。

@@ -1,0 +1,103 @@
+name: 🐛 Bug 反馈
+description: 提交 Bug 报告以帮助我们改进
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢您花时间提交 Bug 报告！请尽可能详细填写以下信息。
+
+  - type: input
+    id: version
+    attributes:
+      label: EasyTier-EUI 版本
+      description: 您使用的 EasyTier-EUI 版本号（可在「设置 → 关于」中查看）
+      placeholder: "例如：1.2"
+    validations:
+      required: true
+
+  - type: input
+    id: easytier-version
+    attributes:
+      label: EasyTier 内核版本
+      description: 您使用的 EasyTier 内核版本号
+      placeholder: "例如：v1.2.4"
+    validations:
+      required: false
+
+  - type: input
+    id: system-version
+    attributes:
+      label: 操作系统版本
+      description: 您使用的操作系统版本信息（Linux 请附上 glibc 版本，通过 ldd --version 查看）
+      placeholder: "例如：Ubuntu 22.10.2, glibc 2.35"
+    validations:
+      required: false
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: 操作系统
+      description: 您遇到的问题发生在哪个平台上？
+      options:
+        - Windows (x86_64)
+        - Linux (x86_64)
+        - Linux (aarch64)
+        - Linux (riscv64)
+        - MacOS (Intel)
+        - MacOS (arm64)
+        - FnOS (x86_64)
+        - FnOS (aarch64)
+        - FnOS 用户版 (x86_64)
+        - FnOS 用户版 (aarch64)
+        - 其他
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 问题描述
+      description: 请清晰描述您遇到的问题
+      placeholder: 描述您遇到的问题...
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: 复现步骤
+      description: 请列出复现此问题的步骤
+      placeholder: |
+        1. 打开 EasyTier-EUI
+        2. 点击 ...
+        3. 观察到 ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望行为
+      description: 您期望的正确行为是什么？
+      placeholder: 描述您期望的结果...
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: 日志/截图
+      description: 如果有相关日志或截图，请在此提供（拖拽文件到此处即可上传）
+      placeholder: 粘贴日志或上传截图...
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: 补充信息
+      description: 任何其他有助于定位问题的信息
+    validations:
+      required: false

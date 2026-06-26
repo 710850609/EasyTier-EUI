@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 📖 EasyTier 官方文档
+    url: https://easytier.cn
+    about: 查看 EasyTier 的官方文档，可能已经包含您需要的答案
+  - name: 💬 EasyTier 社区讨论
+    url: https://github.com/EasyTier/EasyTier/discussions
+    about: 关于 EasyTier 内核的问题，请在 EasyTier 主仓库的 Discussions 中讨论
