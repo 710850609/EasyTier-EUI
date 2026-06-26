@@ -368,48 +368,6 @@
 
                   <div class="input-row">
                     <div class="input-section">
-                      <var-tooltip content="仅转发白名单网络的流量，支持通配*符字符串。多个网络名称间可以使用英文空格间隔" trigger="click">
-                          <div class="section-subtitle">转发白名单网络
-                          <var-icon name="help-circle-outline" size="16" class="help-icon" />
-                        </div>
-                      </var-tooltip>
-                      <var-input
-                        v-model="config.flags.relay_network_whitelist"
-                        multiple
-                        placeholder="网络名称，支持通配*符字符串"
-                        variant="outlined"
-                        :chip="true"
-                        size="small"
-                      />
-                    </div>
-                    <div class="input-section">
-                      <div class="section-subtitle">子网代理CIDR</div>
-                      <var-select
-                        v-model="config.proxy_network"
-                        multiple
-                        placeholder="子网网段"
-                        variant="outlined"
-                        :chip="true"
-                        size="small"
-                      >
-                        <var-cell>
-                          <template #icon>
-                            <svg-icon type="mdi" :path="mdilPencil" color="var(--color-primary)" />
-                          </template>
-                          <template #description>
-                            <var-input placeholder="格式: 192.168.1.1/24 或 192.168.1.1/32 等" size="mini" v-model="customProxyNetwork" blur-color="var(--color-primary)" />
-                          </template>
-                          <template #extra>
-                            <var-button type="primary" size="small" @click="addProxyNetwork">添加</var-button>
-                          </template>
-                        </var-cell>
-                        <var-option v-for="(e, index) in proxyNetworkOptions" :key="index" :label="e" :value="e" />
-                      </var-select>
-                    </div>
-                  </div>
-
-                  <div class="input-row">
-                    <div class="input-section">
                       <div class="section-subtitle">默认协议</div>
                       <var-select
                         v-model="config.flags.default_protocol"
@@ -437,51 +395,6 @@
 
                   <div class="input-row">
                     <div class="input-section">
-                      <div class="section-subtitle">Socks5端口
-                        <var-tooltip content="提供Socks5服务的端口" trigger="click">
-                            <var-icon name="help-circle-outline" size="16" class="help-icon" />
-                        </var-tooltip>
-                      </div>
-                      <var-input
-                        v-model="config.socks5_proxy"
-                        placeholder="设置表示开启Socks5服务"
-                        variant="outlined"
-                        type="number"
-                        size="small"
-                      />
-                    </div>
-                    <div class="input-section">
-                      <var-tooltip content="转发所有流量的出口节点列表，虚拟PV4地址,优先级由列表顺序决定" trigger="click">
-                        <div class="section-subtitle">出口节点
-                          <var-icon name="help-circle-outline" size="16" class="help-icon" />
-                        </div>
-                      </var-tooltip>
-                      <var-select
-                        v-model="config.exit_nodes"
-                        placeholder="出口节点列表"
-                        :multiple="true"
-                        variant="outlined"
-                        :chip="true"
-                        size="small"
-                      >
-                        <var-cell>
-                          <template #icon>
-                            <svg-icon type="mdi" :path="mdilPencil" color="var(--color-primary)" />
-                          </template>
-                          <template #description>
-                            <var-input placeholder="输入固定的虚拟IP" size="mini" v-model="customExitNode" blur-color="var(--color-primary)" />
-                          </template>
-                          <template #extra>
-                            <var-button type="primary" size="small" @click="addExitNode">添加</var-button>
-                          </template>
-                        </var-cell>
-                        <var-option v-for="(e, index) in config.exit_nodes" :key="index" :label="e" :value="e" />
-                      </var-select>
-                    </div>
-                  </div>
-
-                  <div class="input-row">
-                    <div class="input-section">
                       <var-tooltip content="限制当前实例整体入站流量的总接收速率，单位为字节每秒。留空表示不限速。" trigger="click">
                         <div class="section-subtitle">实际接收限速
                           <var-icon name="help-circle-outline" size="16" class="help-icon" />
@@ -501,7 +414,7 @@
 
                   <div class="input-section">
                     <div class="section-subtitle">监听地址
-                      <var-tooltip content="部分协议需要较高版本支持" trigger="click">
+                      <var-tooltip content="部分协议需要较高版本内核支持" trigger="click">
                           <var-icon name="help-circle-outline" size="16" class="help-icon" />
                       </var-tooltip>
                     </div>
@@ -531,7 +444,180 @@
               </var-skeleton>
             </var-collapse-item>
           </var-collapse>
-          </var-paper>        
+          </var-paper>
+
+          <!-- 代理与转发 -->
+          <var-paper v-if="!fastSettingMode" :elevation="3" class="forward-section-paper">
+            <var-collapse v-model="forwardOpen" :accordion="true" class="forward-section-inner">
+              <var-collapse-item name="forward">
+                <template #title>
+                  <div class="collapse-title">
+                    <svg-icon type="mdi" :path="mdiRouterNetwork" width="24" height="24" color="var(--color-primary)" />
+                    <span class="section-title">代理与转发</span>
+                  </div>
+                </template>
+                <var-skeleton :loading="isLoadingConfig">
+                  <div class="forward-content">
+                    <div class="input-row">
+                      <div class="input-section">
+                        <div class="section-subtitle">Socks5端口
+                          <var-tooltip content="提供Socks5服务的端口" trigger="click">
+                            <var-icon name="help-circle-outline" size="16" class="help-icon" />
+                          </var-tooltip>
+                        </div>
+                        <var-input
+                          v-model="config.socks5_proxy"
+                          placeholder="设置表示开启Socks5服务"
+                          variant="outlined"
+                          type="number"
+                          size="small"
+                        />
+                      </div>
+                      <div class="input-section">
+                        <var-tooltip content="转发所有流量的出口节点列表，虚拟PV4地址,优先级由列表顺序决定" trigger="click">
+                          <div class="section-subtitle">出口节点
+                            <var-icon name="help-circle-outline" size="16" class="help-icon" />
+                          </div>
+                        </var-tooltip>
+                        <var-select
+                          v-model="config.exit_nodes"
+                          placeholder="出口节点列表"
+                          :multiple="true"
+                          variant="outlined"
+                          :chip="true"
+                          size="small"
+                        >
+                          <var-cell>
+                            <template #icon>
+                              <svg-icon type="mdi" :path="mdilPencil" color="var(--color-primary)" />
+                            </template>
+                            <template #description>
+                              <var-input placeholder="输入固定的虚拟IP" size="mini" v-model="customExitNode" blur-color="var(--color-primary)" />
+                            </template>
+                            <template #extra>
+                              <var-button type="primary" size="small" @click="addExitNode">添加</var-button>
+                            </template>
+                          </var-cell>
+                          <var-option v-for="(e, index) in config.exit_nodes" :key="index" :label="e" :value="e" />
+                        </var-select>
+                      </div>
+                    </div>
+                    <div class="input-row">
+                      <div class="input-section">
+                        <var-tooltip content="仅转发白名单网络的流量，支持通配*符字符串。多个网络名称间可以使用英文空格间隔" trigger="click">
+                          <div class="section-subtitle">转发白名单网络
+                            <var-icon name="help-circle-outline" size="16" class="help-icon" />
+                          </div>
+                        </var-tooltip>
+                        <var-input
+                          v-model="config.flags.relay_network_whitelist"
+                          multiple
+                          placeholder="网络名称，支持通配*符字符串"
+                          variant="outlined"
+                          :chip="true"
+                          size="small"
+                        />
+                      </div>
+                      <div class="input-section">
+                        <div class="section-subtitle">子网代理CIDR</div>
+                        <var-select
+                          v-model="config.proxy_network"
+                          multiple
+                          placeholder="子网网段"
+                          variant="outlined"
+                          :chip="true"
+                          size="small"
+                        >
+                          <var-cell>
+                            <template #icon>
+                              <svg-icon type="mdi" :path="mdilPencil" color="var(--color-primary)" />
+                            </template>
+                            <template #description>
+                              <var-input placeholder="格式: 192.168.1.1/24 或 192.168.1.1/32 等" size="mini" v-model="customProxyNetwork" blur-color="var(--color-primary)" />
+                            </template>
+                            <template #extra>
+                              <var-button type="primary" size="small" @click="addProxyNetwork">添加</var-button>
+                            </template>
+                          </var-cell>
+                          <var-option v-for="(e, index) in proxyNetworkOptions" :key="index" :label="e" :value="e" />
+                        </var-select>
+                      </div>
+                    </div>
+                    <var-divider />
+                    <div class="forward-section">
+                      <var-tooltip teleport="body" trigger="click" :offset-x="80">
+                        <template #default>
+                          <div class="section-subtitle">端口转发
+                            <var-icon name="help-circle-outline" size="16" class="help-icon" />
+                          </div>
+                        </template>
+                        <template #content>
+                          <div class="tooltip-multiline">
+                            将本地端口转发到虚拟网络中的远程端口。<br/>例如：协议：udp <br/>本地网络：0.0.0.0:1111 <br/>虚拟网络：10.1.1.1:2222 <br/>表示将本地UDP端口1111转发到虚拟网络中的10.1.1.1:2222
+                          </div>
+                        </template>
+                      </var-tooltip>
+                      <div class="port-forward-table">
+                        <div class="port-forward-row port-forward-header">
+                          <div class="port-forward-cell">协议</div>
+                          <div class="port-forward-cell">本地IP端口</div>
+                          <div class="port-forward-cell">虚拟网络IP端口</div>
+                          <div class="port-forward-cell port-forward-actions">操作</div>
+                        </div>
+                        <div class="port-forward-row" v-for="(item, index) in config.port_forward" :key="index">
+                          <div class="port-forward-cell">
+                            <span class="port-forward-label">协议</span>
+                            <var-select
+                              v-model="item.proto"
+                              variant="outlined"
+                              size="small"
+                            >
+                              <var-option label="TCP" value="tcp" />
+                              <var-option label="UDP" value="udp" />
+                            </var-select>
+                          </div>
+                          <div class="port-forward-cell">
+                            <span class="port-forward-label">本地网络IP端口</span>
+                            <var-input
+                              v-model="item.bind_addr"
+                              placeholder="例如: 0.0.0.0:1111"
+                              variant="outlined"
+                              size="small"
+                            />
+                          </div>
+                          <div class="port-forward-cell">
+                            <span class="port-forward-label">虚拟网络IP端口</span>
+                            <var-input
+                              v-model="item.dst_addr"
+                              placeholder="例如: 10.1.1.1:2222"
+                              variant="outlined"
+                              size="small"
+                            />
+                          </div>
+                          <div class="port-forward-cell port-forward-actions">
+                            <var-button
+                              type="danger"
+                              size="mini"
+                              @click="removePortForward(index)"
+                              icon
+                            >
+                              <var-icon name="trash-can-outline" size="14" />
+                            </var-button>
+                          </div>
+                        </div>
+                        <div class="port-forward-add-row">
+                          <var-button type="primary" size="small" @click="addPortForward">
+                            <var-icon name="plus" />
+                            新增
+                          </var-button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </var-skeleton>
+              </var-collapse-item>
+            </var-collapse>
+          </var-paper>
         </var-form>
       </div>
     </template>
@@ -628,7 +714,7 @@ import toast from '../components/toast.js'
 import { api } from '../utils/api.js'
 import CodeEditor from '../components/CodeEditor.vue'
 import SvgIcon from '@jamescoyle/vue-icon'
-import { mdiEye, mdiEyeOff, mdiHomeEdit, mdiShieldEdit, mdiCircle } from '@mdi/js'
+import { mdiEye, mdiEyeOff, mdiHomeEdit, mdiShieldEdit, mdiCircle, mdiRouterNetwork } from '@mdi/js'
 import { mdilPencil, mdilAccount, mdilLock } from '@mdi/light-js'
 
 
@@ -640,6 +726,7 @@ const customPeer = ref('')
 const customProxyNetwork = ref('')
 const customListener = ref('')
 const flagsOpen = ref(['flags'])
+const forwardOpen = ref([''])
 const form = ref(null)
 const showShareConfigType = ref(false)
 const showCodePage = ref(false)
@@ -677,6 +764,7 @@ const config = ref({
   proxy_network: [],
   exit_nodes: [],
   socks5_proxy: null,
+  port_forward: [],
   flags: { 
     bind_device: true, 
     multi_thread: true, 
@@ -1175,6 +1263,17 @@ const addExitNode = () => {
   }
   config.value.exit_nodes.push(customExitNode.value.trim())
   customExitNode.value = ''
+}
+
+const addPortForward = () => {
+  if (!config.value.port_forward) {
+    config.value.port_forward = []
+  }
+  config.value.port_forward.push({ proto: 'tcp', bind_addr: '', dst_addr: '' })
+}
+
+const removePortForward = (index) => {
+  config.value.port_forward.splice(index, 1)
 }
 
 onMounted(async () => {
@@ -1691,6 +1790,7 @@ onMounted(async () => {
 .input-section {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .input-row {
@@ -1703,6 +1803,86 @@ onMounted(async () => {
   white-space: pre-line;   /* 识别 \n 换行 */
   line-height: 1.6;        /* 行间距 */
   max-width: 300px;
+}
+
+/* ===== 代理与转发样式 ===== */
+.forward-section-paper {
+  margin-top: 16px;
+  border-radius: 16px;
+  overflow: hidden;
+  color: var(--color-text);
+  background: linear-gradient(to bottom, var(--color-surface-container), var(--color-surface) 50px) !important;
+}
+
+:deep(.forward-section-inner .var-collapse-item) {
+  border-radius: 12px;
+  overflow: hidden;
+  color: var(--color-text);
+  background: transparent !important;
+}
+
+:deep(.forward-section-inner .var-collapse-item__header) {
+  padding: 12px 16px;
+  color: var(--color-text);
+}
+
+:deep(.forward-section-inner .var-divider) {
+  margin: 8px 0;
+}
+
+.forward-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 8px 0;
+}
+
+.forward-section {
+  margin-bottom: 8px;
+}
+
+.port-forward-table {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.port-forward-row {
+  display: grid;
+  grid-template-columns: 100px 1fr 1fr 60px;
+  gap: 12px;
+  align-items: center;
+}
+
+.port-forward-header {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  padding: 0 4px;
+}
+
+.port-forward-cell {
+  min-width: 0;
+}
+
+.port-forward-label {
+  display: none;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  margin-bottom: 4px;
+}
+
+.port-forward-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.port-forward-add-row {
+  display: flex;
+  justify-content: flex-start;
+  padding-top: 4px;
 }
 
 /* ===== 代码编辑器 ===== */
@@ -2095,6 +2275,40 @@ onMounted(async () => {
     margin-left: 20px !important;
     --tooltip-border-radius: 10px
   }
+
+  /* 端口转发移动端卡片布局 */
+  .port-forward-header {
+    display: none;
+  }
+
+  .forward-section-paper {
+    margin-top: 12px;
+  }
+
+  .port-forward-row {
+    grid-template-columns: 1fr;
+    gap: 4px;
+    padding: 12px;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    background: var(--color-surface);
+    color: var(--color-text);
+  }
+
+  .port-forward-label {
+    display: block;
+  }
+
+  .port-forward-cell {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .port-forward-actions {
+    flex-direction: row;
+    justify-content: flex-end;
+    padding-top: 4px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -2106,6 +2320,15 @@ onMounted(async () => {
     flex-direction: column;
     align-items: flex-end;
     gap: 4px;
+  }
+
+  .port-forward-row {
+    padding: 10px;
+    border-radius: 10px;
+  }
+
+  .port-forward-label {
+    font-size: 11px;
   }
 }
 </style>
