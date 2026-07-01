@@ -48,7 +48,7 @@
 - 支持多配置
 - 支持设置开机自启
 - 支持EasyTier常见设置项
-- 提供动态初始节点（数据来自网络社区）
+- 提供静态、动态初始节点（数据来自网络社区）
 - 支持本地初始节点检测：可用性、延迟、可中转
 - UI自适应大、小屏幕，支持暗黑模式
 
@@ -61,9 +61,9 @@
 | ![节点管理](assets/nodes-pc1.png) | ![配置管理](assets/config-pc3.png) |
 | ![节点管理](assets/nodes-pc2.png) | ![配置管理](assets/config-pc1.png) |
 
-| 配置管理 | 下载管理 |
+| 配置管理 | 应用下载 |
 |----------|----------|
-| ![配置管理](assets/config-pc2.png) | ![下载管理](assets/download-pc1.png) |
+| ![配置管理](assets/config-pc2.png) | ![应用下载](assets/download-pc1.png) |
 
 | 设置 |
 |------|
@@ -75,9 +75,9 @@
 |----------|----------|----------|
 | ![节点管理](assets/nodes-m1.png) | ![配置管理](assets/config-m2.png) | ![配置管理](assets/config-m1.png) |
 
-| 下载管理 | 设置 |
-|----------|------|
-| ![下载管理](assets/download-m1.png) | ![设置](assets/setting-m1.png) |
+| 应用下载                            | 设置 |
+|---------------------------------|------|
+| ![应用下载](assets/download-m1.png) | ![设置](assets/setting-m1.png) |
 
 ## 技术栈
 

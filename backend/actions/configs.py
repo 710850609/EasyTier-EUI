@@ -5,6 +5,7 @@ import logging
 import os
 import shutil
 from pathlib import Path
+from datetime import datetime
 
 import tomlkit
 from tomlkit import document, comment
@@ -178,12 +179,12 @@ def copy(profile:str):
         doc = tomlkit.parse(f.read())
 
     share_doc = document()
-    share_doc.add(comment("EasyTier 配置"))
+    share_doc.add(comment(f"来源于组网分享网络，创建于：{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"))
     # 仅拷贝必要的配置项
     share_doc["ipv4"] = ""
     share_doc["dhcp"] = True
-    share_doc["listeners"] = doc.get("listeners", [])
     share_doc["network_identity"] = doc.get("network_identity", {})
+    share_doc["peer"] = doc.get("peer", [])
 
 
     with open(tmp_file, "w", encoding="utf-8") as f:
@@ -202,4 +203,4 @@ def __deep_merge(base, override):
             __deep_merge(base[key], value)
         else:
             base[key] = value
-    return base    
+    return base
