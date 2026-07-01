@@ -12,11 +12,11 @@ on:
         type: boolean
         default: true
       build_windows:
-        description: '构建 Windows (AMD64)'
+        description: '构建 Windows (amd64)'
         type: boolean
         default: true
       build_macos_arm64:
-        description: '构建 macOS (ARM64, Apple Silicon)'
+        description: '构建 macOS (aarch64, Apple Silicon)'
         type: boolean
         default: true
       build_macos_x64:
@@ -24,19 +24,19 @@ on:
         type: boolean
         default: true
       build_linux_amd64:
-        description: '构建 Linux (AMD64)'
+        description: '构建 Linux (amd64)'
         type: boolean
         default: true
       build_linux_arm64:
-        description: '构建 Linux (ARM64)'
+        description: '构建 Linux (aarch64)'
         type: boolean
         default: true
       build_linux_riscv64:
-        description: '构建 Linux (RISC-V 64)'
+        description: '构建 Linux (risc-v 64)'
         type: boolean
         default: true
       build_linux_armv7:
-        description: '构建 Linux (ARMv7)'
+        description: '构建 Linux (armv7)'
         type: boolean
         default: true
 
@@ -375,8 +375,6 @@ jobs:
           context: .github/docker
           file: .github/docker/linux-buildenv.Dockerfile
           platforms: linux/arm64
-#          build-args: |
-#            PYTHON_VERSION=${{ env.PYTHON_VERSION }}
           tags: linux-buildenv:arm64
           load: true
           cache-from: type=gha,scope=linux-buildenv-arm64
@@ -441,7 +439,6 @@ jobs:
           file: .github/docker/linux-build-risvc64.Dockerfile
           platforms: linux/riscv64
           build-args: |
-            PYTHON_VERSION=${{ env.PYTHON_VERSION }}
             BASE_IMAGE=riscv64/python:${{ env.PYTHON_VERSION }}
           tags: linux-buildenv:riscv64
           load: true
