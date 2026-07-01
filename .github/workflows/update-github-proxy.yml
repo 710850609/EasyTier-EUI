@@ -1,0 +1,28 @@
+name: update-github-proxy
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 */3 * *'
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 更新 GitHub 代理 DNS 记录
+        env:
+          DYNV6_TOKEN: ${{ secrets.DYNV6_TOKEN }}
+        run: |
+          cd peers/src
+          python3 update_github_proxy.py
