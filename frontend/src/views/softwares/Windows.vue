@@ -16,7 +16,7 @@
           <p>集成当前配置，解压启动后启动服务即可组网</p>
           <p>自建初始节点，请自行修改配置</p>
         </var-cell>
-        <var-cell><span style="font-style: italic;">易组网和EasyTier管理器都有用到EasyTier提供的开机自启支持，会相互顶替，不建议同时使用</span></var-cell>
+        <var-cell><span style="font-style: italic;">易组网和其它使用EasyTier提供的开机自启的应用，会相互顶替开机启动注册，不建议同时使用</span></var-cell>
         <var-cell>
           <var-link type="primary" underline="none" href="https://github.com/710850609/EasyTier-EUI/releases" target="_blank"><img src="https://img.shields.io/github/v/release/710850609/EasyTier-EUI?color=blue&logo=github&label=稳定版" /></var-link>
         </var-cell>

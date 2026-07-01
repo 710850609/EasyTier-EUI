@@ -7,6 +7,7 @@ import shutil
 from pathlib import Path
 
 import tomlkit
+from tomlkit import document, comment
 
 from actions import services
 from http_dispatcher.dispatcher import HttpException
@@ -22,8 +23,8 @@ def list_lan_ips(*args, **kwargs):
     ip_24list = []
     for item in ips:
         ip = item['ip']
-        ip_list.append(f"{ip}/32")
         arr = ip.split('.')
+        ip_24list.append(f"{arr[0]}.{arr[1]}.{arr[2]}.1/32")
         ip_24list.append(f"{arr[0]}.{arr[1]}.{arr[2]}.0/24")
     return ip_24list + ip_list
 
@@ -175,13 +176,18 @@ def copy(profile:str):
     et_config_file = run_configs.et_config_file(profile)
     with open(et_config_file, "r", encoding="utf-8") as f:
         doc = tomlkit.parse(f.read())
-    # 情况IP
-    doc["ipv4"] = ""
-    # 设置启用DHCP
-    doc["dhcp"] = True
+
+    share_doc = document()
+    share_doc.add(comment("EasyTier 配置"))
+    # 仅拷贝必要的配置项
+    share_doc["ipv4"] = ""
+    share_doc["dhcp"] = True
+    share_doc["listeners"] = doc.get("listeners", [])
+    share_doc["network_identity"] = doc.get("network_identity", {})
+
 
     with open(tmp_file, "w", encoding="utf-8") as f:
-        f.write(tomlkit.dumps(doc))
+        f.write(tomlkit.dumps(share_doc))
     return tmp_file
 
 

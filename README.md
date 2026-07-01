@@ -38,13 +38,13 @@
 ## 功能
 
 - 支持多平台
-  - FnOS (x86_64, aarch64)
-  - FnOS 用户版 (x86_64, aarch64)
-  - Windows (x86_64)
-  - Linux (x86_64, aarch64, riscv64)
-    - 已验证支持最低版本：Ubuntu 20.04 / Debian 10 / UOS 20
-    - 支持有图形界面（GUI）和无图形界面（Headless）
-  - MacOS (Intel, arm64) [未验证]
+
+| 平台 | 架构 | 备注                                                                       |
+|------|------|--------------------------------------------------------------------------|
+| FnOS | x86_64, aarch64 |  root版本, 用户版本                                                            |
+| Windows | x86_64 | Windows10及其以上版本                                                          |
+| Linux | x86_64, aarch64, riscv64 | 已验证支持最低版本：Ubuntu 20.04 / Debian 10 / UOS 20；支持有图形界面（GUI）和无图形界面（Headless） |
+| MacOS | Intel, arm64 | 未验证                                                                      |
 - 支持多配置
 - 支持设置开机自启
 - 支持EasyTier常见设置项
