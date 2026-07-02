@@ -1,8 +1,10 @@
 #!/bin/bash
 
+
 et_version() {
+    local github_api_proxy="https://gh.felicity.ac.cn"
     local min_et_version='2.6.4'
-    local fetch_url="https://api.github.com/repos/EasyTier/EasyTier/releases/latest"
+    local fetch_url="${github_api_proxy}/https://api.github.com/repos/EasyTier/EasyTier/releases/latest"
 
     # 检查 jq 是否存在
     if ! command -v jq &> /dev/null; then

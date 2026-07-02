@@ -132,11 +132,11 @@ def get_api(url: str, proxy_url: str = ""):
         else:
             raise e
 
-def get_proxy_urls(refresh:bool = False, progress_callback:Optional[Callable[[int, str], None]] = None) -> list:
+def get_proxy_urls(refresh:bool = False, progress_callback:Optional[Callable[[int, str], None]] = None, target_url:Optional[str] = None) -> list:
     """获取 GitHub 代理列表"""
     proxy_file_path = Path(run_configs.data_dir(), 'github_proxy.json')
     cur_time = int(time.time() * 1000)
-    if not refresh and proxy_file_path.exists():
+    if not refresh and proxy_file_path.exists() and not target_url:
         with open(proxy_file_path, 'r', encoding="utf-8") as f:
             cache_data = json.load(f)
             if cache_data and len(cache_data.get('sources', [])) > 0 and cur_time - cache_data.get('create_time', 0) < 1000 * 60 * 60:
@@ -145,7 +145,7 @@ def get_proxy_urls(refresh:bool = False, progress_callback:Optional[Callable[[in
 
     #  https://github.akams.cn/
     if progress_callback:
-        progress_callback(0, '正在获取GitHub加速节点')
+        progress_callback(0, '获取GitHub加速节点中')
     url_list = get_dns_txt_records('github-proxy.v6.army')
     if not url_list:
         logging.warning("DNS TXT 查询返回空，使用默认加速地址")
@@ -169,9 +169,9 @@ def get_proxy_urls(refresh:bool = False, progress_callback:Optional[Callable[[in
     logging.info(f"获取到GitHub 加速地址: {url_list}")
     url_list = [{'url': item} for item in url_list]
     if progress_callback:
-        progress_callback(0, '正在检测GitHub加速节点')
+        progress_callback(0, '检测GitHub加速节点中')
 
-    url_list = check_proxy_url(url_list, progress_callback=progress_callback)
+    url_list = check_proxy_url(url_list, progress_callback=progress_callback, target_url=target_url)
     url_list = [item for item in url_list if item['status'] == 'ok']
     logging.debug(f"GitHub加速地址检测结果: {url_list}")
 
@@ -182,26 +182,33 @@ def get_proxy_urls(refresh:bool = False, progress_callback:Optional[Callable[[in
             f.write(json.dumps({'sources': url_list, 'create_time': cur_time}, indent=2))
     return url_list
 
-def check_proxy_url(url_list:list, check_timeout:int = 3, progress_callback=None) -> list:
+def check_proxy_url(url_list:list, check_timeout:int = 3, progress_callback=None, target_url:Optional[str] = None) -> list:
     """
-    检查代理 URL 是否有效
-    check_type: raw 或 api
+    检查代理 URL 是否有效，同时检测文件下载和 API 访问支持。
+    target_url: 要下载的目标 URL，自动判断类型：
+        - 包含 'api.github.com' → 替换 API 测试 URL，文件测试仍用默认
+        - 其他 → 替换文件测试 URL，API 测试仍用默认
+        - 不传 → 两个都用默认测试 URL
     """
 
     total = len(url_list)
     done = 0
     lock = threading.Lock()
 
-    # ── 新增：并发测速 ──
+    # ── 并发测速 ──
     def _test_speed(item):
         nonlocal done
         proxy = item["url"]
-        result = {"url": proxy, "delay": -1, "status": "", "desc": "", "supports_range": False, "supports_api": False}
-        # 使用 GitHub 轻量文件测试，HEAD 请求减少流量
-        # test_file_path = "https://raw.githubusercontent.com/github/gitignore/main/README.md"
-        # test_file_path = "https://github.com/EasyTier/EasyTier/archive/refs/tags/v2.6.4.zip"
+        result = {"url": proxy, "delay": -1, "status": "", "desc": "", "supports_range": False, "supports_api": False, "file_size": 0}
+        # 默认测试 URL
         test_file_path = "https://github.com/710850609/EasyTier-EUI/releases/download/0.9.020604/EasyTier-EUI-fnos-x86_64-0.9.020604.fpk"
         test_api_path = "https://api.github.com/repos/710850609/EasyTier-EUI/releases/latest"
+        # 如果提供了 target_url，自动判断是 API 还是文件，替换对应默认 URL
+        if target_url:
+            if target_url.lower().startswith('https://api.github.com/'):
+                test_api_path = target_url
+            else:
+                test_file_path = target_url
         test_file_url = f"{proxy}/{test_file_path}" if proxy else test_file_path
         test_api_url = f"{proxy}/{test_api_path}" if proxy else test_api_path
 
@@ -214,6 +221,15 @@ def check_proxy_url(url_list:list, check_timeout:int = 3, progress_callback=None
                 result["delay"] = round(elapsed, 2)
                 result["status"] = "ok"
                 result["supports_range"] = (resp.status_code == 206)
+                # 从 HEAD 响应中提取文件总大小
+                # 206 响应: Content-Range: bytes 0-0/7352
+                # 200 响应: Content-Length: 7352
+                if resp.status_code == 206:
+                    content_range = resp.headers.get("Content-Range", "")
+                    if "/" in content_range:
+                        result["file_size"] = int(content_range.split("/")[-1])
+                else:
+                    result["file_size"] = int(resp.headers.get("Content-Length", 0))
                 try:
                     resp = requests.head(test_api_url, timeout=check_timeout, allow_redirects=True)
                     result["supports_api"] = (resp.status_code == 200)
@@ -336,6 +352,9 @@ def _download_chunk(
         try:
             with requests.get(url, headers=headers, stream=True, timeout=timeout) as resp:
                 if resp.status_code not in (200, 206):
+                    # 5xx 是节点/CDN 错误，重试无意义，立即失败让上层切换镜像
+                    if resp.status_code >= 500:
+                        raise Exception(f"CDN节点错误 HTTP {resp.status_code}，立即切换镜像")
                     raise Exception(f"HTTP {resp.status_code}")
 
                 with open(part_path, "wb") as f:
@@ -344,11 +363,22 @@ def _download_chunk(
                             f.write(chunk)
                             if chunk_progress_callback:
                                 chunk_progress_callback(len(chunk))
+
+                # 校验 Content-Type，防止镜像返回 HTML 错误页面
+                content_type = resp.headers.get('Content-Type', '').lower()
+                if 'text/html' in content_type:
+                    if part_path.exists():
+                        part_path.unlink(missing_ok=True)
+                    raise Exception(f"镜像返回了 HTML 页面而非文件: Content-Type={content_type}")
+
                 return True
         except Exception as e:
             logging.warning(f"分片下载失败 [{start}-{end}] 第{attempt + 1}次: {e}")
             if part_path.exists():
                 part_path.unlink(missing_ok=True)
+            # 5xx CDN 错误不重试，立即返回失败
+            if "CDN节点错误" in str(e) or ("HTTP 5" in str(e) and attempt == 0):
+                return False
 
     return False
 
@@ -377,10 +407,10 @@ def download_release_file(
     # 所有分片下载到临时目录，保证并发不冲突，原子移动到最终路径
     temp_dir = output_path.parent / 'temp' / f'{uuid.uuid4().hex[:8]}'
     temp_dir.mkdir(parents=True, exist_ok=True)
-    check_result = get_proxy_urls(refresh=True, progress_callback=progress_callback)
+    check_result = get_proxy_urls(refresh=True, progress_callback=progress_callback, target_url=download_url)
     if len(check_result) == 0:
         logging.info(f"无可用加速地址，开始重新获取镜像地址")
-        check_result = get_proxy_urls(refresh=True, progress_callback=progress_callback)
+        check_result = get_proxy_urls(refresh=True, progress_callback=progress_callback, target_url=download_url)
 
     # ========== 1. 探测可用 URL 和文件大小 ==========
     usable_urls = [ item.get('url')  + '/' + download_url for item in check_result if item.get('delay') >= 0]
@@ -395,9 +425,28 @@ def download_release_file(
         _download_single(usable_urls[0], temp_dir / output_path.name, desc, timeout, progress_callback=progress_callback)
         shutil.move(str(temp_dir / output_path.name), str(output_path))
         return
+    
+    # 获取文件大小：检测阶段已经得到，直接用第一个可用镜像的结果
+    total_size = check_result[0].get('file_size', 0)
+    if total_size == 0:
+        # 检测阶段未获取到，回退到逐个 HEAD 探测
+        logging.info("检测阶段未获取到文件大小，回退到逐个 HEAD 探测")
+        resp = None
+        validated_range_urls = []
+        for url in usable_range_urls:
+            resp = requests.head(url, allow_redirects=True, timeout=timeout)
+            if resp.status_code < 400:
+                total_size = int(resp.headers.get("content-length", 0))
+                validated_range_urls.append(url)
+            else:
+                logging.warning(f"HEAD 请求失败 {url}: HTTP {resp.status_code}，跳过该镜像")
+        if not validated_range_urls:
+            raise Exception(f"所有支持 Range 的镜像 HEAD 请求均失败，请更换镜像")
+        usable_range_urls = validated_range_urls
+    else:
+        logging.info(f"检测阶段已获取文件大小: {total_size} 字节")
+    
     logging.info(f"加速地址可用 {len(usable_urls)} 个，支持 Range 下载 {len(usable_range_urls)} 个")
-    resp = requests.head(usable_range_urls[0], allow_redirects=True, timeout=timeout)
-    total_size = int(resp.headers.get("content-length", 0))
 
     # ========== 2. 计算分片 ==========
     # 每段至少 1MB，避免线程过多
@@ -445,6 +494,9 @@ def download_release_file(
                 return True
             logging.warning(f"URL 失败，切换镜像: {url}")
 
+        # 所有镜像均失败，清零该分片的进度
+        with progress_lock:
+            chunk_progress[chunk_key] = 0
         return False
 
     failed = False
@@ -467,7 +519,16 @@ def download_release_file(
         if failed:
             raise Exception("部分分片下载失败，所有镜像均已尝试")
 
-        # ========== 4. 合并文件 ==========
+        # ========== 4. 合并前校验分片完整性 ==========
+        for start, end, part_path in chunks:
+            if not part_path.exists():
+                raise Exception(f"分片文件缺失: {part_path.name}")
+            expected_size = end - start + 1
+            actual_size = part_path.stat().st_size
+            if actual_size != expected_size:
+                raise Exception(f"分片文件大小不匹配: {part_path.name}, 期望 {expected_size}, 实际 {actual_size}")
+
+        # ========== 5. 合并文件 ==========
         logging.info(f"{desc} 下载完成，开始合并...")
         temp_file = temp_dir / output_path.name
         with open(temp_file, "wb") as outfile:
@@ -477,6 +538,7 @@ def download_release_file(
                 part_path.unlink(missing_ok=True)
 
         logging.info(f"{desc} 合并完成: {temp_file}")
+
         shutil.move(str(temp_file), str(output_path))
         logging.info(f"{desc} 已移动到: {output_path}")
 
