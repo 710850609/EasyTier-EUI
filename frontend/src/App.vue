@@ -105,6 +105,28 @@ html.dark {
   background: var(--color-surface-container-high) !important;
 }
 
+/* var-select 下拉框毛玻璃效果 */
+html body .var-select__scroller,
+html body .var-select__scroller.var-elevation--3 {
+  --select-scroller-background: rgba(var(--color-surface-container-rgb, 224, 242, 254), 0.18) !important;
+  background: rgba(var(--color-surface-container-rgb, 224, 242, 254), 0.18) !important;
+  background-color: rgba(var(--color-surface-container-rgb, 224, 242, 254), 0.18) !important;
+  backdrop-filter: blur(28px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(140%) !important;
+  border: 1px solid rgba(0, 0, 0, 0.05) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06) !important;
+}
+
+html.dark body .var-select__scroller,
+html.dark body .var-select__scroller.var-elevation--3 {
+  --select-scroller-background: rgba(var(--color-surface-container-rgb, 51, 65, 85), 0.38) !important;
+  background: rgba(var(--color-surface-container-rgb, 51, 65, 85), 0.38) !important;
+  background-color: rgba(var(--color-surface-container-rgb, 51, 65, 85), 0.38) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25) !important;
+}
+
 /* var-tabs 样式适配 */
 .var-tabs {
   background: transparent !important;
@@ -134,32 +156,33 @@ html.dark {
 /* var-popup 背景适配 - 磨砂玻璃效果（必须在 var-paper 之前定义） */
 .var-popup__content,
 .var-popup__content[var-popup-cover] {
-  background: rgba(var(--color-surface-container-rgb, 224, 242, 254), 0.5) !important;
-  backdrop-filter: blur(18px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(18px) saturate(180%) !important;
+  background: rgba(var(--color-surface-container-rgb, 224, 242, 254), 0.18) !important;
+  backdrop-filter: blur(28px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(140%) !important;
+  border: 1px solid rgba(0, 0, 0, 0.05) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06) !important;
 }
 
-/* 底部弹出层磨砂玻璃效果 */
+html.dark .var-popup__content,
+html.dark .var-popup__content[var-popup-cover] {
+  background: rgba(var(--color-surface-container-rgb, 51, 65, 85), 0.38) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* 底部弹出层圆角 */
 .var-popup--bottom {
-  /* background: rgba(var(--color-surface-container-rgb, 224, 242, 254), 0.5) !important;
-  backdrop-filter: blur(18px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(18px) saturate(180%) !important; */
   border-radius: 16px 16px 0 0 !important;
 }
 
-/* 顶部弹出层磨砂玻璃效果 */
+/* 顶部弹出层圆角 */
 .var-popup--top {
-  /* background: rgba(var(--color-surface-container-rgb, 224, 242, 254), 0.5) !important;
-  backdrop-filter: blur(18px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(18px) saturate(180%) !important; */
   border-radius: 0 0 16px 16px !important;
 }
 
+/* 居中弹出层圆角 */
 .var-popup--center {
-  /* background: rgba(var(--color-surface-container-rgb, 224, 242, 254), 0.5) !important;
-  backdrop-filter: blur(18px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(18px) saturate(180%) !important; */
-  border-radius: 16px 16px 16px 16px !important;
+  border-radius: 16px !important;
 }
 
 /* var-paper 背景适配 */
@@ -176,7 +199,9 @@ html.dark {
 
 /* popup 遮罩层 - 半透明 */
 .var-popup__overlay {
-  background: rgba(0, 0, 0, 0.3) !important;
+  background: rgba(0, 0, 0, 0.25) !important;
+  backdrop-filter: blur(2px) !important;
+  -webkit-backdrop-filter: blur(2px) !important;
 }
 
 /* var-cell 样式适配 */

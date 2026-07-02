@@ -2,7 +2,6 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import '@varlet/ui/es/style'
 import '@varlet/touch-emulator'
-import './styles/glass-effect.css'
 // import { api } from './utils/api.js'
 
 const originalAddEventListener = EventTarget.prototype.addEventListener

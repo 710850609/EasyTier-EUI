@@ -1,12 +1,21 @@
 /* var-select 下拉框毛玻璃效果 - 全局样式 */
 html body .var-select__scroller,
 html body .var-select__scroller.var-elevation--3 {
-  /* 使用 Varlet 主题变量，自动适配明暗模式 */
-  --select-scroller-background: rgba(var(--color-surface-container-rgb, 30, 30, 30), 0.6) !important;
-  background: rgba(var(--color-surface-container-rgb, 30, 30, 30), 0.6) !important;
-  background-color: rgba(var(--color-surface-container-rgb, 30, 30, 30), 0.6) !important;
-  backdrop-filter: blur(10px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(10px) saturate(180%) !important;
-  border: 0px solid rgba(255, 255, 255, 0.1) !important;
-  border-radius: 16px 16px 16px 16px !important;
+  --select-scroller-background: rgba(var(--color-surface-container-rgb, 224, 242, 254), 0.18) !important;
+  background: rgba(var(--color-surface-container-rgb, 224, 242, 254), 0.18) !important;
+  background-color: rgba(var(--color-surface-container-rgb, 224, 242, 254), 0.18) !important;
+  backdrop-filter: blur(28px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(140%) !important;
+  border: 1px solid rgba(0, 0, 0, 0.05) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06) !important;
+}
+
+html.dark body .var-select__scroller,
+html.dark body .var-select__scroller.var-elevation--3 {
+  --select-scroller-background: rgba(var(--color-surface-container-rgb, 51, 65, 85), 0.38) !important;
+  background: rgba(var(--color-surface-container-rgb, 51, 65, 85), 0.38) !important;
+  background-color: rgba(var(--color-surface-container-rgb, 51, 65, 85), 0.38) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25) !important;
 }
