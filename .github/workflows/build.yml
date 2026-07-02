@@ -596,18 +596,18 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-#      - name: Push FnDepot
-#        if: ${{ needs.build-info.outputs.prerelease == 'false' }}
-#        run: |
-#         new_version="${{ needs.build-info.outputs.version }}"
-#         changelog="${{ needs.build-info.outputs.release_notes }}"
-#
-#         gh workflow run update-version.yml \
-#           --repo "710850609/FnDepot" \
-#           -f app_name="EasyTier-EUI" \
-#           -f new_version="$new_version" \
-#           -f download_url_amd64="https://github.com/710850609/EasyTier-Lite/releases/download/$new_version/EasyTier-Lite-aarch64-$new_version.fpk" \
-#           -f download_url_aarch64="https://github.com/710850609/EasyTier-Lite/releases/download/$new_version/EasyTier-Lite-x86_64-$new_version.fpk" \
-#           -f changelog="$changelog"
-#        env:
-#         GH_TOKEN: ${{ secrets.FNDEPOT_TOKEN }}
+      - name: Push FnDepot
+        if: ${{ needs.build-info.outputs.prerelease == 'false' }}
+        run: |
+         new_version="${{ needs.build-info.outputs.version }}"
+         changelog="${{ needs.build-info.outputs.release_notes }}"
+
+         gh workflow run update-version.yml \
+           --repo "710850609/FnDepot" \
+           -f app_name="EasyTier-EUI" \
+           -f new_version="$new_version" \
+           -f download_url_amd64="https://github.com/710850609/EasyTier-EUI/releases/download/$new_version/EasyTier-EUI-fnos-x86_64-$new_version.fpk" \
+           -f download_url_aarch64="https://github.com/710850609/EasyTier-EUI/releases/download/$new_version/EasyTier-EUI-fnos-aarch64-$new_version.fpk" \
+           -f changelog="$changelog"
+        env:
+         GH_TOKEN: ${{ secrets.FNDEPOT_TOKEN }}
