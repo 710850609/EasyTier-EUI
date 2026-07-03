@@ -119,9 +119,9 @@
 
 ## 其他链接
 
-- [EasyTier 源码](https://github.com/EasyTier/EasyTier)
-- [EasyTier 文档](https://easytier.cn)
-- [Varlet 文档](https://www.varletjs.com/#/zh-CN)
+- <a href="https://github.com/EasyTier/EasyTier" target="_blank" rel="noopener noreferrer">EasyTier 源码</a>
+- <a href="https://easytier.cn" target="_blank" rel="noopener noreferrer">EasyTier 文档</a>
+- <a href="https://www.varletjs.com/#/zh-CN" target="_blank" rel="noopener noreferrer">Varlet 文档</a>
 
 ## 贡献
 
