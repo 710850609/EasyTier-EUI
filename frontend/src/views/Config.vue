@@ -59,21 +59,21 @@
             <div class="config-actions-group" v-if="selectedConfig">
               <var-button size="small" type="primary" @click="showCreateDialog = true; showMode = 1;" v-if="showMode === 0">新增</var-button>
               <var-button size="small" type="primary" @click="startEditName" :loading="isRenaming" v-if="showMode === 0">改名</var-button>
-              <var-button size="small" type="danger" @click="exitAddMode" :loading="isDeletingConfig" v-if="showMode !== 0">退出新增</var-button>
-              <label class="toggle-item">
+              <label class="toggle-item" v-if="showMode === 0">
                 <var-loading v-if="changingAutostart" size="small" />
                 <label class="switch-wrapper" v-if="!changingAutostart">
                   <input type="checkbox" :checked="currentConfigAutostart" @change="(e) => handleSwitchChange(currentConfigData, 'autostart', e.target.checked)" />
                   <span class="switch-slider"></span>
                 </label>
               </label>
-              <span class="toggle-label">开机自启</span>
+              <span class="toggle-label" v-if="showMode === 0">开机自启</span>
             </div>
           </div>
           <var-divider class="toolbar-divider" />
           <div class="toolbar-group toolbar-status" v-if="selectedConfig">
             <div class="toolbar-toggles">
               <div class="toggle-item">
+                <var-button size="small" type="danger" @click="exitAddMode" :loading="isDeletingConfig" v-if="showMode !== 0">退出新增</var-button>
                 <var-button type="primary" size="small" @click="saveConfig" auto-loading>保存配置</var-button>
                 <var-button type="primary" size="small" @click="openCodePage" auto-loading v-if="showMode === 0">编辑文件</var-button>
                 <var-button type="primary" size="small" @click="showShareConfigType = true" v-if="showMode === 0">分享网络</var-button>
@@ -107,14 +107,18 @@
               </var-option>
             </var-select>
             <div class="toolbar-mobile-actions" v-if="selectedConfig">
-              <label class="toggle-item">
+              <label class="toggle-item" v-if="showMode === 0">
                 <var-loading v-if="changingAutostart" size="small" />
                 <label class="switch-wrapper" v-if="!changingAutostart">
                   <input type="checkbox" :checked="currentConfigAutostart" @change="(e) => handleSwitchChange(currentConfigData, 'autostart', e.target.checked)" />
                   <span class="switch-slider"></span>
                 </label>
               </label>
-              <span class="toggle-label">开机自启</span>
+              <span class="toggle-label" v-if="showMode === 0">开机自启</span>
+              <var-button variant="outlined" size="small" type="danger" @click="exitAddMode" :loading="isDeletingConfig" v-if="showMode !== 0">
+                <var-icon name="close" :size="16" />
+                退出新增
+              </var-button>
               <var-button type="primary" size="small" @click="saveConfig" auto-loading>保存</var-button>
               <var-button size="small" icon round text @click="toggleToolbarMore">
                 <var-icon :name="toolbarMoreOpen.length ? 'menu-open' : 'menu'" :size="20" />
@@ -125,8 +129,7 @@
           <div class="toolbar-more-panel" v-if="toolbarMoreOpen.length && selectedConfig">
             <div class="toolbar-more-content">
               <div class="toolbar-more-row">
-                <var-button variant="outlined" size="small" type="primary" @click="showCreateDialog = true; showMode = 1;" v-if="showMode === 0">
-                  <var-icon name="plus" :size="16" />
+                <var-button variant="outlined" size="small" type="primary" @click="showCreateDialog = true; showMode = 1;toggleToolbarMore()" v-if="showMode === 0">
                   新增
                 </var-button>
                 <var-button variant="outlined" size="small" type="primary" @click="startEditName" :loading="isRenaming" v-if="showMode === 0">
@@ -136,10 +139,6 @@
                 <var-button variant="outlined" size="small" type="danger" @click="showDeleteDialog = true" :loading="isDeletingConfig" v-if="showMode === 0">
                   <var-icon name="delete-outline" :size="16" />
                   删除
-                </var-button>
-                <var-button variant="outlined" size="small" type="danger" @click="exitAddMode" :loading="isDeletingConfig" v-if="showMode !== 0">
-                  <var-icon name="close" :size="16" />
-                  退出新增
                 </var-button>
               </div>
               <div class="toolbar-more-row">
@@ -716,7 +715,7 @@
       />
     </var-dialog>
 
-    <var-dialog v-model:show="showCreateDialog" @confirm="confirmCreateConfig" @cancel="exitAddMode"
+    <var-dialog v-model:show="showCreateDialog" @before-close="beforeCloseCreateDilog"
       confirmButtonText="确认" cancelButtonText="取消">
       <template #title>
         <span>新增配置名称</span>
@@ -780,7 +779,7 @@ import { mdiEye, mdiEyeOff, mdiHomeEdit, mdiShieldEdit, mdiCircle, mdiRouterNetw
 import { mdilPencil, mdilAccount, mdilLock } from '@mdi/light-js'
 
 
-// 显示模式： 0 编辑 1 快速新增 2 普通新增
+// 显示模式： 0 修改 1 快速新增 2 普通新增
 const showMode = ref(0)
 const fastSettingMode = inject('fastSettingMode', ref(false))
 const publicPeerOptions = ref([])
@@ -1198,10 +1197,21 @@ const deleteCurrentConfig = async () => {
   })
 }
 
+const beforeCloseCreateDilog = (action, done) => {
+  if (action === 'confirm') {
+    if (confirmCreateConfig()) {
+      done()
+    }
+  } else {
+    exitAddMode()
+    done()
+  }
+}
+
 const confirmCreateConfig = () => {
   if (!newConfigName.value.trim()) {
     toast.warning('请输入配置名称')
-    return
+    return false
   }
   const name = newConfigName.value.trim()
   const profile = `${name}.toml`
@@ -1218,6 +1228,7 @@ const confirmCreateConfig = () => {
   configList.value.push({ 'profile': profile, 'name': name, 'autostart': false })
   selectedConfig.value = profile
   newConfigName.value = ''
+  return true
 }
 
 const startEditName = () => {
