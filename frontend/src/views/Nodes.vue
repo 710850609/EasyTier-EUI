@@ -84,7 +84,7 @@
         <var-tabs v-model:active="activeTab" @change="handleTabChange">
           <var-tab name="columnsFilter">
             <div class="tab-label">
-              <span>列选择</span>
+              <span>数据项选择</span>
             </div>
           </var-tab>
           <var-tab name="rowFilter">
@@ -130,6 +130,14 @@
               </div>
             </var-checkbox>
           </var-checkbox-group>
+          <div class="mobile-only-switch">
+            <div class="filter-divider"></div>
+            <div class="filter-subtitle">显示模式</div>
+            <div class="switch-row">
+              <span>移动端使用卡片列表</span>
+              <var-checkbox :model-value="useMobileList" @change="toggleMobileList" />
+            </div>
+          </div>
         </div>
 
         <!-- 刷新速度内容 -->
@@ -158,8 +166,8 @@
           </div>
         </div>
         
-        <!-- 实际表格 -->
-        <table v-else class="data-table">
+        <!-- 实际表格 - PC模式 -->
+        <table v-else class="data-table" :class="{ 'mobile-hidden': useMobileList }">
           <thead class="fixed-header">
             <tr>
               <th 
@@ -194,6 +202,70 @@
             </tr>
           </tbody>
         </table>
+
+        <!-- 移动端卡片列表 -->
+        <div v-if="!loadingSkeleton && useMobileList" class="mobile-node-list">
+          <div 
+            v-for="node in filteredNodes" 
+            :key="node.id" 
+            class="node-card"
+            :class="{ 'node-server': node.type === 'server' }"
+          >
+            <div class="node-card-header">
+              <div class="node-ip-row">
+                <var-icon 
+                  :name="node.type === 'server' ? 'cloud' : 'server'" 
+                  size="18" 
+                  :color="node.type === 'server' ? 'var(--color-success)' : 'var(--color-primary)'" 
+                />
+                <span class="node-ip" @click="handleClickCell(node, 'ipv4')">{{ node.ipv4 || '' }}</span>
+                <var-badge 
+                  v-if="visibleColumnsMap.cost"
+                  :type="node.cost === 'Local' ? 'info' : (node.cost === 'p2p' ? 'success' : 'primary')" 
+                  :value="parseNode(node, 'cost')"
+                />
+              </div>
+            </div>
+            <div class="node-card-info">
+              <span v-if="visibleColumnsMap.lat_ms && node.lat_ms !== undefined && node.lat_ms !== '-'" class="info-chip">
+                {{ parseNode(node, 'lat_ms') }}ms
+              </span>
+              <span v-if="visibleColumnsMap.loss_rate && node.loss_rate !== undefined && node.loss_rate !== '-'" class="info-chip" :class="{ 'loss-warn': node.loss_rate > 0 }">
+                丢包 {{ parseNode(node, 'loss_rate') }}
+              </span>
+              <span v-if="visibleColumnsMap.rx_bytes && node.rx_bytes !== undefined && node.rx_bytes !== '-'" class="traffic-item download">
+                <svg-icon size="14" type="mdi" :path="mdilArrowDown" color="var(--color-primary)"></svg-icon>
+                {{ parseNode(node, 'rx_bytes') }}
+              </span>
+              <span v-if="visibleColumnsMap.tx_bytes && node.tx_bytes !== undefined && node.tx_bytes !== '-'" class="traffic-item upload">
+                <svg-icon size="14" type="mdi" :path="mdilArrowUp" color="var(--color-success)"></svg-icon>
+                {{ parseNode(node, 'tx_bytes') }}
+              </span>
+            </div>
+            <div v-if="visibleColumnsMap.hostname || visibleColumnsMap.nat_type || visibleColumnsMap.tunnel_proto || visibleColumnsMap.cidr" class="node-card-meta">
+              <span v-if="visibleColumnsMap.hostname && node.hostname" class="info-chip host-chip">
+                <var-icon name="label" size="14" />
+                {{ node.hostname }}
+              </span>
+              <span v-if="visibleColumnsMap.nat_type && node.nat_type" class="info-chip nat-chip">
+                {{ parseNode(node, 'nat_type') }}
+              </span>
+              <span v-if="visibleColumnsMap.tunnel_proto && node.tunnel_proto && node.tunnel_proto !== '-'" class="info-chip">
+                {{ node.tunnel_proto }}
+              </span>
+              <span v-if="visibleColumnsMap.cidr && node.cidr" class="info-chip cidr-chip">
+                {{ node.cidr }}
+              </span>
+            </div>
+            <div class="node-card-footer">
+              <span v-if="visibleColumnsMap.version && node.version" class="version-text">v{{ node.version }}</span>
+            </div>
+          </div>
+          <div v-if="filteredNodes.length === 0" class="empty-state">
+            <var-icon name="inbox" size="48" color="var(--color-text-disabled)" />
+            <p>暂无节点数据</p>
+          </div>
+        </div>
       </div>
     </var-paper>
 
@@ -215,8 +287,9 @@ import { copyToClipboard } from '../utils/clipboard.js'
 import { api, cancelAllRequests } from '../utils/api.js'
 import toast from '../components/toast.js'
 import { Poller } from '../utils/poller.js'
-import { NODES_SELECTED_COLUMNS_KEY, NODES_SELECTED_NODE_TYPES_KEY, NODES_REFRESH_STEP_KEY } from '../config/storage-keys.js'
+import { NODES_SELECTED_COLUMNS_KEY, NODES_SELECTED_NODE_TYPES_KEY, NODES_REFRESH_STEP_KEY, NODES_MOBILE_LIST_KEY } from '../config/storage-keys.js'
 import { mdiCircle } from '@mdi/js'
+import { mdilArrowDown, mdilArrowUp } from '@mdi/light-js'
 import SvgIcon from '@jamescoyle/vue-icon'
 
 // 注入菜单切换方法和快速设置模式
@@ -238,6 +311,8 @@ const selectedColumns = ref(['ipv4', 'hostname', 'cost', 'tunnel_proto','lat_ms'
 const selectedNodeTypes = ref(['normal'])
 // 刷新速度
 const refreshStep = ref(3)
+// 移动端列表模式（默认启用卡片列表）
+const useMobileList = ref(true)
 // 节点数据
 const allNodes = ref([])
 
@@ -272,6 +347,15 @@ const loadSettings = () => {
   if (savedRefreshStep) {
     refreshStep.value = parseInt(savedRefreshStep, 10) || 3000
   }
+
+  const savedMobileList = localStorage.getItem(NODES_MOBILE_LIST_KEY)
+  if (savedMobileList !== null) {
+    try {
+      useMobileList.value = JSON.parse(savedMobileList)
+    } catch (e) {
+      console.error('加载移动端列表模式失败:', e)
+    }
+  }
 }
 
 // 监听变化并保存到 localStorage
@@ -282,6 +366,10 @@ watch(selectedColumns, (newVal) => {
 watch(selectedNodeTypes, (newVal) => {
   localStorage.setItem(NODES_SELECTED_NODE_TYPES_KEY, JSON.stringify(newVal))
 }, { deep: true })
+
+watch(useMobileList, (newVal) => {
+  localStorage.setItem(NODES_MOBILE_LIST_KEY, JSON.stringify(newVal))
+})
 
 // 创建节点列表轮询器实例
 const nodesPoller = new Poller({
@@ -333,6 +421,15 @@ const visibleColumns = computed(() => {
   return allColumns.filter(col => selectedColumns.value.includes(col.key))
 })
 
+// 列可见性映射表，用于移动端卡片快速判断
+const visibleColumnsMap = computed(() => {
+  const map = {}
+  allColumns.forEach(col => {
+    map[col.key] = selectedColumns.value.includes(col.key)
+  })
+  return map
+})
+
 const normalNodes = computed(() => allNodes.value.filter(n => n.type === 'normal'))
 const serverNodes = computed(() => allNodes.value.filter(n => n.type === 'server'))
 
@@ -344,6 +441,11 @@ const filteredNodes = computed(() => {
 // 处理 tab 切换
 const handleTabChange = (tab) => {
   activeTab.value = tab
+}
+
+// 切换移动端列表模式
+const toggleMobileList = (val) => {
+  useMobileList.value = val
 }
 
 // 防止重复点击
@@ -861,6 +963,215 @@ tr:hover td {
   }
   100% {
     background-position: -200% 0;
+  }
+}
+
+/* ========== 移动端卡片列表样式 ========== */
+/* 移动端列表开关 - 仅移动端可见 */
+.mobile-only-switch {
+  display: none;
+  margin-top: 12px;
+}
+
+.filter-divider {
+  height: 1px;
+  background: var(--color-outline-variant);
+  margin: 8px 0 12px;
+}
+
+.switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14px;
+  color: var(--color-text);
+}
+
+@media (max-width: 768px) {
+  .mobile-only-switch {
+    display: block;
+  }
+  
+  .mobile-hidden {
+    display: none !important;
+  }
+  
+  .mobile-node-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 4px 0;
+  }
+  
+  .node-card {
+    background: var(--color-surface-container-low);
+    border-radius: 12px;
+    padding: 12px 14px;
+    transition: all 0.2s ease;
+    border-left: 3px solid var(--color-primary);
+    overflow: hidden;
+  }
+  
+  .node-card.node-server {
+    border-left-color: var(--color-success);
+  }
+  
+  .node-card:active {
+    transform: scale(0.985);
+    background: var(--color-surface-container);
+  }
+  
+  .node-card-header {
+    margin-bottom: 8px;
+  }
+  
+  .node-ip-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+  
+  .node-ip {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-on-surface);
+    letter-spacing: 0.2px;
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  
+  .node-card-info {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 6px;
+    overflow: hidden;
+  }
+  
+  .node-card-info .info-chip,
+  .node-card-info .traffic-item {
+    flex-shrink: 0;
+    font-size: 11px;
+    padding: 2px 8px;
+  }
+  
+  .info-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    background: var(--color-surface-container-high);
+    color: var(--color-on-surface-variant);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  
+  .info-chip.host-chip {
+    background: rgba(255, 152, 0, 0.08);
+    color: var(--color-warning);
+  }
+  
+  .info-chip.nat-chip {
+    background: rgba(41, 121, 255, 0.08);
+    color: var(--color-primary);
+  }
+  
+  .info-chip.cidr-chip {
+    background: rgba(76, 175, 80, 0.08);
+    color: var(--color-success);
+  }
+  
+  .info-chip.loss-warn {
+    background: rgba(255, 82, 82, 0.08);
+    color: var(--color-danger);
+  }
+  
+  html.dark .info-chip {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.85);
+  }
+  
+  html.dark .info-chip.loss-warn {
+    background: rgba(255, 82, 82, 0.18);
+    color: #ff6b6b;
+  }
+  
+  html.dark .info-chip.nat-chip {
+    background: rgba(41, 121, 255, 0.18);
+    color: #6ea8fe;
+  }
+  
+  html.dark .info-chip.cidr-chip {
+    background: rgba(76, 175, 80, 0.18);
+    color: #81c784;
+  }
+  
+  html.dark .info-chip.host-chip {
+    background: rgba(255, 152, 0, 0.18);
+    color: #ffb74d;
+  }
+  
+  html.dark .traffic-item {
+    color: rgba(255, 255, 255, 0.8);
+  }
+  
+  .node-card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--color-outline-variant);
+    overflow: hidden;
+  }
+  
+  .traffic-item {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--color-on-surface-variant);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  
+  .node-card-footer {
+    margin-top: 8px;
+  }
+  
+  .version-text {
+    font-size: 11px;
+    color: var(--color-text-disabled);
+    font-weight: 400;
+  }
+  
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 20px;
+    color: var(--color-text-disabled);
+    gap: 12px;
+  }
+  
+  .empty-state p {
+    margin: 0;
+    font-size: 14px;
+  }
+}
+
+@media (min-width: 769px) {
+  .mobile-node-list {
+    display: none;
   }
 }
 </style>

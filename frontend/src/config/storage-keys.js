@@ -4,18 +4,19 @@
  */
 
 // VConsole 相关
-export const VCONSOLE_ENABLED_KEY = 'etLite-vconsole-enabled'
+export const VCONSOLE_ENABLED_KEY = 'eui-vconsole-enabled'
 
 // 主题相关
-export const THEME_MODE_KEY = 'etLite-theme'
+export const THEME_MODE_KEY = 'eui-theme'
 
 // Nodes 页面设置
-export const NODES_SELECTED_COLUMNS_KEY = 'etLite-nodes-columns'
-export const NODES_SELECTED_NODE_TYPES_KEY = 'etLite-nodes-rows'
-export const NODES_REFRESH_STEP_KEY = 'etLite-nodes-refresh-step'
+export const NODES_SELECTED_COLUMNS_KEY = 'eui-nodes-columns'
+export const NODES_SELECTED_NODE_TYPES_KEY = 'eui-nodes-rows'
+export const NODES_REFRESH_STEP_KEY = 'eui-nodes-refresh-step'
+export const NODES_MOBILE_LIST_KEY = 'eui-nodes-mobile-list'
 
 // 侧边栏折叠状态
-export const SIDEBAR_COLLAPSED_KEY = 'etLite-sidebar-collapsed'
+export const SIDEBAR_COLLAPSED_KEY = 'eui-sidebar-collapsed'
 
 // GitHub版本
-export const ET_VERSION_LIST_KEY = 'etLite-version-list'
+export const ET_VERSION_LIST_KEY = 'eui-version-list'
