@@ -32,7 +32,8 @@
 
     <template v-else>
       <var-paper class="toolbar" :elevation="2" v-if="!fastSettingMode">
-        <div class="toolbar-row">
+        <!-- 桌面端布局 -->
+        <div class="toolbar-row toolbar-desktop">
           <div class="toolbar-group toolbar-main">
             <var-select
               class="config-switcher"
@@ -58,7 +59,6 @@
             <div class="config-actions-group" v-if="selectedConfig">
               <var-button size="small" type="primary" @click="showCreateDialog = true; showMode = 1;" v-if="showMode === 0">新增</var-button>
               <var-button size="small" type="primary" @click="startEditName" :loading="isRenaming" v-if="showMode === 0">改名</var-button>
-              <!-- <var-button size="small" type="danger" @click="showDeleteDialog = true" :loading="isDeletingConfig" v-if="showMode === 0">删除</var-button> -->
               <var-button size="small" type="danger" @click="exitAddMode" :loading="isDeletingConfig" v-if="showMode !== 0">退出新增</var-button>
               <label class="toggle-item">
                 <var-loading v-if="changingAutostart" size="small" />
@@ -66,39 +66,99 @@
                   <input type="checkbox" :checked="currentConfigAutostart" @change="(e) => handleSwitchChange(currentConfigData, 'autostart', e.target.checked)" />
                   <span class="switch-slider"></span>
                 </label>
-                <span class="toggle-label">自启</span>
               </label>
+              <span class="toggle-label">开机自启</span>
             </div>
           </div>
           <var-divider class="toolbar-divider" />
           <div class="toolbar-group toolbar-status" v-if="selectedConfig">
             <div class="toolbar-toggles">
-              <!-- <label class="toggle-item">
-                <span class="toggle-label">开机自启</span>
-                <var-loading v-if="changingAutostart" size="small" />
-                <label class="switch-wrapper" v-if="!changingAutostart">
-                  <input type="checkbox" :checked="currentConfigAutostart" @change="(e) => handleSwitchChange(currentConfigData, 'autostart', e.target.checked)" />
-                  <span class="switch-slider"></span>
-                </label>
-              </label> --> 
               <div class="toggle-item">
                 <var-button type="primary" size="small" @click="saveConfig" auto-loading>保存配置</var-button>
                 <var-button type="primary" size="small" @click="openCodePage" auto-loading v-if="showMode === 0">编辑文件</var-button>
                 <var-button type="primary" size="small" @click="showShareConfigType = true" v-if="showMode === 0">分享网络</var-button>
                 <var-button size="small" type="danger" @click="showDeleteDialog = true" :loading="isDeletingConfig" v-if="showMode === 0">删除</var-button>
-
               </div>
             </div>
           </div>
         </div>
-        
-        <!-- <var-divider />
-        <div class="toolbar-row toolbar-actions">
-          <var-button type="primary" size="small" @click="saveConfig" auto-loading>保存配置</var-button>
-          <var-button type="primary" size="small" @click="openCodePage" auto-loading v-if="showMode === 0">编辑文件</var-button>
-          <var-button type="primary" size="small" @click="showShareConfigType = true" v-if="showMode === 0">分享网络</var-button>
-        </div> -->
+
+        <!-- 移动端布局 -->
+        <div class="toolbar-mobile">
+          <div class="toolbar-mobile-top">
+            <var-select
+              class="config-switcher"
+              v-model="selectedConfig"
+              placeholder="选择配置"
+              variant="outlined"
+              size="small"
+              blur-color="var(--color-primary)"
+              @change="onConfigSwitch"
+            >
+              <var-option
+                v-for="cfg in configList"
+                :key="cfg.profile"
+                :label="cfg.name"
+                :value="cfg.profile"
+              >
+                <div class="config-option">
+                  <span>{{ cfg.name }}</span>
+                </div>
+              </var-option>
+            </var-select>
+            <div class="toolbar-mobile-actions" v-if="selectedConfig">
+              <label class="toggle-item">
+                <var-loading v-if="changingAutostart" size="small" />
+                <label class="switch-wrapper" v-if="!changingAutostart">
+                  <input type="checkbox" :checked="currentConfigAutostart" @change="(e) => handleSwitchChange(currentConfigData, 'autostart', e.target.checked)" />
+                  <span class="switch-slider"></span>
+                </label>
+              </label>
+              <span class="toggle-label">开机自启</span>
+              <var-button type="primary" size="small" @click="saveConfig" auto-loading>保存</var-button>
+              <var-button size="small" icon round text @click="toggleToolbarMore">
+                <var-icon :name="toolbarMoreOpen.length ? 'menu-open' : 'menu'" :size="20" />
+              </var-button>
+            </div>
+          </div>
+          <Transition name="panel">
+          <div class="toolbar-more-panel" v-if="toolbarMoreOpen.length && selectedConfig">
+            <div class="toolbar-more-content">
+              <div class="toolbar-more-row">
+                <var-button variant="outlined" size="small" type="primary" @click="showCreateDialog = true; showMode = 1;" v-if="showMode === 0">
+                  <var-icon name="plus" :size="16" />
+                  新增
+                </var-button>
+                <var-button variant="outlined" size="small" type="primary" @click="startEditName" :loading="isRenaming" v-if="showMode === 0">
+                  <var-icon name="pencil-outline" :size="16" />
+                  改名
+                </var-button>
+                <var-button variant="outlined" size="small" type="danger" @click="showDeleteDialog = true" :loading="isDeletingConfig" v-if="showMode === 0">
+                  <var-icon name="delete-outline" :size="16" />
+                  删除
+                </var-button>
+                <var-button variant="outlined" size="small" type="danger" @click="exitAddMode" :loading="isDeletingConfig" v-if="showMode !== 0">
+                  <var-icon name="close" :size="16" />
+                  退出新增
+                </var-button>
+              </div>
+              <div class="toolbar-more-row">
+                <var-button variant="outlined" size="small" type="primary" @click="openCodePage" auto-loading v-if="showMode === 0">
+                  <var-icon name="file-edit-outline" :size="16" />
+                  编辑文件
+                </var-button>
+                <var-button variant="outlined" size="small" type="primary" @click="showShareConfigType = true" v-if="showMode === 0">
+                  <var-icon name="share-variant-outline" :size="16" />
+                  分享网络
+                </var-button>
+              </div>
+            </div>
+          </div>
+        </Transition>
+        </div>
       </var-paper>
+
+      <div class="toolbar-more-backdrop" v-show="toolbarMoreOpen.length" @click="toolbarMoreOpen = ''"></div>
 
       <div class="content-area" v-if="selectedConfig || fastSettingMode">
         <var-form ref="form">
@@ -743,6 +803,10 @@ const isRenaming = ref(false)
 const showDeleteDialog = ref(false)
 const isDeletingConfig = ref(false)
 const showPublicPeerTip = ref(false)
+const toolbarMoreOpen = ref([])
+const toggleToolbarMore = () => {
+  toolbarMoreOpen.value = toolbarMoreOpen.value.length ? [] : ['more']
+}
 const lanIps = ref([])
 
 const configList = ref([])
@@ -1403,6 +1467,14 @@ onMounted(async () => {
   padding: 16px 20px;
   border-radius: 12px;
   background: var(--color-surface-container) !important;
+}
+
+.toolbar-desktop {
+  display: flex;
+}
+
+.toolbar-mobile {
+  display: none;
 }
 
 .toolbar-divider {
@@ -2221,10 +2293,104 @@ html.dark .forward-section-paper {
     margin: 16px 12px 4px;
     padding: 12px;
     border-radius: 10px;
+    position: relative;
+    z-index: 10;
+    overflow: visible !important;
+  }
+
+  .toolbar-desktop {
+    display: none;
+  }
+
+  .toolbar-mobile {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .toolbar-mobile-top {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    width: 100%;
+  }
+
+  .toolbar-mobile-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
+  .toolbar-mobile-actions .toggle-item {
+    gap: 3px;
+  }
+
+  .toolbar-mobile-actions .toggle-label {
+    font-size: 11px;
+  }
+
+  .toolbar-more-panel {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 6px;
+    background: rgba(var(--color-surface-container-rgb, 255, 255, 255), 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    padding: 12px 14px 14px;
+    z-index: 11;
+    border: 1px solid rgba(var(--color-outline-rgb, 0, 0, 0), 0.08);
+  }
+
+  .toolbar-more-content {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .toolbar-more-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+
+  .toolbar-more-row .var-button {
+    flex: 1;
+    min-width: 0;
+    font-size: 14px;
+    justify-content: center;
+    border-radius: 10px;
+    padding: 10px 12px;
+  }
+
+  .panel-enter-active,
+  .panel-leave-active {
+    transition: all 0.25s ease;
+  }
+  .panel-enter-from,
+  .panel-leave-to {
+    opacity: 0;
+    transform: translateY(-6px);
   }
 
   .toolbar-divider {
     display: flex;
+  }
+
+  .toolbar-more-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.25);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    z-index: 9;
   }
   .toolbar-row {
     gap: 8px;
