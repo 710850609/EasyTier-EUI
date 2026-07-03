@@ -108,11 +108,12 @@ html.dark {
 /* var-select 下拉框毛玻璃效果 */
 html body .var-select__scroller,
 html body .var-select__scroller.var-elevation--3 {
-  --select-scroller-background: rgba(var(--color-surface-container-rgb, 224, 242, 254), 0.18) !important;
-  background: rgba(var(--color-surface-container-rgb, 224, 242, 254), 0.18) !important;
-  background-color: rgba(var(--color-surface-container-rgb, 224, 242, 254), 0.18) !important;
-  backdrop-filter: blur(28px) saturate(140%) !important;
-  -webkit-backdrop-filter: blur(28px) saturate(140%) !important;
+  --select-scroller-background: rgba(var(--color-surface-container-rgb, 224, 242, 254), 0.08) !important;
+  background: rgba(var(--color-surface-container-rgb, 224, 242, 254), 0.08) !important;
+  background-color: rgba(var(--color-surface-container-rgb, 224, 242, 254), 0.08) !important;
+  backdrop-filter: blur(20px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(140%) !important;
+  will-change: backdrop-filter !important;
   border: 1px solid rgba(0, 0, 0, 0.05) !important;
   border-radius: 16px !important;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06) !important;
@@ -120,9 +121,9 @@ html body .var-select__scroller.var-elevation--3 {
 
 html.dark body .var-select__scroller,
 html.dark body .var-select__scroller.var-elevation--3 {
-  --select-scroller-background: rgba(var(--color-surface-container-rgb, 51, 65, 85), 0.38) !important;
-  background: rgba(var(--color-surface-container-rgb, 51, 65, 85), 0.38) !important;
-  background-color: rgba(var(--color-surface-container-rgb, 51, 65, 85), 0.38) !important;
+  --select-scroller-background: rgba(var(--color-surface-container-rgb, 51, 65, 85), 0.18) !important;
+  background: rgba(var(--color-surface-container-rgb, 51, 65, 85), 0.18) !important;
+  background-color: rgba(var(--color-surface-container-rgb, 51, 65, 85), 0.18) !important;
   border-color: rgba(255, 255, 255, 0.08) !important;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25) !important;
 }
@@ -156,16 +157,17 @@ html.dark body .var-select__scroller.var-elevation--3 {
 /* var-popup 背景适配 - 磨砂玻璃效果（必须在 var-paper 之前定义） */
 .var-popup__content,
 .var-popup__content[var-popup-cover] {
-  background: rgba(var(--color-surface-container-rgb, 224, 242, 254), 0.18) !important;
-  backdrop-filter: blur(28px) saturate(140%) !important;
-  -webkit-backdrop-filter: blur(28px) saturate(140%) !important;
+  background: rgba(var(--color-surface-container-rgb, 224, 242, 254), 0.08) !important;
+  backdrop-filter: blur(20px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(140%) !important;
+  will-change: backdrop-filter !important;
   border: 1px solid rgba(0, 0, 0, 0.05) !important;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06) !important;
 }
 
 html.dark .var-popup__content,
 html.dark .var-popup__content[var-popup-cover] {
-  background: rgba(var(--color-surface-container-rgb, 51, 65, 85), 0.38) !important;
+  background: rgba(var(--color-surface-container-rgb, 51, 65, 85), 0.18) !important;
   border-color: rgba(255, 255, 255, 0.08) !important;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25) !important;
 }
@@ -219,5 +221,52 @@ html.dark .var-popup__content[var-popup-cover] {
 }
 .toast-content {
   white-space: pre-line;
+}
+
+/* ========== 全局毛玻璃面板样式 ========== */
+
+/* 下拉框菜单毛玻璃 */
+.var-menu.var--box.var-select__menu {
+  background: rgba(var(--color-surface-container-rgb, 224, 242, 254), 0.08) !important;
+  backdrop-filter: blur(20px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(140%) !important;
+  will-change: backdrop-filter !important;
+  border: 1px solid rgba(0, 0, 0, 0.05) !important;
+}
+
+html.dark .var-menu.var--box.var-select__menu {
+  background: rgba(var(--color-surface-container-rgb, 51, 65, 85), 0.18) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* 折叠面板样式 - 移除高光，更柔和 */
+.var-collapse {
+  background: transparent !important;
+}
+
+.var-collapse-item {
+  background: rgba(var(--color-surface-container-rgb, 224, 242, 254), 0.08) !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.var-collapse-item__header {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.var-collapse-item__header::before,
+.var-collapse-item__header::after {
+  display: none !important;
+}
+
+.var-collapse-item__content {
+  padding: 8px 16px 16px;
+  background: transparent !important;
+  border-top: none !important;
+}
+
+html.dark .var-collapse-item {
+  background: rgba(var(--color-surface-container-rgb, 51, 65, 85), 0.1) !important;
 }
 </style>

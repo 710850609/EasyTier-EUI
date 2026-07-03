@@ -598,11 +598,11 @@
                           <div class="port-forward-cell port-forward-actions">
                             <var-button
                               type="danger"
-                              size="mini"
+                              size="small"
                               @click="removePortForward(index)"
                               icon
                             >
-                              <var-icon name="trash-can-outline" size="14" />
+                              <var-icon name="trash-can-outline" />
                             </var-button>
                           </div>
                         </div>
@@ -1511,7 +1511,11 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   padding-bottom: 20px;
-  background: linear-gradient(to bottom, var(--color-surface-container), var(--color-surface) 50px) !important;
+  background: rgba(var(--color-surface-container-rgb, 224, 242, 254), 0.08) !important;
+}
+
+html.dark .merged-section {
+  background: rgba(var(--color-surface-container-rgb, 51, 65, 85), 0.1) !important;
 }
 
 .section-header {
@@ -1760,7 +1764,11 @@ onMounted(async () => {
   /* margin-top: 8px; */
   border-radius: 16px;
   overflow: hidden;
-  background: linear-gradient(to bottom, var(--color-surface-container), var(--color-surface) 50px) !important;
+  background: rgba(var(--color-surface-container-rgb, 224, 242, 254), 0.08) !important;
+}
+
+html.dark .flags-section-paper {
+  background: rgba(var(--color-surface-container-rgb, 51, 65, 85), 0.1) !important;
 }
 
 :deep(.flags-section .var-collapse-item) {
@@ -1853,7 +1861,11 @@ onMounted(async () => {
   border-radius: 16px;
   overflow: hidden;
   color: var(--color-text);
-  background: linear-gradient(to bottom, var(--color-surface-container), var(--color-surface) 50px) !important;
+  background: rgba(var(--color-surface-container-rgb, 224, 242, 254), 0.08) !important;
+}
+
+html.dark .forward-section-paper {
+  background: rgba(var(--color-surface-container-rgb, 51, 65, 85), 0.1) !important;
 }
 
 :deep(.forward-section-inner .var-collapse-item) {
@@ -2124,10 +2136,6 @@ onMounted(async () => {
   /* gap: 16px; */
 }
 
-:deep(.var-collapse-item__content) {
-  padding: 8px 16px 16px;
-}
-
 :deep(.var-input__input) {
   color: var(--color-text);
 }
@@ -2197,14 +2205,6 @@ onMounted(async () => {
 
 .is-spinning {
   animation: spin 1s linear infinite;
-}
-
-:deep(.var-menu.var--box.var-select__menu) {
-  background: var(--color-surface) !important;
-}
-
-:deep(.config-switcher .var-menu.var--box.var-select__menu) {
-  background: var(--color-surface-container) !important;
 }
 
 /* ===== 响应式 ===== */
@@ -2333,7 +2333,7 @@ onMounted(async () => {
     padding: 12px;
     border: 1px solid var(--color-border);
     border-radius: 12px;
-    background: var(--color-surface);
+    background: rgba(var(--color-surface-container-rgb, 224, 242, 254), 0.08);
     color: var(--color-text);
   }
 
@@ -2351,6 +2351,11 @@ onMounted(async () => {
     justify-content: flex-end;
     padding-top: 4px;
   }
+}
+
+/* 移动端端口转发暗色模式 */
+html.dark .port-forward-row {
+  background: rgba(var(--color-surface-container-rgb, 51, 65, 85), 0.1);
 }
 
 @media (max-width: 480px) {

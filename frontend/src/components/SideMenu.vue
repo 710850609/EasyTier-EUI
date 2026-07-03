@@ -1,5 +1,5 @@
 <template>
-  <div class="side-menu" :class="{ collapsed: isCollapsed }">
+  <div class="side-menu" :class="{ collapsed: isCollapsed }" @click="submenuPopup.show = false">
     <div class="logo">
       <var-icon name="network-wired" :size="32" />
       <span v-if="!isCollapsed" class="logo-text">EasyTier</span>
@@ -22,7 +22,7 @@
           <div
             class="menu-item"
             :class="{ active: active?.startsWith(menu.key) }"
-            @click="isCollapsed ? showSubmenuPopup(menu, $event) : toggleExpand(menu.key)"
+            @click.stop="isCollapsed ? showSubmenuPopup(menu, $event) : toggleExpand(menu.key)"
           >
             <!-- Varlet 内置图标 -->
             <var-icon v-if="isVarletIcon(menu.icon)" :name="menu.icon" class="menu-icon" />
@@ -97,40 +97,42 @@
     </div>
 
     <!-- 收缩状态下的子菜单弹出框 -->
-    <template v-if="submenuPopup.show">
-      <!-- 透明遮罩层，点击关闭 -->
-      <div class="submenu-overlay" @click="submenuPopup.show = false"></div>
-      <!-- 弹出框内容 -->
-      <div
-        class="submenu-popup-wrapper"
-        :style="submenuPopupStyle"
-      >
-        <div class="submenu-popup-content">
-          <div class="submenu-popup-title">{{ submenuPopup.menu?.label }}</div>
-          <div
-            v-for="child in submenuPopup.menu?.children"
-            :key="child.key"
-            class="submenu-popup-item"
-            :class="{ active: active === child.key }"
-            @click="handleSubmenuClick(child.key)"
-          >
-            <!-- Varlet 内置图标 -->
-            <var-icon v-if="isVarletIcon(child.icon)" :name="child.icon" size="18" />
-            <!-- SVG 图标 (@mdi/js 或 @mdi/light-js) -->
-            <svg-icon
-              v-else-if="isSvgIcon(child.icon)"
-              type="mdi"
-              :path="getIconPath(child.icon)"
-              width="18"
-              height="18"
-            />
-            <!-- 图片图标 -->
-            <img v-else-if="isImageIcon(child.icon)" :src="child.icon" class="submenu-icon" />
-            <span>{{ child.label }}</span>
+    <Transition name="submenu">
+      <div v-if="submenuPopup.show">
+        <!-- 透明遮罩层，点击关闭 -->
+        <div class="submenu-overlay" @click="submenuPopup.show = false"></div>
+        <!-- 弹出框内容 -->
+        <div
+          class="submenu-popup-wrapper"
+          :style="submenuPopupStyle"
+        >
+          <div class="submenu-popup-content" @click.stop>
+            <div class="submenu-popup-title">{{ submenuPopup.menu?.label }}</div>
+            <div
+              v-for="child in submenuPopup.menu?.children"
+              :key="child.key"
+              class="submenu-popup-item"
+              :class="{ active: active === child.key }"
+              @click="handleSubmenuClick(child.key)"
+            >
+              <!-- Varlet 内置图标 -->
+              <var-icon v-if="isVarletIcon(child.icon)" :name="child.icon" size="18" />
+              <!-- SVG 图标 (@mdi/js 或 @mdi/light-js) -->
+              <svg-icon
+                v-else-if="isSvgIcon(child.icon)"
+                type="mdi"
+                :path="getIconPath(child.icon)"
+                width="18"
+                height="18"
+              />
+              <!-- 图片图标 -->
+              <img v-else-if="isImageIcon(child.icon)" :src="child.icon" class="submenu-icon" />
+              <span>{{ child.label }}</span>
+            </div>
           </div>
         </div>
       </div>
-    </template>
+    </Transition>
   </div>
 </template>
 
@@ -201,6 +203,7 @@ watch(isCollapsed, (val) => {
 })
 
 const toggleCollapse = () => {
+  submenuPopup.value.show = false
   isCollapsed.value = !isCollapsed.value
   emit('update:collapsed', isCollapsed.value)
 }
@@ -366,10 +369,12 @@ const handleClick = (key) => {
 .submenu-overlay {
   position: fixed;
   top: 0;
-  left: 0;
+  left: 72px;
   right: 0;
   bottom: 0;
   z-index: 99;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
 .submenu-popup-wrapper {
@@ -378,14 +383,51 @@ const handleClick = (key) => {
 }
 
 .submenu-popup-content {
-  background: var(--color-surface-container);
-  backdrop-filter: blur(10px);
+  background: rgba(var(--color-surface-container-rgb, 224, 242, 254), 0.08);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  will-change: backdrop-filter;
   border-radius: 12px;
   padding: 12px;
   margin-left: 8px;
   min-width: 180px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  border: 1px solid var(--color-outline);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+html.dark .submenu-popup-content {
+  background: rgba(var(--color-surface-container-rgb, 51, 65, 85), 0.18);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+/* 子菜单弹出过渡动画 */
+.submenu-enter-active,
+.submenu-leave-active {
+  transition: opacity 0.2s ease;
+}
+.submenu-enter-active .submenu-overlay,
+.submenu-leave-active .submenu-overlay {
+  transition: opacity 0.2s ease, backdrop-filter 0.2s ease, -webkit-backdrop-filter 0.2s ease;
+}
+.submenu-enter-active .submenu-popup-content,
+.submenu-leave-active .submenu-popup-content {
+  transition: opacity 0.2s ease 0.2s, transform 0.2s ease 0.2s;
+}
+.submenu-enter-from,
+.submenu-leave-to {
+  opacity: 0;
+}
+.submenu-enter-from .submenu-overlay,
+.submenu-leave-to .submenu-overlay {
+  opacity: 0;
+  backdrop-filter: blur(0px);
+  -webkit-backdrop-filter: blur(0px);
+}
+.submenu-enter-from .submenu-popup-content,
+.submenu-leave-to .submenu-popup-content {
+  opacity: 0;
+  transform: translateX(-12px);
 }
 
 .submenu-popup-title {
