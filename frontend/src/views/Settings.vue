@@ -256,7 +256,7 @@
       <!-- 版本信息卡片 -->
       <div class="about-version-card">
         <div class="version-main">
-          <span class="version-name">易组网 {{ forUser ? '(用户版)' : '' }}</span>
+          <span class="version-name">易组网 {{ forUser ? '(残血版)' : '' }}</span>
         </div>
         <div class="version-actions">
           <a href='https://github.com/710850609/EasyTier-EUI' target="_blank">

@@ -276,6 +276,7 @@ export const api = {
   // et app
   etApp: {
     getDownloadUrl: (params = {}) => get('/et_app/get_download_url', params),
+    getAppInfo: (params = {}) => get('/et_app/get_app_info', params),
   },
 }
 

@@ -101,16 +101,14 @@
           </var-link>
         </var-cell>
         <var-space :size="[20, 20]" justify="center">
-          <var-cell>
-            <var-link type="primary" underline="none" href="https://github.com/EasyTier/EasyTier/releases" target="_blank">
-              <img src="https://img.shields.io/github/v/tag/EasyTier/EasyTier?color=blue&logo=github&label=最新版" />
-            </var-link>
-          </var-cell>
-          <var-cell>
-            <var-link type="primary" underline="none" href="https://github.com/EasyTier/EasyTier/releases" target="_blank">
-              <img src="https://img.shields.io/github/v/release/EasyTier/EasyTier?color=blue&logo=github&label=稳定版" />
-            </var-link>
-          </var-cell>
+          <a class="shield-badge" href="https://github.com/EasyTier/EasyTier/releases" target="_blank">
+            <span class="badge-label">预发版</span>
+            <span class="badge-value">{{ prereleaseVersion || '--' }}</span>
+          </a>
+          <a class="shield-badge" href="https://github.com/EasyTier/EasyTier/releases" target="_blank">
+            <span class="badge-label">稳定版</span>
+            <span class="badge-value">{{ latestReleaseVersion || '--' }}</span>
+          </a>
         </var-space>
       </div>
       <var-divider />
@@ -125,7 +123,7 @@
           <div class="item-actions">
             <var-button type="primary" size="normal" @click="download('deb', 'amd64', true)" auto-loading>
               <var-icon name="download"  />
-              最新版
+              预发版
             </var-button>
             <var-button type="primary" size="normal" @click="download('deb', 'amd64', false)" auto-loading>
               <var-icon name="download"  />
@@ -142,7 +140,7 @@
           <div class="item-actions">
             <var-button type="primary" size="normal" @click="download('rpm', 'x86_64', true)" auto-loading>
               <var-icon name="download"  />
-              最新版
+              预发版
             </var-button>
             <var-button type="primary" size="normal" @click="download('rpm', 'x86_64', false)" auto-loading>
               <var-icon name="download"  />
@@ -159,7 +157,7 @@
           <div class="item-actions">
             <var-button type="primary" size="normal" @click="download('AppImage', 'amd64', true)" auto-loading>
               <var-icon name="download"  />
-              最新版
+              预发版
             </var-button>
             <var-button type="primary" size="normal" @click="download('AppImage', 'amd64', false)" auto-loading>
               <var-icon name="download"  />
@@ -176,7 +174,7 @@
           <div class="item-actions">
             <var-button type="primary" size="normal" @click="download('deb', 'arm64', true)" auto-loading>
               <var-icon name="download"  />
-              最新版
+              预发版
             </var-button>
             <var-button type="primary" size="normal" @click="download('deb', 'arm64', false)" auto-loading>
               <var-icon name="download"  />
@@ -193,7 +191,7 @@
           <div class="item-actions">
             <var-button type="primary" size="normal" @click="download('rpm', 'aarch64', true)" auto-loading>
               <var-icon name="download"  />
-              最新版
+              预发版
             </var-button>
             <var-button type="primary" size="normal" @click="download('rpm', 'aarch64', false)" auto-loading>
               <var-icon name="download"  />
@@ -224,9 +222,21 @@
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue'
 import toast from '../../components/toast.js'
 import { api } from '../../utils/api.js'
 import { useAsyncDownload } from '../../utils/downloadProgress.js'
+
+const prereleaseVersion = ref('')
+const latestReleaseVersion = ref('')
+
+onMounted(() => {
+  api.etApp.getAppInfo().then((resp) => {
+    const data = resp.data
+    prereleaseVersion.value = data.prerelease?.version || ''
+    latestReleaseVersion.value = data.release?.version || ''
+  })
+})
 
 const { startDownload, progress, downloadingKey } = useAsyncDownload(
   api.etEui.startDownload,
@@ -478,5 +488,31 @@ const handleConfigConfirm = async () => {
   margin-top: 8px;
   font-size: 13px;
   color: var(--color-on-surface-variant);
+}
+
+.shield-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 4px;
+  overflow: hidden;
+  font-size: 12px;
+  line-height: 20px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.shield-badge:hover {
+  opacity: 0.85;
+}
+.badge-label {
+  padding: 0 8px;
+  background: #555;
+  color: #fff;
+}
+.badge-value {
+  padding: 0 8px;
+  background: #007ec6;
+  color: #fff;
 }
 </style>

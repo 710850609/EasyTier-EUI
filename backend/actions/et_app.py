@@ -5,6 +5,24 @@ from http_dispatcher.dispatcher import HttpException
 from utils import github_util
 from utils.validators import Validator
 
+def get_app_info(params: dict, *args, **kwargs):
+    release_info = et_core.get_release_info({'refresh': 'true'})
+    app_info = {'release': {'version': ''}, 'prerelease': {'version': ''}}
+    versions = release_info.get('versions', [])
+    get_release = False
+    get_prerelease = False
+    for version in versions:
+        if get_prerelease and get_release:
+            break
+        if not version.get('prerelease') and not get_release:
+            app_info['release']['version'] = version.get('version')
+            get_release = True
+            continue
+        if version.get('prerelease') and not get_prerelease:
+            app_info['prerelease']['version'] = version.get('version')
+            get_prerelease = True
+            continue
+    return app_info
 
 def get_download_url(params: dict, *args, **kwargs):
     params = params or {}
