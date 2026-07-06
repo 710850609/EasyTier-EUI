@@ -29,7 +29,7 @@
           <var-button type="primary" size="normal" block @click="downloadEasyTierEui('fnos', 'aarch64')" :loading="downloadingKey === 'fnos-aarch64'">
             <template #default>
               <var-icon name="download"/>
-              aarch64版
+              arm64版
             </template>
           </var-button>
         </var-space>
