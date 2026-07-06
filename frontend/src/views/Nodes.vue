@@ -219,19 +219,31 @@
                   :color="node.type === 'server' ? 'var(--color-success)' : 'var(--color-primary)'" 
                 />
                 <span class="node-ip" @click="handleClickCell(node, 'ipv4')">{{ node.ipv4 || '' }}</span>
-                <var-badge 
-                  v-if="visibleColumnsMap.cost"
-                  :type="node.cost === 'Local' ? 'info' : (node.cost === 'p2p' ? 'success' : 'primary')" 
-                  :value="parseNode(node, 'cost')"
-                />
+                <span v-if="visibleColumnsMap.hostname && node.hostname" class="info-chip host-chip">
+                  <var-icon name="label" size="14" />
+                  {{ node.hostname }}
+                </span>
               </div>
             </div>
             <div class="node-card-info">
+              <var-badge 
+                v-if="visibleColumnsMap.cost"
+                :type="node.cost === 'Local' ? 'info' : (node.cost === 'p2p' ? 'success' : 'primary')" 
+                :value="parseNode(node, 'cost')"
+              />
               <span v-if="visibleColumnsMap.lat_ms && node.lat_ms !== undefined && node.lat_ms !== '-'" class="info-chip">
                 {{ parseNode(node, 'lat_ms') }}ms
               </span>
               <span v-if="visibleColumnsMap.loss_rate && node.loss_rate !== undefined && node.loss_rate !== '-'" class="info-chip" :class="{ 'loss-warn': node.loss_rate > 0 }">
                 丢包 {{ parseNode(node, 'loss_rate') }}
+              </span>
+              <span v-if="visibleColumnsMap.tunnel_proto && node.tunnel_proto && node.tunnel_proto !== '-'" class="info-chip">
+                {{ node.tunnel_proto }}
+              </span>
+            </div>
+            <div v-if="visibleColumnsMap.hostname || visibleColumnsMap.nat_type || visibleColumnsMap.tunnel_proto || visibleColumnsMap.cidr" class="node-card-meta">
+              <span v-if="visibleColumnsMap.nat_type && node.nat_type" class="info-chip nat-chip">
+                {{ parseNode(node, 'nat_type') }}
               </span>
               <span v-if="visibleColumnsMap.rx_bytes && node.rx_bytes !== undefined && node.rx_bytes !== '-'" class="traffic-item download">
                 <svg-icon size="14" type="mdi" :path="mdilArrowDown" color="var(--color-primary)"></svg-icon>
@@ -242,22 +254,10 @@
                 {{ parseNode(node, 'tx_bytes') }}
               </span>
             </div>
-            <div v-if="visibleColumnsMap.hostname || visibleColumnsMap.nat_type || visibleColumnsMap.tunnel_proto || visibleColumnsMap.cidr" class="node-card-meta">
-              <span v-if="visibleColumnsMap.hostname && node.hostname" class="info-chip host-chip">
-                <var-icon name="label" size="14" />
-                {{ node.hostname }}
-              </span>
-              <span v-if="visibleColumnsMap.nat_type && node.nat_type" class="info-chip nat-chip">
-                {{ parseNode(node, 'nat_type') }}
-              </span>
-              <span v-if="visibleColumnsMap.tunnel_proto && node.tunnel_proto && node.tunnel_proto !== '-'" class="info-chip">
-                {{ node.tunnel_proto }}
-              </span>
+            <div class="node-card-footer">
               <span v-if="visibleColumnsMap.cidr && node.cidr" class="info-chip cidr-chip">
                 {{ node.cidr }}
               </span>
-            </div>
-            <div class="node-card-footer">
               <span v-if="visibleColumnsMap.version && node.version" class="version-text">v{{ node.version }}</span>
             </div>
           </div>
