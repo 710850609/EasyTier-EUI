@@ -262,7 +262,7 @@
           <a href='https://github.com/710850609/EasyTier-EUI' target="_blank">
             <img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/710850609/EasyTier-EUI?style=flat&label=%E7%82%B9%20Stars">
           </a>
-          <var-chip elevation="1" @click="showRewardCdoe = true" type="info" size="small">打赏</var-chip>
+          <var-chip elevation="1" @click="showRewardCdoe = true" type="info" size="small">赞赏</var-chip>
         </div>
       </div>
       
@@ -286,7 +286,7 @@
   </div>
 
   <var-popup v-model:show="showRewardCdoe">
-    <var-result description="点Stars或是打赏 感谢您的肯定">
+    <var-result description="点Stars或是微信赞赏 感谢你的肯定">
       <template #image>
         <img src="../../public/images/reward_code.jpg" style="width: 50%; height: 50%; border-radius: 50%; object-fit: cover;" />
       </template>
