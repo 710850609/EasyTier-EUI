@@ -142,7 +142,7 @@
 
         <!-- 刷新速度内容 -->
         <div v-if="activeTab === 'refreshSpeed'" class="tab-content">
-          <var-select variant="outlined" placeholder="请选择更新频率" v-model="refreshStep">
+          <var-select variant="outlined" placeholder="请选择更新频率" v-model="refreshStep" size="small" blur-color="var(--field-decorator-focus-color)">
             <var-option v-for="item in refreshStepList" :label="item.label" :value="item.key" />
           </var-select>
         </div>
@@ -192,6 +192,9 @@
                     :value="parseNode(node, col.key)"
                   />
                 </template>
+                <template v-else-if="col.key === 'lat_ms'">
+                  <span class="cell-text" :class="{ 'lat-medium': node.lat_ms >= 60 && node.lat_ms <= 150, 'lat-high': node.lat_ms > 150 }" @click="handleClickCell(node, col.key)">{{ parseNode(node, col.key) }}ms</span>
+                </template>
                 <template v-else>
                   <var-tooltip v-if="['hostname', 'tunnel_proto'].includes(col.key)" :content="parseNode(node, col.key)">
                     <span class="cell-text" @click="handleClickCell(node, col.key)">{{ parseNode(node, col.key) }}</span>
@@ -231,7 +234,7 @@
                 :type="node.cost === 'Local' ? 'info' : (node.cost === 'p2p' ? 'success' : 'primary')" 
                 :value="parseNode(node, 'cost')"
               />
-              <span v-if="visibleColumnsMap.lat_ms && node.lat_ms !== undefined && node.lat_ms !== '-'" class="info-chip">
+              <span v-if="visibleColumnsMap.lat_ms && node.lat_ms !== undefined && node.lat_ms !== '-'" class="info-chip" :class="{ 'lat-medium': node.lat_ms >= 60 && node.lat_ms <= 150, 'lat-high': node.lat_ms > 150 }">
                 {{ parseNode(node, 'lat_ms') }}ms
               </span>
               <span v-if="visibleColumnsMap.loss_rate && node.loss_rate !== undefined && node.loss_rate !== '-'" class="info-chip" :class="{ 'loss-warn': node.loss_rate > 0 }">
@@ -910,6 +913,22 @@ td {
   max-width: 120px;
 }
 
+.cell-text.lat-medium {
+  color: #f9a825;
+}
+
+.cell-text.lat-high {
+  color: var(--color-danger);
+}
+
+html.dark .cell-text.lat-medium {
+  color: #ffd54f;
+}
+
+html.dark .cell-text.lat-high {
+  color: #ff6b6b;
+}
+
 tr:hover td {
   background: var(--color-surface-container-high);
 }
@@ -1100,6 +1119,16 @@ tr:hover td {
     background: rgba(255, 82, 82, 0.1);
     color: var(--color-danger);
   }
+
+  .info-chip.lat-medium {
+    background: rgba(255, 193, 7, 0.1);
+    color: #f9a825;
+  }
+
+  .info-chip.lat-high {
+    background: rgba(255, 82, 82, 0.1);
+    color: var(--color-danger);
+  }
   
   html.dark .info-chip {
     background: rgba(255, 255, 255, 0.08);
@@ -1107,6 +1136,16 @@ tr:hover td {
   }
   
   html.dark .info-chip.loss-warn {
+    background: rgba(255, 82, 82, 0.18);
+    color: #ff6b6b;
+  }
+
+  html.dark .info-chip.lat-medium {
+    background: rgba(255, 193, 7, 0.18);
+    color: #ffd54f;
+  }
+
+  html.dark .info-chip.lat-high {
     background: rgba(255, 82, 82, 0.18);
     color: #ff6b6b;
   }
