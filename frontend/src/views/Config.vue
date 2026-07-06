@@ -2204,7 +2204,7 @@ html.dark .forward-section-paper {
   top: 0;
   z-index: 10;
   color: var(--color-text) !important;
-  background: rgba(var(--color-surface-container-rgb, 224, 242, 254), 1) !important;
+  background: rgba(var(--color-surface-container-rgb, 224, 242, 254), 0.4) !important;
 }
 
 .help-content tr {

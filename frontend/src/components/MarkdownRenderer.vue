@@ -113,23 +113,27 @@ const renderedMarkdown = computed(() => {
 
 .markdown-content :deep(th),
 .markdown-content :deep(td) {
-  border: 1px solid #e8e8e8;
+  border: 1px solid var(--color-outline-variant, #e8e8e8);
   padding: 8px 12px;
   text-align: left;
+  background: rgba(var(--color-surface-container-rgb, 255, 255, 255), 0.25);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--color-on-surface, #333);
 }
 
 .markdown-content :deep(th) {
-  background-color: #f5f5f5;
+  background: rgba(var(--color-surface-container-rgb, 255, 255, 255), 0.45);
   font-weight: 600;
 }
 
-.markdown-content :deep(tr:nth-child(even)) {
-  background-color: #fafafa;
+.markdown-content :deep(tr:nth-child(even) td) {
+  background: rgba(var(--color-surface-container-rgb, 255, 255, 255), 0.15);
 }
 
 .markdown-content :deep(hr) {
   border: none;
-  border-top: 1px solid #e8e8e8;
+  border-top: 1px solid var(--color-outline-variant, #e8e8e8);
   margin: 16px 0;
 }
 </style>

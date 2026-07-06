@@ -215,10 +215,6 @@ html.dark .var-popup__content[var-popup-cover] {
   color: var(--color-on-surface-variant) !important;
 }
 
-.markdown-content th {
-  /* markdown 表头透明 */
-  background: rgba(var(--color-surface-container-rgb, 224, 242, 254), 0.1) !important;
-}
 .toast-content {
   white-space: pre-line;
 }

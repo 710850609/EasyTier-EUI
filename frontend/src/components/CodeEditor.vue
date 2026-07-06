@@ -53,7 +53,10 @@ onMounted(() => {
       EditorView.theme({
         '&': {
           fontSize: '14px',
-          fontFamily: '"Fira Code", "JetBrains Mono", Consolas, Monaco, monospace'
+          backgroundColor: 'transparent !important',
+          WebkitFontSmoothing: 'antialiased',
+          MozOsxFontSmoothing: 'grayscale',
+          textRendering: 'optimizeLegibility'
         },
         '.cm-editor': {
           height: '100%',
@@ -64,11 +67,15 @@ onMounted(() => {
         },
         '.cm-content': {
           padding: '16px',
-          lineHeight: '1.7'
+          lineHeight: '1.7',
+          fontFamily: '"JetBrains Mono", "Fira Code", "Cascadia Code", "Source Code Pro", "SF Mono", "Ubuntu Mono", Consolas, "Courier New", monospace',
+          fontFeatureSettings: '"calt" 1, "liga" 1, "ss02" 1, "ss03" 1, "ss04" 1, "ss05" 1, "ss06" 1, "zero" 1',
+          fontVariantLigatures: 'contextual',
+          fontWeight: '400'
         },
         '.cm-gutters': {
-          backgroundColor: '#0d1117',
-          borderRight: '1px solid #30363d',
+          backgroundColor: 'rgba(13, 17, 23, 0.5)',
+          borderRight: '1px solid rgba(48, 54, 61, 0.5)',
           paddingLeft: '8px',
           paddingRight: '8px'
         },
@@ -76,10 +83,10 @@ onMounted(() => {
           color: '#484f58'
         },
         '.cm-activeLineGutter': {
-          backgroundColor: '#21262d'
+          backgroundColor: 'rgba(33, 38, 45, 0.5)'
         },
         '.cm-activeLine': {
-          backgroundColor: 'rgba(56, 139, 253, 0.1)'
+          backgroundColor: 'rgba(56, 139, 253, 0.08)'
         },
         '.cm-selectionBackground': {
           backgroundColor: 'rgba(56, 139, 253, 0.3) !important'
@@ -142,24 +149,35 @@ watch(() => props.modelValue, (newValue) => {
 .code-editor {
   height: 100%;
   width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(13, 17, 23, 0.75);
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+}
+
+html.dark .code-editor {
+  background: rgba(13, 17, 23, 0.45);
 }
 
 :deep(.cm-editor) {
   height: 100%;
+  background: transparent !important;
 }
 
 :deep(.cm-scroller) {
   overflow: auto;
+  background: transparent !important;
 }
 
 /* TOML 语法高亮样式 */
-:deep(.cm-keyword) { color: #ff7b72; }      /* 关键字如 true/false */
-:deep(.cm-string) { color: #a5d6ff; }      /* 字符串 */
-:deep(.cm-number) { color: #79c0ff; }      /* 数字 */
-:deep(.cm-comment) { color: #8b949e; font-style: italic; }  /* 注释 */
-:deep(.cm-property) { color: #7ee787; }    /* 属性名/键名 */
-:deep(.cm-operator) { color: #ff7b72; }    /* 操作符如 = */
-:deep(.cm-punctuation) { color: #c9d1d9; } /* 标点符号 */
+:deep(.cm-keyword) { color: #ff7b72; }
+:deep(.cm-string) { color: #a5d6ff; }
+:deep(.cm-number) { color: #79c0ff; }
+:deep(.cm-comment) { color: #8b949e; font-style: italic; }
+:deep(.cm-property) { color: #7ee787; }
+:deep(.cm-operator) { color: #ff7b72; }
+:deep(.cm-punctuation) { color: #c9d1d9; }
 
 /* 滚动条样式 */
 :deep(.cm-scroller::-webkit-scrollbar) {
@@ -168,16 +186,18 @@ watch(() => props.modelValue, (newValue) => {
 }
 
 :deep(.cm-scroller::-webkit-scrollbar-track) {
-  background: #0d1117;
+  background: transparent;
 }
 
 :deep(.cm-scroller::-webkit-scrollbar-thumb) {
-  background: #30363d;
+  background: rgba(48, 54, 61, 0.6);
   border-radius: 6px;
-  border: 3px solid #0d1117;
+  border: 3px solid transparent;
+  background-clip: padding-box;
 }
 
 :deep(.cm-scroller::-webkit-scrollbar-thumb:hover) {
-  background: #484f58;
+  background: rgba(72, 79, 88, 0.8);
+  background-clip: padding-box;
 }
 </style>
