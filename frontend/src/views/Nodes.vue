@@ -1008,11 +1008,12 @@ tr:hover td {
     border-radius: 10px;
     padding: 10px 14px 12px;
     transition: background 0.2s ease;
+    border-left: 2px solid var(--color-primary);
     overflow: hidden;
   }
   
   .node-card.node-server {
-    border-left: 2px solid var(--color-success);
+    border-left-color: var(--color-success);
   }
   
   .node-card:active {
