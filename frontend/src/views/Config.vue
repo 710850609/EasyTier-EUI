@@ -132,21 +132,21 @@
                 <var-button variant="outlined" size="small" type="primary" @click="showCreateDialog = true; showMode = 1;toggleToolbarMore()" v-if="showMode === 0">
                   新增
                 </var-button>
-                <var-button variant="outlined" size="small" type="primary" @click="startEditName" :loading="isRenaming" v-if="showMode === 0">
+                <var-button variant="outlined" size="small" type="primary" @click="startEditName();toggleToolbarMore()" :loading="isRenaming" v-if="showMode === 0">
                   <var-icon name="pencil-outline" :size="16" />
                   改名
                 </var-button>
-                <var-button variant="outlined" size="small" type="danger" @click="showDeleteDialog = true" :loading="isDeletingConfig" v-if="showMode === 0">
+                <var-button variant="outlined" size="small" type="danger" @click="showDeleteDialog = true;toggleToolbarMore()" :loading="isDeletingConfig" v-if="showMode === 0">
                   <var-icon name="delete-outline" :size="16" />
                   删除
                 </var-button>
               </div>
               <div class="toolbar-more-row">
-                <var-button variant="outlined" size="small" type="primary" @click="openCodePage" auto-loading v-if="showMode === 0">
+                <var-button variant="outlined" size="small" type="primary" @click="openCodePage();toggleToolbarMore()" auto-loading v-if="showMode === 0">
                   <var-icon name="file-edit-outline" :size="16" />
                   编辑文件
                 </var-button>
-                <var-button variant="outlined" size="small" type="primary" @click="showShareConfigType = true" v-if="showMode === 0">
+                <var-button variant="outlined" size="small" type="primary" @click="showShareConfigType = true;toggleToolbarMore()" v-if="showMode === 0">
                   <var-icon name="share-variant-outline" :size="16" />
                   分享网络
                 </var-button>
