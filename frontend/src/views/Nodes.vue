@@ -218,8 +218,8 @@
                   size="18" 
                   :color="node.type === 'server' ? 'var(--color-success)' : 'var(--color-primary)'" 
                 />
-                <span class="node-ip" @click="handleClickCell(node, 'ipv4')">{{ node.ipv4 || '' }}</span>
-                <span v-if="visibleColumnsMap.hostname && node.hostname" class="info-chip host-chip">
+                <span class="node-ip card-left" @click="handleClickCell(node, 'ipv4')">{{ node.ipv4 || '' }}</span>
+                <span v-if="visibleColumnsMap.hostname && node.hostname" class="info-chip host-chip card-right">
                   <var-icon name="label" size="14" />
                   {{ node.hostname }}
                 </span>
@@ -242,23 +242,23 @@
               </span>
             </div>
             <div v-if="visibleColumnsMap.hostname || visibleColumnsMap.nat_type || visibleColumnsMap.tunnel_proto || visibleColumnsMap.cidr" class="node-card-meta">
-              <span v-if="visibleColumnsMap.nat_type && node.nat_type" class="info-chip nat-chip">
+              <span v-if="visibleColumnsMap.nat_type && node.nat_type" class="info-chip nat-chip card-left">
                 {{ parseNode(node, 'nat_type') }}
               </span>
-              <span v-if="visibleColumnsMap.rx_bytes && node.rx_bytes !== undefined && node.rx_bytes !== '-'" class="traffic-item download">
+              <span v-if="visibleColumnsMap.rx_bytes && node.rx_bytes !== undefined && node.rx_bytes !== '-'" class="traffic-item download card-right">
                 <svg-icon size="14" type="mdi" :path="mdilArrowDown" color="var(--color-primary)"></svg-icon>
                 {{ parseNode(node, 'rx_bytes') }}
               </span>
-              <span v-if="visibleColumnsMap.tx_bytes && node.tx_bytes !== undefined && node.tx_bytes !== '-'" class="traffic-item upload">
+              <span v-if="visibleColumnsMap.tx_bytes && node.tx_bytes !== undefined && node.tx_bytes !== '-'" class="traffic-item upload card-right">
                 <svg-icon size="14" type="mdi" :path="mdilArrowUp" color="var(--color-success)"></svg-icon>
                 {{ parseNode(node, 'tx_bytes') }}
               </span>
             </div>
             <div class="node-card-footer">
-              <span v-if="visibleColumnsMap.cidr && node.cidr" class="info-chip cidr-chip">
+              <span v-if="visibleColumnsMap.version && node.version" class="version-text card-left">v{{ node.version }}</span>
+              <span v-if="visibleColumnsMap.cidr && node.cidr" class="info-chip cidr-chip card-right">
                 {{ node.cidr }}
               </span>
-              <span v-if="visibleColumnsMap.version && node.version" class="version-text">v{{ node.version }}</span>
             </div>
           </div>
           <div v-if="filteredNodes.length === 0" class="empty-state">
@@ -999,30 +999,37 @@ tr:hover td {
   .mobile-node-list {
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    padding: 4px 0;
+    gap: 8px;
+    padding: 2px 0;
   }
   
   .node-card {
     background: var(--color-surface-container-low);
-    border-radius: 12px;
-    padding: 12px 14px;
-    transition: all 0.2s ease;
-    border-left: 3px solid var(--color-primary);
+    border-radius: 10px;
+    padding: 10px 14px 12px;
+    transition: background 0.2s ease;
     overflow: hidden;
   }
   
   .node-card.node-server {
-    border-left-color: var(--color-success);
+    border-left: 2px solid var(--color-success);
   }
   
   .node-card:active {
-    transform: scale(0.985);
     background: var(--color-surface-container);
   }
   
+  .card-left {
+    flex: 0 0 auto;
+    margin-right: 0;
+  }
+  
+  .card-right {
+    margin-left: auto;
+  }
+  
   .node-card-header {
-    margin-bottom: 8px;
+    margin-bottom: 6px;
   }
   
   .node-ip-row {
@@ -1033,10 +1040,9 @@ tr:hover td {
   }
   
   .node-ip {
-    font-size: 16px;
-    font-weight: 700;
+    font-size: 15px;
+    font-weight: 600;
     color: var(--color-on-surface);
-    letter-spacing: 0.2px;
     flex: 1 1 auto;
     min-width: 0;
     overflow: hidden;
@@ -1050,6 +1056,7 @@ tr:hover td {
     align-items: center;
     gap: 6px;
     overflow: hidden;
+    margin-top: 6px;
   }
   
   .node-card-info .info-chip,
@@ -1062,10 +1069,10 @@ tr:hover td {
   .info-chip {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    padding: 3px 10px;
-    border-radius: 6px;
-    font-size: 12px;
+    gap: 3px;
+    padding: 2px 8px;
+    border-radius: 5px;
+    font-size: 11px;
     font-weight: 500;
     background: var(--color-surface-container-high);
     color: var(--color-on-surface-variant);
@@ -1089,13 +1096,13 @@ tr:hover td {
   }
   
   .info-chip.loss-warn {
-    background: rgba(255, 82, 82, 0.08);
+    background: rgba(255, 82, 82, 0.1);
     color: var(--color-danger);
   }
   
   html.dark .info-chip {
-    background: rgba(255, 255, 255, 0.1);
-    color: rgba(255, 255, 255, 0.85);
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.8);
   }
   
   html.dark .info-chip.loss-warn {
@@ -1119,15 +1126,15 @@ tr:hover td {
   }
   
   html.dark .traffic-item {
-    color: rgba(255, 255, 255, 0.8);
+    color: rgba(255, 255, 255, 0.7);
   }
   
   .node-card-meta {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
-    margin-top: 8px;
-    padding-top: 8px;
+    margin-top: 6px;
+    padding-top: 6px;
     border-top: 1px solid var(--color-outline-variant);
     overflow: hidden;
   }
@@ -1136,7 +1143,7 @@ tr:hover td {
     display: flex;
     align-items: center;
     gap: 3px;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 500;
     color: var(--color-on-surface-variant);
     white-space: nowrap;
@@ -1144,7 +1151,10 @@ tr:hover td {
   }
   
   .node-card-footer {
-    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
   }
   
   .version-text {
