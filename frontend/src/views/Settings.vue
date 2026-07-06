@@ -521,7 +521,7 @@ const getEuiInfo = async () => {
 const installEuiVersion = (versionType) => {
   return new Promise(async (resolve, reject) => {
     if (window.location.href.indexOf('/cgi/ThirdParty/EasyTier-EUI.User/index.cgi') !== -1) {
-      toast.error('易组网(用户版)不支持自更新，仅非用户版支持')
+      toast.error('易组网(残血版)不支持自更新，请到菜单【应用】-【FnOS】下载')
       resolve()
       return
     }

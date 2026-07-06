@@ -49,8 +49,8 @@ body:
         - MacOS (arm64)
         - FnOS (x86_64)
         - FnOS (aarch64)
-        - FnOS 用户版 (x86_64)
-        - FnOS 用户版 (aarch64)
+        - FnOS 残血版 (x86_64)
+        - FnOS 残血版 (aarch64)
         - 其他
     validations:
       required: true

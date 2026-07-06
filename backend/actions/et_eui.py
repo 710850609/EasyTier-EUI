@@ -26,7 +26,7 @@ def update(params: dict, *args, **kwargs):
     if ver_tag not in ('release', 'prerelease'):
         raise HttpResponse(f"版本标签错误：{ver_tag}")
     if kwargs.get('request_uri', '').startswith('/cgi/ThirdParty/EasyTier-EUI.User/'):
-        raise HttpResponse(f"用户版不支持自更新，请在标准版本中自更新")
+        raise HttpResponse(f"残血版不支持自更新，请在标准版本中自更新")
 
     task = UpdateTask(params)
     task.update_progress(0, '正在初始化更新任务...')
