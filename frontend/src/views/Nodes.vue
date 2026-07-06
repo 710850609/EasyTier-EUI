@@ -26,7 +26,7 @@
             </var-option>
           </var-select>
           <div class="service-status" v-if="selectedConfig">
-             <var-chip size="small" :type="serviceRunning ? 'success' : 'danger'" elevation="1">
+             <var-chip size="small" :type="serviceRunning ? 'success' : 'danger'" elevation="0">
               {{ serviceOperating ? (serviceRunning ? '停止中...' : '启动中...') : serviceRunning ? '运行中' : '未启动' }}
              </var-chip>
           </div>
@@ -820,6 +820,8 @@ onUnmounted(() => {
   align-items: center;
   gap: 6px;
   color: var(--color-text);
+  font-size: 15px;
+  font-weight: 700;
 }
 
 .tab-content {
