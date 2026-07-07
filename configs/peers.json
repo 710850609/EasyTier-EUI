@@ -6,31 +6,36 @@
       "status": 1,
       "updateTime": 1776731675,
       "uri": "tcp://225284.xyz:11010",
-      "owner": "刚刚"
+      "owner": "刚刚",
+      "dynamic": false
     },
     "udp://us01.225284.xyz:11010": {
       "status": 1,
       "updateTime": 1776731675,
       "uri": "udp://us01.225284.xyz:11010",
-      "owner": "刚刚"
+      "owner": "刚刚",
+      "dynamic": false
     },
     "tcp://har.yqst.top:11010": {
       "status": 1,
       "updateTime": 1782392202,
       "uri": "tcp://har.yqst.top:11010",
-      "owner": "Enterprise"
+      "owner": "Enterprise",
+      "dynamic": false
     },
     "tcp://mc.yqst.top:11010": {
       "status": 1,
       "updateTime": 1782392202,
       "uri": "tcp://mc.yqst.top:11010",
-      "owner": "Enterprise"
+      "owner": "Enterprise",
+      "dynamic": false
     },
     "txt://0.ethub1.v6.army": {
       "status": 1,
       "updateTime": 1780997981,
-      "uri": "tcp://48358fc41fb646b191767b8180b8e429.20091222.xyz:11010",
-      "owner": "Qicwken"
+      "uri": "txt://net.qicwken.top",
+      "owner": "Qicwken",
+      "dynamic": false
     }
   }
 }
