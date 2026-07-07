@@ -410,15 +410,20 @@ def check_peer_latency(uri):
 def check():
     """主函数"""
     src_file = os.path.abspath(os.path.join(os.path.dirname(__file__), '../peer-source.txt'))
+    no_dynamic_file = os.path.abspath(os.path.join(os.path.dirname(__file__), '../peer-no-dynamic.txt'))
     meta_file = os.path.abspath(os.path.join(os.path.dirname(__file__), '../peer-txt-meta.json'))
-    print(f"检测节点文件: {src_file}")    
+    print(f"检测节点文件: {src_file}")
     with open(src_file, 'r', encoding='utf-8') as f:
         lines = f.readlines()
         peer_source = [line.strip() for line in lines if line.strip()]
+    with open(no_dynamic_file, 'r', encoding='utf-8') as f:
+        lines = f.readlines()
+        no_dynamic_peers = [line.strip() for line in lines if line.strip()]
     
     print("=" * 60)
     print("检测节点连通性")
     print("=" * 60)
+    peer_source = [item for item in peer_source if item not in no_dynamic_peers]
     result = check_peers(peer_source, 20)
     print("检测结果: " + json.dumps(result, ensure_ascii=False, indent=2))
     success_peers = result['success'] or []

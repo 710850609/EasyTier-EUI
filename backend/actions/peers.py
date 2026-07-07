@@ -37,7 +37,8 @@ def check_peers(params: dict, *args, **kwargs):
             peer['status'] = 1
             peer['relay'] = peer_result.get('relay')
             peer['latency'] = peer_result.get('latency')
-            peer['dynamic'] = peer_result.get('dynamic')
+            # 是否动态节点，改从配置获取
+            # peer['dynamic'] = peer_result.get('dynamic')
             peer['hostname'] = peer_result.get('hostname')
         else:
             peer['status'] = 0
