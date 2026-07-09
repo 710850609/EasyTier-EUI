@@ -218,8 +218,8 @@
                   size="18" 
                   :color="node.type === 'server' ? 'var(--color-success)' : 'var(--color-primary)'" 
                 />
-                <span class="node-ip card-left" @click="handleClickCell(node, 'ipv4')">{{ node.ipv4 || '' }}</span>
-                <span v-if="visibleColumnsMap.hostname && node.hostname" class="info-chip host-chip card-right">
+                <span class="node-ip" @click="handleClickCell(node, 'ipv4')">{{ node.ipv4 || '' }}</span>
+                <span v-if="visibleColumnsMap.hostname && node.hostname" class="info-chip host-chip">
                   <var-icon name="label" size="14" />
                   {{ node.hostname }}
                 </span>
@@ -231,32 +231,32 @@
                 :type="node.cost === 'Local' ? 'info' : (node.cost === 'p2p' ? 'success' : 'primary')" 
                 :value="parseNode(node, 'cost')"
               />
-              <span v-if="visibleColumnsMap.lat_ms && node.lat_ms !== undefined && node.lat_ms !== '-'" class="info-chip" :class="{ 'lat-medium': node.lat_ms >= 60 && node.lat_ms <= 150, 'lat-high': node.lat_ms > 150 }">
+              <span v-if="visibleColumnsMap.lat_ms && node.lat_ms !== undefined && node.lat_ms !== '-'" class="info-chip metric-chip" :class="{ 'lat-medium': node.lat_ms >= 60 && node.lat_ms <= 150, 'lat-high': node.lat_ms > 150 }">
                 {{ parseNode(node, 'lat_ms') }}
               </span>
-              <span v-if="visibleColumnsMap.loss_rate && node.loss_rate !== undefined && node.loss_rate !== '-'" class="info-chip" :class="{ 'loss-warn': node.loss_rate > 0 }">
+              <span v-if="visibleColumnsMap.loss_rate && node.loss_rate !== undefined && node.loss_rate !== '-'" class="info-chip metric-chip" :class="{ 'loss-warn': node.loss_rate > 0 }">
                 {{ $t('nodes.packetLoss') }} {{ parseNode(node, 'loss_rate') }}
               </span>
               <span v-if="visibleColumnsMap.tunnel_proto && node.tunnel_proto && node.tunnel_proto !== '-'" class="info-chip">
                 {{ node.tunnel_proto }}
               </span>
             </div>
-            <div v-if="visibleColumnsMap.hostname || visibleColumnsMap.nat_type || visibleColumnsMap.tunnel_proto || visibleColumnsMap.cidr" class="node-card-meta">
-              <span v-if="visibleColumnsMap.nat_type && node.nat_type" class="info-chip nat-chip card-left">
+            <div v-if="visibleColumnsMap.nat_type || visibleColumnsMap.rx_bytes || visibleColumnsMap.tx_bytes" class="node-card-meta">
+              <span v-if="visibleColumnsMap.nat_type && node.nat_type" class="info-chip nat-chip">
                 {{ parseNode(node, 'nat_type') }}
               </span>
-              <span v-if="visibleColumnsMap.rx_bytes && node.rx_bytes !== undefined && node.rx_bytes !== '-'" class="traffic-item download card-right">
+              <span v-if="visibleColumnsMap.rx_bytes && node.rx_bytes !== undefined && node.rx_bytes !== '-'" class="traffic-item download">
                 <svg-icon size="14" type="mdi" :path="mdilArrowDown" color="var(--color-primary)"></svg-icon>
                 {{ parseNode(node, 'rx_bytes') }}
               </span>
-              <span v-if="visibleColumnsMap.tx_bytes && node.tx_bytes !== undefined && node.tx_bytes !== '-'" class="traffic-item upload card-right">
+              <span v-if="visibleColumnsMap.tx_bytes && node.tx_bytes !== undefined && node.tx_bytes !== '-'" class="traffic-item upload">
                 <svg-icon size="14" type="mdi" :path="mdilArrowUp" color="var(--color-success)"></svg-icon>
                 {{ parseNode(node, 'tx_bytes') }}
               </span>
             </div>
             <div class="node-card-footer">
-              <span v-if="visibleColumnsMap.version && node.version" class="version-text card-left">v{{ node.version }}</span>
-              <span v-if="visibleColumnsMap.cidr && node.cidr" class="info-chip cidr-chip card-right">
+              <span v-if="visibleColumnsMap.version && node.version" class="version-text">v{{ node.version }}</span>
+              <span v-if="visibleColumnsMap.cidr && node.cidr" class="info-chip cidr-chip">
                 {{ node.cidr }}
               </span>
             </div>
@@ -1058,8 +1058,8 @@ tr:hover td {
     background: var(--color-surface-container-low);
     border-radius: 10px;
     padding: 10px 14px 12px;
-    transition: background 0.2s ease;
-    border-left: 2px solid var(--color-primary);
+    transition: background 0.2s ease, border-color 0.2s ease;
+    border-left: 3px solid var(--color-primary);
     overflow: hidden;
   }
   
@@ -1070,16 +1070,7 @@ tr:hover td {
   .node-card:active {
     background: var(--color-surface-container);
   }
-  
-  .card-left {
-    flex: 0 0 auto;
-    margin-right: 0;
-  }
-  
-  .card-right {
-    margin-left: auto;
-  }
-  
+
   .node-card-header {
     margin-bottom: 6px;
   }
@@ -1104,10 +1095,9 @@ tr:hover td {
   
   .node-card-info {
     display: flex;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     align-items: center;
     gap: 6px;
-    overflow: hidden;
     margin-top: 6px;
   }
   
@@ -1126,15 +1116,15 @@ tr:hover td {
     border-radius: 5px;
     font-size: 11px;
     font-weight: 500;
-    background: var(--color-surface-container-high);
-    color: var(--color-on-surface-variant);
+    background: rgba(92, 107, 192, 0.08);
+    color: #5c6bc0;
     white-space: nowrap;
     flex-shrink: 0;
   }
   
   .info-chip.host-chip {
-    background: rgba(255, 152, 0, 0.08);
-    color: var(--color-warning);
+    background: rgba(0, 150, 136, 0.08);
+    color: #00897b;
   }
   
   .info-chip.nat-chip {
@@ -1148,18 +1138,27 @@ tr:hover td {
   }
   
   .info-chip.loss-warn {
-    background: rgba(255, 82, 82, 0.1);
-    color: var(--color-danger);
+    background: rgba(239, 83, 80, 0.12);
+    color: #e53935;
+    font-weight: 600;
   }
 
   .info-chip.lat-medium {
-    background: rgba(255, 193, 7, 0.1);
-    color: #f9a825;
+    background: rgba(255, 167, 38, 0.12);
+    color: #f57c00;
+    font-weight: 600;
   }
 
   .info-chip.lat-high {
-    background: rgba(255, 82, 82, 0.1);
-    color: var(--color-danger);
+    background: rgba(239, 83, 80, 0.12);
+    color: #d32f2f;
+    font-weight: 600;
+  }
+
+  .info-chip.metric-chip {
+    font-size: 12px;
+    padding: 3px 10px;
+    border-radius: 6px;
   }
   
   html.dark .info-chip {
@@ -1168,18 +1167,21 @@ tr:hover td {
   }
   
   html.dark .info-chip.loss-warn {
-    background: rgba(255, 82, 82, 0.18);
+    background: rgba(255, 82, 82, 0.25);
     color: #ff6b6b;
+    font-weight: 600;
   }
 
   html.dark .info-chip.lat-medium {
-    background: rgba(255, 193, 7, 0.18);
+    background: rgba(255, 193, 7, 0.25);
     color: #ffd54f;
+    font-weight: 600;
   }
 
   html.dark .info-chip.lat-high {
-    background: rgba(255, 82, 82, 0.18);
+    background: rgba(255, 82, 82, 0.25);
     color: #ff6b6b;
+    font-weight: 600;
   }
   
   html.dark .info-chip.nat-chip {
@@ -1193,10 +1195,21 @@ tr:hover td {
   }
   
   html.dark .info-chip.host-chip {
-    background: rgba(255, 152, 0, 0.18);
-    color: #ffb74d;
+    background: rgba(0, 150, 136, 0.22);
+    color: #4db6ac;
   }
   
+  .traffic-item {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--color-on-surface-variant);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
   html.dark .traffic-item {
     color: rgba(255, 255, 255, 0.7);
   }
@@ -1210,7 +1223,7 @@ tr:hover td {
     border-top: 1px solid var(--color-outline-variant);
     overflow: hidden;
   }
-  
+
   .traffic-item {
     display: flex;
     align-items: center;
@@ -1221,14 +1234,14 @@ tr:hover td {
     white-space: nowrap;
     flex-shrink: 0;
   }
-  
+
   .node-card-footer {
     display: flex;
     align-items: center;
     gap: 8px;
     margin-top: 6px;
   }
-  
+
   .version-text {
     font-size: 11px;
     color: var(--color-text-disabled);
