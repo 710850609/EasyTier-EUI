@@ -260,15 +260,13 @@
                         class="peer-option-wrapper"
                       >
                       <var-cell>
+                        <template #title>
+                          {{ peer.hostname || peer.uri }}
+                        </template>
                         <template #description>
-                          <!-- 左侧：地址信息 -->
                           <div class="peer-info">
-                            <div class="peer-primary-uri">
-                              {{ peer.uri }}
-                            </div>
-                            <span style="font-size: 12px; color: var(--color-primary);">{{ peer.hostname || '' }}</span>
-                            <!-- <span v-if="peer.src_uri != peer.uri && peer.dynamic">{{ peer.src_uri }}</span> -->
-                            <div class="peer-secondary-uri">
+                            <div class="peer-sub-uri">{{ peer.uri }}</div>
+                            <div class="peer-tags">
                               <span class="peer-tag latency-tag" :class="peer.latency < 500 ? (peer.latency < 100 ? 'latency-good' : 'latency-normal') : 'latency-bad'"  
                                 v-if="peer.latency > 0">
                                 {{ peer.latency }}ms
@@ -279,9 +277,7 @@
                           </div>
                         </template>
                         <template #extra>
-                          <!-- 右侧：状态标识 -->
                           <div class="status-dot" v-if="peer.status in [0, 1]" :class="peer.status == 1 ? 'status-online' : 'status-offline'"></div>
-                          <div class="peer-status-area"></div>
                         </template>
                       </var-cell>
                       </var-option>
@@ -788,7 +784,7 @@ const customPeer = ref('')
 const customProxyNetwork = ref('')
 const customListener = ref('')
 const flagsOpen = ref(['flags'])
-const forwardOpen = ref([''])
+const forwardOpen = ref(['forward'])
 const form = ref(null)
 const showShareConfigType = ref(false)
 const showCodePage = ref(false)
@@ -1105,6 +1101,8 @@ const checkPeers = () => {
 const loadConfig = (profile) => {
   isLoadingConfig.value = true
   return api.configs.get(profile).then(data => {
+    flagsOpen.value = ['']
+    forwardOpen.value = ['']
     const json = data.data
     json.peer = (json.peer || []).map(e => e.uri)
     json.proxy_network = (json.proxy_network || []).map(e => e.cidr)
@@ -1130,8 +1128,6 @@ const loadConfig = (profile) => {
         multi_thread_count: json.flags?.multi_thread_count || undefined
       }
     }
-    flagsOpen.value = ['']
-    forwardOpen.value = ['']
   }).finally(() => {
     isLoadingConfig.value = false
   })
@@ -2616,9 +2612,8 @@ html.dark .port-forward-row {
 
 .var-select-dropdown .var-cell__title {
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--color-text);
-  margin-bottom: 6px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -2636,18 +2631,15 @@ html.dark .port-forward-row {
   gap: 4px;
 }
 
-.var-select-dropdown .peer-primary-uri {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--color-text);
+.var-select-dropdown .peer-sub-uri {
+  font-size: 12px;
+  color: var(--color-text-secondary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.var-select-dropdown .peer-secondary-uri {
-  font-size: 12px;
-  color: var(--color-text-secondary);
+.var-select-dropdown .peer-tags {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -2656,7 +2648,7 @@ html.dark .port-forward-row {
 
 .var-select-dropdown .peer-tag {
   font-size: 11px;
-  padding: 2px 6px;
+  padding: 2px 8px;
   border-radius: 4px;
   font-weight: 500;
 }

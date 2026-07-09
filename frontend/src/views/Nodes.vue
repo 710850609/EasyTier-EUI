@@ -53,13 +53,11 @@
           </div>
         </div>
         <div class="stat-item">
-          <var-icon name="server" size="20" color="var(--color-primary)" />
           <span class="stat-label">{{ $t('nodes.normalNodes') }}</span>
           <span class="stat-value">{{ normalNodes.length }}</span>
         </div>
         <div class="divider"></div>
         <div class="stat-item">
-          <var-icon name="cloud" size="20" color="var(--color-success)" />
           <span class="stat-label">{{ $t('nodes.serverNodes') }}</span>
           <span class="stat-value">{{ serverNodes.length }}</span>
         </div>
