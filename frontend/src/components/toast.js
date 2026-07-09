@@ -1,5 +1,8 @@
 import { Snackbar, Icon } from '@varlet/ui'
 import { h } from 'vue'
+import i18n from '../locales/index.js'
+
+const { t } = i18n.global
 
 // 类型映射
 const typeMap = {
@@ -53,7 +56,7 @@ export const toast = {
     return createToast(message, 'info', duration)
   },
 
-  loading(message = '加载中...', duration = 0) {
+  loading(message = t('common.loading'), duration = 0) {
     return createToast(message, 'loading', duration)
   }
 }

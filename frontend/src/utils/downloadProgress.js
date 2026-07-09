@@ -11,6 +11,9 @@
  */
 import { ref, computed, onUnmounted } from 'vue'
 import toast from '../components/toast.js'
+import i18n from '../locales/index.js'
+
+const { t } = i18n.global
 
 export function useAsyncDownload(startDownloadFunc, queryProgressFunc, buildResultUrl, pollInterval = 1500) {
   const downloadingKey = ref(null)
@@ -28,7 +31,7 @@ export function useAsyncDownload(startDownloadFunc, queryProgressFunc, buildResu
 
   onUnmounted(() => {
     if (pollTimer) {
-      toast.info(`${downloadingKey.value} 将会继续后台下载`)
+      toast.info(t('download.background', { key: downloadingKey.value }))
     }
     // stopPolling()
   })
@@ -36,7 +39,7 @@ export function useAsyncDownload(startDownloadFunc, queryProgressFunc, buildResu
   async function startDownload(key, params) {
     stopPolling()
     downloadingKey.value = key
-    progress.value = { current_progress: 0, description: '正在初始化...', status: 0 }
+    progress.value = { current_progress: 0, description: t('download.initializing'), status: 0 }
 
     try {
       const resp = await startDownloadFunc(params)
@@ -50,10 +53,10 @@ export function useAsyncDownload(startDownloadFunc, queryProgressFunc, buildResu
             stopPolling()
             downloadingKey.value = null
             if (result.data.status === 2) {
-              toast.error(result.data.description || '下载失败')
+              toast.error(result.data.description || t('download.failed'))
               progress.value = null
             } else {
-              toast.success(result.data.description + '\n开始下载')
+              toast.success(result.data.description + '\n' + t('download.start'))
               const downloadUrl = buildResultUrl({ download_id: downloadId })
               if (typeof window.pywebview !== 'undefined') {
                 // pywebview 模式：委托给系统浏览器下载

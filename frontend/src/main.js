@@ -2,6 +2,7 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import '@varlet/ui/es/style'
 import '@varlet/touch-emulator'
+import i18n from './locales/index.js'
 // import { api } from './utils/api.js'
 
 const originalAddEventListener = EventTarget.prototype.addEventListener
@@ -26,5 +27,6 @@ EventTarget.prototype.addEventListener = function (type, listener, options) {
 // }
 
 const app = createApp(App)
+app.use(i18n)
 app.mount('#app')
 // updateTitle()

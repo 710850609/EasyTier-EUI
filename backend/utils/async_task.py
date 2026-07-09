@@ -5,9 +5,9 @@ import logging
 import os
 import threading
 import uuid
-from pathlib import Path
 from typing import Optional
 
+from locales import get_message
 from utils import run_configs
 
 
@@ -119,7 +119,7 @@ class AsyncTask:
 
 class DownloadTask(AsyncTask):
     def __init__(self, params: dict, download_id: str = None):
-        super().__init__(params, 'download', '准备下载...', '下载失败', download_id)
+        super().__init__(params, 'download', get_message('task.preparing_download'), get_message('task.download_failed'), download_id)
         self.download_id = self.task_id
         self.file_path = None
         self.file_name = None
@@ -127,7 +127,7 @@ class DownloadTask(AsyncTask):
     def set_completed(self, file_path: str, file_name: str):
         self.file_path = file_path
         self.file_name = file_name
-        super().set_completed(f'{file_name} 已完成准备')
+        super().set_completed(get_message('task.download_ready', file_name=file_name))
 
     def _build_save_data(self) -> dict:
         data = super()._build_save_data()
@@ -143,7 +143,7 @@ class DownloadTask(AsyncTask):
 
 class UpdateTask(AsyncTask):
     def __init__(self, params: dict, update_id: str = None):
-        super().__init__(params, 'update', '准备更新...', '更新失败', update_id)
+        super().__init__(params, 'update', get_message('task.preparing_update'), get_message('task.update_failed'), update_id)
         self.update_id = self.task_id
         self.update_version = ''
 

@@ -15,7 +15,7 @@ def list(params, *args, **kwargs):
     获取节点列表
     :param request_data: 请求数据（可选）
     """
-    profile, _ = Validator.not_empty(params, 'profile', '未指定配置')
+    profile, _ = Validator.not_empty(params, 'profile', 'validate.profile_required')
     profile = Validator.check_profile(profile)
     info = et_run_info.get(profile)
     if not info:

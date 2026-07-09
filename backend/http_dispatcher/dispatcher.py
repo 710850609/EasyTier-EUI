@@ -12,6 +12,8 @@ from pathlib import Path
 from typing import Optional
 from urllib.parse import quote
 from urllib.parse import unquote
+
+from locales import get_message, parse_accept_language, set_lang
 from utils import run_configs
 
 
@@ -25,7 +27,7 @@ class HttpException(Exception):
 class HttpRequest:
 
     def __init__(self, method, request_uri, resource_uri, headers=None, query_string=None, request_body=None,
-                 module_name=None, function_name=None, function_params=None):
+                 module_name=None, function_name=None, function_params=None, accept_language=None):
         self.method = method
         self.request_uri = request_uri
         self.resource_uri = resource_uri
@@ -35,6 +37,8 @@ class HttpRequest:
         self.module_name = module_name
         self.function_name = function_name
         self.function_params = self.__build_fun_params()
+        self.accept_language = accept_language
+        self.lang = parse_accept_language(accept_language) if accept_language else 'zh_CN'
         pass
 
     def __build_fun_params(self):
@@ -162,16 +166,20 @@ class HttpResponse(Exception):
         return json.dumps(self.json, ensure_ascii=False)
 
 
-def get_request(base_uri="", body_data=None, cgi_module=True) -> HttpRequest:
+def get_request(base_uri="", body_data=None, cgi_module=True, accept_language=None) -> HttpRequest:
     # 从环境变量获取http请求参数
     method = os.environ.get('REQUEST_METHOD', '')
     request_uri = os.environ.get('REQUEST_URI', '')
     query_string = os.environ.get('QUERY_STRING', '')
+    
+    # 解析 Accept-Language
+    if not accept_language:
+        accept_language = os.environ.get('HTTP_ACCEPT_LANGUAGE', '')
 
     if not request_uri.startswith(base_uri):
-        # 统一一份前端打包，自动重定向到合适飞牛的固定前置
+        set_lang(parse_accept_language(accept_language) if accept_language else 'zh_CN')
         logging.info(f"重定向到基础请求路径：{base_uri}")
-        raise HttpException(f"请求地址必须以{base_uri}开头", status_code=302, headers={'Location': base_uri})
+        raise HttpException(get_message('error.redirect_base', base_uri=base_uri), status_code=302, headers={'Location': base_uri})
     uri = request_uri
     if base_uri != '/':
         uri = request_uri.replace(base_uri, '')
@@ -213,9 +221,10 @@ def get_request(base_uri="", body_data=None, cgi_module=True) -> HttpRequest:
         function_name = uri_path[2]
     return HttpRequest(method=method, request_uri=request_uri, resource_uri = '/'.join(uri_path),
                        headers=None, query_string=query_string, request_body=request_body,
-                       module_name=module_name, function_name=function_name, function_params=request_data)
+                       module_name=module_name, function_name=function_name, function_params=request_data,
+                       accept_language=accept_language)
 
-def http_handle(base_uri="/", body_data=None, cgi_module=True) -> HttpResponse:
+def http_handle(base_uri="/", body_data=None, cgi_module=True, accept_language=None) -> HttpResponse:
     response = HttpResponse()
     try:
         # 首先处理 OPTIONS 请求（CORS 预检）
@@ -233,7 +242,8 @@ def http_handle(base_uri="/", body_data=None, cgi_module=True) -> HttpResponse:
                     response.output_cgi()
                 return response
         
-        request = get_request(base_uri, body_data, cgi_module)
+        request = get_request(base_uri, body_data, cgi_module, accept_language)
+        set_lang(request.lang)
         req_msg = f"{request.method} {request.request_uri}"
         req_msg += '' if not request.request_body else '\n' + request.request_body
         logging.debug(f"{req_msg}")
@@ -244,14 +254,14 @@ def http_handle(base_uri="/", body_data=None, cgi_module=True) -> HttpResponse:
             resource_uri = request.resource_uri
             if '..' in resource_uri:
                 logging.warning(f"检测到路径遍历尝试: {request.request_uri}")
-                raise HttpException(status_code=403, message=f"不允许访问资源： {request.request_uri}")
+                raise HttpException(status_code=403, message=get_message('error.access_denied'))
             frontend_path = run_configs.FRONTEND_PATH
             if len(resource_uri) == 0:
                 resource_uri = 'index.html'
             resource_path = Path(frontend_path).joinpath(resource_uri).absolute()
             if not resource_path.exists() or resource_path.is_dir():
                 logging.warning(f"访问资源不存在: {resource_path}")
-                raise HttpException(status_code=404, message=f"资源不存在： {request.request_uri}")
+                raise HttpException(status_code=404, message=get_message('error.resource_not_found'))
             response = HttpResponse(file=str(resource_path))
         else:
             function_params = request.function_params
@@ -266,11 +276,11 @@ def http_handle(base_uri="/", body_data=None, cgi_module=True) -> HttpResponse:
         response = HttpResponse(code=1, status_code=e.status_code, data=e.message, headers=e.headers)
     except ImportError as e:
         logging.exception(f"模块导入失败: {str(e)}", exc_info=True)
-        response = HttpResponse(code=1, status_code=500, data="模块加载失败")
+        response = HttpResponse(code=1, status_code=500, data=get_message('error.module_load_failed'))
     except AttributeError as e:
         if str(e).startswith("module 'actions.peers' has no attribute"):
             logging.exception(f"函数不存在: {str(e)}", exc_info=True)
-            response = HttpResponse(code=1, status_code=404, data="接口不存在")
+            response = HttpResponse(code=1, status_code=404, data=get_message('error.api_not_found'))
         else:
             logging.exception(e)
             response = HttpResponse(code=1, status_code=500, data=str(e))

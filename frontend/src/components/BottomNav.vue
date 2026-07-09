@@ -19,7 +19,7 @@
       />
       <!-- 图片图标 -->
       <img v-else-if="isImageIcon(item.icon)" :src="item.icon" class="nav-icon" />
-      <span class="nav-label">{{ item.label }}</span>
+      <span class="nav-label">{{ $t(item.label) }}</span>
     </div>
   </div>
   
@@ -29,7 +29,7 @@
     position="bottom"
   >
     <div class="submenu-popup">
-      <div class="popup-title">{{ currentSubMenuTitle }}</div>
+      <div class="popup-title">{{ $t(currentSubMenuTitle) }}</div>
       <div 
         v-for="item in currentSubMenus" 
         :key="item.key"
@@ -48,7 +48,7 @@
         />
         <!-- 图片图标 -->
         <img v-else-if="isImageIcon(item.icon)" :src="item.icon" class="popup-icon" />
-        <span>{{ item.label }}</span>
+        <span>{{ $t(item.label) }}</span>
       </div>
     </div>
   </var-popup>

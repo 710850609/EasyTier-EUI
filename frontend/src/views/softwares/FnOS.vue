@@ -4,17 +4,17 @@
       <div class="platform-header">
         <div class="platform-info">
           <h2>
-            易组网
+            {{ $t('software.easyTierEui') }}
             <var-badge type="primary">
-               <template #value>新手推荐</template>
+               <template #value>{{ $t('software.newbieRecommended') }}</template>
             </var-badge>
           </h2>
         </div>
       </div>
       <div class="version-info">
-        <var-cell>安装后，从当前易组网分享网络，到飞牛易组网【配置】-【编辑文件】，黏贴并保存，启动后即可组网</var-cell>
+        <var-cell>{{ $t('software.fnOSInstallDesc') }}</var-cell>
         <var-cell>
-          <var-link type="primary" underline="none" href="https://github.com/710850609/EasyTier-EUI/releases" target="_blank"><img src="https://img.shields.io/github/v/release/710850609/EasyTier-EUI?color=blue&logo=github&label=稳定版" /></var-link>
+          <var-link type="primary" underline="none" href="https://github.com/710850609/EasyTier-EUI/releases" target="_blank"><img :src="stableBadgeUrl" /></var-link>
         </var-cell>
       </div>
       <div>
@@ -23,13 +23,13 @@
           <var-button type="primary" size="normal" block @click="downloadEasyTierEui('fnos', 'x86_64')" :loading="downloadingKey === 'fnos-x86_64'">
             <template #default>
               <var-icon name="download"/>
-              x86_64版
+              {{ $t('software.x64Version') }}
             </template>
           </var-button>
           <var-button type="primary" size="normal" block @click="downloadEasyTierEui('fnos', 'aarch64')" :loading="downloadingKey === 'fnos-aarch64'">
             <template #default>
               <var-icon name="download"/>
-              arm64版
+              {{ $t('software.arm64Version') }}
             </template>
           </var-button>
         </var-space>
@@ -45,6 +45,14 @@
 <script setup>
 import { api } from '../../utils/api.js'
 import { useAsyncDownload } from '../../utils/downloadProgress.js'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
+
+const stableBadgeUrl = computed(() => {
+  const label = encodeURIComponent(t('software.stableLabel'))
+  return `https://img.shields.io/github/v/release/710850609/EasyTier-EUI?color=blue&logo=github&label=${label}`
+})
 
 const { startDownload, progress, downloadingKey } = useAsyncDownload(
   api.etEui.startDownload,

@@ -10,6 +10,7 @@ from pathlib import Path
 import tomlkit
 
 from http_dispatcher.dispatcher import HttpException
+from locales import get_message
 from models.peers import PeersCheckResult
 from utils import check_peers as check_util, run_configs
 from utils import github_util
@@ -161,7 +162,7 @@ def __download_peers() ->dict:
         return data
     except Exception as e:
         logging.exception(f"获取节点元数据失败")
-        raise HttpException(f'获取公共节点失败, 请检查网络连接： {e}')
+        raise HttpException(get_message('peers.fetch_failed', error=str(e)))
 
 def __sort_peers(peers: list[dict]):
     peers.sort(key=lambda x: (-x.get('status'), x.get('latency', 0), x.get('src_uri', ''), x.get('uri', '')))

@@ -3,18 +3,18 @@
     <var-paper class="download-card" :elevation="1">
       <div class="platform-header">
         <div class="platform-info">
-          <h2>EasyTier 鸿蒙版本</h2>
+          <h2>{{ $t('software.harmonyosVersion') }}</h2>
         </div>
       </div>
       <div class="version-info">
         <var-cell>
-          <p>安装应用，从易组网分享配置后，到鸿蒙上黏贴配置</p>
-          <p>启动网络即可</p>
+          <p>{{ $t('software.harmonyosInstallDesc') }}</p>
+          <p>{{ $t('software.startNetwork') }}</p>
         </var-cell>
         <var-cell>
-          其他使用说明，请访问 
+          {{ $t('software.visitForHelp') }}
           <var-link type="primary" href="https://easytier.cn/guide/gui/easytier-harmonyos.html" target="_blank" underline="none">
-            EasyTier官网
+            {{ $t('software.easyTierWebsite') }}
           </var-link>
         </var-cell>
       </div>
@@ -24,7 +24,7 @@
           <var-button type="primary" size="normal" block @click="copyAndOpenLink" auto-loading>
             <template #default>
               <var-icon name="share"/>
-              前往鸿蒙应用商店
+              {{ $t('software.goToHarmonyOSStore') }}
             </template>
           </var-button>
         </var-space>

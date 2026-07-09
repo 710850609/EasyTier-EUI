@@ -4,21 +4,21 @@
       <div class="platform-header">
         <div class="platform-info">
           <h2>
-            易组网
+            {{ $t('software.easyTierEui') }}
             <var-badge type="primary">
-               <template #value>新手推荐</template>
+               <template #value>{{ $t('software.newbieRecommended') }}</template>
             </var-badge>
           </h2>
         </div>
       </div>
       <div class="version-info">
         <var-cell>
-          <p>集成当前配置，解压启动后启动服务即可组网</p>
-          <p>自建初始节点，请自行修改配置</p>
+          <p>{{ $t('software.integratedConfig') }}</p>
+          <p>{{ $t('software.selfBuildNode') }}</p>
         </var-cell>
-        <var-cell><span style="font-style: italic;">易组网和其它使用EasyTier提供的开机自启的应用，会相互顶替开机启动注册，不建议同时使用</span></var-cell>
+        <var-cell><span style="font-style: italic;">{{ $t('software.etEuiAutoStartConflict') }}</span></var-cell>
         <var-cell>
-          <var-link type="primary" underline="none" href="https://github.com/710850609/EasyTier-EUI/releases" target="_blank"><img src="https://img.shields.io/github/v/release/710850609/EasyTier-EUI?color=blue&logo=github&label=稳定版" /></var-link>
+          <var-link type="primary" underline="none" href="https://github.com/710850609/EasyTier-EUI/releases" target="_blank"><img :src="euiStableBadgeUrl" /></var-link>
         </var-cell>
       </div>
       <div>
@@ -27,7 +27,7 @@
           <var-button type="primary" size="normal" block @click="showSelectProfile('etEui')" :loading="downloadingKey === 'windows-x86_64'">
             <template #default>
               <var-icon name="download"/>
-              稳定版
+              {{ $t('software.stable') }}
             </template>
           </var-button>
         </var-space>
@@ -42,21 +42,21 @@
       <div class="platform-header">
         <div class="platform-info">
           <h2>
-            EasyTier 管理器 
+            {{ $t('software.easyTierManager') }}
             <!-- <var-badge type="info">
-               <template #value>新手推荐</template>
+               <template #value>{{ $t('software.newbieRecommended') }}</template>
             </var-badge> -->
           </h2>
         </div>
       </div>
       <div class="version-info">
         <var-cell>
-          集成EasyTier内核、当前配置，解压启动后，再选择配置启动服务，即可组网
-          <p>其他使用说明，请访问 <var-link type="primary" href="https://easytier.cn/guide/gui/easytier-manager.html" target="_blank" underline="none">EasyTier 管理器使用</var-link></p>
+          {{ $t('software.managerDesc') }}
+          <p>{{ $t('software.managerUsageMore') }} <var-link type="primary" href="https://easytier.cn/guide/gui/easytier-manager.html" target="_blank" underline="none">{{ $t('software.managerUsageLink') }}</var-link></p>
         </var-cell>
-        <var-cell><span style="font-style: italic;">易组网和EasyTier管理器都有用到EasyTier提供的开机自启支持，会相互顶替，不建议同时使用</span></var-cell>
+        <var-cell><span style="font-style: italic;">{{ $t('software.autoStartConflict') }}</span></var-cell>
         <var-cell>
-          <var-link type="primary" underline="none" href="https://github.com/EasyTier/easytier-manager/releases" target="_blank"><img src="https://img.shields.io/github/v/release/EasyTier/easytier-manager?color=blue&logo=github&label=稳定版" /></var-link>
+          <var-link type="primary" underline="none" href="https://github.com/EasyTier/easytier-manager/releases" target="_blank"><img :src="managerStableBadgeUrl" /></var-link>
         </var-cell>
       </div>
       <div>
@@ -65,7 +65,7 @@
           <var-button type="primary" size="normal" block @click="showSelectProfile('mgr')" :loading="mgrDownloadingKey === 'mgr'">
             <template #default>
               <var-icon name="download"/>
-              稳定版
+              {{ $t('software.stable') }}
             </template>
           </var-button>
         </var-space>
@@ -79,24 +79,24 @@
     <var-paper class="download-card" :elevation="1">
       <div class="platform-header">
         <div class="platform-info">
-          <h2>EasyTier Windows GUI 版本</h2>
+          <h2>{{ $t('software.windowsGuiVersion') }}</h2>
         </div>
       </div>
       <div class="version-info">
-        <var-cell>安装应用，并导出飞牛上配置toml文件后。把toml配置文件导入到easytier中，并启动网络即可。</var-cell>
+        <var-cell>{{ $t('software.installAndImport') }}</var-cell>
         <var-cell>
-          其他使用说明，请访问 
+          {{ $t('software.visitForHelp') }}
           <var-link type="primary" href="https://easytier.cn/" target="_blank" underline="none">
-            EasyTier官网
+            {{ $t('software.easyTierWebsite') }}
           </var-link>
         </var-cell>
         <var-space :size="[20, 20]" justify="center">
           <a class="shield-badge" href="https://github.com/EasyTier/EasyTier/releases" target="_blank">
-            <span class="badge-label">预发版</span>
+            <span class="badge-label">{{ $t('software.prerelease') }}</span>
             <span class="badge-value">{{ prereleaseVersion || '--' }}</span>
           </a>
           <a class="shield-badge" href="https://github.com/EasyTier/EasyTier/releases" target="_blank">
-            <span class="badge-label">稳定版</span>
+            <span class="badge-label">{{ $t('software.stable') }}</span>
             <span class="badge-value">{{ latestReleaseVersion || '--' }}</span>
           </a>
         </var-space>
@@ -106,55 +106,55 @@
         <var-paper class="download-item" :elevation="3">
           <div class="item-header">
             <var-icon name="package" size="24" />
-            <span class="item-title">64位系统(Intel/AMD CPU)</span>
+            <span class="item-title">{{ $t('software.x64System') }}</span>
           </div>
           <div class="item-actions">
             <var-button type="primary" size="normal" @click="download('exe', 'x64', true)" auto-loading>
               <var-icon name="download"/>
-              预发版
+              {{ $t('software.prerelease') }}
             </var-button>
             <var-button type="primary" size="normal" @click="download('exe', 'x64', false)" auto-loading>
               <var-icon name="download"/>
-              稳定版
+              {{ $t('software.stable') }}
             </var-button>
           </div>
         </var-paper>
         <var-paper class="download-item" :elevation="3">
           <div class="item-header">
             <var-icon name="package" size="24" />
-            <span class="item-title">32位系统(Intel/AMD CPU)</span>
+            <span class="item-title">{{ $t('software.x86System') }}</span>
           </div>
           <div class="item-actions">
             <var-button type="primary" size="normal" @click="download('exe', 'x86', true)" auto-loading>
               <var-icon name="download"/>
-              预发版
+              {{ $t('software.prerelease') }}
             </var-button>
             <var-button type="primary" size="normal" @click="download('exe', 'x86', false)" auto-loading>
               <var-icon name="download"/>
-              稳定版
+              {{ $t('software.stable') }}
             </var-button>
           </div>
         </var-paper>
         <var-paper class="download-item" :elevation="3">
           <div class="item-header">
             <var-icon name="package" size="24" />
-            <span class="item-title">64位系统(arm CPU)</span>
+            <span class="item-title">{{ $t('software.arm64System') }}</span>
           </div>
           <div class="item-actions">
             <var-button type="primary" size="normal" @click="download('exe', 'arm64', true)" auto-loading>
               <var-icon name="download" />
-              预发版
+              {{ $t('software.prerelease') }}
             </var-button>
             <var-button type="primary" size="normal" @click="download('exe', 'arm64', false)" auto-loading>
               <var-icon name="download"/>
-              稳定版
+              {{ $t('software.stable') }}
             </var-button>
           </div>
         </var-paper>
       </div>
     </var-paper>
 
-    <var-dialog v-model:show="showConfigSelectDialog" title="选择内置配置" @confirm="downloadApp">
+    <var-dialog v-model:show="showConfigSelectDialog" :title="$t('software.selectConfig')" @confirm="downloadApp">
       <var-select
         v-model="selectedConfig"
         variant="outlined"
@@ -175,12 +175,25 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import toast from '../../components/toast.js'
 import { api } from '../../utils/api.js'
 import { useAsyncDownload } from '../../utils/downloadProgress.js'
 
+const { t } = useI18n()
+
 const prereleaseVersion = ref('')
 const latestReleaseVersion = ref('')
+
+const euiStableBadgeUrl = computed(() => {
+  const label = encodeURIComponent(t('software.stableLabel'))
+  return `https://img.shields.io/github/v/release/710850609/EasyTier-EUI?color=blue&logo=github&label=${label}`
+})
+
+const managerStableBadgeUrl = computed(() => {
+  const label = encodeURIComponent(t('software.stableLabel'))
+  return `https://img.shields.io/github/v/release/EasyTier/easytier-manager?color=blue&logo=github&label=${label}`
+})
 
 onMounted(() => {
   api.etApp.getAppInfo().then((resp) => {
@@ -209,9 +222,9 @@ const selectedApp = ref(null)
 
 const showSelectProfile = async (app) => {
   selectedApp.value = app
-  const configs = await api.configs.listConfigFiles().then(resp => resp.data).catch(error => toast.error('获取配置失败:', error))
+  const configs = await api.configs.listConfigFiles().then(resp => resp.data).catch(error => toast.error(t('software.getConfigFailed'), error.message))
   if (configs.length === 0) {
-    toast.info('当前系统无内置配置，将下载无配置版本')
+    toast.info(t('software.noConfigDownload'))
   } else if (configs.length === 1) {
     selectedConfig.value =  configs[0].profile
   } else {
@@ -233,7 +246,7 @@ const downloadApp = () => {
       console.error('下载失败:', err)
     })
   } else {
-    toast.error('未知的待下载应用')
+    toast.error(t('software.unknownApp'))
     return
   }
   selectedConfig.value = null

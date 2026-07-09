@@ -5,7 +5,7 @@
       <div class="block-header">
         <svg-icon type="mdi" :path="mdiBrightness6" size="24" color="var(--color-primary)"></svg-icon>
         <!-- <var-icon name="palette" size="24" color="var(--color-primary)" /> -->
-        <span class="block-title">外观设置</span>
+        <span class="block-title">{{ $t('settings.appearance.title') }}</span>
       </div>
       <var-divider />
       <div class="theme-options">
@@ -17,8 +17,24 @@
           @click="setThemeMode(option.value)"
         >
           <var-icon :name="option.icon" size="20" />
-          <span>{{ option.label }}</span>
+          <span>{{ $t(option.label) }}</span>
         </div>
+      </div>
+      <var-divider class="divider" />
+      <div class="setting-row">
+        <span class="setting-label">{{ $t('settings.language.label') }}</span>
+        <var-select 
+          class="setting-select" 
+          v-model="currentLanguage"
+          variant="outlined"
+          size="small"
+          :on-change="changeLanguage"
+          :line="true"
+          :options="languageOptions"
+          label-key="label"
+          value-key="value"
+        >
+        </var-select>
       </div>
     </var-paper>
 
@@ -26,14 +42,14 @@
     <var-paper class="setting-block" :elevation="1">
       <div class="block-header">
         <svg-icon type="mdi" :path="mdiShieldLock" size="24" color="var(--color-primary)"></svg-icon>
-        <span class="block-title">内核 EasyTier</span>
+        <span class="block-title">{{ $t('settings.kernel.title') }}</span>
       </div>
       <var-divider />
       <div class="setting-row">
-        <span class="setting-label">日志级别</span>
+        <span class="setting-label">{{ $t('settings.logLevel.label') }}</span>
         <var-select 
           class="setting-select" 
-          placeholder="请选择日志级别" 
+          :placeholder="$t('settings.logLevel.placeholder')" 
           v-model="etLogLevel" 
           variant="outlined"
           size="small"
@@ -47,11 +63,11 @@
       </div>
       <!-- <var-divider /> -->
       <div class="setting-row">
-        <span class="setting-label">当前版本 {{ etVersion.version || '未知' }}</span>
+        <span class="setting-label">{{ $t('settings.currentVersion') }} {{ etVersion.version || $t('settings.unknownVersion') }}</span>
         <var-select 
           class="setting-select" 
           variant="outlined" 
-          placeholder="可选版本" 
+          :placeholder="$t('settings.optionalVersion')" 
           size="small" 
           v-model="etVersion.selected_version"
         >
@@ -61,13 +77,14 @@
                 <template #extra>
                   <div style="display: flex; align-items: center;">
                     <var-chip :type="item.download_count > 100000 ? 'success' : (item.download_count > 10000 ? 'primary' : 'danger')"  size="mini" style="writing-mode: horizontal-tb; white-space: nowrap;">
-                      <var-icon name="download" size="16" />
+                      <var-icon name="download" size="12" />
                       {{ item.download_count }}
                     </var-chip>
-                    <var-badge 
+                    <var-badge
+                      size="mini"
                       :type="item.prerelease ? 'warning' : 'success'" 
                       position="right-bottom" 
-                      :value="item.prerelease ? '预发' : '稳定'">
+                      :value="item.prerelease ? $t('settings.prerelease') : $t('settings.stable')">
                     </var-badge>
                   </div>
                 </template>
@@ -86,21 +103,21 @@
       </div>
       <div class="setting-row" v-if="etVersion.selected_version != ''">
         <div class="setting-actions">
-          <var-chip v-if="hasNewVersion" type="warning" size="mini" plain>可升级</var-chip>
+          <var-chip v-if="hasNewVersion" type="warning" size="mini" plain>{{ $t('common.canUpgrade') }}</var-chip>
           <var-button type="primary" size="small" @click="installEtCore(true)" auto-loading>
             <var-icon name="download" />
-            安装
+            {{ $t('common.install') }}
           </var-button>
            <var-button type="primary" size="small" @click="handleShowEtChangeLog()">
-            <var-icon name="information-outline" />
-            更新内容
+            <!-- <var-icon name="information-outline" /> -->
+            {{ $t('common.updateContent') }}
           </var-button>
         </div>
       </div>
       <!-- <var-divider /> -->
       <div class="setting-row" @click="window.open('https://easytier.cn', '_blank')">
         <span class="setting-label">
-          EasyTier文档
+          {{ $t('settings.easytierDoc') }}
         </span>
         <a href="https://easytier.cn" target="_blank" style="text-decoration: none;">
           <var-icon name="share" color="var(--color-primary)" />
@@ -112,51 +129,51 @@
     <var-paper class="setting-block" :elevation="1">
       <div class="block-header">
         <svg-icon type="mdi" :path="mdiMapOutline" size="24" color="var(--color-primary)"></svg-icon>
-        <span class="block-title">版本</span>
+        <span class="block-title">{{ $t('settings.version') }}</span>
       </div>
       <var-divider />
       
       <div class="setting-row" v-if="euiReleaseInfo?.latest_release?.version">
         <div class="version-info-block">
           <span class="setting-label">
-            稳定版本
+            {{ $t('settings.stableVersion') }}
             <var-icon name="information-outline" size="18" color="var(--color-primary)" 
             @click="setupShowEuiReleaseInfo('latest_release')" />
           </span>
           <span class="version-value">{{ euiReleaseInfo.latest_release.version }}</span>
         </div>        
-        <var-chip type="warning" size="mini" plain v-if="buildVersion < euiReleaseInfo.latest_release.version">新版本</var-chip>
+        <var-chip type="warning" size="mini" plain v-if="buildVersion < euiReleaseInfo.latest_release.version">{{ $t('common.newVersion') }}</var-chip>
         <var-button type="primary" size="small" @click="installEuiVersion('release')" auto-loading
            :disabled="updateProgress.active"
            v-if="euiReleaseInfo?.latest_release?.version && buildVersion !== euiReleaseInfo.latest_release.version">
           <var-icon name="download" />
-          安装
+          {{ $t('common.install') }}
         </var-button>
       </div>
       <div class="setting-row" v-if="euiReleaseInfo?.latest_prerelease?.version">
         <div class="version-info-block">
           <span class="setting-label">
-            预发版本
+            {{ $t('settings.prereleaseVersion') }}
             <var-icon name="information-outline" size="18" color="var(--color-primary)" 
             @click="setupShowEuiReleaseInfo('latest_prerelease')" />
           </span>          
           <span class="version-value">{{ euiReleaseInfo.latest_prerelease.version }}</span>
         </div>
-        <var-chip type="warning" size="mini" plain v-if="buildVersion < euiReleaseInfo.latest_prerelease.version">新版本</var-chip>
+        <var-chip type="warning" size="mini" plain v-if="buildVersion < euiReleaseInfo.latest_prerelease.version">{{ $t('common.newVersion') }}</var-chip>
         <var-button type="primary" size="small" @click="installEuiVersion('prerelease')" auto-loading
            :disabled="updateProgress.active">
           <var-icon name="download" />
-          安装
+          {{ $t('common.install') }}
         </var-button>
       </div>
       <div class="setting-row">
         <div class="version-info-block">
-          <span class="setting-label">当前版本</span>
+          <span class="setting-label">{{ $t('settings.currentVersion') }}</span>
           <span class="version-value">{{ buildVersion }}</span>
         </div>
         <var-button type="primary" size="small" @click="getEuiReleaseInfo(true, true)" auto-loading>
           <var-icon name="refresh" size="18" />
-          检查更新
+          {{ $t('settings.checkUpdate') }}
         </var-button>
       </div>
       <div class="setting-row" v-if="updateProgress.active" style="flex-direction: column; align-items: stretch;">
@@ -177,21 +194,21 @@
     <var-paper class="setting-block" :elevation="1">
       <div class="block-header">
         <svg-icon type="mdi" :path="mdiTextBoxOutline" size="24" color="var(--color-primary)"></svg-icon>
-        <span class="block-title">其他</span>
+        <span class="block-title">{{ $t('settings.others') }}</span>
       </div>
       <var-divider />
       <div class="setting-row">
         <span class="setting-label">
-          清理缓存
+          {{ $t('common.deleteCache') }}
         </span>
         <var-button type="primary" size="small" @click="deleteCache" auto-loading >
           <var-icon name="delete" size="18" />
-          删除
+          {{ $t('common.delete') }}
         </var-button>
       </div>
       <div class="setting-row">
         <span class="setting-label">
-          安装路径
+          {{ $t('common.installationPath') }}
         </span>
         <var-chip type="primary" size="small">{{ installPath }}</var-chip>
       </div>
@@ -202,19 +219,19 @@
       <div class="block-header">
         <!-- <var-icon name="wrench" size="24" color="var(--color-primary)" /> -->
         <svg-icon type="mdi" :path="mdiDevTo" size="24" color="var(--color-primary)"></svg-icon>
-        <span class="block-title">开发者选项</span>
+        <span class="block-title">{{ $t('settings.developer.title') }}</span>
       </div>      
       <var-divider />
       <div class="setting-row">
-        <span class="setting-label">移动端页面调试</span>
+        <span class="setting-label">{{ $t('settings.developer.mobileDebug') }}</span>
         <var-switch v-model="vConsoleEnabled" @change="toggleVConsole" />
       </div>
       <div class="setting-row">
-        <span class="setting-label">使用测试社区节点</span>
+        <span class="setting-label">{{ $t('settings.developer.testPeers') }}</span>
         <var-switch v-model="testPeerSourceEnabled" :loading="changingPeerSource" @change="togglePeerSource" />
       </div>
       <div class="setting-row">
-        <span class="setting-label">查看GitHub加速</span>
+        <span class="setting-label">{{ $t('settings.developer.githubMirror') }}</span>
         <var-select v-model="githubMirror" variant="outlined" size="small" :line="true" class="setting-select">
           <var-option v-for="item in githubMirrors" :key="item.url" :value="item.url" :label="item.label">
             <var-cell border style="display: flex;">
@@ -250,48 +267,48 @@
         @touchcancel="cancelPress"
         @touchmove="cancelPress">
         <svg-icon type="mdi" :path="mdiInformation" size="24" color="var(--color-primary)"></svg-icon>
-        <span class="block-title">关于</span>
+        <span class="block-title">{{ $t('settings.about.title') }}</span>
       </div>
       <var-divider />
       <!-- 版本信息卡片 -->
       <div class="about-version-card">
         <div class="version-main">
-          <span class="version-name">易组网 {{ forUser ? '(残血版)' : '' }}</span>
+          <span class="version-name">{{ $t('settings.about.appName') }} {{ forUser ? $t('settings.about.liteVersion') : '' }}</span>
         </div>
         <div class="version-actions">
           <a href='https://github.com/710850609/EasyTier-EUI' target="_blank">
-            <img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/710850609/EasyTier-EUI?style=flat&label=%E7%82%B9%20Stars">
+            <img :alt="$t('settings.about.starsLabel')" :src="starsBadgeUrl">
           </a>
-          <var-chip elevation="1" @click="showRewardCdoe = true" type="info" size="small">赞赏</var-chip>
+          <var-chip elevation="1" @click="showRewardCdoe = true" type="info" size="small">{{ $t('settings.about.reward') }}</var-chip>
         </div>
       </div>
       
       <!-- 简介 -->
       <div class="about-section">
         <div class="about-content">
-          <p>简化 EasyTier 使用的 UI 界面</p>
-          <p>降低组网门槛，快速访问异地网络设备</p>
-          <p>享受 EasyTier 免费、不限设备数量、支持多类型终端等优势</p>
-          <img alt="下载量" src="https://img.shields.io/github/downloads/710850609/EasyTier-EUI/total?color=blue&label=GitHub下载量" />
+          <p>{{ $t('settings.about.description1') }}</p>
+          <p>{{ $t('settings.about.description2') }}</p>
+          <p>{{ $t('settings.about.description3') }}</p>
+          <img :alt="$t('settings.about.downloadCountAlt')" :src="downloadBadgeUrl" />
         </div>
       </div>
     </var-paper>
 
     <var-button block type="danger" v-if="platform === 'linux'" @click="shutdown">
       <template #default>
-        <var-icon name="power" size="20" /> 关闭 易组网
+        <var-icon name="power" size="20" /> {{ $t('common.shutdown') }} {{ $t('settings.about.appName') }}
       </template>
     </var-button>
   <div>      
   </div>
 
   <var-popup v-model:show="showRewardCdoe">
-    <var-result description="点Stars或是微信赞赏 感谢你的肯定">
+    <var-result :description="$t('settings.about.rewardDesc')">
       <template #image>
         <img src="../../public/images/reward_code.jpg" style="width: 50%; height: 50%; border-radius: 50%; object-fit: cover;" />
       </template>
       <template #footer>
-        <var-button type="info" @click="showRewardCdoe = false">关闭</var-button>
+        <var-button type="info" @click="showRewardCdoe = false">{{ $t('common.close') }}</var-button>
       </template>
     </var-result>
   </var-popup>
@@ -303,7 +320,7 @@
          <MarkdownRenderer :content="`${euiChangeMarkdown}`" class="markdown-renderer" />
       </template>
       <template #footer>
-        <var-button type="info" @click="showEuiReleaseInfo = false" style="margin: 10px;">关闭</var-button>
+        <var-button type="info" @click="showEuiReleaseInfo = false" style="margin: 10px;">{{ $t('common.close') }}</var-button>
       </template>
     </var-result>
   </var-popup>
@@ -314,7 +331,7 @@
         <MarkdownRenderer :content="etChangeLog" class="markdown-renderer" />
       </template>
       <template #footer>
-        <var-button type="info" @click="showEtChangeLog = false">关闭</var-button>
+        <var-button type="info" @click="showEtChangeLog = false">{{ $t('common.close') }}</var-button>
       </template>
     </var-result>
   </var-popup>
@@ -327,11 +344,15 @@ import { themeOptions, setThemeMode, themeMode } from '../config/theme.js'
 import { VCONSOLE_ENABLED_KEY } from '../config/storage-keys.js'
 import toast from '../components/toast.js'
 import api from '../utils/api.js'
+import { setLanguage, getLanguage } from '../locales/index.js'
+import { useI18n } from 'vue-i18n'
 // import { getLatestVersionWithCache } from '../utils/github.js'
 import SvgIcon from '@jamescoyle/vue-icon'
 import { mdiBrightness6, mdiAccessPointNetwork, mdiDevTo, mdiShieldLock, mdiMapOutline, mdiInformation, mdiTextBoxOutline } from '@mdi/js'
 
 const dev_toggle_timer = ref(null);
+const { t } = useI18n()
+const currentLanguage = ref(getLanguage())
 const showDevContent = ref(false)
 const vConsoleEnabled = ref(false)
 const changingPeerSource = ref(false)
@@ -357,21 +378,30 @@ const updateProgress = ref({ current_progress: 0, description: '', status: -1, a
 const showEuiReleaseInfo = ref(false)
 const showEtChangeLog = ref(false)
 const etChangeLog = ref('')
-const logLevelOptions = ref([
-  { value: 'off', label: '禁用' }, // cli 是 disabled
-  { value: 'error', label: '错误' },
-  { value: 'warn', label: '警告' },  // cli 是 warning
-  { value: 'info', label: '信息' },
-  { value: 'debug', label: '调试' },
-  { value: 'trace', label: '追踪' },
+const logLevelOptions = computed(() => [
+  { value: 'off', label: t('settings.logLevel.disabled') },
+  { value: 'error', label: t('settings.logLevel.error') },
+  { value: 'warn', label: t('settings.logLevel.warn') },
+  { value: 'info', label: t('settings.logLevel.info') },
+  { value: 'debug', label: t('settings.logLevel.debug') },
+  { value: 'trace', label: t('settings.logLevel.trace') },
 ])
+
+const languageOptions = computed(() => [
+  { value: 'zh', label: t('settings.language.zh') },
+  { value: 'en', label: t('settings.language.en') },
+])
+
+const changeLanguage = (val) => {
+  setLanguage(val)
+}
 
 const startPress = (e) => {
   dev_toggle_timer.value = setTimeout(() => { 
     getGithubMirrors()
     loadPeerSource()
     showDevContent.value = !showDevContent.value
-    toast.success(`开发者选项已${showDevContent.value ? '开启' : '关闭'}`)
+    toast.success(t(showDevContent.value ? 'settings.toast.devEnabled' : 'settings.toast.devDisabled'))
   }, 3000);
 };
 
@@ -382,6 +412,16 @@ const cancelPress = () => {
 const hasNewVersion = computed(() => etVersion.value.version && etVersion.value.latest_version && etVersion.value.version !== etVersion.value.latest_version)
 // 计算当前主题模式（从 theme.js 获取）
 const currentThemeMode = computed(() => themeMode.value)
+
+const starsBadgeUrl = computed(() => {
+  const label = encodeURIComponent(t('settings.about.starsLabel'))
+  return `https://img.shields.io/github/stars/710850609/EasyTier-EUI?style=flat&label=${label}`
+})
+
+const downloadBadgeUrl = computed(() => {
+  const label = encodeURIComponent(t('settings.about.downloadCount'))
+  return `https://img.shields.io/github/downloads/710850609/EasyTier-EUI/total?color=blue&label=${label}`
+})
 
 // 加载 VConsole（动态导入）
 const loadVConsole = async () => {
@@ -403,9 +443,9 @@ const toggleVConsole = async (val) => {
   if (val) {
     const loaded = await loadVConsole()
     if (loaded) {
-      toast.success('VConsole 已开启')
+      toast.success(t('settings.toast.vconsoleEnabled'))
     } else {
-      toast.error('加载 VConsole 失败')
+      toast.error(t('settings.toast.vconsoleFailed'))
       vConsoleEnabled.value = false
       localStorage.setItem(VCONSOLE_ENABLED_KEY, 'false')
     }
@@ -414,7 +454,7 @@ const toggleVConsole = async (val) => {
       vConsoleInstance.value.destroy()
       vConsoleInstance.value = null
     }
-    toast.success('VConsole 已关闭')
+    toast.success(t('settings.toast.vconsoleDisabled'))
   }
 }
 
@@ -423,7 +463,7 @@ const togglePeerSource = async (val) => {
   const data = { source: val ? 'test' : 'stable' }
   await api.peers.setPeerSource(data).then(() => {
     testPeerSourceEnabled.value = val
-    toast.success(`已切换到 ${val ? '测试' : '正式'} 社区节点`)
+    toast.success(t(val ? 'settings.toast.peerSourceTest' : 'settings.toast.peerSourceStable'))
   }).finally(() => {
     changingPeerSource.value = false
   })
@@ -447,7 +487,7 @@ const getEtVersion = async () => {
     etVersion.value = { ...etVersion.value, ...data }
   } catch (e) {
     console.error('获取内核版本失败:', e)
-    etVersion.value.raw_version = '获取内核版本失败:' + e.message
+    etVersion.value.raw_version = t('settings.getVersionFailed') + e.message
   } finally {
     isFetchingEtCoreVersion.value = false
   }
@@ -464,7 +504,7 @@ const getEtReleaseInfo = async (refresh = false, showTip = true) => {
       etVersion.value.selected_version = etVersion.value.latest_version
     }
     if (refresh && showTip) {      
-      toast.success(`内核可选版本已刷新\n${formatDate(new Date(resp.data.update_time))}`)
+      toast.success(t('settings.toast.versionRefreshed') + '\n' + formatDate(new Date(resp.data.update_time)))
     }
   } catch (e) {
     console.error('获取版本列表失败:', e)
@@ -477,7 +517,7 @@ const installEtCore = async () => {
   return new Promise((resolve, reject) => {
     api.etCore.install({ version: etVersion.value.selected_version })
     .then((res) => {
-      toast.success(res.data || `安装内核版本 ${etVersion.value.selected_version} 成功`)
+      toast.success(res.data || t('settings.toast.kernelInstalled', { version: etVersion.value.selected_version }))
       getEtVersion()
       resolve(res)
     })
@@ -495,7 +535,7 @@ const getGithubMirrors = async (refresh = false) => {
     // githubMirror.value = data.selected
     githubMirrors.value = data
     if (refresh) {
-      toast.success('已获取最新地址')
+      toast.success(t('settings.toast.mirrorsRefreshed'))
     }
   } catch (e) {
     console.error('获取 GitHub 加速地址失败:', e)
@@ -506,7 +546,7 @@ const getGithubMirrors = async (refresh = false) => {
 
 const getEuiInfo = async () => {
   try {
-    buildVersion.value = '获取版本号中...'
+    buildVersion.value = t('settings.toast.fetchingVersion')
     const { data } = await api.settings.getEuiInfo()
     buildVersion.value = data.build_version
     installPath.value = data.install_path
@@ -514,20 +554,20 @@ const getEuiInfo = async () => {
     platform.value = data.platform
   } catch (e) {
     console.error('获取版本号失败:', e)
-    buildVersion.value = '获取版本号失败'
+    buildVersion.value = t('settings.toast.fetchVersionFailed')
   }
 }
 
 const installEuiVersion = (versionType) => {
   return new Promise(async (resolve, reject) => {
     if (window.location.href.indexOf('/cgi/ThirdParty/EasyTier-EUI.User/index.cgi') !== -1) {
-      toast.error('易组网(残血版)不支持自更新，请到菜单【应用】-【FnOS】下载')
+      toast.error(t('settings.toast.liteNotSupported'))
       resolve()
       return
     }
     let targetVersion = null
-    updateProgress.value = { current_progress: 0, description: '正在准备更新...', status: 0, active: true }
-    const loadingToast = toast.loading('正在更新中，请等待...')
+    updateProgress.value = { current_progress: 0, description: t('settings.toast.preparingUpdate'), status: 0, active: true }
+    const loadingToast = toast.loading(t('settings.toast.updating'))
     let pollErrorCount = 0
 
     try {
@@ -548,14 +588,14 @@ const installEuiVersion = (versionType) => {
             clearInterval(pollTimer)
             updateProgress.value = { ...progress, active: false }
             loadingToast.clear()
-            toast.success(progress.description || '更新准备完成')
+            toast.success(progress.description || t('settings.toast.updateReady'))
             resolve()
             waitForRestart(targetVersion)
           } else if (progress.status === 2) {
             clearInterval(pollTimer)
             updateProgress.value = { ...progress, active: false }
             loadingToast.clear()
-            toast.error(progress.description || '更新失败')
+            toast.error(progress.description || t('settings.toast.updateFailed'))
             reject(new Error(progress.description))
           }
         } catch (e) {
@@ -571,7 +611,7 @@ const installEuiVersion = (versionType) => {
       }, 1500)
     } catch (e) {
       updateProgress.value = { current_progress: 0, description: '', status: -1, active: false }
-      toast.error(e.message || '更新请求失败')
+      toast.error(e.message || t('settings.toast.updateRequestFailed'))
       loadingToast.clear()
       reject(e)
     }
@@ -579,7 +619,7 @@ const installEuiVersion = (versionType) => {
 }
 
 const waitForRestart = (targetVersion) => {
-  const waitingToast = toast.loading('正在更新软件包，服务重启中，请稍后...')
+  const waitingToast = toast.loading(t('settings.toast.restarting'))
   let retryCount = 0
 
   const checkRestart = setInterval(async () => {
@@ -590,7 +630,7 @@ const waitForRestart = (targetVersion) => {
         clearInterval(checkRestart)
         waitingToast.clear()
         buildVersion.value = euiInfo.build_version
-        toast.success('更新完成，即将刷新页面')
+        toast.success(t('settings.toast.updateCompleted'))
         window.location.reload()
       }
     } catch (e) {
@@ -600,7 +640,7 @@ const waitForRestart = (targetVersion) => {
     if (retryCount >= 60) {
       clearInterval(checkRestart)
       waitingToast.clear()
-      toast.error('更新超时，请手动刷新页面检查')
+      toast.error(t('settings.updateTimeout'))
     }
   }, 2000)
 }
@@ -608,13 +648,13 @@ const waitForRestart = (targetVersion) => {
 const shutdown = async () => {
   try {
     await api.settings.shutdown()
-    toast.success('易组网正在关闭...')
+    toast.success(t('settings.shuttingDown'))
     setTimeout(() => {
       window.location.reload()
     }, 1000)
   } catch (e) {
     console.error('关闭易组网失败:', e)
-    toast.error('关闭易组网失败')
+    toast.error(t('settings.shutdownFailed'))
   }
 }
 
@@ -624,11 +664,11 @@ const getEtLogLevel = async () => {
 }
 
 const setEtLogLevel = async (level) => {
-  const loadingToast = toast.loading('正在修改内核日志级别，请稍后...')
+  const loadingToast = toast.loading(t('settings.settingLogLevel'))
   try {
     await api.etCore.setEtLogLevel({ level: level })
     const selectedLabel = logLevelOptions.value.filter(item => item.value === level)[0].label
-    toast.success(`内核日志级别已设置【${selectedLabel}】`)
+    toast.success(t('settings.logLevelSet', {label: selectedLabel}))
   } finally {
     loadingToast.clear()
   }
@@ -641,7 +681,7 @@ const getEuiReleaseInfo = (refresh=false, showTip = true) => {
       // euiRelease.value = data.data.latest_release
       // euiPreRelease.value = data.data.latest_prerelease
       if (refresh && showTip) {
-        toast.success(`易组网在线版本已刷新\n${formatDate(data.data.update_time)}`)
+        toast.success(t('settings.versionRefreshed', {update_time: formatDate(data.data.update_time)}))
       }
     }).finally((error) => {
       resolve()
@@ -656,7 +696,7 @@ const setupShowEuiReleaseInfo = (releaseType) => {
   }
   euiChangeMarkdown.value = `
 # ${ info.version }
->  ${formatDate(euiReleaseInfo.value.update_time)} GitHub下载量  ${info.download_count }
+>  ${formatDate(euiReleaseInfo.value.update_time)} ${t('settings.about.changelogDownloadCount')}  ${info.download_count }
 ## 更新内容
 ${ info.changelog }
 `
@@ -672,7 +712,7 @@ const handleShowEtChangeLog = () => {
 const deleteCache = async () => {
   return new Promise((resolve, reject) => {
     api.settings.deleteCache().then(data => {
-      toast.success(data.data || '缓存已删除')
+      toast.success(data.data || t('settings.cacheCleared'))
     }).finally(() => {
       resolve()
     })
@@ -840,6 +880,7 @@ onMounted(() => {
   padding: 12px 0;
   gap: 6px;
   border-bottom: 1px solid var(--color-border);
+  flex-wrap: wrap;
 }
 
 .setting-row:last-child {
@@ -864,6 +905,7 @@ onMounted(() => {
   font-weight: 500;
   color: var(--color-text);
   flex: 1;
+  min-width: 60px;
 }
 
 .setting-select {

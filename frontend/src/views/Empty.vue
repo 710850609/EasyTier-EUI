@@ -2,7 +2,7 @@
   <div class="empty-page">
     <var-space justify="center" direction="column">
       <div class="empty-text" style="font-size: 40px;">ಥ_ಥ</div>
-      <div class="empty-text">我的{{ menuKey }} 页面哪里去了</div>
+      <div class="empty-text">{{ $t('empty.page_missing', { menu: menuKey }) }}</div>
     </var-space>
   </div>
 </template>

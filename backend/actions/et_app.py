@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 from actions import et_core
 from http_dispatcher.dispatcher import HttpException
+from locales import get_message
 from utils import github_util
 from utils.validators import Validator
 
@@ -40,5 +41,5 @@ def get_download_url(params: dict, *args, **kwargs):
             download_url = version.get('assets', {}).get(platform_arch, {}).get('download_url')
             break
     if download_url == '':
-        raise HttpException(f'未找到 {arch}-{type} 的下载链接')
+        raise HttpException(get_message('download.platform_arch_not_found', arch=arch, type=type))
     return github_util.get_download_url_proxy(download_url)

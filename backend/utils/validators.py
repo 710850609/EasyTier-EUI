@@ -2,13 +2,14 @@ from pathlib import Path
 from typing import Optional, Any, Tuple
 
 from http_dispatcher.dispatcher import HttpException
+from locales import get_message
 from utils import security, run_configs
 
 
 class Validator:
 
     @staticmethod
-    def not_empty(params: Optional[dict], key: Optional[str], message: Optional[str]=None, raise_error: bool=True) -> Tuple[Any, bool]:
+    def not_empty(params: Optional[dict], key: Optional[str], message_key: Optional[str]=None, raise_error: bool=True, **kwargs) -> Tuple[Any, bool]:
         if key is None:
             raise AssertionError(f"not key for check")
         value = None
@@ -27,7 +28,10 @@ class Validator:
             else:
                 result = True
         if raise_error and not result:
-            raise HttpException(message if message else f"{key} is Empty")
+            if message_key:
+                raise HttpException(get_message(message_key, **kwargs))
+            else:
+                raise HttpException(f"{key} is Empty")
         return value, result
 
 
@@ -35,8 +39,8 @@ class Validator:
     def check_profile(profile:Optional[str], check_exists:bool = True) -> str:
         """检查配置文件名"""
         if not profile:
-            raise HttpException("未知profile")
+            raise HttpException(get_message('validate.unknown_profile'))
         profile = security.validate_profile(profile)
         if check_exists and (profile is None or not Path(run_configs.et_config_file(profile)).exists()):
-            raise HttpException(f"配置文件不存在: {profile}")
+            raise HttpException(get_message('validate.config_not_found', profile=profile))
         return profile

@@ -10,7 +10,7 @@
             size="small"
             v-model="selectedConfig"
             @change="handleConfigChange"
-            placeholder="选择配置"
+            :placeholder="$t('nodes.selectConfig')"
             blur-color="var(--color-primary)"
           >
             <var-option
@@ -27,7 +27,7 @@
           </var-select>
           <div class="service-status" v-if="selectedConfig">
              <var-chip size="small" :type="serviceRunning ? 'success' : 'danger'" elevation="0">
-              {{ serviceOperating ? (serviceRunning ? '停止中...' : '启动中...') : serviceRunning ? '运行中' : '未启动' }}
+              {{ serviceOperating ? (serviceRunning ? $t('nodes.stopping') : $t('nodes.starting')) : serviceRunning ? $t('nodes.running') : $t('nodes.stopped') }}
              </var-chip>
           </div>
           <div class="service-actions">
@@ -39,7 +39,7 @@
               @click="startService"
               v-if="selectedConfig && !serviceRunning && !serviceOperating"
             >
-              启动
+              {{ $t('nodes.start') }}
             </var-button>
             <var-button
               type="danger"
@@ -48,7 +48,7 @@
               @click="stopService"
               v-if="serviceRunning && !serviceOperating"
             >
-              停止
+              {{ $t('nodes.stop') }}
             </var-button>
             <!-- <var-icon name="play-circle" size="24" @click="startService" color="var(--color-success)" v-if="!serviceRunning && !serviceOperating" :style="{ cursor: 'pointer' }"/> -->
             <!-- <var-icon name="radio-marked" size="24" @click="stopService" color="var(--color-danger)" v-if="serviceRunning && !serviceOperating"  :style="{ cursor: 'pointer' }"/> -->
@@ -57,13 +57,13 @@
         <!-- <div class="divider"></div> -->
         <div class="stat-item">
           <var-icon name="server" size="20" color="var(--color-primary)" />
-          <span class="stat-label">普通节点</span>
+          <span class="stat-label">{{ $t('nodes.normalNodes') }}</span>
           <span class="stat-value">{{ normalNodes.length }}</span>
         </div>
         <div class="divider"></div>
         <div class="stat-item">
           <var-icon name="cloud" size="20" color="var(--color-success)" />
-          <span class="stat-label">服务节点</span>
+          <span class="stat-label">{{ $t('nodes.serverNodes') }}</span>
           <span class="stat-value">{{ serverNodes.length }}</span>
         </div>
         
@@ -84,17 +84,17 @@
         <var-tabs v-model:active="activeTab" @change="handleTabChange">
           <var-tab name="columnsFilter">
             <div class="tab-label">
-              <span>数据项选择</span>
+              <span>{{ $t('nodes.dataSelect') }}</span>
             </div>
           </var-tab>
           <var-tab name="rowFilter">
             <div class="tab-label">
-              <span>行选择</span>
+              <span>{{ $t('nodes.rowSelect') }}</span>
             </div>
           </var-tab>
           <var-tab name="refreshSpeed">
             <div class="tab-label">
-              <span>刷新速度</span>
+              <span>{{ $t('nodes.refreshSpeed') }}</span>
             </div>
           </var-tab>
         </var-tabs>
@@ -115,26 +115,26 @@
         
         <!-- 节点筛选内容 -->
         <div v-if="activeTab === 'rowFilter'" class="tab-content">
-          <div class="filter-subtitle">节点类型</div>
+          <div class="filter-subtitle">{{ $t('nodes.nodeType') }}</div>
           <var-checkbox-group v-model="selectedNodeTypes" direction="vertical">
             <var-checkbox checked-value="normal">
               <div class="type-option">
                 <var-icon name="server" size="18" color="var(--color-primary)" />
-                <span>普通节点</span>
+                <span>{{ $t('nodes.normalNodes') }}</span>
               </div>
             </var-checkbox>
             <var-checkbox checked-value="server">
               <div class="type-option">
                 <var-icon name="cloud" size="18" color="var(--color-success)" />
-                <span>服务节点</span>
+                <span>{{ $t('nodes.serverNodes') }}</span>
               </div>
             </var-checkbox>
           </var-checkbox-group>
           <div class="mobile-only-switch">
             <div class="filter-divider"></div>
-            <div class="filter-subtitle">显示模式</div>
+            <div class="filter-subtitle">{{ $t('nodes.displayMode') }}</div>
             <div class="switch-row">
-              <span>移动端使用卡片列表</span>
+              <span>{{ $t('nodes.mobileCardList') }}</span>
               <var-checkbox :model-value="useMobileList" @change="toggleMobileList" />
             </div>
           </div>
@@ -142,7 +142,7 @@
 
         <!-- 刷新速度内容 -->
         <div v-if="activeTab === 'refreshSpeed'" class="tab-content">
-          <var-select variant="outlined" placeholder="请选择更新频率" v-model="refreshStep" size="small" blur-color="var(--field-decorator-focus-color)">
+          <var-select variant="outlined" :placeholder="$t('nodes.refreshSpeedPlaceholder')" v-model="refreshStep" size="small" blur-color="var(--field-decorator-focus-color)">
             <var-option v-for="item in refreshStepList" :label="item.label" :value="item.key" />
           </var-select>
         </div>
@@ -238,7 +238,7 @@
                 {{ parseNode(node, 'lat_ms') }}ms
               </span>
               <span v-if="visibleColumnsMap.loss_rate && node.loss_rate !== undefined && node.loss_rate !== '-'" class="info-chip" :class="{ 'loss-warn': node.loss_rate > 0 }">
-                丢包 {{ parseNode(node, 'loss_rate') }}
+                {{ $t('nodes.packetLoss') }} {{ parseNode(node, 'loss_rate') }}
               </span>
               <span v-if="visibleColumnsMap.tunnel_proto && node.tunnel_proto && node.tunnel_proto !== '-'" class="info-chip">
                 {{ node.tunnel_proto }}
@@ -266,7 +266,7 @@
           </div>
           <div v-if="filteredNodes.length === 0" class="empty-state">
             <var-icon name="inbox" size="48" color="var(--color-text-disabled)" />
-            <p>暂无节点数据</p>
+            <p>{{ $t('nodes.no_nodes') }}</p>
           </div>
         </div>
       </div>
@@ -274,18 +274,19 @@
 
     <var-dialog v-model:show="showFastSettingTip" :close-on-click-overlay="false" 
       @confirm="openConfigView(true)" @cancel="openConfigView(false)"
-      confirmButtonText="需要" cancelButtonText="不需要">
+      :confirmButtonText="$t('nodes.need')" :cancelButtonText="$t('nodes.noNeed')">
       <template #title>
         <var-icon name="information" color="#2979ff" />
-        <span style="color: #2979ff" >不存在组网配置</span>
+        <span style="color: #2979ff" >{{ $t('nodes.noConfig') }}</span>
       </template>
-      <var-cell title="是否需要快速配置（新手推荐）？" description="" />
+      <var-cell :title="$t('nodes.needQuickSetup')" description="" />
     </var-dialog>
     
   </div>
 </template>
 
 <script setup>
+import { useI18n } from 'vue-i18n'
 import { copyToClipboard } from '../utils/clipboard.js'
 import { api, cancelAllRequests } from '../utils/api.js'
 import toast from '../components/toast.js'
@@ -294,6 +295,8 @@ import { NODES_SELECTED_COLUMNS_KEY, NODES_SELECTED_NODE_TYPES_KEY, NODES_REFRES
 import { mdiCircle } from '@mdi/js'
 import { mdilArrowDown, mdilArrowUp } from '@mdi/light-js'
 import SvgIcon from '@jamescoyle/vue-icon'
+
+const { t } = useI18n()
 
 // 注入菜单切换方法和快速设置模式
 const setActiveMenu = inject('setActiveMenu')
@@ -396,38 +399,38 @@ watch(refreshStep, (newVal) => {
 })
 
 const refreshStepList = [
-  { key: 1, label: '1秒' },
-  { key: 2, label: '2秒' },
-  { key: 3, label: '3秒' },
-  { key: 4, label: '4秒' },
-  { key: 5, label: '5秒' },
-  { key: 10, label: '10秒' },
+  { key: 1, label: `1${t('nodes.second')}` },
+  { key: 2, label: `2${t('nodes.second')}` },
+  { key: 3, label: `3${t('nodes.second')}` },
+  { key: 4, label: `4${t('nodes.second')}` },
+  { key: 5, label: `5${t('nodes.second')}` },
+  { key: 10, label: `10${t('nodes.second')}` },
 ]
 // 所有可用列
-const allColumns = [
+const allColumns = computed(() => [
   { key: "ipv4", label: "IPv4" },
-  { key: "cidr", label: "网段" },
-  { key: "hostname", label: "主机名" },
-  { key: "cost", label: "穿透方式" },
-  { key: "tunnel_proto", label: "协议" },
-  { key: "lat_ms", label: "延迟" },
-  { key: "loss_rate", label: "丢包率" },
-  { key: "rx_bytes", label: "下载" }, 
-  { key: "tx_bytes", label: "上传" },
-  { key: "nat_type", label: "Nat类型" },
-  { key: "version", label: "内核版本" },
+  { key: "cidr", label: t('nodes.columns.cidr') },
+  { key: "hostname", label: t('nodes.columns.hostname') },
+  { key: "cost", label: t('nodes.columns.cost') },
+  { key: "tunnel_proto", label: t('nodes.columns.tunnel_proto') },
+  { key: "lat_ms", label: t('nodes.columns.lat_ms') },
+  { key: "loss_rate", label: t('nodes.columns.loss_rate') },
+  { key: "rx_bytes", label: t('nodes.columns.rx_bytes') }, 
+  { key: "tx_bytes", label: t('nodes.columns.tx_bytes') },
+  { key: "nat_type", label: t('nodes.columns.nat_type') },
+  { key: "version", label: t('nodes.columns.version') },
   { key: "id", label: "id" },
-]
+])
 
 // 可见列
 const visibleColumns = computed(() => {
-  return allColumns.filter(col => selectedColumns.value.includes(col.key))
+  return allColumns.value.filter(col => selectedColumns.value.includes(col.key))
 })
 
 // 列可见性映射表，用于移动端卡片快速判断
 const visibleColumnsMap = computed(() => {
   const map = {}
-  allColumns.forEach(col => {
+  allColumns.value.forEach(col => {
     map[col.key] = selectedColumns.value.includes(col.key)
   })
   return map
@@ -462,13 +465,13 @@ const handleClickCell = async (node, key) => {
     try {
       const success = await copyToClipboard(node[key])
       if (success) {
-        toast.success(`已复制: ${node[key]}`)
+        toast.success(`${t('nodes.copySuccess')}: ${node[key]}`)
       } else {
-        toast.error('复制失败')
+        toast.error(t('nodes.copyFailed'))
       }
     } catch (error) {
-      console.error('复制出错:', error)
-      toast.error('复制出错')
+      console.error(t('nodes.copyFailed'), error)
+      toast.error(t('nodes.copyFailed'))
     } finally {
       // 延迟重置，防止快速连续点击
       setTimeout(() => {
@@ -491,11 +494,11 @@ const parseNode = (node, key) => {
 
 const parseCost = (node) => {
   if (node.cost === 'p2p') {
-    return '直连'
+    return t('nodes.costDirect')
   } else if (node.cost === 'Local') {
-    return '本地'
+    return t('nodes.costLocal')
   } else if (node.cost.startsWith('relay')) {
-    return node.cost.replace('relay', '中继')
+    return node.cost.replace('relay', t('nodes.costRelay'))
   } else {
     return node.cost
   }
@@ -511,17 +514,17 @@ const parseNatType = (node) => {
   } else if (node.nat_type === 'Symmetric') {
     return 'Nat4'
   } else if (node.nat_type === 'SymmetricEasyInc') {
-    return 'Nat4(对称递增型)'
+    return t('nodes.natSymInc')
   } else if (node.nat_type === 'SymmetricEasyDec') {
-    return 'Nat4(对称递减型)'
+    return t('nodes.natSymDec')
   } else if (node.nat_type === 'SymUdpFirewall') {
-    return '对称UDP防火墙'
+    return t('nodes.natSymUdp')
   } else if (['NoPAT', 'NoPat'].includes(node.nat_type)) {
-    return `无PAT`
+    return t('nodes.natNoPat')
   } else if (node.nat_type === 'OpenInternet') {
-    return '开放网络'
+    return t('nodes.natOpen')
   } else if (node.nat_type === 'Unknown') {
-    return '未知'
+    return t('nodes.natUnknown')
   } else {
     return node.nat_type
   }
@@ -570,7 +573,7 @@ const fetchNodes = async () => {
     })
   } catch (error) {
     if (isUnmounted.value) return
-    console.error('获取组网信息失败:', error)
+    console.error(t('nodes.loadConfigFailed'), error)
   } finally {
     dataLoading.value = false
   }
@@ -585,11 +588,11 @@ const restartService = () => {
   return new Promise((resolve, reject) => {
     try {
       api.services.restart(selectedConfig.value).then(() => {
-        toast.success('服务重启成功')
+        toast.success(t('nodes.serviceRestartSuccess'))
         resolve()
       }).catch(e => reject(e))
     } catch (error) {
-      toast.error('服务重启失败: ' + error.message)
+      toast.error(t('nodes.serviceRestartFailed') + ': ' + error.message)
       reject(error)
     }
   })
@@ -609,7 +612,7 @@ const loadConfigs = async () => {
     updateServiceStatus()
     return true
   } catch (error) {
-    console.error('加载配置列表失败:', error)
+    console.error(t('nodes.loadConfigListFailed'), error)
     return false
   }
 }
@@ -641,7 +644,7 @@ const startService = async () => {
   try {
     allNodes.value = []
     await api.services.start(selectedConfig.value)
-    toast.success('服务启动成功')
+    toast.success(t('nodes.serviceStartSuccess'))
     serviceRunning.value = true
     const cfg = configList.value.find(c => c.profile === selectedConfig.value)
     if (cfg) cfg.running = true
@@ -660,13 +663,13 @@ const stopService = async () => {
   pendingAction.value = 'stop'
   try {
     await api.services.stop(selectedConfig.value)
-    toast.success('服务已停止')
+    toast.success(t('nodes.serviceStopped'))
     allNodes.value = []
     serviceRunning.value = false
     const cfg = configList.value.find(c => c.profile === selectedConfig.value)
     if (cfg) cfg.running = false
   } catch (error) {
-    toast.error('服务停止失败: ' + error.message)
+    toast.error(t('nodes.serviceStopFailed') + ': ' + error.message)
   } finally {
     serviceOperating.value = false
     pendingAction.value = ''
@@ -678,21 +681,21 @@ onMounted(async () => {
   loadSettings()
   const result = await loadConfigs()
   if (!result) {    
-    toast.error('加载配置列表失败，请检查网络连接或服务状态')
+    toast.error(t('nodes.loadConfigListFailed'))
     return
   }
   try {
     if (!selectedConfig.value) {
       // showFastSettingTip.value = true
       // 没有选择配置，直接跳配置页面
-      toast.success('当前没有网络配置，请创建网络配置后再查看节点数据')
+      toast.success(t('nodes.noConfigGoCreate'))
       setTimeout(() => {
         setActiveMenu?.('config')
       }, 250)
       return;
     }
   } catch (error) {
-    console.error('获取配置状态失败:', error)
+    console.error(t('nodes.loadConfigStatusFailed'), error)
     return
   }
   try {
@@ -702,7 +705,7 @@ onMounted(async () => {
     configStatusPoller.start(loadConfigs)
     nodesPoller.start(fetchNodes)
   } catch (error) {
-    console.error('获取节点列表失败:', error)
+    console.error(t('nodes.loadNodeListFailed'), error)
   }
 })
 
@@ -719,6 +722,9 @@ onUnmounted(() => {
 <style scoped>
 .nodes-page {
   padding: 16px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .stats-bar {
@@ -726,6 +732,10 @@ onUnmounted(() => {
   margin-bottom: 16px;
   border-radius: 12px;
   background: var(--color-surface-container) !important;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  flex-shrink: 0;
 }
 
 .stats-content {
@@ -776,11 +786,14 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .stat-label {
   color: var(--color-on-surface-variant);
   font-size: 14px;
+  white-space: nowrap;
 }
 
 .stat-value {
@@ -845,17 +858,26 @@ onUnmounted(() => {
 .table-container {
   border-radius: 12px;
   overflow: hidden;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .table-wrapper {
   overflow: auto;
-  max-height: calc(100vh - 160px);
+  flex: 1;
+  min-height: 0;
   position: relative;
 }
 
 @media (max-width: 768px) {
-  .table-wrapper {
-    max-height: calc(100vh - 245px);
+  .stats-bar {
+    padding: 10px 12px;
+  }
+
+  .stats-content {
+    gap: 12px;
   }
 }
 

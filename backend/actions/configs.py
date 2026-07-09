@@ -4,8 +4,8 @@
 import logging
 import os
 import shutil
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 import tomlkit
 from tomlkit import document, comment
@@ -13,10 +13,12 @@ from tomlkit import document, comment
 from actions import services
 from http_dispatcher.dispatcher import HttpException
 from http_dispatcher.dispatcher import HttpResponse
+from locales import get_message
 from utils import et_run_info, ip_util
 from utils import run_configs
 from utils import security
 from utils.validators import Validator
+
 
 def list_lan_ips(*args, **kwargs):
     ips = ip_util.get_lan_ips()
@@ -56,7 +58,7 @@ def list_config_status(*args, **kwargs):
     return result
 
 def delete(params, *args, **kwargs):
-    profile, _ = Validator.not_empty(params, 'profile', '配置不能为空')
+    profile, _ = Validator.not_empty(params, 'profile', 'validate.profile_required')
     profile = Validator.check_profile(profile)
     if services.status(params):
         logging.info(f"{profile} 配置运行中，停止服务...")
@@ -70,8 +72,8 @@ def delete(params, *args, **kwargs):
 
 
 def rename(params, *args, **kwargs):
-    old_profile, _ = Validator.not_empty(params, 'oldProfile', '旧配置名空')
-    new_profile, _ = Validator.not_empty(params, 'newProfile', '新配置名空')
+    old_profile, _ = Validator.not_empty(params, 'oldProfile', 'config.old_profile_empty')
+    new_profile, _ = Validator.not_empty(params, 'newProfile', 'config.new_profile_empty')
     old_profile = Validator.check_profile(old_profile)
     new_profile = Validator.check_profile(new_profile, check_exists=False)
     if old_profile == new_profile:
@@ -80,7 +82,7 @@ def rename(params, *args, **kwargs):
     old_config = run_configs.et_config_file(old_profile)
     new_config = run_configs.et_config_file(new_profile)
     if Path(new_config).exists():
-       raise HttpException(f"新名称已存在: {new_profile}")
+       raise HttpException(get_message('config.name_exists', name=new_profile))
 
     shutil.copy2(old_config, new_config)
     try:
@@ -116,13 +118,13 @@ def save_toml(data: str, *args, **kwargs):
     try:
         profile = data.pop('_profile', None) if data else None
         if not profile:
-            raise HttpException("profile is none for save toml")
+            raise HttpException(get_message('config.profile_required_for_save'))
         else:
             # 安全验证
             safe_profile = security.validate_profile(profile)
             if not safe_profile:
-                logging.warning(f"无效的配置文件名: {profile}")
-                raise HttpException(f"无效的配置文件名: {profile}")
+                logging.warning(get_message('config.invalid_name', profile=profile))
+                raise HttpException(get_message('config.invalid_name', profile=profile))
             profile = safe_profile
         doc = tomlkit.parse(data['toml'])
         doc['instance_name'] = profile
@@ -137,7 +139,7 @@ def save_toml(data: str, *args, **kwargs):
 
 def get(params, *args, **kwargs):
     # 同时支持驼峰和下划线参数
-    profile, _ = Validator.not_empty(params, 'profile', '未指定配置')
+    profile, _ = Validator.not_empty(params, 'profile', 'validate.profile_required')
     profile = Validator.check_profile(profile)
     et_config_file = run_configs.et_config_file(profile)
     if os.path.exists(et_config_file):
@@ -147,21 +149,21 @@ def get(params, *args, **kwargs):
     return {}
 
 def get_toml(params=None, *args, **kwargs):
-    profile, _ = Validator.not_empty(params, 'profile', '未指定配置')
+    profile, _ = Validator.not_empty(params, 'profile', 'validate.profile_required')
     profile = Validator.check_profile(profile)
     et_config_file = run_configs.et_config_file(profile)
     with open(et_config_file, "r", encoding="utf-8") as f:
         return f.read()
 
 def download_share_config(params=None, *args, **kwargs):
-    profile, _ = Validator.not_empty(params, 'profile', '未指定配置')
+    profile, _ = Validator.not_empty(params, 'profile', 'validate.profile_required')
     profile = Validator.check_profile(profile)
     tmp_file = copy(profile)
     logging.info(f"{tmp_file}")
     return HttpResponse(file=tmp_file, download_name="config.toml")
 
 def get_share_config_str(params=None, *args, **kwargs):
-    profile, _ = Validator.not_empty(params, 'profile', '未指定配置')
+    profile, _ = Validator.not_empty(params, 'profile', 'validate.profile_required')
     profile = Validator.check_profile(profile)
     tmp_file = copy(profile)
     with open(tmp_file, "r", encoding="utf-8") as f:
@@ -179,7 +181,7 @@ def copy(profile:str):
         doc = tomlkit.parse(f.read())
 
     share_doc = document()
-    share_doc.add(comment(f"来源于组网分享网络，创建于：{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"))
+    share_doc.add(comment(get_message('config.share_comment', datetime=datetime.now().strftime('%Y-%m-%d %H:%M:%S'))))
     # 仅拷贝必要的配置项
     share_doc["ipv4"] = ""
     share_doc["dhcp"] = True

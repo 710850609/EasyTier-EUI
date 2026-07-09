@@ -19,6 +19,7 @@ from typing import Optional, List, Tuple, Callable
 import requests
 
 from http_dispatcher.dispatcher import HttpException
+from locales import get_message
 from utils import run_configs
 from utils.dns_util import get_dns_txt_records
 
@@ -110,7 +111,7 @@ def get_api(url: str, proxy_url: str = ""):
             req_url = proxy_url + '/' + req_url
         response = requests.get(req_url, timeout=10)
         if response.status_code == 404:
-            raise HttpException(f"请求资源不存在: {req_url}")
+            raise HttpException(get_message('error.resource_not_found_at', url=req_url))
         response.raise_for_status()
         data = response.json()
         return data

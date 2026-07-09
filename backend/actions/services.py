@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Union, List, Optional, Set
 
 from http_dispatcher.dispatcher import HttpException
+from locales import get_message
 from utils import check_peers, common_util
 from utils import et_run_info
 from utils import process_util
@@ -24,7 +25,7 @@ _ext = ".exe" if sys.platform == "win32" else ""
 def _get_process_manager(profile:str = None) -> Union[ProcessManager]:
     """获取 ProcessManager 实例（延迟初始化，线程安全）"""
     if not profile:
-        raise HttpException(f"profile is none for process manager")
+        raise HttpException('validate.profile_required')
     pm_key = profile
     
     # 双重检查锁定模式，保证线程安全的同时提高性能
@@ -42,7 +43,7 @@ def _get_process_manager(profile:str = None) -> Union[ProcessManager]:
     return cur_pm
 
 def status(params=None, *args, **kwargs) -> bool:
-    profile, _ = Validator.not_empty(params, 'profile', '配置不能为空')
+    profile, _ = Validator.not_empty(params, 'profile', 'validate.profile_required')
     info = et_run_info.get(profile)
     if info is not None and info.use_system_service:
         return _system_service_status() == 1
@@ -51,7 +52,7 @@ def status(params=None, *args, **kwargs) -> bool:
         return pm.status()
 
 def stop(params=None, *args, **kwargs):
-    profile, _ = Validator.not_empty(params, 'profile', '配置不能为空')
+    profile, _ = Validator.not_empty(params, 'profile', 'validate.profile_required')
     info = et_run_info.get(profile)
     if info is not None and info.use_system_service:
         if _system_service_status() == -1:
@@ -66,15 +67,15 @@ def stop(params=None, *args, **kwargs):
         pm.stop()
 
 def start(params=None, *args, **kwargs):
-    profile, _ = Validator.not_empty(params, 'profile', '配置不能为空')
+    profile, _ = Validator.not_empty(params, 'profile', 'validate.profile_required')
     config_file = run_configs.et_config_file(profile)
     if not Path(config_file).exists():
-        raise HttpException(f"不存在配置文件，请先确认配置")
+        raise HttpException(get_message('service.config_not_found'))
 
     info = et_run_info.get(profile)
     if info is not None and info.use_system_service:
         if _system_service_status() == -1:
-            raise HttpException(f"未注册ET系统服务，请设置开机自启后重试")
+            raise HttpException(get_message('service.not_registered'))
         cmd = f"{os.path.join(run_configs.core_dir(), 'easytier-cli')}{_ext} service start"
         logging.info(f"启动ET服务: {cmd}")
         result = common_util.run_cmd(cmd)
@@ -145,7 +146,7 @@ def stop_all(*args, **kwargs) -> List[str]:
     return stop_profiles
 
 def auto_start(params: Optional[dict]=None, keep_run_status:bool=True, *args, **kwargs):
-    profile, _ = Validator.not_empty(params, 'profile', '配置不能为空')
+    profile, _ = Validator.not_empty(params, 'profile', 'validate.profile_required')
     profile = Validator.check_profile(profile)
     is_enabled = params.get('enabled', False)
     if isinstance(is_enabled, str):
@@ -194,7 +195,7 @@ def rename_profile(old_profile: Optional[str], new_profile: Optional[str]):
     old_profile = Validator.check_profile(old_profile)
     new_profile = Validator.check_profile(new_profile)
     if not old_profile:
-        raise HttpException(f"不存在运行配置： {old_profile}")
+        raise HttpException(get_message('service.config_not_running', old_profile=old_profile))
     auto_start_set = __get_system_service_profiles()
     old_info = et_run_info.get(old_profile)
     if run_configs.is_fn_system() or old_profile not in auto_start_set:
@@ -265,7 +266,7 @@ def __get_system_service_profiles() -> Set[str]:
 
 def _system_service_install(profiles: List[str], log_level:str = 'error') -> str:
     if len(profiles or []) == 0:
-        raise AssertionError(f"未指定启动配置，无法注册系统服务")
+        raise AssertionError(get_message('service.no_config_for_system_service'))
     cmd_config_file_parts = ''
     for profile in profiles:
         cfg_path = run_configs.et_config_file(profile)
@@ -273,7 +274,7 @@ def _system_service_install(profiles: List[str], log_level:str = 'error') -> str
             cmd_config_file_parts += f" -c {cfg_path}"
         else:
             logging.warning(f"跳过配置不存在: {profile}")
-    desc = f"易组网-启动配置:{','.join(profiles)}"
+    desc = get_message('service.start_config_desc') + f":{','.join(profiles)}"
     display_name = "EasyTier-EUI"
     rpc_port = check_peers.get_available_port(start_port=16999)
     rpc_portal = f"127.0.0.1:{rpc_port}"
@@ -329,5 +330,4 @@ def _system_service_status() -> int:
     elif result.find('not installed') > 0:
         return -1
     else:
-        raise HttpException(f"未知服务状态： {result}")
-
+        raise HttpException(get_message('service.unknown_status', status=result))

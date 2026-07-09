@@ -9,22 +9,22 @@
           <template #icon>
             <var-icon :name="isPaused ? 'play' : 'pause'" />
           </template>
-          {{ isPaused ? '继续' : '暂停' }}
+          {{ isPaused ? $t('logs.continue') : $t('logs.pause') }}
         </var-button>
         
         <var-button text @click="clearLogs">
           <template #icon><var-icon name="trash" /></template>
-          清空
+          {{ $t('logs.clear') }}
         </var-button>
         
         <var-select v-model="logLevel" size="small" style="width: 120px;">
-          <var-option label="全部" value="all" />
-          <var-option label="信息" value="info" />
-          <var-option label="警告" value="warn" />
-          <var-option label="错误" value="error" />
+          <var-option :label="$t('logs.all')" value="all" />
+          <var-option :label="$t('logs.info')" value="info" />
+          <var-option :label="$t('logs.warning')" value="warn" />
+          <var-option :label="$t('logs.error')" value="error" />
         </var-select>
         
-        <span class="log-stats">共 {{ filteredLogs.length }} 条日志</span>
+        <span class="log-stats">{{ $t('logs.total', { count: filteredLogs.length }) }}</span>
       </div>
     </var-paper>
 

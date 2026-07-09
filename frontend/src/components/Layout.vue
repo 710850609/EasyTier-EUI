@@ -28,7 +28,10 @@ import BottomNav from './BottomNav.vue'
 import { componentMap } from '../config/menu.js'
 import { isDark } from '../config/theme.js'
 import { VCONSOLE_ENABLED_KEY } from '../config/storage-keys.js'
+import { useI18n } from 'vue-i18n'
 import toast from './toast.js'
+
+const { t } = useI18n()
 
 // 动态导入 Empty 组件，避免与 menu.js 中的动态导入冲突
 const Empty = defineAsyncComponent(() => import('../views/Empty.vue'))
@@ -70,7 +73,7 @@ const loadVConsole = async () => {
   } catch (error) {
     console.error('加载 VConsole 失败:', error)
     localStorage.setItem(VCONSOLE_ENABLED_KEY, 'false')
-    toast.error('加载 VConsole 失败\n' + error.message)
+    toast.error(t('settings.vconsoleFailed') + '\n' + error.message)
   }
 }
 
@@ -144,6 +147,7 @@ onUnmounted(() => {
 /* 移动端样式 - 使用类名控制 */
 .layout.is-mobile {
   flex-direction: column;
+  height: 100vh;
 }
 
 .layout.is-mobile .main-content {
@@ -152,14 +156,17 @@ onUnmounted(() => {
 }
 
 .layout.is-mobile .content-wrapper {
-  overflow-y: visible;
+  overflow-y: auto;
   padding: 0;
+  flex: 1;
+  min-height: 0;
 }
 
 /* 媒体查询作为后备 */
 @media (max-width: 767px) {
   .layout {
     flex-direction: column;
+    height: 100vh;
   }
   
   .side-menu {
@@ -174,8 +181,10 @@ onUnmounted(() => {
   }
   
   .content-wrapper {
-    overflow-y: visible;
+    overflow-y: auto;
     padding: 0;
+    flex: 1;
+    min-height: 0;
   }
 }
 </style>

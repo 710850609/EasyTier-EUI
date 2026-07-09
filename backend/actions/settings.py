@@ -7,6 +7,7 @@ import time
 from pathlib import Path
 
 from http_dispatcher.dispatcher import HttpException
+from locales import get_message
 from utils import run_configs, github_util
 
 
@@ -31,9 +32,9 @@ def github_mirrors(params:dict, *args, **kwargs):
         return url_list
     except Exception as e:
         logging.warning(f"读取代理配置失败: {e}")
-        raise HttpException(f"读取代理配置失败: {e}") from e
+        raise HttpException(get_message('settings.proxy_config_failed', error=str(e))) from e
 
-def delete_cache(*args, **kwargs):
+def delete_cache(params=None, *args, **kwargs):
     download_path = Path(run_configs.data_dir(), 'download')
     total_bytes = _delete_dir(download_path)
     logging.info(f"删除缓存目录: {download_path}, 累计删除 {total_bytes} 字节")
@@ -41,7 +42,7 @@ def delete_cache(*args, **kwargs):
     total_bytes += _delete_dir(tasks_path)
     logging.info(f"删除任务目录: {tasks_path}, 累计删除 {total_bytes} 字节")
     if total_bytes == 0:
-        return f"缓存已删除干净"
+        return get_message('settings.cache_cleared')
     units = ["B", "KB", "MB", "GB", "TB"]
     i = 0
     while total_bytes >= 1024 and i < len(units) - 1:
@@ -49,7 +50,7 @@ def delete_cache(*args, **kwargs):
         i += 1
     size = f"{total_bytes:.2f} {units[i]}"
     logging.info(f"删除缓存目录: {download_path}, 任务目录: {tasks_path}, 累计删除 {size}")
-    return f"缓存已删除 {size}"
+    return get_message('settings.cache_deleted', size=size)
 
 def _delete_dir(delete_path: Path):
     total_bytes = 0
@@ -63,7 +64,7 @@ def _delete_dir(delete_path: Path):
     shutil.rmtree(delete_path, ignore_errors=True)
     return total_bytes
 
-def shutdown(*args, **kwargs):
+def shutdown(params=None, *args, **kwargs):
     import os
     import threading
     logging.info("Received shutdown request, exiting...")
@@ -73,5 +74,4 @@ def shutdown(*args, **kwargs):
         os._exit(0)
 
     threading.Thread(target=do_exit, daemon=True).start()
-    return {"status": "success", "message": "正在关闭服务..."}
-
+    return {"status": "success", "message": get_message('settings.shutting_down')}

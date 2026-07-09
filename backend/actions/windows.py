@@ -11,6 +11,7 @@ import actions.configs as configs
 import utils.common_util as common_util
 import utils.et_util as et_util
 import utils.github_util as github_util
+from locales import get_message
 from utils.async_task import DownloadTask
 from http_dispatcher.dispatcher import HttpResponse
 from utils import run_configs
@@ -19,7 +20,7 @@ from utils import run_configs
 def download_mgr_pro(params:dict, *args, **kwargs):
     profile = params.get('profile', '') if params is not None else None
     task = DownloadTask(params)
-    task.update_progress(0, '正在初始化下载任务...')
+    task.update_progress(0, get_message('download.init_task'))
     task.start(_do_download_mgr_pro, profile)
     return HttpResponse(data={'download_id': task.download_id})
 
@@ -27,10 +28,10 @@ def download_mgr_pro(params:dict, *args, **kwargs):
 def get_download_mgr_pro_progress(params:dict, *args, **kwargs):
     download_id = params.get('download_id', '')
     if not download_id:
-        raise HttpResponse(f"download_id参数不能为空")
+        raise HttpResponse(get_message('download.id_required', param='download_id'))
     progress = DownloadTask.load(download_id)
     if progress is None:
-        raise HttpResponse(f"下载任务不存在: {download_id}")
+        raise HttpResponse(get_message('download.task_not_found', id=download_id))
     progress.pop('file_path', None)
     progress.pop('file_name', None)
     return HttpResponse(data=progress)
@@ -39,47 +40,47 @@ def get_download_mgr_pro_progress(params:dict, *args, **kwargs):
 def download_mgr_pro_result(params:dict, *args, **kwargs):
     download_id = params.get('download_id', '')
     if not download_id:
-        raise HttpResponse(f"download_id参数不能为空")
+        raise HttpResponse(get_message('download.id_required', param='download_id'))
     progress = DownloadTask.load(download_id)
     if progress is None:
-        raise HttpResponse(f"下载任务不存在: {download_id}")
+        raise HttpResponse(get_message('download.task_not_found', id=download_id))
     status = progress.get('status')
     if status == 0:
-        raise HttpResponse(f"下载尚未完成")
+        raise HttpResponse(get_message('download.not_completed'))
     if status == 2:
-        raise HttpResponse(f"下载失败: {progress.get('description')}")
+        raise HttpResponse(get_message('download.failed', error=progress.get('description')))
     file_path = progress.get('file_path')
     file_name = progress.get('file_name')
     if not file_path or not os.path.exists(file_path):
-        raise HttpResponse(f"下载文件不存在")
+        raise HttpResponse(get_message('download.file_not_found'))
     return HttpResponse(file=file_path, download_name=file_name)
 
 
 def _do_download_mgr_pro(task: DownloadTask, profile: str):
     download_dir = os.path.join(run_configs.data_dir(), 'download')
-    task.update_progress(5, '正在获取EasyTier版本信息...')
+    task.update_progress(5, get_message('download.fetching_version'))
     et_version = et_util.get_latest_version()
-    task.update_progress(10, f'获取到EasyTier版本: {et_version}，准备下载...')
+    task.update_progress(10, get_message('download.preparing') + f' ({et_version})')
 
     def on_et_download(percent, desc):
         mapped = 10 + int(percent * 0.40)
-        task.update_progress(mapped, f'正在下载EasyTier内核 {et_version}({desc or "已下载" + percent + "%"})')
+        task.update_progress(mapped, get_message('download.downloading_core') + f' {et_version}({desc or percent}%)')
 
     et_package = et_util.download_package(download_dir, 'windows', 'x86_64', et_version, progress_callback=on_et_download)
-    task.update_progress(50, f'EasyTier内核下载完成，获取EasyTier管理器版本...')
+    task.update_progress(50, get_message('download.fetching_version') + ' - EasyTier Manager')
     et_mgr_version = _get_et_mgr_latest_version()
-    task.update_progress(55, f'获取到EasyTier管理器版本: {et_mgr_version}，准备下载...')
+    task.update_progress(55, get_message('download.preparing') + f' ({et_mgr_version})')
 
     def on_mgr_download(percent, desc):
         mapped = 55 + int(percent * 0.35)
-        task.update_progress(mapped, f'正在下载EasyTier管理器 {et_mgr_version}({desc or "已下载" + percent + "%"})')
+        task.update_progress(mapped, get_message('download.downloading_manager') + f' {et_mgr_version}({desc or percent}%)')
 
     et_mgr_package = _get_et_mgr_package(et_mgr_version, download_dir, progress_callback=on_mgr_download)
-    task.update_progress(90, f'下载完成，正在合并包...')
+    task.update_progress(90, get_message('download.merging_package'))
     download_temp_dir = f"{download_dir}/temp"
     output_file = f"{download_temp_dir}/easytier-manager-pro-v{et_mgr_version}-v{et_version}.zip"
     _merge_package(profile, et_package, et_mgr_package, output_file, download_temp_dir)
-    task.update_progress(95, f'合并完成，准备返回文件...')
+    task.update_progress(95, get_message('download.preparing'))
     task.set_completed(output_file, Path(output_file).name)
 
 

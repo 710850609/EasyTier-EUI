@@ -26,7 +26,8 @@
     "markdown-it": "^14.2.0",
     "vconsole": "^3.15.1",
     "vue": "^3.5.30",
-    "vue-codemirror6": "^1.5.0"
+    "vue-codemirror6": "^1.5.0",
+    "vue-i18n": "^9.14.0"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.2.1",

@@ -106,9 +106,9 @@ if (typeof window !== 'undefined') {
 
 // 主题选项配置
 export const themeOptions = [
-  { label: '跟随系统', value: 'system', icon: 'palette-outline' },
-  { label: '亮模式', value: 'light', icon: 'white-balance-sunny' },
-  { label: '暗模式', value: 'dark', icon: 'weather-night' }
+  { label: 'settings.theme.auto', value: 'system', icon: 'palette-outline' },
+  { label: 'settings.theme.light', value: 'light', icon: 'white-balance-sunny' },
+  { label: 'settings.theme.dark', value: 'dark', icon: 'weather-night' }
 ]
 
 // 对外导出响应式状态

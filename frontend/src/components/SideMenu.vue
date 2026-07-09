@@ -37,7 +37,7 @@
             />
             <!-- 图片图标 -->
             <img v-else-if="isImageIcon(menu.icon)" :src="menu.icon" class="menu-icon" />
-            <span v-if="!isCollapsed" class="menu-title">{{ menu.label }}</span>
+            <span v-if="!isCollapsed" class="menu-title">{{ $t(menu.label) }}</span>
             <var-icon
               v-if="!isCollapsed"
               name="chevron-down"
@@ -66,7 +66,7 @@
               />
               <!-- 图片图标 -->
               <img v-else-if="isImageIcon(child.icon)" :src="child.icon" class="submenu-icon" />
-              <span>{{ child.label }}</span>
+              <span>{{ $t(child.label) }}</span>
             </div>
           </div>
         </div>
@@ -91,7 +91,7 @@
           />
           <!-- 图片图标 -->
           <img v-else-if="isImageIcon(menu.icon)" :src="menu.icon" class="menu-icon" />
-          <span v-if="!isCollapsed" class="menu-title">{{ menu.label }}</span>
+          <span v-if="!isCollapsed" class="menu-title">{{ $t(menu.label) }}</span>
         </div>
       </template>
     </div>
@@ -107,7 +107,7 @@
           :style="submenuPopupStyle"
         >
           <div class="submenu-popup-content" @click.stop>
-            <div class="submenu-popup-title">{{ submenuPopup.menu?.label }}</div>
+            <div class="submenu-popup-title">{{ $t(submenuPopup.menu?.label) }}</div>
             <div
               v-for="child in submenuPopup.menu?.children"
               :key="child.key"
@@ -127,7 +127,7 @@
               />
               <!-- 图片图标 -->
               <img v-else-if="isImageIcon(child.icon)" :src="child.icon" class="submenu-icon" />
-              <span>{{ child.label }}</span>
+              <span>{{ $t(child.label) }}</span>
             </div>
           </div>
         </div>

@@ -14,6 +14,7 @@ import utils.common_util as common_util
 import utils.github_util as github_util
 from actions import services
 from http_dispatcher.dispatcher import HttpException
+from locales import get_message
 from utils import run_configs, et_run_info, log_util
 
 
@@ -34,9 +35,9 @@ def check_core(*args, **kwargs):
     core_file = f'{core_dir}/easytier-core{ext}'
     return os.path.exists(cli_file) and os.path.exists(core_file)
 
-def version(*args, **kwargs):
+def version(params=None, *args, **kwargs):
     if not check_core():
-        raise HttpException('内核不存在，请先安装内核')
+        raise HttpException(get_message('download.task_not_found'))
         
     core_dir = run_configs.core_dir()
     ext = ".exe" if sys.platform == "win32" else ""
@@ -129,7 +130,7 @@ def version_list(params: dict, *args, **kwargs):
 def install(data, *args, **kwargs):
     et_version = data['version']
     if not et_version:
-        raise HttpException('版本不能为空')
+        raise HttpException(get_message('download.id_required', param='version'))
 
     arch = __get_arch()
     platform = 'linux' if sys.platform == 'linux' else ('windows' if sys.platform == 'win32' else 'macos')

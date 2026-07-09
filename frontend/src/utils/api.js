@@ -3,6 +3,7 @@
  * 统一管理 HTTP 请求和基础路径
  */
 import toast from '../components/toast.js'
+import { getLanguage } from '../locales/index.js'
 
 // 使用 Vite 注入的环境变量
 const API_BASE = typeof __API_BASE__ !== 'undefined' ? __API_BASE__ : '/'
@@ -87,6 +88,7 @@ async function request(url, options = {}, otherOptions = {}) {
   const defaultOptions = {
     headers: {
       'Content-Type': 'application/json',
+      'Accept-Language': getLanguage() === 'en' ? 'en-US' : 'zh-CN',
       ...options.headers
     },
     signal

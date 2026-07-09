@@ -4,20 +4,20 @@
       <div class="platform-header">
         <div class="platform-info">
           <h2>
-            易组网
+            {{ $t('software.easyTierEui') }}
             <var-badge type="primary">
-               <template #value>预览</template>
+               <template #value>{{ $t('software.preview') }}</template>
             </var-badge>
           </h2>
         </div>
       </div>
       <div class="version-info">
         <var-cell>
-          <p>集成当前配置，解压启动后启动服务即可组网</p>
-          <p>自建初始节点，请自行修改配置</p>
+          <p>{{ $t('software.integratedConfig') }}</p>
+          <p>{{ $t('software.selfBuildNode') }}</p>
         </var-cell>
         <var-cell>
-          <var-link type="primary" underline="none" href="https://github.com/710850609/EasyTier-EUI/releases" target="_blank"><img src="https://img.shields.io/github/v/release/710850609/EasyTier-EUI?color=blue&logo=github&label=稳定版" /></var-link>
+          <var-link type="primary" underline="none" href="https://github.com/710850609/EasyTier-EUI/releases" target="_blank"><img :src="stableBadgeUrl" /></var-link>
         </var-cell>
       </div>
       <div>
@@ -26,13 +26,13 @@
           <var-button type="primary" size="normal" block @click="downloadEasyTierEui('macos', 'aarch64')" :loading="downloadingKey === 'macos-aarch64'">
             <template #default>
               <var-icon name="download"/>
-              Apple芯片版
+              {{ $t('software.appleSiliconVersion') }}
             </template>
           </var-button>
           <var-button type="primary" size="normal" block @click="downloadEasyTierEui('macos', 'x86_64')" :loading="downloadingKey === 'macos-x86_64'">
             <template #default>
               <var-icon name="download"/>
-              Intel芯片版
+              {{ $t('software.intelChipVersion') }}
             </template>
           </var-button>
         </var-space>
@@ -46,24 +46,24 @@
     <var-paper class="download-card" :elevation="1">
       <div class="platform-header">
         <div class="platform-info">
-          <h2>EasyTier MacOS GUI 版本</h2>
+          <h2>{{ $t('software.macOSGuiVersion') }}</h2>
         </div>
       </div>
       <div class="version-info">
-        <var-cell>安装应用，并导出飞牛上配置toml文件后。把toml配置文件导入到easytier中，并启动网络即可。</var-cell>
+        <var-cell>{{ $t('software.installAndImport') }}</var-cell>
         <var-cell>
-          其他使用说明，请访问 
+          {{ $t('software.visitForHelp') }}
           <var-link type="primary" href="https://easytier.cn/" target="_blank" underline="none">
-            EasyTier官网
+            {{ $t('software.easyTierWebsite') }}
           </var-link>
         </var-cell>
         <var-space :size="[20, 20]" justify="center">
           <a class="shield-badge" href="https://github.com/EasyTier/EasyTier/releases" target="_blank">
-            <span class="badge-label">预发版</span>
+            <span class="badge-label">{{ $t('software.prerelease') }}</span>
             <span class="badge-value">{{ prereleaseVersion || '--' }}</span>
           </a>
           <a class="shield-badge" href="https://github.com/EasyTier/EasyTier/releases" target="_blank">
-            <span class="badge-label">稳定版</span>
+            <span class="badge-label">{{ $t('software.stable') }}</span>
             <span class="badge-value">{{ latestReleaseVersion || '--' }}</span>
           </a>
         </var-space>
@@ -73,39 +73,39 @@
         <var-paper class="download-item" :elevation="3">
           <div class="item-header">
             <var-icon name="package" size="24" />
-            <span class="item-title">Apple芯片</span>
+            <span class="item-title">{{ $t('software.appleSilicon') }}</span>
           </div>
           <div class="item-actions">
             <var-button type="primary" size="normal" @click="download('dmg', 'aarch64', true)" auto-loading>
               <var-icon name="download"/>
-              预发版
+              {{ $t('software.prerelease') }}
             </var-button>
             <var-button type="primary" size="normal" @click="download('dmg', 'aarch64', false)" auto-loading>
               <var-icon name="download"/>
-              稳定版
+              {{ $t('software.stable') }}
             </var-button>
           </div>
         </var-paper>
         <var-paper class="download-item" :elevation="3">
           <div class="item-header">
             <var-icon name="package" size="24" />
-            <span class="item-title">Intel芯片</span>
+            <span class="item-title">{{ $t('software.intelChip') }}</span>
           </div>
           <div class="item-actions">
             <var-button type="primary" size="normal" @click="download('dmg', 'x64', true)" auto-loading>
               <var-icon name="download" />
-              预发版
+              {{ $t('software.prerelease') }}
             </var-button>
             <var-button type="primary" size="normal" @click="download('dmg', 'x64', false)" auto-loading>
               <var-icon name="download"/>
-              稳定版
+              {{ $t('software.stable') }}
             </var-button>
           </div>
         </var-paper>
       </div>
     </var-paper>
 
-      <var-dialog v-model:show="showConfigSelectDialog" title="选择内置配置" @confirm="handleConfigConfirm">
+      <var-dialog v-model:show="showConfigSelectDialog" :title="$t('software.selectConfig')" @confirm="handleConfigConfirm">
       <var-select
         v-model="selectedConfig"
         variant="outlined"
@@ -126,12 +126,20 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import toast from '../../components/toast.js'
 import { api } from '../../utils/api.js'
 import { useAsyncDownload } from '../../utils/downloadProgress.js'
 
+const { t } = useI18n()
+
 const prereleaseVersion = ref('')
 const latestReleaseVersion = ref('')
+
+const stableBadgeUrl = computed(() => {
+  const label = encodeURIComponent(t('software.stableLabel'))
+  return `https://img.shields.io/github/v/release/710850609/EasyTier-EUI?color=blue&logo=github&label=${label}`
+})
 
 onMounted(() => {
   api.etApp.getAppInfo().then((resp) => {
@@ -165,15 +173,15 @@ const selectedArch = ref(null)
 
 const downloadEasyTierEui = async (platform, arch) => {
   if (downloadingKey.value) {
-    toast.warning(`当前 ${downloadingKey.value} 正在下载中，请稍后`)
+    toast.warning(t('software.currentlyDownloading', { key: downloadingKey.value }))
     return
   }
-  const configs = await api.configs.listConfigFiles().then(resp => resp.data).catch(error => toast.error('获取配置失败:', error))
+  const configs = await api.configs.listConfigFiles().then(resp => resp.data).catch(error => toast.error(t('software.getConfigFailed'), error.message))
   let profile = ''
   selectedPlatform.value = platform
   selectedArch.value = arch
   if (configs.length === 0) {
-    toast.info('当前系统无内置配置，将下载无配置版本')
+    toast.info(t('software.noConfigDownload'))
   } else if (configs.length === 1) {
     profile =  configs[0].profile
   } else {
@@ -279,17 +287,6 @@ const handleConfigConfirm = async () => {
 .item-actions .var-button {
   flex: 1;
   min-width: 90px;
-}
-
-.download-progress {
-  margin-top: 16px;
-  text-align: center;
-}
-
-.progress-desc {
-  margin-top: 8px;
-  font-size: 13px;
-  color: var(--color-on-surface-variant);
 }
 
 .shield-badge {

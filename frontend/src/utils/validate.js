@@ -1,6 +1,9 @@
 /**
  * 验证工具函数
  */
+import i18n from '../locales/index.js'
+
+const { t } = i18n.global
 
 /**
  * 验证是否为合法的 IPv4 地址
@@ -36,12 +39,12 @@ export function isValidIPPort(addr) {
  * @param {string} label - 字段名称，用于错误提示
  * @returns {string|null}
  */
-export function validateIP(ip, label = 'IP地址') {
+export function validateIP(ip, label = t('validate.ip')) {
   if (!ip || !ip.trim()) {
-    return `${label}不能为空`
+    return t('validate.required', { label })
   }
   if (!isValidIP(ip.trim())) {
-    return `${label}格式不正确`
+    return t('validate.invalid_format', { label })
   }
   return null
 }
@@ -52,12 +55,12 @@ export function validateIP(ip, label = 'IP地址') {
  * @param {string} label - 字段名称，用于错误提示
  * @returns {string|null}
  */
-export function validateIPPort(addr, label = '地址') {
+export function validateIPPort(addr, label = t('validate.address')) {
   if (!addr || !addr.trim()) {
-    return `${label}不能为空`
+    return t('validate.required', { label })
   }
   if (!isValidIPPort(addr.trim())) {
-    return `${label}格式不正确，正确格式: IP:端口 (如 0.0.0.0:1111)`
+    return t('validate.invalid_ip_port_format', { label })
   }
   return null
 }

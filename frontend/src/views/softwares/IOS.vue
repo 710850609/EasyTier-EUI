@@ -3,19 +3,19 @@
     <var-paper class="download-card" :elevation="1">
       <div class="platform-header">
         <div class="platform-info">
-          <h2>EasyTier IOS版本</h2>
+          <h2>{{ $t('software.iosVersion') }}</h2>
         </div>
       </div>
       <div class="version-info">
-        <var-cell>如未安装TestFlight，请先安装TestFlight。再从下面按钮点击跳转下载安装EasyTier </var-cell>
+        <var-cell>{{ $t('software.iosInstallDesc') }}</var-cell>
         <var-cell>
-          <p>安装应用，从当前易组网分享配置后，到手机的Easytier应用上黏贴配置</p>
-          <p>启动网络即可</p>
+          <p>{{ $t('software.iosInstallDesc2') }}</p>
+          <p>{{ $t('software.startNetwork') }}</p>
         </var-cell>
         <var-cell>
-          其他使用说明，请访问 
+          {{ $t('software.visitForHelp') }}
           <var-link type="primary" href="https://easytier.cn/" target="_blank" underline="hover">
-            EasyTier官网
+            {{ $t('software.easyTierWebsite') }}
           </var-link>
         </var-cell>
       </div>
@@ -25,7 +25,7 @@
           <var-button type="primary" size="normal" block @click="copyAndOpenLink" auto-loading>
             <template #default>
               <var-icon name="share"/>
-              前往 TestFlight 安装
+              {{ $t('software.goToTestFlight') }}
             </template>
           </var-button>
         </var-space>

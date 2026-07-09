@@ -3,27 +3,27 @@
     <var-paper class="download-card" :elevation="1">
       <div class="platform-header">
         <div class="platform-info">
-          <h2>EasyTier 安卓版本</h2>
+          <h2>{{ $t('software.androidVersion') }}</h2>
         </div>
       </div>
       <div class="version-info">
         <var-cell>
-          <p>下载安装APK，从易组网分享配置后，到安卓上点击【编辑为文件】并黏贴保存配置</p>
-          <p>启动网络即可</p>
+          <p>{{ $t('software.androidInstallDesc') }}</p>
+          <p>{{ $t('software.startNetwork') }}</p>
         </var-cell>
         <var-cell>
-          其他使用说明，请访问 
+          {{ $t('software.visitForHelp') }}
           <var-link type="primary" href="https://easytier.cn/" target="_blank" underline="none">
-            EasyTier官网
+            {{ $t('software.easyTierWebsite') }}
           </var-link>
         </var-cell>
         <var-space :size="[20, 20]" justify="center">
           <a class="shield-badge" href="https://github.com/EasyTier/EasyTier/releases" target="_blank">
-            <span class="badge-label">预发版</span>
+            <span class="badge-label">{{ $t('software.prerelease') }}</span>
             <span class="badge-value">{{ prereleaseVersion || '--' }}</span>
           </a>
           <a class="shield-badge" href="https://github.com/EasyTier/EasyTier/releases" target="_blank">
-            <span class="badge-label">稳定版</span>
+            <span class="badge-label">{{ $t('software.stable') }}</span>
             <span class="badge-value">{{ latestReleaseVersion || '--' }}</span>
           </a>
         </var-space>
@@ -36,18 +36,18 @@
             <var-icon name="package" size="24" />
             <span class="item-title">arm64
               <var-badge color="var(--color-primary)">
-                 <template #value>常见机型</template>
+                 <template #value>{{ $t('software.commonModel') }}</template>
               </var-badge>
             </span>
           </div>
           <div class="item-actions">
             <var-button type="primary" size="normal" @click="download('arm64', true)" auto-loading>
               <var-icon name="download"/>
-              预发版
+              {{ $t('software.prerelease') }}
             </var-button>
             <var-button type="primary" size="normal" @click="download('arm64', false)" auto-loading>
               <var-icon name="download"/>
-              稳定版
+              {{ $t('software.stable') }}
             </var-button>
           </div>
         </var-paper>
@@ -58,18 +58,18 @@
             <var-icon name="package" size="24" />
             <span class="item-title">arm
               <var-badge color="var(--color-primary)">
-                 <template #value>古老机型</template>
+                 <template #value>{{ $t('software.oldModel') }}</template>
               </var-badge>
             </span>
           </div>
           <div class="item-actions">
             <var-button type="primary" size="normal" @click="download('arm', true)" auto-loading>
               <var-icon name="download"/>
-              预发版
+              {{ $t('software.prerelease') }}
             </var-button>
             <var-button type="primary" size="normal" @click="download('arm', false)" auto-loading>
               <var-icon name="download"/>
-              稳定版
+              {{ $t('software.stable') }}
             </var-button>
           </div>
         </var-paper>
@@ -83,11 +83,11 @@
           <div class="item-actions">
             <var-button type="primary" size="normal" @click="download('x86_64', true)" auto-loading>
               <var-icon name="download"/>
-              预发版
+              {{ $t('software.prerelease') }}
             </var-button>
             <var-button type="primary" size="normal" @click="download('x86_64', false)" auto-loading>
               <var-icon name="download"/>
-              稳定版
+              {{ $t('software.stable') }}
             </var-button>
           </div>
         </var-paper>
@@ -101,11 +101,11 @@
           <div class="item-actions">
             <var-button type="primary" size="normal" @click="download('x86', true)" auto-loading>
               <var-icon name="download"/>
-              预发版
+              {{ $t('software.prerelease') }}
             </var-button>
             <var-button type="primary" size="normal" @click="download('x86', false)" auto-loading>
               <var-icon name="download"/>
-              稳定版
+              {{ $t('software.stable') }}
             </var-button>
           </div>
         </var-paper>

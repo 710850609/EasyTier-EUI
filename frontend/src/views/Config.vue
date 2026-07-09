@@ -18,15 +18,15 @@
 
     <div v-else-if="!fastSettingMode && configList.length === 0" class="empty-state-full">
       <var-icon name="file-document-outline" size="56" color="var(--color-text-disabled)" />
-      <p class="empty-title">暂无配置</p>
-      <p class="empty-hint">创建第一个配置开始使用 EasyTier</p>
+      <p class="empty-title">{{ $t('config.noConfig') }}</p>
+      <p class="empty-hint">{{ $t('config.noConfigHint') }}</p>
       <var-button type="primary" size="large" @click="setupShowMode(1);" auto-loading>
         <var-icon name="plus" size="18" />
-        快速新增
+        {{ $t('config.quickAdd') }}
       </var-button>
       <var-button type="primary" size="large" @click="setupShowMode(2);" auto-loading>
         <var-icon name="plus" size="18" />
-        普通新增
+        {{ $t('config.normalAdd') }}
       </var-button>
     </div>
 
@@ -38,7 +38,7 @@
             <var-select
               class="config-switcher"
               v-model="selectedConfig"
-              placeholder="选择配置"
+              :placeholder="$t('config.selectConfig')"
               variant="outlined"
               size="small"
               blur-color="var(--color-primary)"
@@ -57,8 +57,10 @@
             </var-select>
 
             <div class="config-actions-group" v-if="selectedConfig">
-              <var-button size="small" type="primary" @click="showCreateDialog = true; showMode = 1;" v-if="showMode === 0">新增</var-button>
-              <var-button size="small" type="primary" @click="startEditName" :loading="isRenaming" v-if="showMode === 0">改名</var-button>
+              <var-button size="small" type="primary" @click="showCreateDialog = true; showMode = 1;" v-if="showMode === 0">{{ $t('config.add') }}</var-button>
+              <var-button size="small" type="primary" @click="startEditName" :loading="isRenaming" v-if="showMode === 0">{{ $t('config.rename') }}</var-button>
+              <var-button type="primary" size="small" @click="showShareConfigType = true" v-if="showMode === 0">{{ $t('config.shareNetwork') }}</var-button>
+              <var-button size="small" type="danger" @click="showDeleteDialog = true" :loading="isDeletingConfig" v-if="showMode === 0">{{ $t('config.delete') }}</var-button>
               <label class="toggle-item" v-if="showMode === 0">
                 <var-loading v-if="changingAutostart" size="small" />
                 <label class="switch-wrapper" v-if="!changingAutostart">
@@ -66,18 +68,16 @@
                   <span class="switch-slider"></span>
                 </label>
               </label>
-              <span class="toggle-label" v-if="showMode === 0">开机自启</span>
+              <span class="toggle-label" v-if="showMode === 0">{{ $t('config.autostart') }}</span>
             </div>
           </div>
           <var-divider class="toolbar-divider" />
           <div class="toolbar-group toolbar-status" v-if="selectedConfig">
             <div class="toolbar-toggles">
               <div class="toggle-item">
-                <var-button size="small" type="danger" @click="exitAddMode" :loading="isDeletingConfig" v-if="showMode !== 0">退出新增</var-button>
-                <var-button type="primary" size="small" @click="saveConfig" auto-loading>保存配置</var-button>
-                <var-button type="primary" size="small" @click="openCodePage" auto-loading v-if="showMode === 0">编辑文件</var-button>
-                <var-button type="primary" size="small" @click="showShareConfigType = true" v-if="showMode === 0">分享网络</var-button>
-                <var-button size="small" type="danger" @click="showDeleteDialog = true" :loading="isDeletingConfig" v-if="showMode === 0">删除</var-button>
+                <var-button size="small" type="danger" @click="exitAddMode" :loading="isDeletingConfig" v-if="showMode !== 0">{{ $t('config.exitAdd') }}</var-button>
+                <var-button type="primary" size="small" @click="saveConfig" auto-loading>{{ $t('config.saveConfig') }}</var-button>
+                <var-button type="primary" size="small" @click="openCodePage" auto-loading v-if="showMode === 0">{{ $t('config.editFile') }}</var-button>
               </div>
             </div>
           </div>
@@ -89,7 +89,7 @@
             <var-select
               class="config-switcher"
               v-model="selectedConfig"
-              placeholder="选择配置"
+              :placeholder="$t('config.selectConfig')"
               variant="outlined"
               size="small"
               blur-color="var(--color-primary)"
@@ -114,12 +114,12 @@
                   <span class="switch-slider"></span>
                 </label>
               </label>
-              <span class="toggle-label" v-if="showMode === 0">开机自启</span>
+              <span class="toggle-label" v-if="showMode === 0">{{ $t('config.autostart') }}</span>
               <var-button variant="outlined" size="small" type="danger" @click="exitAddMode" :loading="isDeletingConfig" v-if="showMode !== 0">
                 <var-icon name="close" :size="16" />
-                退出新增
+                {{ $t('config.exitAdd') }}
               </var-button>
-              <var-button type="primary" size="small" @click="saveConfig" auto-loading>保存</var-button>
+              <var-button type="primary" size="small" @click="saveConfig" auto-loading>{{ $t('config.save') }}</var-button>
               <var-button size="small" icon round text @click="toggleToolbarMore">
                 <var-icon :name="toolbarMoreOpen.length ? 'menu-open' : 'menu'" :size="20" />
               </var-button>
@@ -130,25 +130,25 @@
             <div class="toolbar-more-content">
               <div class="toolbar-more-row">
                 <var-button variant="outlined" size="small" type="primary" @click="showCreateDialog = true; showMode = 1;toggleToolbarMore()" v-if="showMode === 0">
-                  新增
+                  {{ $t('config.add') }}
                 </var-button>
                 <var-button variant="outlined" size="small" type="primary" @click="startEditName();toggleToolbarMore()" :loading="isRenaming" v-if="showMode === 0">
                   <var-icon name="pencil-outline" :size="16" />
-                  改名
+                  {{ $t('config.rename') }}
                 </var-button>
                 <var-button variant="outlined" size="small" type="danger" @click="showDeleteDialog = true;toggleToolbarMore()" :loading="isDeletingConfig" v-if="showMode === 0">
                   <var-icon name="delete-outline" :size="16" />
-                  删除
+                  {{ $t('config.delete') }}
                 </var-button>
               </div>
               <div class="toolbar-more-row">
-                <var-button variant="outlined" size="small" type="primary" @click="openCodePage();toggleToolbarMore()" auto-loading v-if="showMode === 0">
-                  <var-icon name="file-edit-outline" :size="16" />
-                  编辑文件
-                </var-button>
                 <var-button variant="outlined" size="small" type="primary" @click="showShareConfigType = true;toggleToolbarMore()" v-if="showMode === 0">
                   <var-icon name="share-variant-outline" :size="16" />
-                  分享网络
+                  {{ $t('config.shareNetwork') }}
+                </var-button>
+                <var-button variant="outlined" size="small" type="primary" @click="openCodePage();toggleToolbarMore()" auto-loading v-if="showMode === 0">
+                  <var-icon name="file-edit-outline" :size="16" />
+                  {{ $t('config.editFile') }}
                 </var-button>
               </div>
             </div>
@@ -166,11 +166,11 @@
             <div class="section-header">
               <div class="section-header-left">
                 <svg-icon type="mdi" :path="mdiHomeEdit" width="24" height="24" color="var(--color-primary)" />
-                <span class="section-title">{{ fastSettingMode ? '快速设置' : '基础设置' }}</span>
+                <span class="section-title">{{ fastSettingMode ? $t('config.fastSetup') : $t('config.basicSettings') }}</span>
               </div>
               <div v-if="fastSettingMode && !isLoadingConfig && publicPeerOptions.length > 0">
-                <span class="fast-setting-hint">填写网络名称和密码，后点击即可 -&gt; </span>
-                <var-button type="primary" size="small" @click="saveConfig" auto-loading>保存并启动</var-button>
+                <span class="fast-setting-hint">{{ $t('config.fastSetupHint') }} -&gt; </span>
+                <var-button type="primary" size="small" @click="saveConfig" auto-loading>{{ $t('config.saveAndStart') }}</var-button>
               </div>
             </div>
 
@@ -179,30 +179,30 @@
                 <var-cell>
                   <var-input
                     v-model="config.network_identity.network_name"
-                    placeholder="网络名称"
+                    :placeholder="$t('config.networkName')"
                     size="small"
-                    :rules="[(v) => !!v || '网络名称不能为空']"
+                    :rules="[(v) => !!v || $t('config.networkNameRequired')]"
                     variant="outlined"
                   >
                     <template #prepend-icon>
                       <svg-icon type="mdi" :path="mdilAccount"></svg-icon>
                     </template>
-                    <template #label>网络名称</template>
+                    <template #label>{{ $t('config.networkName') }}</template>
                   </var-input>
                 </var-cell>
                 <var-cell>
                   <var-input
                     v-model="config.network_identity.network_secret"
-                    placeholder="网络密码"
+                    :placeholder="$t('config.networkSecret')"
                     :type="showPassword ? 'text' : 'password'"
-                    :rules="[(v) => !!v || '网络密码不能为空']"
+                    :rules="[(v) => !!v || $t('config.networkSecretRequired')]"
                     size="small"
                     variant="outlined"
                   >
                     <template #prepend-icon>
                       <svg-icon type="mdi" :path="mdilLock" />
                     </template>
-                    <template #label>网络密码</template>
+                    <template #label>{{ $t('config.networkSecret') }}</template>
                     <template #append-icon>
                       <svg-icon
                         type="mdi"
@@ -221,7 +221,7 @@
               <var-cell v-if="!fastSettingMode" class="peer-cell">
                 <div class="peer-cell-header">
                   <div class="section-subtitle">
-                    初始节点
+                    {{ $t('config.initialPeers') }}
                     <var-icon name="information-outline" size="12pt" @click="showPublicPeerTip = true" color="var(--color-primary)" />
                   </div>                    
                   <!-- <div class="peer-actions">
@@ -235,7 +235,7 @@
                   size="small"
                   v-model="config.peer"
                   multiple
-                  :placeholder="`${config.peer.length} 个节点，用于发现组网设备`"
+                  :placeholder="$t('config.nodeCountHint', { count: config.peer.length })"
                   :chip="true"
                   class="peer-select"
                 >
@@ -243,12 +243,12 @@
                     <div class="peer-custom-input">
                       <svg-icon type="mdi" :path="mdilPencil" color="var(--color-primary)" size="20" />
                       <var-input 
-                        placeholder="输入自定义节点，例如 tcp://1.2.3.4:11010" 
+                        :placeholder="$t('config.customNodePlaceholder')" 
                         size="small" 
                         v-model="customPeer" 
                         class="peer-custom-field"
                       />
-                      <var-button type="primary" size="small" @click="addPeer">添加</var-button>
+                      <var-button type="primary" size="small" @click="addPeer">{{ $t('config.add') }}</var-button>
                     </div>
                     
                     <div class="peer-options-list">
@@ -273,8 +273,8 @@
                                 v-if="peer.latency > 0">
                                 {{ peer.latency }}ms
                               </span>
-                              <span class="peer-tag relay-tag" v-if="peer.relay == 1">可中转</span>
-                              <span class="peer-tag dynamic-tag" v-if="peer.dynamic">动态</span>
+                              <span class="peer-tag relay-tag" v-if="peer.relay == 1">{{ $t('config.relay') }}</span>
+                              <span class="peer-tag dynamic-tag" v-if="peer.dynamic">{{ $t('config.dynamic') }}</span>
                             </div>
                           </div>
                         </template>
@@ -301,11 +301,12 @@
               <var-cell v-if="fastSettingMode">
                 <div class="fast-setting-mode-hint">
                   <p>
-                    <span>默认开机自启、使用社区节点用于发现组网节点。</span>
+                    <span>{{ $t('config.fastSetupHintFooter') }}</span>
                     <var-icon name="help-circle-outline" size="12pt" @click="showPublicPeerTip = true" class="help-icon" />
                   </p>
                   <p>
-                    <span>如不想用，请 <var-button type="primary" size="mini" @click="fastSettingMode = false">重新选择</var-button> 普通模式进行配置</span>
+                    <span>{{ $t('config.fastSetupReconfigHint') }}</span>
+                    <var-button type="primary" size="mini" @click="fastSettingMode = false">{{ $t('config.normalAdd') }}</var-button>
                   </p>
                 </div>
               </var-cell>
@@ -319,13 +320,13 @@
               <template #title>
                 <div class="collapse-title">
                   <svg-icon type="mdi" :path="mdiShieldEdit" width="24" height="24" color="var(--color-primary)" />
-                  <span class="section-title">高级设置</span>
+                  <span class="section-title">{{ $t('config.advancedSettings') }}</span>
                 </div>
               </template>
               <var-skeleton :loading="isLoadingConfig">
                 <div class="flags-content">
                   <div class="feature-section">
-                    <div class="section-subtitle">功能开关</div>
+                    <div class="section-subtitle">{{ $t('config.featureToggles') }}</div>
                     <div class="feature-grid">
                       <div
                         v-for="feature in featureSwitches"
@@ -333,13 +334,13 @@
                         class="feature-item"
                       >
                         <var-checkbox v-model="config.flags[feature.key]">
-                          {{ feature.label }}
+                          {{ $t(feature.label) }}
                         </var-checkbox>
                         <var-tooltip v-if="feature.tooltip" teleport="body">
                           <var-icon name="help-circle-outline" size="16" class="help-icon" />
                           <template #content>
                             <div class="tooltip-multiline">
-                              {{ feature.tooltip }}
+                              {{ $t(feature.tooltip) }}
                             </div>
                           </template>
                         </var-tooltip>
@@ -350,45 +351,44 @@
 
                   <div class="input-row">
                     <div class="input-section">
-                      <div class="section-subtitle">主机名</div>
-                      <var-input v-model="config.hostname" placeholder="留空默认为主机名" variant="outlined" size="small" />
+                      <div class="section-subtitle">{{ $t('config.hostname') }}</div>
+                      <var-input v-model="config.hostname" :placeholder="$t('config.hostnamePlaceholder')" variant="outlined" size="small" />
                     </div>
                     <div class="input-section">
-                      <div class="section-subtitle">虚拟IPv4</div>
-                      <var-input v-model="config.ipv4" placeholder="固定虚拟IPv4" variant="outlined" size="small" />
+                      <div class="section-subtitle">{{ $t('config.virtualIpv4') }}</div>
+                      <var-input v-model="config.ipv4" :placeholder="$t('config.virtualIpv4Placeholder')" variant="outlined" size="small" />
                     </div>
                   </div>
 
                   <div class="input-row">
                     <div class="input-section">
                       <var-tooltip trigger="click">
-                        <div class="section-subtitle">TUN接口名称
+                        <div class="section-subtitle">{{ $t('config.tunName') }}
                           <var-icon name="help-circle-outline" size="16" class="help-icon" />
                         </div>
                         <template #content>
                           <div class="tooltip-multiline">
-                            当多个网络同时使用相同的TUN接口名称时，将会在设置TUN的IP时产生冲突
+                            {{ $t('config.tunNameHint') }}
                           </div>
                         </template>
                       </var-tooltip>
-                      <var-input v-model="config.flags.dev_name" placeholder="留空自动生成随机名称" variant="outlined" size="small" />
+                      <var-input v-model="config.flags.dev_name" :placeholder="$t('config.tunNamePlaceholder')" variant="outlined" size="small" />
                     </div>
                     <div class="input-section">
                       <var-tooltip trigger="click">
-                        <div class="section-subtitle">MTU
+                        <div class="section-subtitle">{{ $t('config.tunMtu') }}
                           <var-icon name="help-circle-outline" size="16" class="help-icon" />
                         </div>
                         <template #content>
-                          <div class="tooltip-multiline">
-                            TUN设备的MTU，取值范围 400 ~ 1380<br/>默认加密: 1360，不加密: 1380。
+                          <div class="tooltip-multiline" v-html="$t('config.tunMtuHint')">
                           </div>
                         </template>
                       </var-tooltip>
                       <var-input
                         v-model="mtuStr"
                         type="number"
-                        :rules="(v) => (v === '' || v >= 400 && v <= 1380) || 'MTU值超出范围[400, 1380]'"
-                        placeholder="留空默认加密:1360, 不加密:1380"
+                        :rules="(v) => (v === '' || v >= 400 && v <= 1380) || $t('config.mtuRangeError')"
+                        :placeholder="$t('config.tunMtuPlaceholder')"
                         variant="outlined"
                         size="small"
                       />
@@ -397,25 +397,25 @@
 
                   <div class="input-row">
                     <div class="input-section">
-                      <var-tooltip content="仅当开启多线程时生效，取值必须大于2" trigger="click">
-                        <div class="section-subtitle">线程数
+                      <var-tooltip :content="$t('config.workerCountHint')" trigger="click">
+                        <div class="section-subtitle">{{ $t('config.workerCount') }}
                           <var-icon name="help-circle-outline" size="16" class="help-icon" />
                         </div>
                       </var-tooltip>
                       <var-input
                         v-model="multiThreadCountStr"
-                        placeholder="留空默认为2"
+                        :placeholder="$t('config.workerCountPlaceholder')"
                         variant="outlined"
                         type="number"
-                        :rules="(v) => (v === '' || v >= 2) || '线程数必须大于等于2'"
+                        :rules="(v) => (v === '' || v >= 2) || $t('config.workerCountError')"
                         size="small"
                       />
                     </div>
                     <div class="input-section">
-                      <div class="section-subtitle">加密算法</div>
+                      <div class="section-subtitle">{{ $t('config.cipher') }}</div>
                       <var-select
                         v-model="config.flags.encryption_algorithm"
-                        placeholder="留空默认aes-gcm"
+                        :placeholder="$t('config.cipherPlaceholder')"
                         variant="outlined"
                         :chip="true"
                         size="small"
@@ -427,10 +427,10 @@
 
                   <div class="input-row">
                     <div class="input-section">
-                      <div class="section-subtitle">默认协议</div>
+                      <div class="section-subtitle">{{ $t('config.defaultProtocol') }}</div>
                       <var-select
                         v-model="config.flags.default_protocol"
-                        placeholder="默认协议"
+                        :placeholder="$t('config.defaultProtocol')"
                         variant="outlined"
                         :chip="true"
                         size="small"
@@ -439,10 +439,10 @@
                       </var-select>
                     </div>
                     <div class="input-section">
-                      <div class="section-subtitle">压缩算法</div>
+                      <div class="section-subtitle">{{ $t('config.compression') }}</div>
                       <var-select
                         v-model="config.flags.compression"
-                        placeholder="默认无"
+                        :placeholder="$t('config.compressionPlaceholder')"
                         variant="outlined"
                         :chip="true"
                         size="small"
@@ -454,14 +454,14 @@
 
                   <div class="input-row">
                     <div class="input-section">
-                      <var-tooltip content="限制当前实例整体入站流量的总接收速率，单位为字节每秒。留空表示不限速。" trigger="click">
-                        <div class="section-subtitle">实际接收限速
+                      <var-tooltip :content="$t('config.rateLimitRxHint')" trigger="click">
+                        <div class="section-subtitle">{{ $t('config.rateLimitRx') }}
                           <var-icon name="help-circle-outline" size="16" class="help-icon" />
                         </div>
                       </var-tooltip>
                       <var-input
                         v-model="config.flags.instance_recv_bps_limit"
-                        placeholder="接收限速，单位：B/s"
+                        :placeholder="$t('config.rateLimitRxPlaceholder')"
                         variant="outlined"
                         type="number"
                         size="small"
@@ -472,15 +472,15 @@
                   </div>
 
                   <div class="input-section">
-                    <div class="section-subtitle">监听地址
-                      <var-tooltip content="部分协议需要较高版本内核支持" trigger="click">
+                    <div class="section-subtitle">{{ $t('config.listeners') }}
+                      <var-tooltip :content="$t('config.listenersHint')" trigger="click">
                           <var-icon name="help-circle-outline" size="16" class="help-icon" />
                       </var-tooltip>
                     </div>
                     <var-select
                       v-model="config.listeners"
                       multiple
-                      placeholder="监听地址"
+                      :placeholder="$t('config.customListenerPlaceholder')"
                       variant="outlined"
                       :chip="true"
                       size="small"
@@ -490,10 +490,10 @@
                           <svg-icon type="mdi" :path="mdilPencil" color="var(--color-primary)" />
                         </template>
                         <template #description>
-                          <var-input placeholder="自定义监听" size="mini" v-model="customListener" blur-color="var(--color-primary)" />
+                          <var-input :placeholder="$t('config.customListenerPlaceholder')" size="mini" v-model="customListener" blur-color="var(--color-primary)" />
                         </template>
                         <template #extra>
-                          <var-button type="primary" size="small" @click="addListener">添加</var-button>
+                          <var-button type="primary" size="small" @click="addListener">{{ $t('config.addListener') }}</var-button>
                         </template>
                       </var-cell>
                       <var-option v-for="(e, index) in listenerOptions" :key="index" :label="e" :value="e" />
@@ -512,36 +512,36 @@
                 <template #title>
                   <div class="collapse-title">
                     <svg-icon type="mdi" :path="mdiRouterNetwork" width="24" height="24" color="var(--color-primary)" />
-                    <span class="section-title">代理与转发</span>
+                    <span class="section-title">{{ $t('config.proxyForward') }}</span>
                   </div>
                 </template>
                 <var-skeleton :loading="isLoadingConfig">
                   <div class="forward-content">
                     <div class="input-row">
                       <div class="input-section">
-                        <div class="section-subtitle">Socks5端口
-                          <var-tooltip content="提供Socks5服务的端口" trigger="click">
+                        <div class="section-subtitle">{{ $t('config.socks5Port') }}
+                          <var-tooltip :content="$t('config.socks5PortHint')" trigger="click">
                             <var-icon name="help-circle-outline" size="16" class="help-icon" />
                           </var-tooltip>
                         </div>
                         <var-input
                           v-model="config.socks5_proxy"
-                          placeholder="设置表示开启Socks5服务"
+                          :placeholder="$t('config.socks5Placeholder')"
                           variant="outlined"
                           type="number"
                           size="small"
-                          :rules="(v) => (!v || (v >= 2 && v <= 65535)) || '端口范围[2, 65535]'"
+                          :rules="(v) => (!v || (v >= 2 && v <= 65535)) || $t('config.portRangeError')"
                         />
                       </div>
                       <div class="input-section">
-                        <var-tooltip content="转发所有流量的出口节点列表，虚拟PV4地址,优先级由列表顺序决定" trigger="click">
-                          <div class="section-subtitle">出口节点
+                        <var-tooltip :content="$t('config.exitNodesHint')" trigger="click">
+                          <div class="section-subtitle">{{ $t('config.exitNodes') }}
                             <var-icon name="help-circle-outline" size="16" class="help-icon" />
                           </div>
                         </var-tooltip>
                         <var-select
                           v-model="config.exit_nodes"
-                          placeholder="出口节点列表"
+                          :placeholder="$t('config.exitNodesPlaceholder')"
                           :multiple="true"
                           variant="outlined"
                           :chip="true"
@@ -552,10 +552,10 @@
                               <svg-icon type="mdi" :path="mdilPencil" color="var(--color-primary)" />
                             </template>
                             <template #description>
-                              <var-input placeholder="输入固定的虚拟IP" size="mini" v-model="customExitNode" blur-color="var(--color-primary)" />
+                              <var-input :placeholder="$t('config.customExitNodePlaceholder')" size="mini" v-model="customExitNode" blur-color="var(--color-primary)" />
                             </template>
                             <template #extra>
-                              <var-button type="primary" size="small" @click="addExitNode">添加</var-button>
+                              <var-button type="primary" size="small" @click="addExitNode">{{ $t('config.addExitNode') }}</var-button>
                             </template>
                           </var-cell>
                           <var-option v-for="(e, index) in config.exit_nodes" :key="index" :label="e" :value="e" />
@@ -564,26 +564,26 @@
                     </div>
                     <div class="input-row">
                       <div class="input-section">
-                        <var-tooltip content="仅转发白名单网络的流量，支持通配*符字符串。多个网络名称间可以使用英文空格间隔" trigger="click">
-                          <div class="section-subtitle">转发白名单网络
+                        <var-tooltip :content="$t('config.forwardWhitelistHint')" trigger="click">
+                          <div class="section-subtitle">{{ $t('config.forwardWhitelist') }}
                             <var-icon name="help-circle-outline" size="16" class="help-icon" />
                           </div>
                         </var-tooltip>
                         <var-input
                           v-model="config.flags.relay_network_whitelist"
                           multiple
-                          placeholder="网络名称，支持通配*符字符串"
+                          :placeholder="$t('config.forwardWhitelistPlaceholder')"
                           variant="outlined"
                           :chip="true"
                           size="small"
                         />
                       </div>
                       <div class="input-section">
-                        <div class="section-subtitle">子网代理CIDR</div>
+                        <div class="section-subtitle">{{ $t('config.subnetProxy') }}</div>
                         <var-select
                           v-model="config.proxy_network"
                           multiple
-                          placeholder="子网网段"
+                          :placeholder="$t('config.subnetProxyPlaceholder')"
                           variant="outlined"
                           :chip="true"
                           size="small"
@@ -593,10 +593,10 @@
                               <svg-icon type="mdi" :path="mdilPencil" color="var(--color-primary)" />
                             </template>
                             <template #description>
-                              <var-input placeholder="格式: 192.168.1.0/24 或 192.168.1.10/32 等" size="mini" v-model="customProxyNetwork" blur-color="var(--color-primary)" />
+                              <var-input :placeholder="$t('config.customProxyNetworkPlaceholder')" size="mini" v-model="customProxyNetwork" blur-color="var(--color-primary)" />
                             </template>
                             <template #extra>
-                              <var-button type="primary" size="small" @click="addProxyNetwork">添加</var-button>
+                              <var-button type="primary" size="small" @click="addProxyNetwork">{{ $t('config.addProxyNetwork') }}</var-button>
                             </template>
                           </var-cell>
                           <var-option v-for="(e, index) in proxyNetworkOptions" :key="index" :label="e" :value="e" />
@@ -607,26 +607,25 @@
                     <div class="forward-section">
                       <var-tooltip teleport="body" trigger="click" :offset-x="80">
                         <template #default>
-                          <div class="section-subtitle">端口转发
+                          <div class="section-subtitle">{{ $t('config.portForward') }}
                             <var-icon name="help-circle-outline" size="16" class="help-icon" />
                           </div>
                         </template>
                         <template #content>
-                          <div class="tooltip-multiline">
-                            将本地端口转发到虚拟网络中的远程端口。<br/>例如：协议：udp <br/>本地网络：0.0.0.0:1111 <br/>虚拟网络：10.1.1.1:2222 <br/>表示将本地UDP端口1111转发到虚拟网络中的10.1.1.1:2222
+                          <div class="tooltip-multiline" v-html="$t('config.portForwardHint')">
                           </div>
                         </template>
                       </var-tooltip>
                       <div class="port-forward-table">
                         <div class="port-forward-row port-forward-header">
-                          <div class="port-forward-cell">协议</div>
-                          <div class="port-forward-cell">本地网络IP端口</div>
-                          <div class="port-forward-cell">虚拟网络IP端口</div>
-                          <div class="port-forward-cell port-forward-actions">操作</div>
+                          <div class="port-forward-cell">{{ $t('config.protocol') }}</div>
+                          <div class="port-forward-cell">{{ $t('config.localAddress') }}</div>
+                          <div class="port-forward-cell">{{ $t('config.remoteAddress') }}</div>
+                          <div class="port-forward-cell port-forward-actions">{{ $t('config.portForwardAction') }}</div>
                         </div>
                         <div class="port-forward-row" v-for="(item, index) in config.port_forward" :key="index">
                           <div class="port-forward-cell">
-                            <span class="port-forward-label">协议</span>
+                            <span class="port-forward-label">{{ $t('config.protocol') }}</span>
                             <var-select
                               v-model="item.proto"
                               variant="outlined"
@@ -637,19 +636,19 @@
                             </var-select>
                           </div>
                           <div class="port-forward-cell">
-                            <span class="port-forward-label">本地网络IP端口</span>
+                            <span class="port-forward-label">{{ $t('config.localAddress') }}</span>
                             <var-input
                               v-model="item.bind_addr"
-                              placeholder="例如: 0.0.0.0:1111"
+                              :placeholder="$t('config.localPlaceholder')"
                               variant="outlined"
                               size="small"
                             />
                           </div>
                           <div class="port-forward-cell">
-                            <span class="port-forward-label">虚拟网络IP端口</span>
+                            <span class="port-forward-label">{{ $t('config.remoteAddress') }}</span>
                             <var-input
                               v-model="item.dst_addr"
-                              placeholder="例如: 10.1.1.1:2222"
+                              :placeholder="$t('config.remotePlaceholder')"
                               variant="outlined"
                               size="small"
                             />
@@ -668,7 +667,7 @@
                         <div class="port-forward-add-row">
                           <var-button type="primary" size="small" @click="addPortForward">
                             <var-icon name="plus" />
-                            新增
+                            {{ $t('config.addPortForward') }}
                           </var-button>
                         </div>
                       </div>
@@ -685,7 +684,7 @@
     <var-popup v-model:show="showCodePage" class="code-editor-popup" :close-on-click-overlay="false" :style="{ width: '100vw', height: '100vh', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, margin: 0, padding: 0, maxWidth: 'none', maxHeight: 'none' }">
       <div class="code-editor-wrapper">
         <div class="code-editor-header">
-          <span class="editor-title">编辑配置【{{ currentConfigData.name }}】</span>
+          <span class="editor-title">{{ $t('config.editConfigTitle', { name: currentConfigData.name }) }}</span>
           <var-space>
             <var-button type="primary" size="mini" round @click="saveToml" auto-loading>
               <var-icon name="check"/>
@@ -702,56 +701,56 @@
     </var-popup>
 
     <var-dialog v-model:show="showRenameDialog" @before-close="confirmEditName"
-      confirmButtonText="确认" cancelButtonText="取消">
+      :confirm-button-text="$t('common.confirm')" :cancel-button-text="$t('common.cancel')">
       <template #title>
-        <span>重命名配置名称</span>
+        <span>{{ $t('config.renameTitle') }}</span>
       </template>
       <var-input
         size="small"
         variant="outlined"
-        placeholder="请输入新名称"
+        :placeholder="$t('config.renamePlaceholder')"
         v-model="editNameValue"
-        :rules="[v => !!v || '名称不能为空']"
+        :rules="[v => !!v || $t('config.nameRequired')]"
       />
     </var-dialog>
 
     <var-dialog v-model:show="showCreateDialog" @before-close="beforeCloseCreateDilog"
-      confirmButtonText="确认" cancelButtonText="取消">
+      :confirm-button-text="$t('common.confirm')" :cancel-button-text="$t('common.cancel')">
       <template #title>
-        <span>新增配置名称</span>
+        <span>{{ $t('config.newConfigTitle') }}</span>
       </template>
       <var-input
         size="small"
         variant="outlined"
-        placeholder="请输入配置名称"
+        :placeholder="$t('config.profileNameHint')"
         v-model="newConfigName"
-        :rules="[v => !!v || '配置名称不能为空']"
+        :rules="[v => !!v || $t('config.nameRequired')]"
       />
     </var-dialog>
 
-    <var-dialog v-model:show="showShareConfigType" title="选择分享类型"
-      confirmButtonText="下载文件"  @confirm="downloadConfig" 
-      cancelButtonText="复制到剪贴板" @cancel="copyConfig">
+    <var-dialog v-model:show="showShareConfigType" :title="$t('config.selectShareType')"
+      :confirm-button-text="$t('config.downloadFile')"  @confirm="downloadConfig" 
+      :cancel-button-text="$t('config.copyClipboard')" @cancel="copyConfig">
     </var-dialog>
 
-    <var-dialog v-model:show="showDeleteDialog" :title="`确认删除配置【${currentConfigData.name}】?`"
-      confirmButtonText="确认"  @confirm="deleteCurrentConfig" 
-      cancelButtonText="取消" @cancel="showDeleteDialog = false">
+    <var-dialog v-model:show="showDeleteDialog" :title="$t('config.confirmDelete', { name: currentConfigData.name })"
+      :confirm-button-text="$t('config.confirm')"  @confirm="deleteCurrentConfig" 
+      :cancel-button-text="$t('config.cancel')" @cancel="showDeleteDialog = false">
     </var-dialog>
 
     <var-popup position="top" v-model:show="showPublicPeerTip">
       <div class="help-content">
-        <p class="help-paragraph"><span class="help-bold">初始节点</span>：用于发现组网设备，数据来自网络社区</p>
-        <p class="help-paragraph"><span class="help-bold">动态节点</span>：原始节点经过TXT协议转换而来。为后续支持社区节点下线时，在不重启服务情况下，持续组网</p>
-        <p class="help-paragraph"><span class="help-bold">节点刷新</span>：在线获取易组网维护的初始节点数据</p>
-        <p class="help-paragraph"><span class="help-bold">节点检测</span>：基于易组网本地设备网络，检测节点的是否可用、延迟、是否可转发</p>
+        <p class="help-paragraph"><span class="help-bold">{{ $t('config.peerHelp.publicPeer') }}</span>：{{ $t('config.peerHelp.publicPeerDesc') }}</p>
+        <p class="help-paragraph"><span class="help-bold">{{ $t('config.peerHelp.dynamicPeer') }}</span>：{{ $t('config.peerHelp.dynamicPeerDesc') }}</p>
+        <p class="help-paragraph"><span class="help-bold">{{ $t('config.peerHelp.peerRefresh') }}</span>：{{ $t('config.peerHelp.peerRefreshDesc') }}</p>
+        <p class="help-paragraph"><span class="help-bold">{{ $t('config.peerHelp.peerCheck') }}</span>：{{ $t('config.peerHelp.peerCheckDesc') }}</p>
         <div style="margin-top: 20px;">
-          <p class="help-paragraph"><span class="help-bold">感谢以下社区节点服务提供者</span></p>
+          <p class="help-paragraph"><span class="help-bold">{{ $t('config.peerHelp.thanks') }}</span></p>
           <var-table scroller-height="280px">
             <thead>
               <tr>
-                <th>社区节点</th>
-                <th>提供者</th>
+                <th>{{ $t('config.peerHelp.communityNode') }}</th>
+                <th>{{ $t('config.peerHelp.provider') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -771,6 +770,7 @@
 import { copyToClipboard } from '../utils/clipboard.js'
 import { validateIP, validateIPPort } from '../utils/validate.js'
 import { ref, computed, inject, onMounted, nextTick } from 'vue'
+import { useI18n } from 'vue-i18n'
 import toast from '../components/toast.js'
 import { api } from '../utils/api.js'
 import CodeEditor from '../components/CodeEditor.vue'
@@ -780,6 +780,7 @@ import { mdilPencil, mdilAccount, mdilLock } from '@mdi/light-js'
 
 
 // 显示模式： 0 修改 1 快速新增 2 普通新增
+const { t } = useI18n()
 const showMode = ref(0)
 const fastSettingMode = inject('fastSettingMode', ref(false))
 const publicPeerOptions = ref([])
@@ -816,8 +817,8 @@ const newConfigName = ref('')
 const editNameValue = ref('')
 const customExitNode = ref('')
 const encryptionAlgorithmList = ref(['aes-gcm','xor','chacha20','aes-gcm','aes-gcm-256','openssl-aes128-gcm','openssl-aes256-gcm','openssl-chacha20'])
-const defaultProtocolList = ref([{'label':'默认','value':''},{'label':'tcp','value':'tcp'},{'label':'udp','value':'udp'},{'label':'quic','value':'quic'},{'label':'wg','value':'wg'},{'label':'ws','value':'ws'},{'label':'wss','value':'wss'},{'label':'faketcp','value':'faketcp'}])
-const compressionOptions = ref([{'label':'无压缩','value':'none'},{'label':'zstd','value':'zstd'}])
+const defaultProtocolList = computed(() => [{label: t('config.defaultOption'), value: ''}, {label: 'tcp', value: 'tcp'}, {label: 'udp', value: 'udp'}, {label: 'quic', value: 'quic'}, {label: 'wg', value: 'wg'}, {label: 'ws', value: 'ws'}, {label: 'wss', value: 'wss'}, {label: 'faketcp', value: 'faketcp'}])
+const compressionOptions = computed(() => [{label: t('config.noCompression'), value: 'none'}, {label: 'zstd', value: 'zstd'}])
 
 const config = ref({
   hostname: '',
@@ -851,30 +852,30 @@ const proxyNetworkOptions = computed(() =>
 )
 
 const featureSwitches = [
-  { key: 'latency_first', label: '开启延迟优先模式', tooltip: '优先选择延迟最低的连接路径' },
-  { key: 'multi_thread', label: '启用多线程', tooltip: '启用多线程处理，提高性能' },
-  { key: 'private_mode', label: '启用私有模式', tooltip: '启用私有模式，限制节点发现' },
-  { key: 'enable_kcp_proxy', label: '启用 KCP 代理', tooltip: '使用 KCP 协议进行数据传输，提高弱网环境下的稳定性 (KCP 代理会优先于 QUIC 代理生效)' },
-  { key: 'disable_kcp_input', label: '禁用 KCP 输入', tooltip: '关闭 KCP 协议的入站连接' },
-  { key: 'enable_quic_proxy', label: '启用 QUIC 代理', tooltip: '使用 QUIC 协议进行代理传输' },
-  { key: 'disable_quic_input', label: '禁用 QUIC 输入', tooltip: '关闭 QUIC 协议的入站连接' },
-  { key: 'p2p_only', label: '仅 P2P', tooltip: '只允许 P2P 连接，不使用中继' },
-  { key: 'disable_p2p', label: '禁用 P2P', tooltip: '关闭点对点直连功能，所有流量通过中继' },
-  { key: 'lazy_p2p', label: '延迟 P2P', tooltip: '实际流量需要某个对等节点时才尝试建立 P2P 连接。开启 需要 P2P 仍会主动连接' },
-  { key: 'need_p2p', label: '需要 P2P', tooltip: '即使其它节点使用 延迟 P2P, 也要求它们主动和当前节点建立 p2p 连接' },
-  { key: 'disable_tcp_hole_punching', label: '禁用 TCP 打洞', tooltip: '关闭 TCP 协议的 NAT 打洞功能' },
-  { key: 'disable_udp_hole_punching', label: '禁用 UDP 打洞', tooltip: '关闭 UDP 协议的 NAT 打洞功能' },
-  { key: 'disable_sym_hole_punching', label: '禁用对称 NAT 打洞', tooltip: '关闭对 NAT4 的打洞功能。该打洞方式可能会被运营商封锁' },
-  { key: 'disable_upnp', label: '禁用 UPnP', tooltip: '禁用 UPnP' },
-  { key: 'use_smoltcp', label: '使用用户态协议栈', tooltip: '使用用户态TCP/IP协议栈，避免系统防火墙问题无法子网代理或KCP代理' },
-  { key: 'proxy_forward_by_system', label: '系统转发', tooltip: '通过系统内核转发子网代理数据包，禁用内置NAT' },
-  { key: 'enable_exit_node', label: '启用出口节点', tooltip: '允许此节点作为网络的出口' },
-  { key: 'relay_all_peer_rpc', label: '转发 RPC 包', tooltip: '允许转发所有对等节点的RPC数据包，即使对等节点不在转发网络白名单中。这可以帮助白名单外网络中的对等节点建立P2P连接' },
-  { key: 'enable_encryption', label: '启用加密', tooltip: '开启数据传输加密，提高安全性但性能降低。必须和对等节点设置一致' },
-  { key: 'enable_ipv6', label: '启用 IPv6', tooltip: '开启 IPv6 支持' },
-  { key: 'no_tun', label: '无 TUN 模式', tooltip: '不使用 TUN 设备。适用于无 Root 权限运行' },
-  { key: 'accept_dns', label: '启用魔法 DNS', tooltip: '启用魔法DNS，可使用域名访问其他节点，例如：<主机名>.et.net。魔法 DNS 目前仅支持在 Windows 和 MacOS 上自动配置系统 DNS，Linux 上需要手动配置 DNS 服务器为 100.100.100.101 才可正常使用' },
-  { key: 'bind_device', label: '仅使用物理网卡', tooltip: '将连接器的套接字绑定到物理设备以避免路由问题' },
+  { key: 'latency_first', label: 'config.flags.latency_first.label', tooltip: 'config.flags.latency_first.tooltip' },
+  { key: 'multi_thread', label: 'config.flags.multi_thread.label', tooltip: 'config.flags.multi_thread.tooltip' },
+  { key: 'private_mode', label: 'config.flags.private_mode.label', tooltip: 'config.flags.private_mode.tooltip' },
+  { key: 'enable_kcp_proxy', label: 'config.flags.enable_kcp_proxy.label', tooltip: 'config.flags.enable_kcp_proxy.tooltip' },
+  { key: 'disable_kcp_input', label: 'config.flags.disable_kcp_input.label', tooltip: 'config.flags.disable_kcp_input.tooltip' },
+  { key: 'enable_quic_proxy', label: 'config.flags.enable_quic_proxy.label', tooltip: 'config.flags.enable_quic_proxy.tooltip' },
+  { key: 'disable_quic_input', label: 'config.flags.disable_quic_input.label', tooltip: 'config.flags.disable_quic_input.tooltip' },
+  { key: 'p2p_only', label: 'config.flags.p2p_only.label', tooltip: 'config.flags.p2p_only.tooltip' },
+  { key: 'disable_p2p', label: 'config.flags.disable_p2p.label', tooltip: 'config.flags.disable_p2p.tooltip' },
+  { key: 'lazy_p2p', label: 'config.flags.lazy_p2p.label', tooltip: 'config.flags.lazy_p2p.tooltip' },
+  { key: 'need_p2p', label: 'config.flags.need_p2p.label', tooltip: 'config.flags.need_p2p.tooltip' },
+  { key: 'disable_tcp_hole_punching', label: 'config.flags.disable_tcp_hole_punching.label', tooltip: 'config.flags.disable_tcp_hole_punching.tooltip' },
+  { key: 'disable_udp_hole_punching', label: 'config.flags.disable_udp_hole_punching.label', tooltip: 'config.flags.disable_udp_hole_punching.tooltip' },
+  { key: 'disable_sym_hole_punching', label: 'config.flags.disable_sym_hole_punching.label', tooltip: 'config.flags.disable_sym_hole_punching.tooltip' },
+  { key: 'disable_upnp', label: 'config.flags.disable_upnp.label', tooltip: 'config.flags.disable_upnp.tooltip' },
+  { key: 'use_smoltcp', label: 'config.flags.use_smoltcp.label', tooltip: 'config.flags.use_smoltcp.tooltip' },
+  { key: 'proxy_forward_by_system', label: 'config.flags.proxy_forward_by_system.label', tooltip: 'config.flags.proxy_forward_by_system.tooltip' },
+  { key: 'enable_exit_node', label: 'config.flags.enable_exit_node.label', tooltip: 'config.flags.enable_exit_node.tooltip' },
+  { key: 'relay_all_peer_rpc', label: 'config.flags.relay_all_peer_rpc.label', tooltip: 'config.flags.relay_all_peer_rpc.tooltip' },
+  { key: 'enable_encryption', label: 'config.flags.enable_encryption.label', tooltip: 'config.flags.enable_encryption.tooltip' },
+  { key: 'enable_ipv6', label: 'config.flags.enable_ipv6.label', tooltip: 'config.flags.enable_ipv6.tooltip' },
+  { key: 'no_tun', label: 'config.flags.no_tun.label', tooltip: 'config.flags.no_tun.tooltip' },
+  { key: 'accept_dns', label: 'config.flags.accept_dns.label', tooltip: 'config.flags.accept_dns.tooltip' },
+  { key: 'bind_device', label: 'config.flags.bind_device.label', tooltip: 'config.flags.bind_device.tooltip' },
 ]
 
 const listenerOptions = ref([
@@ -924,7 +925,7 @@ const saveConfig = () => {
     const valid = await form.value.validate()
     if (!valid) {
       reject();
-      toast.error('初步校验不通过，请检查各项配置是否正确')
+      toast.error(t('config.validationFailed'))
       return
     }
     const pfError = validatePortForward()
@@ -943,11 +944,11 @@ const saveConfig = () => {
     const autoStart = async () => {
       return await api.services.autoStart(selectedConfig.value, true)
         .then(() => {
-          toast.success('设置服务开机启动成功')
+          toast.success(t('config.autostartSuccess'))
           currentConfigData.value.autostart = true
           currentConfigAutostart.value = true
         }).catch(e => {
-          toast.error('设置服务开机启动失败: ' + e.message)
+          toast.error(t('config.autostartFailed', { error: e.message }))
         })
     }
     let data = { ...config.value }  
@@ -976,28 +977,28 @@ const saveConfig = () => {
       delete data.flags.instance_recv_bps_limit
     }
     api.configs.save(data).then(async res => {
-      toast.success('保存配置成功')
+      toast.success(t('config.saveSuccess'))
       if (fastSettingMode.value) {
         // 快速设置模式，自动开启启动服务
         await autoStart()
       }
       if (fastSettingMode.value || await checkStatus()) {
-        const restartLoading = toast.loading(fastSettingMode.value ? '服务启动中...' : '服务重启中...')
+        const restartLoading = toast.loading(fastSettingMode.value ? t('config.serviceStarting') : t('config.serviceRestarting'))
             await api.services.restart(selectedConfig.value).then(() => {
-              toast.success('服务启动成功')
+              toast.success(t('config.serviceStarted'))
             }).finally(() => {
               restartLoading.clear()
             })
       }      
       if (fastSettingMode.value) {
-        toast.info('退出引导设置模式')
+        toast.info(t('config.exitSetupMode'))
         fastSettingMode.value = false
       }
       if (showMode.value != 0) {
         exitAddMode()
       }
     }).catch(e => {
-      toast.error('保存配置失败: ' + e.message)
+      toast.error(t('config.saveFailed', { error: e.message }))
       reject(e)
     }).finally(() => {
       resolve()
@@ -1013,7 +1014,7 @@ const downloadConfig = () => {
 const copyConfig = () => {
   api.configs.getShareConfigStr(selectedConfig.value).then(resp => {
     copyToClipboard(resp.data)
-    toast.success('已复制配置到剪贴板')
+    toast.success(t('config.copied'))
   })
 }
 
@@ -1030,13 +1031,13 @@ const openCodePage = () => {
 const saveToml = () => {
   return new Promise((resolve, reject) => {
     api.configs.saveToml({ toml: configToml.value, _profile: selectedConfig.value }).then(res => {
-      toast.success('保存配置成功')
+      toast.success(t('config.saveSuccess'))
       // 先检查服务状态，只有运行中才重启
       api.services.status(selectedConfig.value).then(resp => {
         if (resp.data) {
-          const restartLoading = toast.loading('服务重启中...')
+          const restartLoading = toast.loading(t('config.serviceRestarting'))
           api.services.restart(selectedConfig.value).then(() => {
-            toast.success('服务重启成功')
+            toast.success(t('config.serviceStarted'))
             loadConfig(selectedConfig.value)
           }).finally(() => {
             restartLoading.clear()
@@ -1062,7 +1063,7 @@ const refreshPublicPeerOptions = (refresh = false, doCheck = false) => {
     api.peers.publicPeers({ 'profile': selectedConfig.value, 'refresh': refresh }).then(async (data) => {
       publicPeerOptions.value = data.data
       if (refresh) {
-        toast.success('已获取最新节点')
+        toast.success(t('config.gotLatestNodes'))
       }
       const hasAvailable = data.data.filter(e => e.status == 1).length > 0
       if (doCheck || !hasAvailable) {
@@ -1078,21 +1079,21 @@ const refreshPublicPeerOptions = (refresh = false, doCheck = false) => {
 const checkPeers = () => {
   return new Promise((resolve, reject) => {
     if (isPeerChecking.value) {
-      toast.warning('检测节点可用状态中，请稍后...')
+      toast.warning(t('config.checkingNodes'))
       return
     }
-    const checkToast = toast.info('开始检测节点可用状态，这可能需要一些时间，请稍后...', 30000)
+    const checkToast = toast.info(t('config.checkingNodesStart'), 30000)
     isPeerChecking.value = true
     api.peers.checkPeers({ 'profile': selectedConfig.value, 'refresh': true }).then(data => {
       publicPeerOptions.value = data.data
-      toast.success('检测节点可用状态成功')
+      toast.success(t('config.checkSuccess'))
       publicPeerOptions.value.sort((a, b) => {
         const aIn = config.value.peer.includes(a.uri);
         const bIn = config.value.peer.includes(b.uri);
         return bIn - aIn;
       });
     }).catch(() => {
-      toast.error('检测节点可用状态失败')
+      toast.error(t('config.checkFailed'))
     }).finally(() => {
       isPeerChecking.value = false
       checkToast.clear()
@@ -1146,7 +1147,7 @@ const loadConfigs = async () => {
       configList.value = []
     }
   } catch (error) {
-    toast.error('加载配置列表失败: ' + (error.message || '未知错误'))
+    toast.error(t('config.loadConfigListFailed', { error: error.message || t('config.unknown') }))
   } finally {
     isLoadingConfigList.value = false
   }
@@ -1158,7 +1159,7 @@ const onConfigSwitch = async (profile) => {
     try {
       await loadConfig(cfg.profile)
     } catch (error) {
-      toast.error('加载配置失败: ' + (error.message || '未知错误'))
+      toast.error(t('config.loadConfigFailed', { error: error.message || t('config.unknown') }))
     }
   }
 }
@@ -1171,15 +1172,15 @@ const deleteCurrentConfig = async () => {
     try {
       const isRunning = await api.services.status(selectedConfig.value).then(resp => resp.data)
       if (isRunning) {
-        const stoping = toast.loading('停止服务中...')
-        await api.services.stop(selectedConfig.value).then(() => toast.success('服务已停止')).finally(() => {
+        const stoping = toast.loading(t('config.serviceStopping'))
+        await api.services.stop(selectedConfig.value).then(() => toast.success(t('config.serviceStopped'))).finally(() => {
           stoping.clear()
         })
         // 停止et服务可能本地网络会有波动，导致下一次请求被被阻断
         await new Promise(r => setTimeout(r, 2000));
       }
       await api.configs.delete(cfg.profile)
-      toast.success('配置已删除')
+      toast.success(t('config.configDeleted'))
       await loadConfigs()
       if (configList.value.length > 0) {
         selectedConfig.value = configList.value[0].profile
@@ -1189,7 +1190,7 @@ const deleteCurrentConfig = async () => {
       }
       resolve()
     } catch (error) {
-      toast.error('删除配置失败: ' + error.message)
+      toast.error(t('config.configDeleteFailed', { error: error.message }))
       reject(error)
     } finally {
       isDeletingConfig.value = false
@@ -1210,7 +1211,7 @@ const beforeCloseCreateDilog = (action, done) => {
 
 const confirmCreateConfig = () => {
   if (!newConfigName.value.trim()) {
-    toast.warning('请输入配置名称')
+    toast.warning(t('config.profileNameRequired'))
     return false
   }
   const name = newConfigName.value.trim()
@@ -1243,7 +1244,7 @@ const confirmEditName = async (action, done) => {
   }
   const newName = editNameValue.value.trim()
   if (!newName) {
-    toast.warning('请输入新名称')
+    toast.warning(t('config.nameRequired'))
     return done()
   }
   if (newName === currentConfigData.value.name) {
@@ -1251,29 +1252,29 @@ const confirmEditName = async (action, done) => {
     return done()
   }
   isRenaming.value = true
-  const loadingToast = toast.loading('重命名中...')
+  const loadingToast = toast.loading(t('config.renaming'))
   try {
     const isRunning = await api.services.status(selectedConfig.value).then(resp => resp.data)
     if (isRunning) {
-      const stoping = toast.loading('停止服务中...')
-      await api.services.stop(selectedConfig.value).then(() => toast.success('服务已停止')).finally(() => {
+      const stoping = toast.loading(t('config.serviceStopping'))
+      await api.services.stop(selectedConfig.value).then(() => toast.success(t('config.serviceStopped'))).finally(() => {
         stoping.clear()
       })
       // 停止et服务可能本地网络会有波动，导致下一次请求被被阻断
       await new Promise(r => setTimeout(r, 2000));
     }
     const res = await api.configs.rename(selectedConfig.value, newName+'.toml').catch(error => {
-      toast.error('重命名失败: ' + error.message)
+      toast.error(t('config.configRenameFailed', { error: error.message }))
       throw error
     })
-    toast.success('重命名成功')
+    toast.success(t('config.configRenamed'))
     await loadConfigs()
     selectedConfig.value = res.data.profile
     currentConfigData.value.name = res.data.name
     showRenameDialog.value = false
     if (isRunning) {
-      const starting = toast.loading('启动服务中...')
-      await api.services.start(selectedConfig.value).then(() => toast.success('服务已启动'))
+      const starting = toast.loading(t('config.serviceStarting'))
+      await api.services.start(selectedConfig.value).then(() => toast.success(t('config.serviceStarted')))
       .finally(() => {
         starting.clear()
       })
@@ -1291,7 +1292,7 @@ const handleSwitchChange = async (cfg, field, val) => {
     try {
       changingAutostart.value = true
       await api.services.autoStart(cfg.profile, val)
-      toast.success(val ? '已开机自启' : '已关闭开机自启')
+      toast.success(val ? t('config.autostartEnabled') : t('config.autostartDisabled'))
     } catch (error) {
       cfg[field] = !val
     } finally {
@@ -1339,10 +1340,10 @@ const getLanIps = () => {
 
 const addExitNode = () => {
   if (!customExitNode.value.trim()) {
-    toast.warning('请输入出口节点')
+    toast.warning(t('config.exitNodeRequired'))
     return
   }
-  const error = validateIP(customExitNode.value.trim(), '出口节点')
+  const error = validateIP(customExitNode.value.trim(), t('config.exitNodes'))
   if (error) {
     toast.warning(error)
     return
@@ -1351,7 +1352,7 @@ const addExitNode = () => {
     config.value.exit_nodes = []
   }
   if (config.value.exit_nodes.includes(customExitNode.value.trim())) {
-    toast.warning(`出口节点已存在: ${customExitNode.value.trim()}`)
+    toast.warning(t('config.exitNodeExists', { name: customExitNode.value.trim() }))
     return
   }
   config.value.exit_nodes.push(customExitNode.value.trim())
@@ -1408,6 +1409,10 @@ onMounted(async () => {
   api.peers.publicPeers({'profile': selectedConfig.value}).then(async data => {
     publicPeerOptions.value = data.data
   })
+})
+
+onUnmounted(() => {
+  fastSettingMode.value = false
 })
 </script>
 
