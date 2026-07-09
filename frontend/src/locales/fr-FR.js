@@ -25,7 +25,7 @@ export default {
     stable: 'Release',
     prerelease: 'Prerelease',
     newVersion: 'Nouvelle version',
-    canUpgrade: 'Mise à jour dispo',
+    canUpgrade: 'Mettre à jour',
     updateContent: 'Nouveautés'
   },
   menu: {
