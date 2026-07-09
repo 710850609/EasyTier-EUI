@@ -7,12 +7,20 @@ from contextvars import ContextVar
 from typing import Dict, Any
 
 from . import zh_CN
+from . import zh_TW
 from . import en_US
+from . import de_DE
+from . import fr_FR
+from . import ja_JP
 
 # 支持的语言
 SUPPORTED_LANGS = {
     'zh_CN': zh_CN.MESSAGES,
+    'zh_TW': zh_TW.MESSAGES,
     'en_US': en_US.MESSAGES,
+    'de_DE': de_DE.MESSAGES,
+    'fr_FR': fr_FR.MESSAGES,
+    'ja_JP': ja_JP.MESSAGES,
 }
 
 # 默认语言
@@ -30,7 +38,7 @@ def parse_accept_language(accept_lang: str) -> str:
         accept_lang: Accept-Language header 值
         
     Returns:
-        'zh_CN' 或 'en_US'
+        支持的语言代码，如 'zh_CN', 'zh_TW', 'en_US', 'de_DE', 'fr_FR', 'ja_JP'
     """
     if not accept_lang:
         return DEFAULT_LANG
@@ -61,11 +69,20 @@ def parse_accept_language(accept_lang: str) -> str:
     
     # 匹配支持的语言
     for _, lang in languages:
-        lang = lang.lower()
-        if lang.startswith('zh'):
+        lang_lower = lang.lower()
+        # 精确匹配 zh-TW / zh-HK / zh-Hant 等
+        if lang_lower in ('zh-tw', 'zh-hk', 'zh-hant', 'zhtw'):
+            return 'zh_TW'
+        if lang_lower.startswith('zh'):
             return 'zh_CN'
-        if lang.startswith('en'):
+        if lang_lower.startswith('en'):
             return 'en_US'
+        if lang_lower.startswith('de'):
+            return 'de_DE'
+        if lang_lower.startswith('fr'):
+            return 'fr_FR'
+        if lang_lower.startswith('ja'):
+            return 'ja_JP'
     
     return DEFAULT_LANG
 
@@ -75,7 +92,7 @@ def set_lang(lang: str) -> None:
     设置当前请求的语言
     
     Args:
-        lang: 语言代码 'zh_CN' 或 'en_US'
+        lang: 语言代码，如 'zh_CN', 'zh_TW', 'en_US', 'de_DE', 'fr_FR', 'ja_JP'
     """
     lang_ctx.set(lang)
 

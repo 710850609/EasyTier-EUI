@@ -785,7 +785,7 @@ onUnmounted(() => {
 .stat-item {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 2px;
   white-space: nowrap;
   flex-shrink: 0;
 }

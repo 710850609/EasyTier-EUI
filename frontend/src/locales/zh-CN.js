@@ -69,8 +69,12 @@ export default {
 
     language: {
       label: '语言',
-      zh: '中文',
+      zh: '中文简体',
+      zhtw: '中文繁体',
       en: 'English',
+      de: 'Deutsch',
+      fr: 'Français',
+      ja: '日本語',
     },
 
     kernel: {

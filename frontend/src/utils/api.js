@@ -5,6 +5,16 @@
 import toast from '../components/toast.js'
 import { getLanguage } from '../locales/index.js'
 
+// 前端语言代码 → Accept-Language header 值映射
+const LANG_TO_ACCEPT_LANGUAGE = {
+  zh: 'zh-CN',
+  zhtw: 'zh-TW',
+  en: 'en-US',
+  de: 'de-DE',
+  fr: 'fr-FR',
+  ja: 'ja-JP',
+}
+
 // 使用 Vite 注入的环境变量
 const API_BASE = typeof __API_BASE__ !== 'undefined' ? __API_BASE__ : '/'
 // console.log(API_BASE)
@@ -88,7 +98,7 @@ async function request(url, options = {}, otherOptions = {}) {
   const defaultOptions = {
     headers: {
       'Content-Type': 'application/json',
-      'Accept-Language': getLanguage() === 'en' ? 'en-US' : 'zh-CN',
+      'Accept-Language': LANG_TO_ACCEPT_LANGUAGE[getLanguage()] || 'zh-CN',
       ...options.headers
     },
     signal

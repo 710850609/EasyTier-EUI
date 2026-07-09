@@ -1571,12 +1571,17 @@ onUnmounted(() => {
   align-items: center;
   gap: 5px;
   cursor: pointer;
+  flex-wrap: wrap;
+  min-width: 0;
 }
 
 .toggle-label {
+  display: inline-block;
   font-size: 12px;
   color: var(--color-on-surface-variant);
-  white-space: nowrap;
+  max-width: 120px;
+  word-break: break-word;
+  line-height: 1.3;
 }
 
 .content-area {
@@ -2335,7 +2340,7 @@ html.dark .forward-section-paper {
     align-items: center;
     gap: 6px;
     margin-left: auto;
-    flex-shrink: 0;
+    min-width: 0;
   }
 
   .toolbar-mobile-actions .toggle-item {

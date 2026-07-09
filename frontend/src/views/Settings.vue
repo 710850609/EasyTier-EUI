@@ -389,7 +389,11 @@ const logLevelOptions = computed(() => [
 
 const languageOptions = computed(() => [
   { value: 'zh', label: t('settings.language.zh') },
+  { value: 'zhtw', label: t('settings.language.zhtw') },
   { value: 'en', label: t('settings.language.en') },
+  { value: 'de', label: t('settings.language.de') },
+  { value: 'fr', label: t('settings.language.fr') },
+  { value: 'ja', label: t('settings.language.ja') },
 ])
 
 const changeLanguage = (val) => {
