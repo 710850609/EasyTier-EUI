@@ -40,33 +40,35 @@ export const freshLightTheme = {
   '--color-disabled': '#e2e8f0',
   '--color-text-disabled': '#94a3b8',
 
-  // 背景色 - 使用 Varlet 规范变量名（更有活力的浅色调）
-  '--color-body': '#f0f9ff',
+  // 背景色 - 清新浅蓝，层次分明有活力
+  '--color-body': '#f0f7fc',
   '--color-surface': '#ffffff',
-  '--color-surface-container': '#e0f2fe',
-  '--color-surface-container-low': '#f0f9ff',
-  '--color-surface-container-high': '#bae6fd',
+  '--color-surface-rgb': '255, 255, 255',
+  '--color-surface-container': '#d4eaf5',
+  '--color-surface-container-rgb': '212, 234, 245',
+  '--color-surface-container-low': '#f0f7fc',
+  '--color-surface-container-high': '#b3d5ed',
   '--color-surface-container-highest': '#7dd3fc',
 
-  // 文字色（调整为更柔和的深灰色）
-  '--color-text': '#2d3748',
-  '--color-on-surface': '#2d3748',
-  '--color-on-surface-variant': '#5a6578',
+  // 文字色（更清晰的对比度）
+  '--color-text': '#1e293b',
+  '--color-on-surface': '#1e293b',
+  '--color-on-surface-variant': '#475569',
 
   // 反色
-  '--color-inverse-surface': '#1e293b',
+  '--color-inverse-surface': '#11263d',
 
-  // 边框和轮廓（清新蓝调）
-  '--color-outline': '#7dd3fc',
-  '--color-outline-variant': '#bae6fd',
+  // 边框和轮廓（与容器层级呼应，柔和过渡）
+  '--color-outline': '#8cc0dc',
+  '--color-outline-variant': '#b3d5ed',
 
   // Checkbox 样式
   '--checkbox-unchecked-color': '#94a3b8',
 
   // Snackbar/Toast 样式
-  '--snackbar-background': '#e2e8f0',
+  '--snackbar-background': '#d4eaf5',
   '--snackbar-color': '#1e293b',
-  '--snackbar-info-background': '#cbd5e1',
+  '--snackbar-info-background': '#b3d5ed',
   '--snackbar-success-background': '#07c160',
   '--snackbar-success-color': '#ffffff',
 
@@ -109,16 +111,18 @@ export const freshDarkTheme = {
   '--color-on-danger-container': '#fee2e2',
 
   // 禁用状态
-  '--color-disabled': '#334155',
-  '--color-text-disabled': '#64748b',
+  '--color-disabled': '#1a2838',
+  '--color-text-disabled': '#4d5e75',
 
-  // 背景色 - 使用 Varlet 规范变量名
-  '--color-body': '#0f172a',
-  '--color-surface': '#1e293b',
-  '--color-surface-container': '#334155',
-  '--color-surface-container-low': '#1e293b',
-  '--color-surface-container-high': '#475569',
-  '--color-surface-container-highest': '#64748b',
+  // 背景色 - 冷灰微蓝，温和不夺目
+  '--color-body': '#0c1520',
+  '--color-surface': '#152130',
+  '--color-surface-rgb': '21, 33, 48',
+  '--color-surface-container': '#1e2d40',
+  '--color-surface-container-rgb': '30, 45, 64',
+  '--color-surface-container-low': '#111c2a',
+  '--color-surface-container-high': '#2a3b52',
+  '--color-surface-container-highest': '#374b68',
 
   // 文字色
   '--color-text': '#f8fafc',
@@ -129,21 +133,21 @@ export const freshDarkTheme = {
   '--color-inverse-surface': '#f8fafc',
 
   // 边框和轮廓
-  '--color-outline': '#475569',
-  '--color-outline-variant': '#334155',
+  '--color-outline': '#2a3b52',
+  '--color-outline-variant': '#1e2d40',
 
   // Checkbox 样式
   '--checkbox-unchecked-color': 'rgba(255, 255, 255, 0.4)',
 
   // Snackbar/Toast 样式
-  '--snackbar-background': '#1e293b',
+  '--snackbar-background': '#152130',
   '--snackbar-color': 'rgba(255, 255, 255, 0.87)',
-  '--snackbar-info-background': '#334155',
+  '--snackbar-info-background': '#1e2d40',
   '--snackbar-success-background': '#2ba245',
   '--snackbar-success-color': '#000000',
 
   // Dialog 样式
   '--dialog-title-color': '#0284c7',
-  '--result-background': '#1e293b',
+  '--result-background': '#152130',
   '--result-description-color': 'var(--color-text)',
 }

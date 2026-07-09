@@ -105,7 +105,7 @@
         <div class="setting-actions">
           <var-chip v-if="hasNewVersion" type="warning" size="mini" plain>{{ $t('common.canUpgrade') }}</var-chip>
           <var-button type="primary" size="small" @click="installEtCore(true)" auto-loading>
-            <var-icon name="download" />
+            <!-- <var-icon name="download" /> -->
             {{ $t('common.install') }}
           </var-button>
            <var-button type="primary" size="small" @click="handleShowEtChangeLog()">
@@ -141,7 +141,7 @@
             @click="setupShowEuiReleaseInfo('latest_release')" />
           </span>
           <span class="version-value">{{ euiReleaseInfo.latest_release.version }}</span>
-        </div>        
+        </div>
         <var-chip type="warning" size="mini" plain v-if="buildVersion < euiReleaseInfo.latest_release.version">{{ $t('common.newVersion') }}</var-chip>
         <var-button type="primary" size="small" @click="installEuiVersion('release')" auto-loading
            :disabled="updateProgress.active"

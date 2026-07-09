@@ -373,8 +373,21 @@ const handleClick = (key) => {
   right: 0;
   bottom: 0;
   z-index: 99;
+  background: radial-gradient(
+    ellipse 60% 50% at 0% 50%,
+    rgba(0, 0, 0, 0.18) 0%,
+    transparent 70%
+  );
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
+}
+
+html.dark .submenu-overlay {
+  background: radial-gradient(
+    ellipse 60% 50% at 0% 50%,
+    rgba(0, 0, 0, 0.35) 0%,
+    transparent 70%
+  );
 }
 
 .submenu-popup-wrapper {
@@ -383,6 +396,8 @@ const handleClick = (key) => {
 }
 
 .submenu-popup-content {
+  position: relative;
+  overflow: hidden;
   background: rgba(var(--color-surface-container-rgb, 224, 242, 254), 0.08);
   backdrop-filter: blur(20px) saturate(140%);
   -webkit-backdrop-filter: blur(20px) saturate(140%);
@@ -391,14 +406,73 @@ const handleClick = (key) => {
   padding: 12px;
   margin-left: 8px;
   min-width: 180px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  border: none;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 html.dark .submenu-popup-content {
   background: rgba(var(--color-surface-container-rgb, 51, 65, 85), 0.18);
-  border-color: rgba(255, 255, 255, 0.08);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* 顶部高光条 */
+.submenu-popup-content::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 20%;
+  right: 20%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+html.dark .submenu-popup-content::after {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.15),
+    transparent
+  );
+}
+
+/* 内发光边框 */
+.submenu-popup-content::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.25) 0%,
+    transparent 50%,
+    rgba(255, 255, 255, 0.06) 100%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 0;
+}
+
+html.dark .submenu-popup-content::before {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.15) 0%,
+    transparent 50%,
+    rgba(255, 255, 255, 0.04) 100%
+  );
 }
 
 /* 子菜单弹出过渡动画 */

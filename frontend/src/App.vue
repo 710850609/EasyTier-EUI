@@ -114,9 +114,11 @@ html body .var-select__scroller.var-elevation--3 {
   backdrop-filter: blur(20px) saturate(140%) !important;
   -webkit-backdrop-filter: blur(20px) saturate(140%) !important;
   will-change: backdrop-filter !important;
-  border: 1px solid rgba(0, 0, 0, 0.05) !important;
+  border: none !important;
   border-radius: 16px !important;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06) !important;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
 }
 
 html.dark body .var-select__scroller,
@@ -124,8 +126,9 @@ html.dark body .var-select__scroller.var-elevation--3 {
   --select-scroller-background: rgba(var(--color-surface-container-rgb, 51, 65, 85), 0.18) !important;
   background: rgba(var(--color-surface-container-rgb, 51, 65, 85), 0.18) !important;
   background-color: rgba(var(--color-surface-container-rgb, 51, 65, 85), 0.18) !important;
-  border-color: rgba(255, 255, 255, 0.08) !important;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25) !important;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
 }
 
 /* var-tabs 样式适配 */
@@ -157,19 +160,79 @@ html.dark body .var-select__scroller.var-elevation--3 {
 /* var-popup 背景适配 - 磨砂玻璃效果（必须在 var-paper 之前定义） */
 .var-popup__content,
 .var-popup__content[var-popup-cover] {
+  overflow: hidden;
   background: rgba(var(--color-surface-container-rgb, 224, 242, 254), 0.08) !important;
   backdrop-filter: blur(20px) saturate(140%) !important;
   -webkit-backdrop-filter: blur(20px) saturate(140%) !important;
   will-change: backdrop-filter !important;
-  border: 1px solid rgba(0, 0, 0, 0.05) !important;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06) !important;
+  border: none !important;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
 }
 
 html.dark .var-popup__content,
 html.dark .var-popup__content[var-popup-cover] {
   background: rgba(var(--color-surface-container-rgb, 51, 65, 85), 0.18) !important;
-  border-color: rgba(255, 255, 255, 0.08) !important;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25) !important;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+}
+
+/* 弹窗顶部高光条 —— 模拟玻璃边缘反光 */
+.var-popup__content::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 20%;
+  right: 20%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.25),
+    transparent
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+html.dark .var-popup__content::after {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.12),
+    transparent
+  );
+}
+
+/* 弹窗内发光边框 —— 替代生硬 border，让边缘"呼吸" */
+.var-popup__content::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.2) 0%,
+    transparent 50%,
+    rgba(255, 255, 255, 0.06) 100%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 0;
+}
+
+html.dark .var-popup__content::before {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.12) 0%,
+    transparent 50%,
+    rgba(255, 255, 255, 0.04) 100%
+  );
 }
 
 /* 底部弹出层圆角 */
@@ -199,11 +262,24 @@ html.dark .var-popup__content[var-popup-cover] {
   box-shadow: none !important;
 }
 
-/* popup 遮罩层 - 半透明 */
+/* popup 遮罩层 - 渐变暗角聚焦（替代纯色半透明） */
 .var-popup__overlay {
-  background: rgba(0, 0, 0, 0.25) !important;
+  background: radial-gradient(
+    ellipse 70% 55% at 50% 50%,
+    rgba(0, 0, 0, 0.35) 0%,
+    transparent 70%
+  ) !important;
   backdrop-filter: blur(2px) !important;
   -webkit-backdrop-filter: blur(2px) !important;
+}
+
+/* 亮色模式遮罩 - 压暗值极低，避免脏玻璃感 */
+html:not(.dark) .var-popup__overlay {
+  background: radial-gradient(
+    ellipse 70% 55% at 50% 50%,
+    rgba(0, 0, 0, 0.1) 0%,
+    transparent 70%
+  ) !important;
 }
 
 /* var-cell 样式适配 */
@@ -213,6 +289,38 @@ html.dark .var-popup__content[var-popup-cover] {
 
 .var-cell__description {
   color: var(--color-on-surface-variant) !important;
+}
+
+/* var-dialog 遮罩层 - 渐变暗角聚焦 */
+.var-dialog__overlay {
+  background: radial-gradient(
+    ellipse 60% 60% at 50% 50%,
+    rgba(0, 0, 0, 0.35) 0%,
+    transparent 70%
+  ) !important;
+  backdrop-filter: blur(2px) !important;
+  -webkit-backdrop-filter: blur(2px) !important;
+}
+
+html:not(.dark) .var-dialog__overlay {
+  background: radial-gradient(
+    ellipse 60% 60% at 50% 50%,
+    rgba(0, 0, 0, 0.1) 0%,
+    transparent 70%
+  ) !important;
+}
+
+/* var-dialog 弹窗内容增强 */
+.var-dialog__content {
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+}
+
+html.dark .var-dialog__content {
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
 }
 
 .toast-content {

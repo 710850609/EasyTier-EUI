@@ -25,7 +25,7 @@ export default {
     stable: 'Release',
     prerelease: 'Prerelease',
     newVersion: 'Neue Version',
-    canUpgrade: 'Upgrade verfügbar',
+    canUpgrade: 'Upgrade',
     updateContent: 'Änderungen'
   },
   menu: {
@@ -41,11 +41,11 @@ export default {
     language: { label: 'Sprache', zh: '中文简体', zhtw: '中文繁體', en: 'English', de: 'Deutsch', fr: 'Français', ja: '日本語' },
     kernel: { title: 'Kernel EasyTier' },
     logLevel: { label: 'Log-Stufe', placeholder: 'Log-Stufe wählen', disabled: 'Deaktiviert', error: 'Fehler', warn: 'Warnung', info: 'Info', debug: 'Debug', trace: 'Trace' },
-    currentVersion: 'Aktuelle Version',
+    currentVersion: 'Aktuelle',
     unknownVersion: 'Unbekannt',
     optionalVersion: 'Version wählen',
-    stableVersion: 'Release Version',
-    prereleaseVersion: 'Prerelease Version',
+    stableVersion: 'Release',
+    prereleaseVersion: 'Prerelease',
     easytierDoc: 'EasyTier Doku',
     checkUpdate: 'Update prüfen',
     version: 'Version',

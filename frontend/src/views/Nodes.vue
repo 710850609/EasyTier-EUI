@@ -3,6 +3,7 @@
     <!-- 统计标题栏 -->
     <var-paper class="stats-bar" :elevation="1">
       <div class="stats-content">
+        <!-- 选择配置 -->
         <div class="config-section">
           <var-select
             variant="outlined"
@@ -13,6 +14,12 @@
             :placeholder="$t('nodes.selectConfig')"
             blur-color="var(--color-primary)"
           >
+            <template #selected>
+              <div class="config-option">
+                <svg-icon size="16" type="mdi" :path="mdiCircle" :color="serviceRunning ? 'var(--color-success)' : 'var(--color-text-disabled)'"></svg-icon>
+                <span>{{ selectedConfig?.replace('.toml', '') }}</span>
+              </div>
+            </template>
             <var-option
               v-for="cfg in configList"
               :key="cfg.profile"
@@ -25,16 +32,10 @@
               </div>
             </var-option>
           </var-select>
-          <div class="service-status" v-if="selectedConfig">
-             <var-chip size="small" :type="serviceRunning ? 'success' : 'danger'" elevation="0">
-              {{ serviceOperating ? (serviceRunning ? $t('nodes.stopping') : $t('nodes.starting')) : serviceRunning ? $t('nodes.running') : $t('nodes.stopped') }}
-             </var-chip>
-          </div>
           <div class="service-actions">
             <var-loading type="circle" v-if="serviceOperating" />
             <var-button
               type="primary"
-              size="small"
               auto-loading
               @click="startService"
               v-if="selectedConfig && !serviceRunning && !serviceOperating"
@@ -43,18 +44,14 @@
             </var-button>
             <var-button
               type="danger"
-              auto-loading
-              size="small"               
+              auto-loading            
               @click="stopService"
               v-if="serviceRunning && !serviceOperating"
             >
               {{ $t('nodes.stop') }}
             </var-button>
-            <!-- <var-icon name="play-circle" size="24" @click="startService" color="var(--color-success)" v-if="!serviceRunning && !serviceOperating" :style="{ cursor: 'pointer' }"/> -->
-            <!-- <var-icon name="radio-marked" size="24" @click="stopService" color="var(--color-danger)" v-if="serviceRunning && !serviceOperating"  :style="{ cursor: 'pointer' }"/> -->
           </div>
         </div>
-        <!-- <div class="divider"></div> -->
         <div class="stat-item">
           <var-icon name="server" size="20" color="var(--color-primary)" />
           <span class="stat-label">{{ $t('nodes.normalNodes') }}</span>
@@ -193,7 +190,7 @@
                   />
                 </template>
                 <template v-else-if="col.key === 'lat_ms'">
-                  <span class="cell-text" :class="{ 'lat-medium': node.lat_ms >= 60 && node.lat_ms <= 150, 'lat-high': node.lat_ms > 150 }" @click="handleClickCell(node, col.key)">{{ parseNode(node, col.key) }}ms</span>
+                  <span class="cell-text" :class="{ 'lat-medium': node.lat_ms >= 60 && node.lat_ms <= 150, 'lat-high': node.lat_ms > 150 }" @click="handleClickCell(node, col.key)">{{ parseNode(node, col.key) }}</span>
                 </template>
                 <template v-else>
                   <var-tooltip v-if="['hostname', 'tunnel_proto'].includes(col.key)" :content="parseNode(node, col.key)">
@@ -235,7 +232,7 @@
                 :value="parseNode(node, 'cost')"
               />
               <span v-if="visibleColumnsMap.lat_ms && node.lat_ms !== undefined && node.lat_ms !== '-'" class="info-chip" :class="{ 'lat-medium': node.lat_ms >= 60 && node.lat_ms <= 150, 'lat-high': node.lat_ms > 150 }">
-                {{ parseNode(node, 'lat_ms') }}ms
+                {{ parseNode(node, 'lat_ms') }}
               </span>
               <span v-if="visibleColumnsMap.loss_rate && node.loss_rate !== undefined && node.loss_rate !== '-'" class="info-chip" :class="{ 'loss-warn': node.loss_rate > 0 }">
                 {{ $t('nodes.packetLoss') }} {{ parseNode(node, 'loss_rate') }}
@@ -487,8 +484,10 @@ const parseNode = (node, key) => {
     return parseCost(node)
   case 'nat_type':
     return parseNatType(node)
+  case 'lat_ms':
+    return node.lat_ms === '-' ? '' : node.lat_ms + ' ms'
   default:
-    return node[key]
+    return node[key] === '-' ? '' : node[key]
   }
 }
 
@@ -785,7 +784,7 @@ onUnmounted(() => {
 .stat-item {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 8px;
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -858,7 +857,7 @@ onUnmounted(() => {
 .table-container {
   border-radius: 12px;
   overflow: hidden;
-  flex: 1;
+  flex: 0 1 auto;
   min-height: 0;
   display: flex;
   flex-direction: column;
@@ -878,6 +877,15 @@ onUnmounted(() => {
 
   .stats-content {
     gap: 12px;
+  }
+
+  .stat-item {
+    gap: 2px;
+  }
+
+  .config-section {
+    width: 100%;
+    justify-content: space-between;
   }
 }
 

@@ -6,9 +6,12 @@ html body .var-select__scroller.var-elevation--3 {
   background-color: rgba(var(--color-surface-container-rgb, 224, 242, 254), 0.18) !important;
   backdrop-filter: blur(28px) saturate(140%) !important;
   -webkit-backdrop-filter: blur(28px) saturate(140%) !important;
-  border: 1px solid rgba(0, 0, 0, 0.05) !important;
+  border: none !important;
   border-radius: 16px !important;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06) !important;
+  box-shadow:
+    0 12px 48px rgba(0, 0, 0, 0.18),
+    0 0 0 1px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
 }
 
 html.dark body .var-select__scroller,
@@ -16,6 +19,66 @@ html.dark body .var-select__scroller.var-elevation--3 {
   --select-scroller-background: rgba(var(--color-surface-container-rgb, 51, 65, 85), 0.38) !important;
   background: rgba(var(--color-surface-container-rgb, 51, 65, 85), 0.38) !important;
   background-color: rgba(var(--color-surface-container-rgb, 51, 65, 85), 0.38) !important;
-  border-color: rgba(255, 255, 255, 0.08) !important;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25) !important;
+  box-shadow:
+    0 12px 48px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+}
+
+/* 下拉框顶部高光条 */
+html body .var-select__scroller::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 15%;
+  right: 15%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+html.dark body .var-select__scroller::after {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.18),
+    transparent
+  );
+}
+
+/* 下拉框内发光边框 */
+html body .var-select__scroller::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.3) 0%,
+    rgba(255, 255, 255, 0.05) 40%,
+    transparent 70%,
+    rgba(255, 255, 255, 0.08) 100%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 0;
+}
+
+html.dark body .var-select__scroller::before {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.18) 0%,
+    rgba(255, 255, 255, 0.03) 40%,
+    transparent 70%,
+    rgba(255, 255, 255, 0.05) 100%
+  );
 }

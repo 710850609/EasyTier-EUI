@@ -120,7 +120,7 @@
                 {{ $t('config.exitAdd') }}
               </var-button>
               <var-button type="primary" size="small" @click="saveConfig" auto-loading>{{ $t('config.save') }}</var-button>
-              <var-button size="small" icon round text @click="toggleToolbarMore">
+              <var-button size="small" icon round text @click="toggleToolbarMore" v-if="showMode === 0">
                 <var-icon :name="toolbarMoreOpen.length ? 'menu-open' : 'menu'" :size="20" />
               </var-button>
             </div>
@@ -2048,6 +2048,11 @@ html.dark .forward-section-paper {
     display: flex !important;
     flex-direction: column !important;
   }
+
+  :deep(.var-popup__content::before),
+  :deep(.var-popup__content::after) {
+    display: none !important;
+  }
 }
 
 .code-editor-container {
@@ -2361,10 +2366,30 @@ html.dark .forward-section-paper {
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
     padding: 12px 14px 14px;
     z-index: 11;
-    border: 1px solid rgba(var(--color-outline-rgb, 0, 0, 0), 0.08);
+    border: none;
+    overflow: hidden;
+  }
+
+  .toolbar-more-panel::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 20%;
+    right: 20%;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.35),
+      transparent
+    );
+    pointer-events: none;
+    z-index: 1;
   }
 
   .toolbar-more-content {
@@ -2408,7 +2433,11 @@ html.dark .forward-section-paper {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.25);
+    background: radial-gradient(
+      ellipse 70% 55% at 50% 50%,
+      rgba(0, 0, 0, 0.3) 0%,
+      transparent 70%
+    );
     backdrop-filter: blur(2px);
     -webkit-backdrop-filter: blur(2px);
     z-index: 9;
@@ -2487,6 +2516,11 @@ html.dark .forward-section-paper {
       max-width: 100vw !important;
       max-height: 100vh !important;
       border-radius: 0 !important;
+    }
+
+    :deep(.var-popup__content::before),
+    :deep(.var-popup__content::after) {
+      display: none !important;
     }
   }
 
