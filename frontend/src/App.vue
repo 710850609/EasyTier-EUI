@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <Layout />
 </template>
 
@@ -45,7 +45,7 @@ body {
   --app-primary: var(--color-primary);
   /* RGB 变量用于 rgba() */
   --color-surface-rgb: 255, 255, 255;
-  --color-surface-container-rgb: 224, 242, 254;
+  --color-surface-container-rgb: 221, 231, 245;
 }
 
 /* 暗色主题 RGB 变量 - 使用 html.dark 提高优先级 */
@@ -108,9 +108,9 @@ html.dark {
 /* var-select 下拉框毛玻璃效果 */
 html body .var-select__scroller,
 html body .var-select__scroller.var-elevation--3 {
-  --select-scroller-background: rgba(var(--color-surface-container-rgb, 224, 242, 254), 0.08) !important;
-  background: rgba(var(--color-surface-container-rgb, 224, 242, 254), 0.08) !important;
-  background-color: rgba(var(--color-surface-container-rgb, 224, 242, 254), 0.08) !important;
+  --select-scroller-background: rgba(var(--color-surface-container-rgb, 221, 231, 245), 0.08) !important;
+  background: rgba(var(--color-surface-container-rgb, 221, 231, 245), 0.08) !important;
+  background-color: rgba(var(--color-surface-container-rgb, 221, 231, 245), 0.08) !important;
   backdrop-filter: blur(20px) saturate(140%) !important;
   -webkit-backdrop-filter: blur(20px) saturate(140%) !important;
   will-change: backdrop-filter !important;
@@ -161,7 +161,7 @@ html.dark body .var-select__scroller.var-elevation--3 {
 .var-popup__content,
 .var-popup__content[var-popup-cover] {
   overflow: hidden;
-  background: rgba(var(--color-surface-container-rgb, 224, 242, 254), 0.08) !important;
+  background: rgba(var(--color-surface-container-rgb, 221, 231, 245), 0.08) !important;
   backdrop-filter: blur(20px) saturate(140%) !important;
   -webkit-backdrop-filter: blur(20px) saturate(140%) !important;
   will-change: backdrop-filter !important;
@@ -250,16 +250,81 @@ html.dark .var-popup__content::before {
   border-radius: 16px !important;
 }
 
-/* var-paper 背景适配 */
+/* var-paper 背景适配 + 玻璃质感增强 */
 .var-paper {
   background: var(--color-surface-container) !important;
+  position: relative;
+  overflow: hidden;
 }
 
-/* popup 内的 paper 保持透明 */
+/* 内发光边框 - 替代生硬边界，模拟玻璃边缘厚度 */
+.var-paper::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.3) 0%,
+    transparent 40%,
+    rgba(0, 0, 0, 0.06) 100%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* 暗色模式 - 内发光边框 */
+html.dark .var-paper::before {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.15) 0%,
+    transparent 40%,
+    rgba(255, 255, 255, 0.05) 100%
+  );
+}
+
+/* 顶部高光条 - 模拟玻璃边缘反光 */
+.var-paper::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 10%;
+  right: 10%;
+  height: 1.5px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.45),
+    transparent
+  );
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* 暗色模式 - 高光条 */
+html.dark .var-paper::after {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+}
+
+/* popup 内的 paper 保持透明，去掉玻璃效果 */
 .var-popup__content .var-result,
 .var-popup__content .var-paper {
   background: transparent !important;
   box-shadow: none !important;
+}
+
+.var-popup__content .var-paper::before,
+.var-popup__content .var-paper::after {
+  display: none;
 }
 
 /* popup 遮罩层 - 渐变暗角聚焦（替代纯色半透明） */
@@ -295,32 +360,113 @@ html:not(.dark) .var-popup__overlay {
 .var-dialog__overlay {
   background: radial-gradient(
     ellipse 60% 60% at 50% 50%,
-    rgba(0, 0, 0, 0.35) 0%,
-    transparent 70%
+    rgba(0, 0, 0, 0.4) 0%,
+    rgba(0, 0, 0, 0.15) 60%,
+    transparent 100%
   ) !important;
-  backdrop-filter: blur(2px) !important;
-  -webkit-backdrop-filter: blur(2px) !important;
+  backdrop-filter: blur(4px) saturate(120%) !important;
+  -webkit-backdrop-filter: blur(4px) saturate(120%) !important;
+  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 html:not(.dark) .var-dialog__overlay {
   background: radial-gradient(
     ellipse 60% 60% at 50% 50%,
-    rgba(0, 0, 0, 0.1) 0%,
-    transparent 70%
+    rgba(0, 0, 0, 0.12) 0%,
+    rgba(0, 0, 0, 0.04) 60%,
+    transparent 100%
   ) !important;
 }
 
-/* var-dialog 弹窗内容增强 */
-.var-dialog__content {
+/* var-dialog 弹窗盒子 - 毛玻璃背景 + 玻璃质感 */
+/* 关键：dialog box 背景必须透明，让 popup content 的毛玻璃透出来 */
+.var-dialog--box,
+.var-dialog {
+  position: relative !important;
+  overflow: hidden !important;
+  background: transparent !important;
+  border: none !important;
   box-shadow:
     0 8px 32px rgba(0, 0, 0, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+    0 2px 8px rgba(0, 0, 0, 0.08) !important;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  animation: dialog-enter 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-html.dark .var-dialog__content {
+html.dark .var-dialog--box,
+html.dark .var-dialog {
+  background: transparent !important;
   box-shadow:
     0 8px 32px rgba(0, 0, 0, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+    0 2px 8px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* 内发光边框 */
+.var-dialog--box::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.25) 0%,
+    transparent 40%,
+    rgba(0, 0, 0, 0.05) 100%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 1;
+}
+
+html.dark .var-dialog--box::before {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.12) 0%,
+    transparent 40%,
+    rgba(255, 255, 255, 0.04) 100%
+  );
+}
+
+/* 顶部高光条 */
+.var-dialog--box::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 12%;
+  right: 12%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.35),
+    transparent
+  );
+  pointer-events: none;
+  z-index: 2;
+}
+
+html:not(.dark) .var-dialog--box::after {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.55),
+    transparent
+  );
+}
+
+@keyframes dialog-enter {
+  from {
+    transform: translateY(8px) scale(0.98);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
 }
 
 .toast-content {
@@ -331,7 +477,7 @@ html.dark .var-dialog__content {
 
 /* 下拉框菜单毛玻璃 */
 .var-menu.var--box.var-select__menu {
-  background: rgba(var(--color-surface-container-rgb, 224, 242, 254), 0.08) !important;
+  background: rgba(var(--color-surface-container-rgb, 221, 231, 245), 0.08) !important;
   backdrop-filter: blur(20px) saturate(140%) !important;
   -webkit-backdrop-filter: blur(20px) saturate(140%) !important;
   will-change: backdrop-filter !important;
@@ -349,7 +495,7 @@ html.dark .var-menu.var--box.var-select__menu {
 }
 
 .var-collapse-item {
-  background: rgba(var(--color-surface-container-rgb, 224, 242, 254), 0.08) !important;
+  background: rgba(var(--color-surface-container-rgb, 221, 231, 245), 0.08) !important;
   border: none !important;
   box-shadow: none !important;
 }

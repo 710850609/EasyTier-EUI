@@ -36,6 +36,7 @@
             <var-loading type="circle" v-if="serviceOperating" />
             <var-button
               type="primary"
+              size="small"
               auto-loading
               @click="startService"
               v-if="selectedConfig && !serviceRunning && !serviceOperating"
@@ -44,6 +45,7 @@
             </var-button>
             <var-button
               type="danger"
+              size="small"
               auto-loading            
               @click="stopService"
               v-if="serviceRunning && !serviceOperating"

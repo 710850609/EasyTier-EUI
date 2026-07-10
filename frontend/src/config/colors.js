@@ -1,25 +1,25 @@
 /**
  * 配色配置文件
- * 清新蓝绿主题 - 适配 Varlet 官方 CSS 变量规范
+ * 电光蓝主题 - 现代清爽，适配年轻人审美
  * @see https://www.varletjs.com/#/zh-CN/themes
  */
 
-// 清新蓝绿 - 亮色主题
+// 电光蓝 - 亮色主题
 export const freshLightTheme = {
-  // 主色调 - 活力亮蓝
-  '--color-primary': '#0284c7',
+  // 主色调 - 电光蓝，Apple/Stripe 风格
+  '--color-primary': '#2563eb',
   '--color-on-primary': '#ffffff',
-  '--color-primary-container': '#e0f2fe',
-  '--color-on-primary-container': '#075985',
+  '--color-primary-container': '#dbeafe',
+  '--color-on-primary-container': '#1e40af',
 
-  // 信息色 - 天蓝
-  '--color-info': '#06b6d4',
+  // 信息色 - 天空蓝
+  '--color-info': '#0ea5e9',
   '--color-on-info': '#ffffff',
-  '--color-info-container': '#cffafe',
-  '--color-on-info-container': '#0e7490',
+  '--color-info-container': '#e0f2fe',
+  '--color-on-info-container': '#075985',
 
-  // 成功色 - 鲜艳绿
-  '--color-success': '#059669',
+  // 成功色 - 薄荷绿
+  '--color-success': '#10b981',
   '--color-on-success': '#ffffff',
   '--color-success-container': '#d1fae5',
   '--color-on-success-container': '#065f46',
@@ -40,15 +40,15 @@ export const freshLightTheme = {
   '--color-disabled': '#e2e8f0',
   '--color-text-disabled': '#94a3b8',
 
-  // 背景色 - 清新浅蓝，层次分明有活力
-  '--color-body': '#f0f7fc',
+  // 背景色 - 清新天空蓝，明亮有活力
+  '--color-body': '#f3f6fa',
   '--color-surface': '#ffffff',
   '--color-surface-rgb': '255, 255, 255',
-  '--color-surface-container': '#d4eaf5',
-  '--color-surface-container-rgb': '212, 234, 245',
-  '--color-surface-container-low': '#f0f7fc',
-  '--color-surface-container-high': '#b3d5ed',
-  '--color-surface-container-highest': '#7dd3fc',
+  '--color-surface-container': '#dde7f5',
+  '--color-surface-container-rgb': '221, 231, 245',
+  '--color-surface-container-low': '#f3f6fa',
+  '--color-surface-container-high': '#c4d1e5',
+  '--color-surface-container-highest': '#a0b4d0',
 
   // 文字色（更清晰的对比度）
   '--color-text': '#1e293b',
@@ -59,21 +59,21 @@ export const freshLightTheme = {
   '--color-inverse-surface': '#11263d',
 
   // 边框和轮廓（与容器层级呼应，柔和过渡）
-  '--color-outline': '#8cc0dc',
-  '--color-outline-variant': '#b3d5ed',
+  '--color-outline': '#b0bcc8',
+  '--color-outline-variant': '#c4d1e5',
 
   // Checkbox 样式
   '--checkbox-unchecked-color': '#94a3b8',
 
   // Snackbar/Toast 样式
-  '--snackbar-background': '#d4eaf5',
+  '--snackbar-background': '#dde7f5',
   '--snackbar-color': '#1e293b',
   '--snackbar-info-background': '#b3d5ed',
   '--snackbar-success-background': '#07c160',
   '--snackbar-success-color': '#ffffff',
 
   // Dialog 样式
-  '--dialog-title-color': '#0284c7',
+  '--dialog-title-color': '#2563eb',
   '--result-background': '#fff',
   '--result-description-color': 'var(--color-text)',
 }
@@ -147,7 +147,7 @@ export const freshDarkTheme = {
   '--snackbar-success-color': '#000000',
 
   // Dialog 样式
-  '--dialog-title-color': '#0284c7',
+  '--dialog-title-color': '#2563eb',
   '--result-background': '#152130',
   '--result-description-color': 'var(--color-text)',
 }
