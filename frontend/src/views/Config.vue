@@ -41,7 +41,6 @@
               :placeholder="$t('config.selectConfig')"
               variant="outlined"
               size="small"
-              blur-color="var(--color-primary)"
               @change="onConfigSwitch"
             >
               <var-option
@@ -92,7 +91,6 @@
               :placeholder="$t('config.selectConfig')"
               variant="outlined"
               size="small"
-              blur-color="var(--color-primary)"
               @change="onConfigSwitch"
             >
               <var-option

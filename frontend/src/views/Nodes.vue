@@ -12,7 +12,6 @@
             v-model="selectedConfig"
             @change="handleConfigChange"
             :placeholder="$t('nodes.selectConfig')"
-            blur-color="var(--color-primary)"
           >
             <template #selected>
               <div class="config-option">
@@ -192,6 +191,11 @@
                 <template v-else-if="col.key === 'lat_ms'">
                   <span class="cell-text" :class="{ 'lat-medium': node.lat_ms >= 60 && node.lat_ms <= 150, 'lat-high': node.lat_ms > 150 }" @click="handleClickCell(node, col.key)">{{ parseNode(node, col.key) }}</span>
                 </template>
+                <template v-else-if="col.key === 'loss_rate'">                  
+                  <span>
+                    {{ parseNode(node, 'loss_rate') }}
+                  </span>
+                </template>
                 <template v-else>
                   <var-tooltip v-if="['hostname', 'tunnel_proto'].includes(col.key)" :content="parseNode(node, col.key)">
                     <span class="cell-text" @click="handleClickCell(node, col.key)">{{ parseNode(node, col.key) }}</span>
@@ -234,7 +238,7 @@
               <span v-if="visibleColumnsMap.lat_ms && node.lat_ms !== undefined && node.lat_ms !== '-'" class="info-chip metric-chip" :class="{ 'lat-medium': node.lat_ms >= 60 && node.lat_ms <= 150, 'lat-high': node.lat_ms > 150 }">
                 {{ parseNode(node, 'lat_ms') }}
               </span>
-              <span v-if="visibleColumnsMap.loss_rate && node.loss_rate !== undefined && node.loss_rate !== '-'" class="info-chip metric-chip" :class="{ 'loss-warn': node.loss_rate > 0 }">
+              <span v-if="visibleColumnsMap.loss_rate && node.loss_rate !== undefined && node.loss_rate !== '-'" class="info-chip metric-chip" :class="{ 'loss-warn': parseFloat(node.loss_rate.replace('%', ''))  > 0 }">
                 {{ $t('nodes.packetLoss') }} {{ parseNode(node, 'loss_rate') }}
               </span>
               <span v-if="visibleColumnsMap.tunnel_proto && node.tunnel_proto && node.tunnel_proto !== '-'" class="info-chip">

@@ -44,11 +44,11 @@ export const freshLightTheme = {
   '--color-body': '#f3f6fa',
   '--color-surface': '#ffffff',
   '--color-surface-rgb': '255, 255, 255',
-  '--color-surface-container': '#dde7f5',
-  '--color-surface-container-rgb': '221, 231, 245',
+  '--color-surface-container': '#e8f0f8',
+  '--color-surface-container-rgb': '232, 240, 248',
   '--color-surface-container-low': '#f3f6fa',
-  '--color-surface-container-high': '#c4d1e5',
-  '--color-surface-container-highest': '#a0b4d0',
+  '--color-surface-container-high': '#d0ddee',
+  '--color-surface-container-highest': '#b0c4dd',
 
   // 文字色（更清晰的对比度）
   '--color-text': '#1e293b',
