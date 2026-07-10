@@ -159,6 +159,38 @@ html.dark body .var-select__scroller .var-option:not(:last-child)::after {
   );
 }
 
+/* 竖排 var-checkbox 渐变分割线 */
+html body .var-checkbox-group--vertical .var-checkbox__wrap {
+  position: relative;
+}
+
+html body .var-checkbox-group--vertical .var-checkbox__wrap:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 36px;
+  right: 12px;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(0, 0, 0, 0.08) 20%,
+    rgba(0, 0, 0, 0.08) 80%,
+    transparent
+  );
+  pointer-events: none;
+}
+
+html.dark body .var-checkbox-group--vertical .var-checkbox__wrap:not(:last-child)::after {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1) 20%,
+    rgba(255, 255, 255, 0.1) 80%,
+    transparent
+  );
+}
+
 /* var-tabs 样式适配 */
 .var-tabs {
   background: transparent !important;
