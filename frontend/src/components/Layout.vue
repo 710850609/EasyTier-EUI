@@ -107,7 +107,7 @@ onUnmounted(() => {
 <style scoped>
 .layout {
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
   background: var(--color-body);
 }
 

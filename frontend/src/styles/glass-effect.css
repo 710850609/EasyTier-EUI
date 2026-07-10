@@ -1,9 +1,9 @@
 /* var-select 下拉框毛玻璃效果 - 全局样式 */
 html body .var-select__scroller,
 html body .var-select__scroller.var-elevation--3 {
-  --select-scroller-background: rgba(var(--color-surface-container-rgb, 221, 231, 245), 0.18) !important;
-  background: rgba(var(--color-surface-container-rgb, 221, 231, 245), 0.18) !important;
-  background-color: rgba(var(--color-surface-container-rgb, 221, 231, 245), 0.18) !important;
+  --select-scroller-background: rgba(var(--color-surface-container-rgb, 226, 236, 250), 0.18) !important;
+  background: rgba(var(--color-surface-container-rgb, 226, 236, 250), 0.18) !important;
+  background-color: rgba(var(--color-surface-container-rgb, 226, 236, 250), 0.18) !important;
   backdrop-filter: blur(28px) saturate(140%) !important;
   -webkit-backdrop-filter: blur(28px) saturate(140%) !important;
   border: none !important;

@@ -1602,7 +1602,7 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   padding-bottom: 20px;
-  background: rgba(var(--color-surface-container-rgb, 221, 231, 245), 0.08) !important;
+  background: rgba(var(--color-surface-container-rgb, 226, 236, 250), 0.08) !important;
 }
 
 html.dark .merged-section {
@@ -1855,7 +1855,7 @@ html.dark .merged-section {
   /* margin-top: 8px; */
   border-radius: 16px;
   overflow: hidden;
-  background: rgba(var(--color-surface-container-rgb, 221, 231, 245), 0.08) !important;
+  background: rgba(var(--color-surface-container-rgb, 226, 236, 250), 0.08) !important;
 }
 
 html.dark .flags-section-paper {
@@ -1952,7 +1952,7 @@ html.dark .flags-section-paper {
   border-radius: 16px;
   overflow: hidden;
   color: var(--color-text);
-  background: rgba(var(--color-surface-container-rgb, 221, 231, 245), 0.08) !important;
+  background: rgba(var(--color-surface-container-rgb, 226, 236, 250), 0.08) !important;
 }
 
 html.dark .forward-section-paper {
@@ -2222,7 +2222,7 @@ html.dark .forward-section-paper {
 
 .help-content tr {
   --table-tbody-td-text-color: var(--color-text) !important;
-  background: rgba(var(--color-surface-container-rgb, 221, 231, 245), 0.1) !important;
+  background: rgba(var(--color-surface-container-rgb, 226, 236, 250), 0.1) !important;
 }
 
 /* ===== Deep 覆盖 ===== */
@@ -2552,7 +2552,7 @@ html.dark .forward-section-paper {
     padding: 12px;
     border: 1px solid var(--color-border);
     border-radius: 12px;
-    background: rgba(var(--color-surface-container-rgb, 221, 231, 245), 0.08);
+    background: rgba(var(--color-surface-container-rgb, 226, 236, 250), 0.08);
     color: var(--color-text);
   }
 

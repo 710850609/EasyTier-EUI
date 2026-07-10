@@ -41,14 +41,14 @@ export const freshLightTheme = {
   '--color-text-disabled': '#94a3b8',
 
   // 背景色 - 清新天空蓝，明亮有活力
-  '--color-body': '#f3f6fa',
+  '--color-body': '#f4f6fc',
   '--color-surface': '#ffffff',
   '--color-surface-rgb': '255, 255, 255',
-  '--color-surface-container': '#e8f0f8',
-  '--color-surface-container-rgb': '232, 240, 248',
-  '--color-surface-container-low': '#f3f6fa',
-  '--color-surface-container-high': '#d0ddee',
-  '--color-surface-container-highest': '#b0c4dd',
+  '--color-surface-container': '#e2ecfa',
+  '--color-surface-container-rgb': '226, 236, 250',
+  '--color-surface-container-low': '#f0f4fc',
+  '--color-surface-container-high': '#ccdaf0',
+  '--color-surface-container-highest': '#aec4e0',
 
   // 文字色（更清晰的对比度）
   '--color-text': '#1e293b',
@@ -59,8 +59,8 @@ export const freshLightTheme = {
   '--color-inverse-surface': '#11263d',
 
   // 边框和轮廓（与容器层级呼应，柔和过渡）
-  '--color-outline': '#b0bcc8',
-  '--color-outline-variant': '#c4d1e5',
+  '--color-outline': '#aebcc8',
+  '--color-outline-variant': '#c0cfe5',
 
   // Checkbox 样式
   '--checkbox-unchecked-color': '#94a3b8',

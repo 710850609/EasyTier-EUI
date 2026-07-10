@@ -398,7 +398,7 @@ html.dark .submenu-overlay {
 .submenu-popup-content {
   position: relative;
   overflow: hidden;
-  background: rgba(var(--color-surface-container-rgb, 221, 231, 245), 0.08);
+  background: rgba(var(--color-surface-container-rgb, 226, 236, 250), 0.08);
   backdrop-filter: blur(20px) saturate(140%);
   -webkit-backdrop-filter: blur(20px) saturate(140%);
   will-change: backdrop-filter;

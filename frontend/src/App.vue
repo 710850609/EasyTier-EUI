@@ -1,4 +1,4 @@
-﻿<template>
+﻿﻿<template>
   <Layout />
 </template>
 
@@ -45,7 +45,7 @@ body {
   --app-primary: var(--color-primary);
   /* RGB 变量用于 rgba() */
   --color-surface-rgb: 255, 255, 255;
-  --color-surface-container-rgb: 221, 231, 245;
+  --color-surface-container-rgb: 226, 236, 250;
 }
 
 /* 暗色主题 RGB 变量 - 使用 html.dark 提高优先级 */
@@ -108,9 +108,9 @@ html.dark {
 /* var-select 下拉框毛玻璃效果 */
 html body .var-select__scroller,
 html body .var-select__scroller.var-elevation--3 {
-  --select-scroller-background: rgba(var(--color-surface-container-rgb, 221, 231, 245), 0.08) !important;
-  background: rgba(var(--color-surface-container-rgb, 221, 231, 245), 0.08) !important;
-  background-color: rgba(var(--color-surface-container-rgb, 221, 231, 245), 0.08) !important;
+  --select-scroller-background: rgba(var(--color-surface-container-rgb, 226, 236, 250), 0.08) !important;
+  background: rgba(var(--color-surface-container-rgb, 226, 236, 250), 0.08) !important;
+  background-color: rgba(var(--color-surface-container-rgb, 226, 236, 250), 0.08) !important;
   backdrop-filter: blur(20px) saturate(140%) !important;
   -webkit-backdrop-filter: blur(20px) saturate(140%) !important;
   will-change: backdrop-filter !important;
@@ -221,7 +221,7 @@ html.dark body .var-checkbox-group--vertical .var-checkbox__wrap:not(:last-child
 .var-popup__content,
 .var-popup__content[var-popup-cover] {
   overflow: hidden;
-  background: rgba(var(--color-surface-container-rgb, 221, 231, 245), 0.22) !important;
+  background: rgba(var(--color-surface-container-rgb, 226, 236, 250), 0.22) !important;
   backdrop-filter: blur(30px) saturate(160%) !important;
   -webkit-backdrop-filter: blur(30px) saturate(160%) !important;
   will-change: backdrop-filter !important;
@@ -542,7 +542,7 @@ html:not(.dark) .var-dialog--box::after {
 
 /* 下拉框菜单毛玻璃 */
 .var-menu.var--box.var-select__menu {
-  background: rgba(var(--color-surface-container-rgb, 221, 231, 245), 0.08) !important;
+  background: rgba(var(--color-surface-container-rgb, 226, 236, 250), 0.08) !important;
   backdrop-filter: blur(20px) saturate(140%) !important;
   -webkit-backdrop-filter: blur(20px) saturate(140%) !important;
   will-change: backdrop-filter !important;
@@ -560,7 +560,7 @@ html.dark .var-menu.var--box.var-select__menu {
 }
 
 .var-collapse-item {
-  background: rgba(var(--color-surface-container-rgb, 221, 231, 245), 0.08) !important;
+  background: rgba(var(--color-surface-container-rgb, 226, 236, 250), 0.08) !important;
   border: none !important;
   box-shadow: none !important;
 }
