@@ -192,7 +192,7 @@
                   <span class="cell-text" :class="{ 'lat-medium': node.lat_ms >= 60 && node.lat_ms <= 150, 'lat-high': node.lat_ms > 150 }" @click="handleClickCell(node, col.key)">{{ parseNode(node, col.key) }}</span>
                 </template>
                 <template v-else-if="col.key === 'loss_rate'">                  
-                  <span>
+                  <span class="cell-text" :class="{ 'loss-medium': parseFloat(node.loss_rate) > 0 && parseFloat(node.loss_rate) <= 1, 'loss-high': parseFloat(node.loss_rate) > 1 }">
                     {{ parseNode(node, 'loss_rate') }}
                   </span>
                 </template>
@@ -238,7 +238,7 @@
               <span v-if="visibleColumnsMap.lat_ms && node.lat_ms !== undefined && node.lat_ms !== '-'" class="info-chip metric-chip" :class="{ 'lat-medium': node.lat_ms >= 60 && node.lat_ms <= 150, 'lat-high': node.lat_ms > 150 }">
                 {{ parseNode(node, 'lat_ms') }}
               </span>
-              <span v-if="visibleColumnsMap.loss_rate && node.loss_rate !== undefined && node.loss_rate !== '-'" class="info-chip metric-chip" :class="{ 'loss-warn': parseFloat(node.loss_rate.replace('%', ''))  > 0 }">
+              <span v-if="visibleColumnsMap.loss_rate && node.loss_rate !== undefined && node.loss_rate !== '-'" class="info-chip metric-chip" :class="{ 'loss-medium': parseFloat(node.loss_rate) > 0 && parseFloat(node.loss_rate) <= 1, 'loss-high': parseFloat(node.loss_rate) > 1 }">
                 {{ $t('nodes.packetLoss') }} {{ parseNode(node, 'loss_rate') }}
               </span>
               <span v-if="visibleColumnsMap.tunnel_proto && node.tunnel_proto && node.tunnel_proto !== '-'" class="info-chip">
@@ -957,12 +957,28 @@ td {
   color: var(--color-danger);
 }
 
+.cell-text.loss-medium {
+  color: var(--color-warning);
+}
+
+.cell-text.loss-high {
+  color: var(--color-danger);
+}
+
 html.dark .cell-text.lat-medium {
   color: #ffd54f;
 }
 
 html.dark .cell-text.lat-high {
   color: #ff6b6b;
+}
+
+html.dark .cell-text.loss-medium {
+  color: var(--color-warning);
+}
+
+html.dark .cell-text.loss-high {
+  color: var(--color-danger);
 }
 
 tr:hover td {
@@ -1141,9 +1157,15 @@ tr:hover td {
     color: var(--color-success);
   }
   
-  .info-chip.loss-warn {
-    background: rgba(239, 83, 80, 0.12);
-    color: #e53935;
+  .info-chip.loss-medium {
+    background: rgba(var(--color-warning-rgb, 234, 88, 12), 0.12);
+    color: var(--color-warning);
+    font-weight: 600;
+  }
+
+  .info-chip.loss-high {
+    background: rgba(var(--color-danger-rgb, 239, 68, 68), 0.12);
+    color: var(--color-danger);
     font-weight: 600;
   }
 
@@ -1170,9 +1192,15 @@ tr:hover td {
     color: rgba(255, 255, 255, 0.8);
   }
   
-  html.dark .info-chip.loss-warn {
-    background: rgba(255, 82, 82, 0.25);
-    color: #ff6b6b;
+  html.dark .info-chip.loss-medium {
+    background: rgba(var(--color-warning-rgb, 251, 191, 36), 0.25);
+    color: var(--color-warning);
+    font-weight: 600;
+  }
+
+  html.dark .info-chip.loss-high {
+    background: rgba(var(--color-danger-rgb, 248, 113, 113), 0.25);
+    color: var(--color-danger);
     font-weight: 600;
   }
 
