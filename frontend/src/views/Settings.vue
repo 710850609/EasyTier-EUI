@@ -308,7 +308,7 @@
         <img src="../../public/images/reward_code.jpg" style="width: 50%; height: 50%; border-radius: 50%; object-fit: cover;" />
       </template>
       <template #footer>
-        <var-button type="info" @click="showRewardCdoe = false">{{ $t('common.close') }}</var-button>
+        <var-button type="primary" @click="showRewardCdoe = false">{{ $t('common.close') }}</var-button>
       </template>
     </var-result>
   </var-popup>
@@ -320,7 +320,7 @@
          <MarkdownRenderer :content="`${euiChangeMarkdown}`" class="markdown-renderer" />
       </template>
       <template #footer>
-        <var-button type="info" @click="showEuiReleaseInfo = false" style="margin: 10px;">{{ $t('common.close') }}</var-button>
+        <var-button type="primary" @click="showEuiReleaseInfo = false" style="margin: 10px;">{{ $t('common.close') }}</var-button>
       </template>
     </var-result>
   </var-popup>
@@ -331,7 +331,7 @@
         <MarkdownRenderer :content="etChangeLog" class="markdown-renderer" />
       </template>
       <template #footer>
-        <var-button type="info" @click="showEtChangeLog = false">{{ $t('common.close') }}</var-button>
+        <var-button type="primary" @click="showEtChangeLog = false">{{ $t('common.close') }}</var-button>
       </template>
     </var-result>
   </var-popup>
