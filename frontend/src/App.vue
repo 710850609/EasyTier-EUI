@@ -131,6 +131,34 @@ html.dark body .var-select__scroller.var-elevation--3 {
     inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
 }
 
+/* 下拉选项渐变分割线 */
+html body .var-select__scroller .var-option:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 12px;
+  right: 12px;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(0, 0, 0, 0.08) 20%,
+    rgba(0, 0, 0, 0.08) 80%,
+    transparent
+  );
+  pointer-events: none;
+}
+
+html.dark body .var-select__scroller .var-option:not(:last-child)::after {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1) 20%,
+    rgba(255, 255, 255, 0.1) 80%,
+    transparent
+  );
+}
+
 /* var-tabs 样式适配 */
 .var-tabs {
   background: transparent !important;
@@ -161,22 +189,22 @@ html.dark body .var-select__scroller.var-elevation--3 {
 .var-popup__content,
 .var-popup__content[var-popup-cover] {
   overflow: hidden;
-  background: rgba(var(--color-surface-container-rgb, 221, 231, 245), 0.08) !important;
-  backdrop-filter: blur(20px) saturate(140%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(140%) !important;
+  background: rgba(var(--color-surface-container-rgb, 221, 231, 245), 0.22) !important;
+  backdrop-filter: blur(30px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(30px) saturate(160%) !important;
   will-change: backdrop-filter !important;
   border: none !important;
   box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+    0 8px 40px rgba(0, 0, 0, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
 }
 
 html.dark .var-popup__content,
 html.dark .var-popup__content[var-popup-cover] {
-  background: rgba(var(--color-surface-container-rgb, 51, 65, 85), 0.18) !important;
+  background: rgba(var(--color-surface-container-rgb, 51, 65, 85), 0.35) !important;
   box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+    0 8px 40px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
 }
 
 /* 弹窗顶部高光条 —— 模拟玻璃边缘反光 */
@@ -212,12 +240,12 @@ html.dark .var-popup__content::after {
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  padding: 1px;
+  padding: 1.5px;
   background: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.2) 0%,
+    rgba(255, 255, 255, 0.3) 0%,
     transparent 50%,
-    rgba(255, 255, 255, 0.06) 100%
+    rgba(0, 0, 0, 0.06) 100%
   );
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -229,9 +257,9 @@ html.dark .var-popup__content::after {
 html.dark .var-popup__content::before {
   background: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.12) 0%,
+    rgba(255, 255, 255, 0.15) 0%,
     transparent 50%,
-    rgba(255, 255, 255, 0.04) 100%
+    rgba(255, 255, 255, 0.06) 100%
   );
 }
 
@@ -320,6 +348,11 @@ html.dark .var-paper::after {
 .var-popup__content .var-paper {
   background: transparent !important;
   box-shadow: none !important;
+}
+
+/* popup 内的表格滚动时防止背景穿透 */
+.var-popup__content .var-table thead {
+  background: var(--color-surface-container);
 }
 
 .var-popup__content .var-paper::before,

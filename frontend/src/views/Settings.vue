@@ -73,7 +73,7 @@
         >
           <template #default>
             <var-option v-for="item in etVersionList" :key="item.version" :label="item.version" :value="item.version">
-              <var-cell :title="item.version" border>
+              <var-cell :title="item.version">
                 <template #extra>
                   <div style="display: flex; align-items: center;">
                     <var-chip :type="item.download_count > 100000 ? 'success' : (item.download_count > 10000 ? 'primary' : 'danger')"  size="mini" style="writing-mode: horizontal-tb; white-space: nowrap;">

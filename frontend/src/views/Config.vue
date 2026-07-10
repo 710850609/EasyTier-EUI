@@ -223,11 +223,7 @@
                   <div class="section-subtitle">
                     {{ $t('config.initialPeers') }}
                     <var-icon name="information-outline" size="12pt" @click="showPublicPeerTip = true" color="var(--color-primary)" />
-                  </div>                    
-                  <!-- <div class="peer-actions">
-                    <var-button type="primary" size="mini" auto-loading @click="refreshPublicPeerOptions">获取最新节点</var-button>
-                    <var-button type="primary" size="mini" auto-loading @click="checkPeers">检测节点</var-button>
-                  </div> -->
+                  </div>
                 </div>
                 
                 <var-select
@@ -311,7 +307,7 @@
           </var-paper>
 
           <!-- 高级设置 -->
-          <var-paper v-if="!fastSettingMode" :elevation="3" class="flags-section-paper">
+          <var-paper v-if="!fastSettingMode" :elevation="2" class="flags-section-paper">
             <var-collapse v-model="flagsOpen" :accordion="true" class="flags-section-inner">
               <var-collapse-item name="flags">
               <template #title>
@@ -416,6 +412,7 @@
                         variant="outlined"
                         :chip="true"
                         size="small"
+                        :line="true"
                       >
                         <var-option v-for="(e, index) in encryptionAlgorithmList" :key="index" :label="e" :value="e" />
                       </var-select>
@@ -487,7 +484,7 @@
                           <svg-icon type="mdi" :path="mdilPencil" color="var(--color-primary)" />
                         </template>
                         <template #description>
-                          <var-input :placeholder="$t('config.customListenerPlaceholder')" size="mini" v-model="customListener" blur-color="var(--color-primary)" />
+                          <var-input :placeholder="$t('config.customListenerPlaceholder')" size="small" v-model="customListener" blur-color="var(--color-primary)" />
                         </template>
                         <template #extra>
                           <var-button type="primary" size="small" @click="addListener">{{ $t('config.addListener') }}</var-button>
@@ -503,7 +500,7 @@
           </var-paper>
 
           <!-- 代理与转发 -->
-          <var-paper v-if="!fastSettingMode" :elevation="3" class="forward-section-paper">
+          <var-paper v-if="!fastSettingMode" :elevation="2" class="forward-section-paper">
             <var-collapse v-model="forwardOpen" :accordion="true" class="forward-section-inner">
               <var-collapse-item name="forward">
                 <template #title>
@@ -549,7 +546,7 @@
                               <svg-icon type="mdi" :path="mdilPencil" color="var(--color-primary)" />
                             </template>
                             <template #description>
-                              <var-input :placeholder="$t('config.customExitNodePlaceholder')" size="mini" v-model="customExitNode" blur-color="var(--color-primary)" />
+                              <var-input :placeholder="$t('config.customExitNodePlaceholder')" size="small" v-model="customExitNode" blur-color="var(--color-primary)" />
                             </template>
                             <template #extra>
                               <var-button type="primary" size="small" @click="addExitNode">{{ $t('config.addExitNode') }}</var-button>
@@ -590,7 +587,7 @@
                               <svg-icon type="mdi" :path="mdilPencil" color="var(--color-primary)" />
                             </template>
                             <template #description>
-                              <var-input :placeholder="$t('config.customProxyNetworkPlaceholder')" size="mini" v-model="customProxyNetwork" blur-color="var(--color-primary)" />
+                              <var-input :placeholder="$t('config.customProxyNetworkPlaceholder')" size="small" v-model="customProxyNetwork" blur-color="var(--color-primary)" />
                             </template>
                             <template #extra>
                               <var-button type="primary" size="small" @click="addProxyNetwork">{{ $t('config.addProxyNetwork') }}</var-button>
@@ -678,6 +675,7 @@
       </div>
     </template>
 
+    <!-- 编辑配置弹窗 -->
     <var-popup v-model:show="showCodePage" class="code-editor-popup" :close-on-click-overlay="false" :style="{ width: '100vw', height: '100vh', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, margin: 0, padding: 0, maxWidth: 'none', maxHeight: 'none' }">
       <div class="code-editor-wrapper">
         <div class="code-editor-header">
@@ -697,6 +695,7 @@
       </div>
     </var-popup>
 
+    <!-- 重命名配置弹窗 -->
     <var-dialog v-model:show="showRenameDialog" @before-close="confirmEditName"
       :confirm-button-text="$t('common.confirm')" :cancel-button-text="$t('common.cancel')">
       <template #title>
@@ -711,6 +710,7 @@
       />
     </var-dialog>
 
+    <!-- 创建新配置弹窗 -->
     <var-dialog v-model:show="showCreateDialog" @before-close="beforeCloseCreateDilog"
       :confirm-button-text="$t('common.confirm')" :cancel-button-text="$t('common.cancel')">
       <template #title>
@@ -725,16 +725,19 @@
       />
     </var-dialog>
 
+    <!-- 分享配置弹窗 -->
     <var-dialog v-model:show="showShareConfigType" :title="$t('config.selectShareType')"
       :confirm-button-text="$t('config.downloadFile')"  @confirm="downloadConfig" 
       :cancel-button-text="$t('config.copyClipboard')" @cancel="copyConfig">
     </var-dialog>
 
+    <!-- 删除配置弹窗 -->
     <var-dialog v-model:show="showDeleteDialog" :title="$t('config.confirmDelete', { name: currentConfigData.name })"
       :confirm-button-text="$t('config.confirm')"  @confirm="deleteCurrentConfig" 
       :cancel-button-text="$t('config.cancel')" @cancel="showDeleteDialog = false">
     </var-dialog>
 
+    <!-- 公共节点帮助弹窗 -->
     <var-popup position="top" v-model:show="showPublicPeerTip">
       <div class="help-content">
         <p class="help-paragraph"><span class="help-bold">{{ $t('config.peerHelp.publicPeer') }}</span>：{{ $t('config.peerHelp.publicPeerDesc') }}</p>
@@ -752,8 +755,8 @@
             </thead>
             <tbody>
               <tr v-for="item in publicPeerOptions" :key="item.uri">
-                <td v-if="item.owner !== ''">{{ item.uri }}</td>
-                <td v-if="item.owner !== ''">{{ item.owner }}</td>
+                <td v-if="item.owner !== ''" style="font-size: 10pt;">{{ item.uri }}</td>
+                <td v-if="item.owner !== ''" style="font-size: 10pt;">{{ item.owner }}</td>
               </tr>
             </tbody>
           </var-table>
@@ -2216,7 +2219,7 @@ html.dark .forward-section-paper {
   top: 0;
   z-index: 10;
   color: var(--color-text) !important;
-  background: rgba(var(--color-surface-container-rgb, 221, 231, 245), 0.4) !important;
+  background: var(--color-surface-container) !important;
 }
 
 .help-content tr {
@@ -2431,8 +2434,8 @@ html.dark .forward-section-paper {
     right: 0;
     bottom: 0;
     background: radial-gradient(
-      ellipse 70% 55% at 50% 50%,
-      rgba(0, 0, 0, 0.3) 0%,
+      ellipse 70% 55% at 50% 15%,
+      rgba(0, 0, 0, 0.15) 0%,
       transparent 70%
     );
     backdrop-filter: blur(2px);

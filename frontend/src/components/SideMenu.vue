@@ -375,7 +375,7 @@ const handleClick = (key) => {
   z-index: 99;
   background: radial-gradient(
     ellipse 60% 50% at 0% 50%,
-    rgba(0, 0, 0, 0.18) 0%,
+    rgba(0, 0, 0, 0.06) 0%,
     transparent 70%
   );
   backdrop-filter: blur(4px);
@@ -408,7 +408,7 @@ html.dark .submenu-overlay {
   min-width: 180px;
   border: none;
   box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.15),
+    0 8px 32px rgba(0, 0, 0, 0.10),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
@@ -523,15 +523,91 @@ html.dark .submenu-popup-content::before {
   color: var(--color-on-surface);
   font-size: 13px;
   gap: 10px;
+  position: relative;
+  margin-bottom: 2px;
 }
 
 .submenu-popup-item:hover {
-  background: var(--color-surface-container-highest);
+  background: rgba(0, 0, 0, 0.04);
+  box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.04);
+}
+
+html.dark .submenu-popup-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* 渐变分割线 */
+.submenu-popup-item:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 12px;
+  right: 12px;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(0, 0, 0, 0.08) 20%,
+    rgba(0, 0, 0, 0.08) 80%,
+    transparent
+  );
+  pointer-events: none;
+}
+
+html.dark .submenu-popup-item:not(:last-child)::after {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1) 20%,
+    rgba(255, 255, 255, 0.1) 80%,
+    transparent
+  );
+}
+
+/* 触摸按压反馈 */
+.submenu-popup-item:active {
+  background: rgba(0, 0, 0, 0.08);
+  transition: background 0.05s;
+}
+
+html.dark .submenu-popup-item:active {
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .submenu-popup-item.active {
-  background: var(--color-primary-container);
+  background: radial-gradient(
+    ellipse 80% 80% at 50% 50%,
+    rgba(59, 130, 246, 0.22) 0%,
+    transparent 70%
+  );
   color: var(--color-on-primary-container);
+  box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.2);
+}
+
+html.dark .submenu-popup-item.active {
+  background: radial-gradient(
+    ellipse 80% 80% at 50% 50%,
+    rgba(59, 130, 246, 0.28) 0%,
+    transparent 70%
+  );
+  box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.28);
+}
+
+/* Active 项左侧发光指示条 */
+.submenu-popup-item.active::before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 60%;
+  border-radius: 2px;
+  background: #3b82f6;
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.5);
+  pointer-events: none;
+  z-index: 2;
 }
 
 .submenu-icon {

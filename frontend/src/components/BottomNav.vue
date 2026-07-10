@@ -34,6 +34,7 @@
         v-for="item in currentSubMenus" 
         :key="item.key"
         class="popup-item"
+        :class="{ active: active === item.key }"
         @click="handleSubMenuClick(item.key)"
       >
         <!-- Varlet 内置图标 -->
@@ -158,8 +159,14 @@ const handleSubMenuClick = (key) => {
 
 .submenu-popup {
   padding: 16px;
-  background: transparent;
+  background: rgba(var(--color-surface-container-rgb, 221, 231, 245), 0.08);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
   border-radius: 16px 16px 0 0;
+}
+
+html.dark .submenu-popup {
+  background: rgba(var(--color-surface-container-rgb, 51, 65, 85), 0.18);
 }
 
 .popup-title {
@@ -178,15 +185,92 @@ const handleSubMenuClick = (key) => {
   border-radius: 8px;
   cursor: pointer;
   color: var(--color-on-surface);
-  transition: background 0.2s;
+  transition: all 0.2s;
+  position: relative;
+  margin-bottom: 2px;
 }
 
 .popup-item:hover {
-  background: var(--color-surface-container-highest);
+  background: rgba(0, 0, 0, 0.04);
+  box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.04);
 }
 
+html.dark .popup-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* 渐变分割线 */
+.popup-item:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 16px;
+  right: 16px;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(0, 0, 0, 0.08) 20%,
+    rgba(0, 0, 0, 0.08) 80%,
+    transparent
+  );
+  pointer-events: none;
+}
+
+html.dark .popup-item:not(:last-child)::after {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1) 20%,
+    rgba(255, 255, 255, 0.1) 80%,
+    transparent
+  );
+}
+
+/* 触摸按压反馈 */
 .popup-item:active {
-  background: var(--color-surface-container);
+  background: rgba(0, 0, 0, 0.08);
+  transition: background 0.05s;
+}
+
+html.dark .popup-item:active {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.popup-item.active {
+  background: radial-gradient(
+    ellipse 80% 80% at 50% 50%,
+    rgba(59, 130, 246, 0.18) 0%,
+    transparent 70%
+  );
+  color: var(--color-primary);
+  box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.15);
+}
+
+html.dark .popup-item.active {
+  background: radial-gradient(
+    ellipse 80% 80% at 50% 50%,
+    rgba(59, 130, 246, 0.35) 0%,
+    transparent 70%
+  );
+  box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.35);
+}
+
+/* Active 项左侧发光指示条 */
+.popup-item.active::before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 60%;
+  border-radius: 2px;
+  background: #3b82f6;
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.5);
+  pointer-events: none;
+  z-index: 2;
 }
 
 .popup-icon {
