@@ -20,12 +20,14 @@ log() {
 
 log "执行"
 
-# 检查可执行文件
-if [ ! -x "$EXECUTABLE" ]; then
+# 检查文件是否存在
+if [ ! -f "$EXECUTABLE" ]; then
     log "错误：找不到可执行文件 $EXECUTABLE"
     [ -t 0 ] && read -p "按 Enter 退出..."
     exit 1
 fi
+
+chmod +x "$EXECUTABLE"
 
 # 检查是否已在运行
 if [ -f "$PID_FILE" ]; then
