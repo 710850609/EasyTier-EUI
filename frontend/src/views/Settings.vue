@@ -398,7 +398,6 @@ const languageOptions = computed(() => [
   { value: 'en', label: t('settings.language.en') },
   { value: 'de', label: t('settings.language.de') },
   { value: 'fr', label: t('settings.language.fr') },
-  { value: 'ja', label: t('settings.language.ja') },
 ])
 
 const changeLanguage = (val) => {
