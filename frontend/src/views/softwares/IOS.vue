@@ -126,4 +126,8 @@ const copyAndOpenLink = () => {
   flex: 1;
   min-width: 90px;
 }
+
+.item-actions .var-button :deep(.var-button__content) {
+  flex-wrap: nowrap !important;
+}
 </style>

@@ -4,7 +4,6 @@ import zhTW from './zh-TW.js'
 import enUS from './en-US.js'
 import deDE from './de-DE.js'
 import frFR from './fr-FR.js'
-import jaJP from './ja-JP.js'
 import { use as varletUse } from '@varlet/ui/es/locale'
 
 const STORAGE_KEY = 'language'
@@ -94,7 +93,6 @@ const i18n = createI18n({
     en: enUS,
     de: deDE,
     fr: frFR,
-    ja: jaJP
   }
 })
 

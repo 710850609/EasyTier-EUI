@@ -1,5 +1,5 @@
 [manifest]
-display_name="EasyTier-EUI (Lite)"
+display_name="EasyTier-EUI(Lite)"
 desc="Vereinfachte UI für EasyTier, senkt die Einstiegshürde für Netzwerke und ermöglicht schnellen Zugriff auf entfernte Netzwerkgeräte</br>Nutzen Sie EasyTier Vorteile: kostenlos, unbegrenzte Geräte, Multi-Plattform-Unterstützung und mehr</br>Damit andere Geräte dem virtuellen Netzwerk beitreten können, gehen Sie zum [Apps]-Menü, laden Sie die App für das entsprechende System/die Architektur herunter und folgen Sie den Anweisungen zum Beitritt</br>Weitere EasyTier-Tipps finden Sie in der <a href="https://easytier.cn" target="_blank">offiziellen Dokumentation</a></br></br>EasyTier-EUI (Benutzerversion) läuft ohne Root-Rechte und unterstützt standardmäßig keinen aktiven Zugriff auf andere Knoten im Netzwerk</br>Um die vollen Funktionen zu nutzen, installieren Sie bitte die Nicht-Benutzer-Version:</br>Methode 1: Gehen Sie zu [Apps] -> [FnOS] in EasyTier-EUI zum Herunterladen und Installieren</br>Methode 2: <a href='https://github.com/710850609/EasyTier-EUI/releases' target="_blank">GitHub-Repository</a> herunterladen und installieren</br></br></br><a href="/cgi/ThirdParty/EasyTier-EUI.User/index.cgi/index.html" target="_blank">Web-UI Schnellzugriff</a></br>"
 
 [install]

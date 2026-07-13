@@ -138,7 +138,7 @@ const latestReleaseVersion = ref('')
 
 const stableBadgeUrl = computed(() => {
   const label = encodeURIComponent(t('software.stableLabel'))
-  return `https://img.shields.io/github/v/release/710850609/EasyTier-EUI?color=blue&logo=github&label=${label}`
+  return `https://img.shields.io/github/v/release/710850609/EasyTier-EUI?color=blue&label=${label}`
 })
 
 onMounted(() => {
@@ -287,6 +287,10 @@ const handleConfigConfirm = async () => {
 .item-actions .var-button {
   flex: 1;
   min-width: 90px;
+}
+
+.item-actions .var-button :deep(.var-button__content) {
+  flex-wrap: nowrap !important;
 }
 
 .shield-badge {

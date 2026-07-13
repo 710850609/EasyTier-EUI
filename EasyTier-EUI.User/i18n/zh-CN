@@ -1,5 +1,5 @@
 [manifest]
-display_name="易组网 (用户版)"
+display_name="易组网(用户版)"
 desc="简化 EasyTier 使用的UI界面，降低组网门槛，快速访问异地网络设备</br>享受 EasyTier 免费、不限设备数量、支持多类型终端等优势</br>其它设备要加入虚拟网络组网，请在【应用】菜单选择下载安装对应系统、架构的应用，按说明加入</br>更多EasyTier使用技巧，请查看 <a href="https://easytier.cn" target="_blank">官网文档</a></br></br>易组网(残血版)以非root权限运行，默认不支持主动访问组网的其它节点</br>如要体验完整功能，请安装非用户版本：</br>方式1：进入易组网中的【应用】->【FnOS】菜单下载并安装</br>方式2：<a href='https://github.com/710850609/EasyTier-EUI/releases' target="_blank">Github仓库</a>下载并安装</br></br></br><a href="/cgi/ThirdParty/EasyTier-EUI.User/index.cgi/index.html" target="_blank">Web界面快捷入口</a></br>"
 
 [install]

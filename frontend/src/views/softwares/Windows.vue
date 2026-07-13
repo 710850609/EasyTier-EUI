@@ -187,12 +187,12 @@ const latestReleaseVersion = ref('')
 
 const euiStableBadgeUrl = computed(() => {
   const label = encodeURIComponent(t('software.stableLabel'))
-  return `https://img.shields.io/github/v/release/710850609/EasyTier-EUI?color=blue&logo=github&label=${label}`
+  return `https://img.shields.io/github/v/release/710850609/EasyTier-EUI?color=blue&label=${label}`
 })
 
 const managerStableBadgeUrl = computed(() => {
   const label = encodeURIComponent(t('software.stableLabel'))
-  return `https://img.shields.io/github/v/release/EasyTier/easytier-manager?color=blue&logo=github&label=${label}`
+  return `https://img.shields.io/github/v/release/EasyTier/easytier-manager?color=blue&label=${label}`
 })
 
 onMounted(() => {
@@ -344,6 +344,10 @@ const download = (type, arch, prerelease) => {
 .item-actions .var-button {
   flex: 1;
   min-width: 90px;
+}
+
+.item-actions .var-button :deep(.var-button__content) {
+  flex-wrap: nowrap !important;
 }
 
 .download-progress {

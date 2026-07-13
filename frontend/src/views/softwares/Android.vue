@@ -227,6 +227,10 @@ const download = (arch, prerelease) => {
   min-width: 90px;
 }
 
+.item-actions .var-button :deep(.var-button__content) {
+  flex-wrap: nowrap !important;
+}
+
 .shield-badge {
   display: inline-flex;
   align-items: center;

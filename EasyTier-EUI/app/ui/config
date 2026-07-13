@@ -1,7 +1,7 @@
 {
     ".url": {
         "EasyTier-EUI.Application": {
-            "title": "易组网",
+            "title": "${manifest.display_name}",
             "icon": "images/icon_{0}.png",
             "type": "iframe",
             "url": "/cgi/ThirdParty/EasyTier-EUI/index.cgi",

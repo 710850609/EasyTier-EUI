@@ -1,5 +1,5 @@
 [manifest]
-display_name="易組網 (用户版)"
+display_name="易組網(用户版)"
 desc="簡化 EasyTier 使用的UI介面，降低組網門檻，快速存取異地網路裝置</br>享受 EasyTier 免費、不限裝置數量、支援多類型終端等優勢</br>其他裝置要加入虛擬網路組網，請在【應用】選單選擇下載安裝對應系統、架構的應用，依說明加入</br>更多EasyTier使用技巧，請檢視 <a href="https://easytier.cn" target="_blank">官網文件</a></br></br>易組網(使用者版)以非root權限執行，預設不支援主動存取組網的其他節點</br>如要體驗完整功能，請安裝非使用者版本：</br>方式1：進入易組網中的【應用】->【FnOS】選單下載並安裝</br>方式2：<a href='https://github.com/710850609/EasyTier-EUI/releases' target="_blank">GitHub 倉庫</a>下載並安裝</br></br></br><a href="/cgi/ThirdParty/EasyTier-EUI.User/index.cgi/index.html" target="_blank">Web 介面快捷入口</a></br>"
 
 [install]
