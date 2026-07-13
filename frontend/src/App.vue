@@ -22,8 +22,8 @@ body {
 
 /* 全局滚动条样式 */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 4px;
+  height: 4px;
 }
 
 ::-webkit-scrollbar-track {
@@ -221,22 +221,22 @@ html.dark body .var-checkbox-group--vertical .var-checkbox__wrap:not(:last-child
 .var-popup__content,
 .var-popup__content[var-popup-cover] {
   overflow: hidden;
-  background: rgba(var(--color-surface-container-rgb, 226, 236, 250), 0.22) !important;
-  backdrop-filter: blur(30px) saturate(160%) !important;
-  -webkit-backdrop-filter: blur(30px) saturate(160%) !important;
+  background: rgba(var(--color-surface-container-rgb, 212, 223, 250), 0.06) !important;
+  backdrop-filter: blur(16px) saturate(110%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(110%) !important;
   will-change: backdrop-filter !important;
   border: none !important;
   box-shadow:
-    0 8px 40px rgba(0, 0, 0, 0.16),
-    inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
+    0 8px 40px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
 }
 
 html.dark .var-popup__content,
 html.dark .var-popup__content[var-popup-cover] {
-  background: rgba(var(--color-surface-container-rgb, 51, 65, 85), 0.35) !important;
+  background: rgba(var(--color-surface-container-rgb, 51, 65, 85), 0.12) !important;
   box-shadow:
-    0 8px 40px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+    0 8px 40px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
 }
 
 /* 弹窗顶部高光条 —— 模拟玻璃边缘反光 */
@@ -250,7 +250,7 @@ html.dark .var-popup__content[var-popup-cover] {
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(255, 255, 255, 0.25),
+    rgba(255, 255, 255, 0.45),
     transparent
   );
   pointer-events: none;
@@ -266,9 +266,9 @@ html.dark .var-popup__content[var-popup-cover] {
 .var-popup__content.var-popup--top::before {
   background: linear-gradient(
     180deg,
-    rgba(0, 0, 0, 0.06) 0%,
+    rgba(0, 0, 0, 0.03) 0%,
     transparent 50%,
-    rgba(255, 255, 255, 0.3) 100%
+    rgba(255, 255, 255, 0.35) 100%
   );
 }
 
@@ -276,7 +276,7 @@ html.dark .var-popup__content::after {
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(255, 255, 255, 0.12),
+    rgba(255, 255, 255, 0.2),
     transparent
   );
 }
@@ -290,9 +290,9 @@ html.dark .var-popup__content::after {
   padding: 1.5px;
   background: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.3) 0%,
+    rgba(255, 255, 255, 0.35) 0%,
     transparent 50%,
-    rgba(0, 0, 0, 0.06) 100%
+    rgba(0, 0, 0, 0.03) 100%
   );
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -304,18 +304,18 @@ html.dark .var-popup__content::after {
 html.dark .var-popup__content::before {
   background: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.15) 0%,
+    rgba(255, 255, 255, 0.18) 0%,
     transparent 50%,
-    rgba(255, 255, 255, 0.06) 100%
+    rgba(255, 255, 255, 0.02) 100%
   );
 }
 
 html.dark .var-popup__content.var-popup--top::before {
   background: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.06) 0%,
+    rgba(255, 255, 255, 0.02) 0%,
     transparent 50%,
-    rgba(255, 255, 255, 0.15) 100%
+    rgba(255, 255, 255, 0.18) 100%
   );
 }
 
@@ -420,7 +420,7 @@ html.dark .var-paper::after {
 .var-popup__overlay {
   background: radial-gradient(
     ellipse 70% 55% at 50% 50%,
-    rgba(0, 0, 0, 0.35) 0%,
+    rgba(0, 0, 0, 0.25) 0%,
     transparent 70%
   ) !important;
   backdrop-filter: blur(2px) !important;
@@ -431,7 +431,7 @@ html.dark .var-paper::after {
 html:not(.dark) .var-popup__overlay {
   background: radial-gradient(
     ellipse 70% 55% at 50% 50%,
-    rgba(0, 0, 0, 0.1) 0%,
+    rgba(0, 0, 0, 0.06) 0%,
     transparent 70%
   ) !important;
 }

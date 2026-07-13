@@ -259,21 +259,25 @@
                         </template>
                         <template #description>
                           <div class="peer-info">
-                            <div class="peer-sub-uri">{{ peer.uri }}</div>
+                            <div class="peer-sub-uri">
+                              <!-- <span class="status-dot" v-if="peer.status in [1]" :class="peer.status == 1 ? 'status-online' : 'status-offline'"></span> -->
+                              {{ peer.uri }}
+                            </div>
                             <div class="peer-tags">
                               <span class="peer-tag latency-tag" :class="peer.latency < 500 ? (peer.latency < 100 ? 'latency-good' : 'latency-normal') : 'latency-bad'"  
                                 v-if="peer.latency > 0">
                                 {{ peer.latency }}ms
                               </span>
+                              <span class="peer-tag unavailable-tag" v-if="peer.status === 0">✕</span>
                               <span class="peer-tag relay-tag" v-if="peer.relay == 1">{{ $t('config.relay') }}</span>
                               <span class="peer-tag dynamic-tag" v-if="peer.dynamic">{{ $t('config.dynamic') }}</span>
                               <span style="font-size: 12px; color: var(--color-primary);">{{ peer.hostname || '' }}</span>
                             </div>
                           </div>
                         </template>
-                        <template #extra>
+                        <!-- <template #extra>
                           <div class="status-dot" v-if="peer.status in [0, 1]" :class="peer.status == 1 ? 'status-online' : 'status-offline'"></div>
-                        </template>
+                        </template> -->
                       </var-cell>
                       </var-option>
                     </div>
@@ -1799,6 +1803,11 @@ html.dark .merged-section {
   color: var(--color-on-danger-container);
 }
 
+.unavailable-tag {
+  background: var(--color-danger);
+  color: #fff;
+}
+
 .dynamic-tag {
   background: var(--color-success-container);
   color: var(--color-on-success-container);
@@ -1814,6 +1823,7 @@ html.dark .merged-section {
 }
 
 .status-dot {
+  display: inline-block;
   width: 10px;
   height: 10px;
   border-radius: 50%;
