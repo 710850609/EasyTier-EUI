@@ -52,13 +52,22 @@ provide('activeMenu', readonly(activeMenu))
 provide('setActiveMenu', handleMenuChange)
 provide('fastSettingMode', fastSettingMode)
 
+// 缓存已创建的异步组件，避免重复调用 defineAsyncComponent
+const asyncComponentCache = {}
+
 const currentComponent = computed(() => {
   const component = componentMap[activeMenu.value]
-  // 如果没有对应组件，返回空组件（显示提示或保持当前页面）
   if (!component) {
     return Empty
   }
-  // 组件已同步加载，直接使用
+  // 如果是函数（延迟加载），用 defineAsyncComponent 包装
+  if (typeof component === 'function') {
+    if (!asyncComponentCache[activeMenu.value]) {
+      asyncComponentCache[activeMenu.value] = defineAsyncComponent(() => component())
+    }
+    return asyncComponentCache[activeMenu.value]
+  }
+  // 核心页面同步组件直接使用
   return component
 })
 

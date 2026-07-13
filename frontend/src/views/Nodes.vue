@@ -199,7 +199,10 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="node in filteredNodes" :key="node.id">
+            <tr v-if="topSpacerHeight > 0" aria-hidden="true">
+              <td :colspan="visibleColumns.length" :style="{ height: topSpacerHeight + 'px', padding: 0, border: 'none' }"></td>
+            </tr>
+            <tr v-for="node in virtualFilteredNodes" :key="node.id">
               <td 
                 v-for="(col, index) in visibleColumns" 
                 :key="col.key"
@@ -226,6 +229,9 @@
                   <span v-else class="cell-text" @click="handleClickCell(node, col.key)">{{ parseNode(node, col.key) }}</span>
                 </template>
               </td>
+            </tr>
+            <tr v-if="bottomSpacerHeight > 0" aria-hidden="true">
+              <td :colspan="visibleColumns.length" :style="{ height: bottomSpacerHeight + 'px', padding: 0, border: 'none' }"></td>
             </tr>
           </tbody>
         </table>
@@ -559,6 +565,49 @@ const parseNatType = (node) => {
 // 骨架屏宽度 - 固定值，避免 Math.random() 导致重复渲染
 const skeletonWidths = ['60%', '80%', '45%', '72%', '55%', '90%', '68%', '48%', '75%', '52%', '85%', '40%']
 
+// ========== 虚拟滚动（PC 表格模式） ==========
+const VIRTUAL_ROW_HEIGHT = 42
+const VIRTUAL_BUFFER = 6
+const VIRTUAL_THRESHOLD = 50
+
+const visibleStart = ref(0)
+const visibleCount = ref(20)
+
+const virtualFilteredNodes = computed(() => {
+  const nodes = filteredNodes.value
+  if (nodes.length <= VIRTUAL_THRESHOLD || useMobileList.value) return nodes
+  const start = Math.max(0, visibleStart.value - VIRTUAL_BUFFER)
+  const end = Math.min(nodes.length, visibleStart.value + visibleCount.value + VIRTUAL_BUFFER)
+  return nodes.slice(start, end)
+})
+
+const virtualStartIndex = computed(() => {
+  const nodes = filteredNodes.value
+  if (nodes.length <= VIRTUAL_THRESHOLD || useMobileList.value) return 0
+  return Math.max(0, visibleStart.value - VIRTUAL_BUFFER)
+})
+
+const topSpacerHeight = computed(() => {
+  return virtualStartIndex.value * VIRTUAL_ROW_HEIGHT
+})
+
+const bottomSpacerHeight = computed(() => {
+  const nodes = filteredNodes.value
+  if (nodes.length <= VIRTUAL_THRESHOLD || useMobileList.value) return 0
+  const renderedEnd = virtualStartIndex.value + virtualFilteredNodes.value.length
+  return Math.max(0, (nodes.length - renderedEnd) * VIRTUAL_ROW_HEIGHT)
+})
+
+const handleTableScroll = () => {
+  if (!tableWrapper.value || useMobileList.value) return
+  const scrollTop = tableWrapper.value.scrollTop
+  visibleStart.value = Math.floor(scrollTop / VIRTUAL_ROW_HEIGHT)
+  visibleCount.value = Math.ceil(tableWrapper.value.clientHeight / VIRTUAL_ROW_HEIGHT) + 2
+}
+
+let tableScrollHandler = null
+const tableWrapper = ref(null)
+
 const fetchNodes = async () => {
   if (dataLoading.value) return
   dataLoading.value = true
@@ -648,6 +697,11 @@ const updateServiceStatus = () => {
 const handleConfigChange = async () => {
   updateServiceStatus()
   allNodes.value = []
+  // 重置虚拟滚动位置
+  visibleStart.value = 0
+  if (tableWrapper.value) {
+    tableWrapper.value.scrollTop = 0
+  }
   nodesPoller.stop()
   cancelAllRequests()
   if (serviceRunning.value) {
@@ -713,6 +767,12 @@ onMounted(async () => {
     toast.error(t('nodes.loadConfigListFailed'))
     return
   }
+  // 绑定滚动事件用于虚拟滚动
+  if (tableWrapper.value) {
+    tableScrollHandler = handleTableScroll
+    tableWrapper.value.addEventListener('scroll', handleTableScroll, { passive: true })
+    visibleCount.value = Math.ceil(tableWrapper.value.clientHeight / VIRTUAL_ROW_HEIGHT) + 2
+  }
   try {
     if (!selectedConfig.value) {
       // showFastSettingTip.value = true
@@ -750,6 +810,9 @@ onUnmounted(() => {
   nodesPoller.stop()
   configStatusPoller.stop()
   cancelAllRequests()
+  if (tableWrapper.value && tableScrollHandler) {
+    tableWrapper.value.removeEventListener('scroll', tableScrollHandler)
+  }
 })
 
 </script>
@@ -1015,6 +1078,16 @@ html.dark .cell-text.loss-high {
 
 tr:hover td {
   background: var(--color-surface-container-high);
+}
+
+/* 虚拟滚动占位行不显示 hover 效果 */
+tr[aria-hidden="true"] td {
+  background: transparent !important;
+  border-bottom: none !important;
+}
+
+tr[aria-hidden="true"]:hover td {
+  background: transparent !important;
 }
 
 /* ========== 骨架屏 ========== */

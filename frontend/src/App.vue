@@ -131,6 +131,19 @@ html.dark body .var-select__scroller.var-elevation--3 {
     inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
 }
 
+/* 关闭毛玻璃效果时，var-select 下拉框使用实色背景 */
+html.no-glass body .var-select__scroller,
+html.no-glass body .var-select__scroller.var-elevation--3 {
+  background: var(--color-surface-container) !important;
+  background-color: var(--color-surface-container) !important;
+}
+
+html.no-glass.dark body .var-select__scroller,
+html.no-glass.dark body .var-select__scroller.var-elevation--3 {
+  background: var(--color-surface-container) !important;
+  background-color: var(--color-surface-container) !important;
+}
+
 /* 下拉选项渐变分割线 */
 html body .var-select__scroller .var-option:not(:last-child)::after {
   content: '';
@@ -607,5 +620,51 @@ html.dark .var-menu.var--box.var-select__menu {
 
 html.dark .var-collapse-item {
   background: rgba(var(--color-surface-container-rgb, 51, 65, 85), 0.1) !important;
+}
+
+/* ========== 性能优化：关闭毛玻璃效果 ========== */
+html.no-glass *,
+html.no-glass *::before,
+html.no-glass *::after {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  will-change: auto !important;
+}
+
+/* 关闭毛玻璃后，弹窗/下拉框等透明元素改为实色背景 */
+html.no-glass .var-popup__content,
+html.no-glass .var-popup__content[var-popup-cover] {
+  background: var(--color-surface-container) !important;
+}
+
+html.no-glass .var-menu.var--box.var-select__menu {
+  background: var(--color-surface-container) !important;
+}
+
+html.no-glass .var-popup__overlay {
+  background: rgba(0, 0, 0, 0.35) !important;
+}
+
+html:not(.dark).no-glass .var-popup__overlay {
+  background: rgba(0, 0, 0, 0.12) !important;
+}
+
+html.no-glass .var-dialog__overlay {
+  background: rgba(0, 0, 0, 0.35) !important;
+}
+
+html:not(.dark).no-glass .var-dialog__overlay {
+  background: rgba(0, 0, 0, 0.12) !important;
+}
+
+/* 关闭毛玻璃后，SideMenu 子菜单弹出框使用实色背景 */
+html.no-glass .submenu-popup-content {
+  background: var(--color-surface-container) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15) !important;
+}
+
+html.no-glass.dark .submenu-popup-content {
+  background: var(--color-surface-container) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
 }
 </style>

@@ -20,3 +20,6 @@ export const SIDEBAR_COLLAPSED_KEY = 'eui-sidebar-collapsed'
 
 // GitHub版本
 export const ET_VERSION_LIST_KEY = 'eui-version-list'
+
+// 性能设置
+export const PERFORMANCE_GLASS_EFFECT = 'eui-performance-glass-effect'

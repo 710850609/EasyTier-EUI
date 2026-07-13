@@ -8,7 +8,7 @@ import threading
 from typing import Optional
 
 from http_dispatcher import http_server
-from utils import run_configs, log_util, permissions_util, ip_util, qrcode_util
+from utils import run_configs, log_util, permissions_util, ip_util, qrcode_util, et_run_info
 from utils.permissions_util import ServerHandle
 
 
@@ -80,6 +80,15 @@ def run():
                        log_level=logging.INFO if run_mode > 0 else logging.DEBUG,
                        enabled_console=run_mode == 0)
     # logging.info(f"前端路径: {os.path.join(sys._MEIPASS, 'frontend')}")
+
+    if sys.platform != 'win32':
+        # unzip 出来是 rw-r--r-- ，需要添加执行权限
+        import stat
+        dst = run_configs.core_dir()
+        exec_path = os.path.join(dst, 'easytier-core')
+        os.chmod(exec_path, os.stat(exec_path).st_mode | stat.S_IEXEC)
+        exec_path = os.path.join(dst, 'easytier-cli')
+        os.chmod(exec_path, os.stat(exec_path).st_mode | stat.S_IEXEC)
 
     global BASE_URI
     import argparse

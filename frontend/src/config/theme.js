@@ -8,7 +8,7 @@
 import { ref } from 'vue'
 import { StyleProvider } from '@varlet/ui'
 import { freshLightTheme, freshDarkTheme } from './colors.js'
-import { THEME_MODE_KEY } from './storage-keys.js'
+import { THEME_MODE_KEY, PERFORMANCE_GLASS_EFFECT } from './storage-keys.js'
 
 // localStorage key
 const STORAGE_KEY = THEME_MODE_KEY
@@ -104,6 +104,37 @@ if (typeof window !== 'undefined') {
   }
 }
 
+// 毛玻璃效果开关
+const glassEffectEnabled = ref(true)
+
+const initGlassEffect = () => {
+  const saved = localStorage.getItem(PERFORMANCE_GLASS_EFFECT)
+  if (saved !== null) {
+    try {
+      const enabled = JSON.parse(saved)
+      glassEffectEnabled.value = enabled
+      setGlassEffect(enabled)
+    } catch (e) {
+      console.error('解析毛玻璃设置失败:', e)
+    }
+  }
+}
+
+export const setGlassEffect = (enabled) => {
+  glassEffectEnabled.value = enabled
+  localStorage.setItem(PERFORMANCE_GLASS_EFFECT, JSON.stringify(enabled))
+  document.documentElement.classList.toggle('no-glass', !enabled)
+}
+
+// 初始化毛玻璃效果
+if (typeof window !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initGlassEffect)
+  } else {
+    initGlassEffect()
+  }
+}
+
 // 主题选项配置
 export const themeOptions = [
   { label: 'settings.theme.auto', value: 'system', icon: 'palette-outline' },
@@ -112,4 +143,4 @@ export const themeOptions = [
 ]
 
 // 对外导出响应式状态
-export { isDark, themeMode }
+export { isDark, themeMode, glassEffectEnabled }

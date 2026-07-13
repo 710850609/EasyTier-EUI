@@ -9,9 +9,11 @@
  * 4. 图片路径: icon: './images/windows.svg'
  */
 
-// 使用 import.meta.glob 预加载所有视图组件（包括子目录）
-// eager: true 表示同步加载，所有组件合并到主 bundle
-const viewModules = import.meta.glob('../views/**/*.vue', { eager: true })
+// 核心页面（Nodes、Config）同步加载，确保首屏速度
+const coreModules = import.meta.glob('../views/{Nodes,Config}.vue', { eager: true })
+
+// 非核心页面延迟加载，减少首屏 bundle 体积
+const lazyModules = import.meta.glob('../views/**/*.vue')
 
 // 菜单树结构（每个节点单行）
 export const menuTree = [
@@ -46,16 +48,19 @@ const flattenMenuTree = (items) => {
 
 // 组件映射表（从菜单树构建）
 // 只处理叶子节点（没有 children 的菜单项）
+// 核心页面（Nodes, Config）同步加载，其他页面延迟加载
 const buildComponentMap = () => {
   const map = {}
   const flatMenus = flattenMenuTree(menuTree)
   flatMenus.forEach(item => {
-    // 只有叶子节点（没有子菜单）且配置了 component 才加入映射
     if (!item.children && item.component) {
       const modulePath = `../views/${item.component}.vue`
-      if (viewModules[modulePath]) {
-        // eager: true 时，直接取 default 导出
-        map[item.key] = viewModules[modulePath].default
+      if (coreModules[modulePath]) {
+        // 核心页面同步加载
+        map[item.key] = coreModules[modulePath].default
+      } else if (lazyModules[modulePath]) {
+        // 非核心页面延迟加载，存储异步导入函数
+        map[item.key] = lazyModules[modulePath]
       }
     }
   })

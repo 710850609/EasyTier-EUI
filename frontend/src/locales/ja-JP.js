@@ -36,7 +36,7 @@ export default {
     logs: { label: 'ログ', title: 'ログ表示' }
   },
   settings: {
-    appearance: { title: '外観設定' },
+    appearance: { title: '外観設定', glassEffect: 'ガラス効果（オフでパフォーマンス向上）' },
     theme: { light: 'ライト', dark: 'ダーク', auto: '自動' },
     language: { label: '言語', zh: '中文简体', zhtw: '中文繁體', en: 'English', de: 'Deutsch', fr: 'Français', ja: '日本語' },
     kernel: { title: 'カーネル EasyTier' },

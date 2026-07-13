@@ -36,7 +36,7 @@ export default {
     logs: { label: 'Logs', title: 'Log-Anzeige' }
   },
   settings: {
-    appearance: { title: 'Erscheinungsbild' },
+    appearance: { title: 'Erscheinungsbild', glassEffect: 'Glaseffekt (Deaktivieren für bessere Leistung)' },
     theme: { light: 'Hell', dark: 'Dunkel', auto: 'Auto' },
     language: { label: 'Sprache', zh: '中文简体', zhtw: '中文繁體', en: 'English', de: 'Deutsch', fr: 'Français', ja: '日本語' },
     kernel: { title: 'Kernel EasyTier' },

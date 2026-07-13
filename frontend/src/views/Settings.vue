@@ -36,6 +36,11 @@
         >
         </var-select>
       </div>
+      <var-divider class="divider" />
+      <div class="setting-row">
+        <span class="setting-label">{{ $t('settings.appearance.glassEffect') }}</span>
+        <var-switch v-model="glassEffectEnabled" @change="toggleGlassEffect" />
+      </div>
     </var-paper>
 
     <!-- 内核设置 -->
@@ -340,7 +345,7 @@
 
 <script setup>
 import MarkdownRenderer from '../components/MarkdownRenderer.vue'
-import { themeOptions, setThemeMode, themeMode } from '../config/theme.js'
+import { themeOptions, setThemeMode, themeMode, glassEffectEnabled, setGlassEffect } from '../config/theme.js'
 import { VCONSOLE_ENABLED_KEY } from '../config/storage-keys.js'
 import toast from '../components/toast.js'
 import api from '../utils/api.js'
@@ -398,6 +403,10 @@ const languageOptions = computed(() => [
 
 const changeLanguage = (val) => {
   setLanguage(val)
+}
+
+const toggleGlassEffect = (val) => {
+  setGlassEffect(val)
 }
 
 const startPress = (e) => {

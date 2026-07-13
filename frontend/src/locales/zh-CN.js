@@ -60,6 +60,7 @@ export default {
   settings: {
     appearance: {
       title: '外观设置',
+      glassEffect: '毛玻璃效果（关闭可提升性能）',
     },
     theme: {
       light: '浅色',

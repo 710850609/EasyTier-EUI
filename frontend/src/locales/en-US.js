@@ -60,6 +60,7 @@ export default {
   settings: {
     appearance: {
       title: 'Appearance',
+      glassEffect: 'Glass Effect (Disable for better performance)',
     },
     theme: {
       light: 'Light',

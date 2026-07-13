@@ -82,3 +82,18 @@ html.dark body .var-select__scroller::before {
     rgba(255, 255, 255, 0.05) 100%
   );
 }
+
+/* 关闭毛玻璃效果时，var-select 下拉框使用实色背景 */
+html.no-glass body .var-select__scroller,
+html.no-glass body .var-select__scroller.var-elevation--3 {
+  background: var(--color-surface-container) !important;
+  background-color: var(--color-surface-container) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18) !important;
+}
+
+html.no-glass.dark body .var-select__scroller,
+html.no-glass.dark body .var-select__scroller.var-elevation--3 {
+  background: var(--color-surface-container) !important;
+  background-color: var(--color-surface-container) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45) !important;
+}
