@@ -57,14 +57,17 @@
         <var-cell>
           <var-link type="primary" underline="none" href="https://github.com/socoldkiller/easytier-macos/releases" target="_blank"><img :src="socoldkillerStableBadgeUrl" /></var-link>
         </var-cell>
-        <var-space :size="[20, 20]" justify="center">
-          <var-button type="primary" size="normal" block @click="downloadSocoldkiller" auto-loading>
-            <template #default>
-              <var-icon name="download"/>
-              {{ $t('software.stable') }}
-            </template>
-          </var-button>
-        </var-space>
+        <div>
+          <var-divider />
+          <var-space :size="[20, 20]" justify="center">
+            <var-button type="primary" size="normal" block @click="downloadSocoldkiller" auto-loading>
+              <template #default>
+                <var-icon name="download"/>
+                {{ $t('software.stable') }}
+              </template>
+            </var-button>
+          </var-space>
+        </div>
       </div>
     </var-paper>
 
