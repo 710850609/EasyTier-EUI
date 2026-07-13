@@ -1,0 +1,19 @@
+[manifest]
+display_name="易组网"
+desc="简化 EasyTier 使用的UI界面，降低组网门槛，快速访问异地网络设备</br>享受 EasyTier 免费、不限设备数量、支持多类型终端等优势</br>其它设备要加入组网，在【应用】菜单选择下载安装对应系统、架构的应用，按说明加入</br>更多EasyTier使用技巧，请查看 <a href="https://easytier.cn" target="_blank">官网文档</a></br></br><a href="/cgi/ThirdParty/EasyTier-EUI/index.cgi/index.html" target="_blank">易组网Web界面快捷入口</a></br>"
+
+[install]
+stepTitle="欢迎安装"
+tips1.helpText="欢迎安装使用EasyTier-EUI，一款方便使用EasyTier的UI界面"
+tips2.helpText="EasyTier需要管理员权限创建TUN设备，以支持虚拟组网功能，需要您同意以root权限运行EasyTier-EUI"
+wizard_agree_terms.label="我已阅读并同意授权"
+wizard_agree_terms.rules1.message="请同意授权"
+
+[uninstall]
+stepTitle="确认卸载"
+tips1.helpText="您即将卸载此应用。请选择如何处理应用数据"
+wizard_data_action.label="数据保留选项"
+wizard_data_action.options1.label="保留数据（推荐）- 将来重新安装时可恢复"
+wizard_data_action.options2.label="删除所有数据 - 此操作不可恢复"
+wizard_data_action.rules1.message="请选择数据保留选项"
+tips2.helpText="<strong>警告：</strong> 选择删除数据后，所有应用数据将永久丢失，无法恢复。"
