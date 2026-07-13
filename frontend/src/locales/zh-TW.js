@@ -116,7 +116,7 @@ export default {
     about: {
       title: '關於',
       appName: '易組網',
-      liteVersion: '(殘血版)',
+      liteVersion: '(使用者版)',
       description1: '簡化 EasyTier 使用的 UI 介面',
       description2: '降低組網門檻，快速存取異地網路裝置',
       description3: '享受 EasyTier 免費、不限裝置數量、支援多類型終端等優勢',

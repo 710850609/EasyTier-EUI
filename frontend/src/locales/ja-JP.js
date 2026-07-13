@@ -56,7 +56,7 @@ export default {
     about: {
       title: 'について',
       appName: 'EasyTier-EUI',
-      liteVersion: '(Lite版)',
+      liteVersion: '(ユーザー版)',
       description1: 'EasyTier を簡単に使うための UI',
       description2: 'ネットワークの敷居を下げ、リモートデバイスに素早くアクセス',
       description3: '無料、デバイス数無制限、マルチプラットフォーム対応',

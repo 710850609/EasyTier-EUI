@@ -116,7 +116,7 @@ export default {
     about: {
       title: '关于',
       appName: '易组网',
-      liteVersion: '(残血版)',
+      liteVersion: '(用户版)',
       description1: '简化 EasyTier 使用的 UI 界面',
       description2: '降低组网门槛，快速访问异地网络设备',
       description3: '享受 EasyTier 免费、不限设备数量、支持多类型终端等优势',

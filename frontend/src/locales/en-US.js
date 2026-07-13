@@ -116,7 +116,7 @@ export default {
     about: {
       title: 'About',
       appName: 'EasyTier-EUI',
-      liteVersion: '(Lite Version)',
+      liteVersion: '(User Version)',
       description1: 'Simplify the UI for EasyTier usage',
       description2: 'Lower the entry barrier, quickly access remote network devices',
       description3: 'Enjoy advantages like free, unlimited devices, multi-platform support, etc.',

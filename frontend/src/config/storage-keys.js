@@ -11,6 +11,7 @@ export const THEME_MODE_KEY = 'eui-theme'
 
 // Nodes 页面设置
 export const NODES_SELECTED_COLUMNS_KEY = 'eui-nodes-columns'
+export const NODES_MOBILE_COLUMNS_KEY = 'eui-nodes-mobile-columns'
 export const NODES_SELECTED_NODE_TYPES_KEY = 'eui-nodes-rows'
 export const NODES_REFRESH_STEP_KEY = 'eui-nodes-refresh-step'
 export const NODES_MOBILE_LIST_KEY = 'eui-nodes-mobile-list'

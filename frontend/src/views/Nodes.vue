@@ -321,7 +321,7 @@ import { copyToClipboard } from '../utils/clipboard.js'
 import { api, cancelAllRequests } from '../utils/api.js'
 import toast from '../components/toast.js'
 import { Poller } from '../utils/poller.js'
-import { NODES_SELECTED_COLUMNS_KEY, NODES_SELECTED_NODE_TYPES_KEY, NODES_REFRESH_STEP_KEY, NODES_MOBILE_LIST_KEY } from '../config/storage-keys.js'
+import { NODES_SELECTED_COLUMNS_KEY, NODES_MOBILE_COLUMNS_KEY, NODES_SELECTED_NODE_TYPES_KEY, NODES_REFRESH_STEP_KEY, NODES_MOBILE_LIST_KEY } from '../config/storage-keys.js'
 import { mdiCircle } from '@mdi/js'
 import { mdilArrowDown, mdilArrowUp } from '@mdi/light-js'
 import SvgIcon from '@jamescoyle/vue-icon'
@@ -341,8 +341,18 @@ const activeTab = ref('columnsFilter')
 // 加载骨架屏
 const loadingSkeleton = ref(true)
 
-// 默认选中的列
-const selectedColumns = ref(['ipv4', 'hostname', 'cost', 'tunnel_proto','lat_ms', 'loss_rate', 'rx_bytes', 'tx_bytes', 'nat_type'])
+// PC 模式默认选中的列
+const PC_DEFAULT_COLUMNS = ['ipv4', 'hostname', 'cost', 'tunnel_proto', 'lat_ms', 'loss_rate', 'rx_bytes', 'tx_bytes', 'nat_type']
+// 移动端模式默认选中的列
+const MOBILE_DEFAULT_COLUMNS = ['hostname', 'cost', 'tunnel_proto', 'lat_ms', 'loss_rate']
+
+// 根据当前屏幕宽度获取默认列
+const getDefaultColumns = () => {
+  return window.innerWidth <= 768 ? [...MOBILE_DEFAULT_COLUMNS] : [...PC_DEFAULT_COLUMNS]
+}
+
+// 默认选中的列（根据屏幕宽度初始化）
+const selectedColumns = ref(getDefaultColumns())
 // 默认选中的节点类型
 const selectedNodeTypes = ref(['normal'])
 // 刷新速度
@@ -359,9 +369,15 @@ const serviceOperating = ref(false)
 const pendingAction = ref('')
 
 
+// 获取当前模式对应的列存储 key
+const getColumnsStorageKey = () => {
+  return useMobileList.value ? NODES_MOBILE_COLUMNS_KEY : NODES_SELECTED_COLUMNS_KEY
+}
+
 // 从 localStorage 加载设置
 const loadSettings = () => {
-  const savedColumns = localStorage.getItem(NODES_SELECTED_COLUMNS_KEY)
+  const columnsKey = getColumnsStorageKey()
+  const savedColumns = localStorage.getItem(columnsKey)
   if (savedColumns) {
     try {
       selectedColumns.value = JSON.parse(savedColumns)
@@ -394,9 +410,9 @@ const loadSettings = () => {
   }
 }
 
-// 监听变化并保存到 localStorage
+// 监听变化并保存到 localStorage（根据当前模式保存到不同 key）
 watch(selectedColumns, (newVal) => {
-  localStorage.setItem(NODES_SELECTED_COLUMNS_KEY, JSON.stringify(newVal))
+  localStorage.setItem(getColumnsStorageKey(), JSON.stringify(newVal))
 }, { deep: true })
 
 watch(selectedNodeTypes, (newVal) => {
@@ -405,6 +421,18 @@ watch(selectedNodeTypes, (newVal) => {
 
 watch(useMobileList, (newVal) => {
   localStorage.setItem(NODES_MOBILE_LIST_KEY, JSON.stringify(newVal))
+  // 切换模式时，从对应 storage 加载列设置，没有则用默认值
+  const columnsKey = getColumnsStorageKey()
+  const savedColumns = localStorage.getItem(columnsKey)
+  if (savedColumns) {
+    try {
+      selectedColumns.value = JSON.parse(savedColumns)
+    } catch (e) {
+      selectedColumns.value = getDefaultColumns()
+    }
+  } else {
+    selectedColumns.value = getDefaultColumns()
+  }
 })
 
 // 创建节点列表轮询器实例

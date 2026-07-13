@@ -56,7 +56,7 @@ export default {
     about: {
       title: 'Über',
       appName: 'EasyTier-EUI',
-      liteVersion: '(Lite Version)',
+      liteVersion: '(Benutzerversion)',
       description1: 'UI für EasyTier vereinfachen',
       description2: 'Einstiegshürde senken, schneller Zugriff auf entfernte Geräte',
       description3: 'Kostenlos, unbegrenzte Geräte, Multi-Plattform-Unterstützung',
