@@ -148,22 +148,45 @@
     <!-- 数据表格 -->
     <var-paper class="table-container" :elevation="1">
       <div class="table-wrapper" ref="tableWrapper">
-        <!-- 骨架屏 - 加载时显示 -->
-        <div v-if="loadingSkeleton" class="skeleton-container">
-          <div class="skeleton-header">
-            <div v-for="n in visibleColumns.length" :key="n" class="skeleton-cell skeleton-title"></div>
+        <!-- 骨架屏 - PC 表格骨架 -->
+        <div v-if="loadingSkeleton && !useMobileList" class="skeleton-container skeleton-pc">
+          <div class="sk-pc-header">
+            <div class="sk-pill sk-pill-hdr" v-for="n in visibleColumns.length" :key="'h'+n">
+              <div class="sk-breathe"></div>
+            </div>
           </div>
-          <div class="skeleton-body">
-            <div v-for="row in 8" :key="row" class="skeleton-row">
-              <div v-for="n in visibleColumns.length" :key="n" class="skeleton-cell">
-                <div class="skeleton-item" :style="{ width: getSkeletonWidth(n) }"></div>
+          <div class="sk-pc-body">
+            <div v-for="row in 6" :key="row" class="sk-pc-row" :style="{ animationDelay: `${row * 0.05}s` }">
+              <div class="sk-pc-cell" v-for="n in visibleColumns.length" :key="n">
+                <div class="sk-pill" :style="{ width: skeletonWidths[(n - 1) % skeletonWidths.length] }">
+                  <div class="sk-breathe"></div>
+                </div>
               </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 骨架屏 - 移动端卡片骨架 -->
+        <div v-else-if="loadingSkeleton && useMobileList" class="skeleton-container skeleton-mobile">
+          <div v-for="card in 4" :key="card" class="sk-card" :style="{ animationDelay: `${card * 0.08}s` }">
+            <div class="sk-card-top">
+              <div class="sk-icon"><div class="sk-breathe"></div></div>
+              <div class="sk-card-title"><div class="sk-breathe"></div></div>
+            </div>
+            <div class="sk-card-chips">
+              <div class="sk-chip sk-chip-sm"><div class="sk-breathe"></div></div>
+              <div class="sk-chip sk-chip-md"><div class="sk-breathe"></div></div>
+              <div class="sk-chip sk-chip-lg"><div class="sk-breathe"></div></div>
+            </div>
+            <div class="sk-card-meta">
+              <div class="sk-chip sk-chip-sm"><div class="sk-breathe"></div></div>
+              <div class="sk-chip sk-chip-md"><div class="sk-breathe"></div></div>
             </div>
           </div>
         </div>
         
         <!-- 实际表格 - PC模式 -->
-        <table v-else class="data-table" :class="{ 'mobile-hidden': useMobileList }">
+        <table v-else-if="!useMobileList" class="data-table" :class="{ 'mobile-hidden': useMobileList }">
           <thead class="fixed-header">
             <tr>
               <th 
@@ -208,7 +231,7 @@
         </table>
 
         <!-- 移动端卡片列表 -->
-        <div v-if="!loadingSkeleton && useMobileList" class="mobile-node-list">
+        <div v-else class="mobile-node-list">
           <div 
             v-for="node in filteredNodes" 
             :key="node.id" 
@@ -318,8 +341,8 @@ const selectedColumns = ref(['ipv4', 'hostname', 'cost', 'tunnel_proto','lat_ms'
 const selectedNodeTypes = ref(['normal'])
 // 刷新速度
 const refreshStep = ref(3)
-// 移动端列表模式（默认启用卡片列表）
-const useMobileList = ref(true)
+// 移动端列表模式（默认根据屏幕宽度判断）
+const useMobileList = ref(window.innerWidth <= 768)
 // 节点数据
 const allNodes = ref([])
 
@@ -533,11 +556,8 @@ const parseNatType = (node) => {
   }
 }
 
-// 骨架屏宽度随机化，更真实
-const getSkeletonWidth = (index) => {
-  const widths = ['60%', '80%', '40%', '70%', '50%', '90%', '65%', '45%']
-  return widths[(index + Math.floor(Math.random() * 3)) % widths.length]
-}
+// 骨架屏宽度 - 固定值，避免 Math.random() 导致重复渲染
+const skeletonWidths = ['60%', '80%', '45%', '72%', '55%', '90%', '68%', '48%', '75%', '52%', '85%', '40%']
 
 const fetchNodes = async () => {
   if (dataLoading.value) return
@@ -634,7 +654,13 @@ const handleConfigChange = async () => {
     loadingSkeleton.value = true
     dataLoading.value = false
     isUnmounted.value = false
+    const skStart = Date.now()
     await fetchNodes()
+    const minSkTime = 400
+    const elapsed = Date.now() - skStart
+    if (elapsed < minSkTime) {
+      await new Promise(r => setTimeout(r, minSkTime - elapsed))
+    }
     loadingSkeleton.value = false
   }
   nodesPoller.start(fetchNodes)
@@ -702,7 +728,13 @@ onMounted(async () => {
     return
   }
   try {
+    const skStart = Date.now()
     await fetchNodes()
+    const minSkTime = 400
+    const elapsed = Date.now() - skStart
+    if (elapsed < minSkTime) {
+      await new Promise(r => setTimeout(r, minSkTime - elapsed))
+    }
     loadingSkeleton.value = false
     // 启动配置状态轮询
     configStatusPoller.start(loadConfigs)
@@ -985,55 +1017,202 @@ tr:hover td {
   background: var(--color-surface-container-high);
 }
 
-/* 骨架屏样式 */
+/* ========== 骨架屏 ========== */
 .skeleton-container {
-  min-width: 800px;
+  overflow: hidden;
+  min-height: 200px;
 }
 
-.skeleton-header {
+.skeleton-pc {
+  padding: 12px 0;
+}
+
+/* PC 头部 */
+.sk-pc-header {
   display: flex;
-  padding: 16px;
-  border-bottom: 2px solid var(--color-outline);
-  background: var(--color-surface-container-highest);
-}
-
-.skeleton-body {
-  padding: 8px 0;
-}
-
-.skeleton-row {
-  display: flex;
-  padding: 12px 16px;
+  gap: 10px;
+  padding: 10px 16px 12px;
   border-bottom: 1px solid var(--color-outline-variant);
+  margin-bottom: 4px;
 }
 
-.skeleton-cell {
-  flex: 1;
-  padding: 0 8px;
-}
-
-.skeleton-title {
-  height: 16px;
-  background: linear-gradient(90deg, var(--color-outline) 25%, var(--color-surface-container) 50%, var(--color-outline) 75%);
-  background-size: 200% 100%;
-  animation: skeleton-loading 1.5s infinite;
-  border-radius: 4px;
-}
-
-.skeleton-item {
+.sk-pill-hdr {
   height: 14px;
-  background: linear-gradient(90deg, var(--color-outline-variant) 25%, var(--color-surface-container) 50%, var(--color-outline-variant) 75%);
-  background-size: 200% 100%;
-  animation: skeleton-loading 1.5s infinite;
-  border-radius: 4px;
+  width: 100%;
+  max-width: 100px;
+  border-radius: 7px;
+  background: rgba(var(--color-on-surface-rgb, 0, 0, 0), 0.06);
+  opacity: 0.7;
 }
 
-@keyframes skeleton-loading {
-  0% {
-    background-position: 200% 0;
+html.dark .sk-pill-hdr {
+  background: rgba(255, 255, 255, 0.06);
+  opacity: 0.5;
+}
+
+/* PC 行 */
+.sk-pc-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.sk-pc-row {
+  display: flex;
+  gap: 10px;
+  padding: 9px 16px;
+  animation: sk-slideUp 0.45s ease both;
+}
+
+.sk-pc-cell {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+/* 通用圆角条 */
+.sk-pill {
+  height: 12px;
+  border-radius: 7px;
+  background: rgba(var(--color-on-surface-rgb, 0, 0, 0), 0.05);
+  overflow: hidden;
+  position: relative;
+  max-width: 100%;
+}
+
+html.dark .sk-pill {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* 呼吸微光 */
+.sk-breathe {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(99, 132, 255, 0.12) 20%,
+    rgba(127, 90, 240, 0.18) 40%,
+    rgba(99, 132, 255, 0.12) 60%,
+    transparent 80%
+  );
+  animation: sk-breathe 2.4s ease-in-out infinite;
+  will-change: opacity;
+}
+
+html.dark .sk-breathe {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(99, 132, 255, 0.2) 20%,
+    rgba(167, 139, 250, 0.28) 40%,
+    rgba(99, 132, 255, 0.2) 60%,
+    transparent 80%
+  );
+}
+
+@keyframes sk-breathe {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+@keyframes sk-slideUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ========== 移动端卡片骨架 ========== */
+.skeleton-mobile {
+  padding: 8px 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sk-card {
+  background: rgba(var(--color-on-surface-rgb, 0, 0, 0), 0.02);
+  border-radius: 14px;
+  padding: 14px 16px;
+  border-left: 4px solid rgba(var(--color-on-surface-rgb, 0, 0, 0), 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: sk-slideUp 0.45s ease both;
+  overflow: hidden;
+}
+
+html.dark .sk-card {
+  background: rgba(255, 255, 255, 0.02);
+  border-left-color: rgba(255, 255, 255, 0.06);
+}
+
+.sk-card-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sk-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(var(--color-on-surface-rgb, 0, 0, 0), 0.06);
+  flex-shrink: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+html.dark .sk-icon {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.sk-card-title {
+  flex: 1;
+  height: 15px;
+  border-radius: 8px;
+  background: rgba(var(--color-on-surface-rgb, 0, 0, 0), 0.05);
+  overflow: hidden;
+  position: relative;
+  max-width: 55%;
+}
+
+html.dark .sk-card-title {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.sk-card-chips,
+.sk-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.sk-chip {
+  height: 22px;
+  border-radius: 6px;
+  background: rgba(var(--color-on-surface-rgb, 0, 0, 0), 0.05);
+  overflow: hidden;
+  position: relative;
+}
+
+html.dark .sk-chip {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.sk-chip-sm { width: 52px; }
+.sk-chip-md { width: 76px; }
+.sk-chip-lg { width: 100px; }
+
+@media (max-width: 768px) {
+  .skeleton-pc {
+    display: none !important;
   }
-  100% {
-    background-position: -200% 0;
+}
+
+@media (min-width: 769px) {
+  .skeleton-mobile {
+    display: none !important;
   }
 }
 
@@ -1066,239 +1245,223 @@ tr:hover td {
   .mobile-hidden {
     display: none !important;
   }
-  
-  .mobile-node-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding: 2px 0;
-  }
-  
-  .node-card {
-    background: var(--color-surface-container-low);
-    border-radius: 10px;
-    padding: 10px 14px 12px;
-    transition: background 0.2s ease, border-color 0.2s ease;
-    border-left: 3px solid var(--color-primary);
-    overflow: hidden;
-  }
-  
-  .node-card.node-server {
-    border-left-color: var(--color-success);
-  }
-  
-  .node-card:active {
-    background: var(--color-surface-container);
-  }
-
-  .node-card-header {
-    margin-bottom: 6px;
-  }
-  
-  .node-ip-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    min-width: 0;
-  }
-  
-  .node-ip {
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--color-on-surface);
-    flex: 1 1 auto;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  
-  .node-card-info {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px;
-    margin-top: 6px;
-  }
-  
-  .node-card-info .info-chip,
-  .node-card-info .traffic-item {
-    flex-shrink: 0;
-    font-size: 11px;
-    padding: 2px 8px;
-  }
-  
-  .info-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    padding: 2px 8px;
-    border-radius: 5px;
-    font-size: 11px;
-    font-weight: 500;
-    background: rgba(92, 107, 192, 0.08);
-    color: #5c6bc0;
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-  
-  .info-chip.host-chip {
-    background: rgba(0, 150, 136, 0.08);
-    color: #00897b;
-  }
-  
-  .info-chip.nat-chip {
-    background: rgba(41, 121, 255, 0.08);
-    color: var(--color-primary);
-  }
-  
-  .info-chip.cidr-chip {
-    background: rgba(76, 175, 80, 0.08);
-    color: var(--color-success);
-  }
-  
-  .info-chip.loss-medium {
-    background: rgba(var(--color-warning-rgb, 234, 88, 12), 0.12);
-    color: var(--color-warning);
-    font-weight: 600;
-  }
-
-  .info-chip.loss-high {
-    background: rgba(var(--color-danger-rgb, 239, 68, 68), 0.12);
-    color: var(--color-danger);
-    font-weight: 600;
-  }
-
-  .info-chip.lat-medium {
-    background: rgba(255, 167, 38, 0.12);
-    color: #f57c00;
-    font-weight: 600;
-  }
-
-  .info-chip.lat-high {
-    background: rgba(239, 83, 80, 0.12);
-    color: #d32f2f;
-    font-weight: 600;
-  }
-
-  .info-chip.metric-chip {
-    font-size: 12px;
-    padding: 3px 10px;
-    border-radius: 6px;
-  }
-  
-  html.dark .info-chip {
-    background: rgba(255, 255, 255, 0.08);
-    color: rgba(255, 255, 255, 0.8);
-  }
-  
-  html.dark .info-chip.loss-medium {
-    background: rgba(var(--color-warning-rgb, 251, 191, 36), 0.25);
-    color: var(--color-warning);
-    font-weight: 600;
-  }
-
-  html.dark .info-chip.loss-high {
-    background: rgba(var(--color-danger-rgb, 248, 113, 113), 0.25);
-    color: var(--color-danger);
-    font-weight: 600;
-  }
-
-  html.dark .info-chip.lat-medium {
-    background: rgba(255, 193, 7, 0.25);
-    color: #ffd54f;
-    font-weight: 600;
-  }
-
-  html.dark .info-chip.lat-high {
-    background: rgba(255, 82, 82, 0.25);
-    color: #ff6b6b;
-    font-weight: 600;
-  }
-  
-  html.dark .info-chip.nat-chip {
-    background: rgba(41, 121, 255, 0.18);
-    color: #6ea8fe;
-  }
-  
-  html.dark .info-chip.cidr-chip {
-    background: rgba(76, 175, 80, 0.18);
-    color: #81c784;
-  }
-  
-  html.dark .info-chip.host-chip {
-    background: rgba(0, 150, 136, 0.22);
-    color: #4db6ac;
-  }
-  
-  .traffic-item {
-    display: flex;
-    align-items: center;
-    gap: 3px;
-    font-size: 11px;
-    font-weight: 500;
-    color: var(--color-on-surface-variant);
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-
-  html.dark .traffic-item {
-    color: rgba(255, 255, 255, 0.7);
-  }
-  
-  .node-card-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 6px;
-    padding-top: 6px;
-    border-top: 1px solid var(--color-outline-variant);
-    overflow: hidden;
-  }
-
-  .traffic-item {
-    display: flex;
-    align-items: center;
-    gap: 3px;
-    font-size: 11px;
-    font-weight: 500;
-    color: var(--color-on-surface-variant);
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-
-  .node-card-footer {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 6px;
-  }
-
-  .version-text {
-    font-size: 11px;
-    color: var(--color-text-disabled);
-    font-weight: 400;
-  }
-  
-  .empty-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 48px 20px;
-    color: var(--color-text-disabled);
-    gap: 12px;
-  }
-  
-  .empty-state p {
-    margin: 0;
-    font-size: 14px;
-  }
 }
 
-@media (min-width: 769px) {
-  .mobile-node-list {
-    display: none;
-  }
+/* ========== 移动端卡片列表样式（全尺寸可用） ========== */
+.mobile-node-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 2px 0;
+}
+
+.node-card {
+  background: var(--color-surface-container-low);
+  border-radius: 10px;
+  padding: 10px 14px 12px;
+  transition: background 0.2s ease, border-color 0.2s ease;
+  border-left: 3px solid var(--color-primary);
+  overflow: hidden;
+}
+
+.node-card.node-server {
+  border-left-color: var(--color-success);
+}
+
+.node-card:active {
+  background: var(--color-surface-container);
+}
+
+.node-card-header {
+  margin-bottom: 6px;
+}
+
+.node-ip-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.node-ip {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-on-surface);
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.node-card-info {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.node-card-info .info-chip,
+.node-card-info .traffic-item {
+  flex-shrink: 0;
+  font-size: 11px;
+  padding: 2px 8px;
+}
+
+.info-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 500;
+  background: rgba(92, 107, 192, 0.08);
+  color: #5c6bc0;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.info-chip.host-chip {
+  background: rgba(0, 150, 136, 0.08);
+  color: #00897b;
+}
+
+.info-chip.nat-chip {
+  background: rgba(41, 121, 255, 0.08);
+  color: var(--color-primary);
+}
+
+.info-chip.cidr-chip {
+  background: rgba(76, 175, 80, 0.08);
+  color: var(--color-success);
+}
+
+.info-chip.loss-medium {
+  background: rgba(var(--color-warning-rgb, 234, 88, 12), 0.12);
+  color: var(--color-warning);
+  font-weight: 600;
+}
+
+.info-chip.loss-high {
+  background: rgba(var(--color-danger-rgb, 239, 68, 68), 0.12);
+  color: var(--color-danger);
+  font-weight: 600;
+}
+
+.info-chip.lat-medium {
+  background: rgba(255, 167, 38, 0.12);
+  color: #f57c00;
+  font-weight: 600;
+}
+
+.info-chip.lat-high {
+  background: rgba(239, 83, 80, 0.12);
+  color: #d32f2f;
+  font-weight: 600;
+}
+
+.info-chip.metric-chip {
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 6px;
+}
+
+html.dark .info-chip {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+html.dark .info-chip.loss-medium {
+  background: rgba(var(--color-warning-rgb, 251, 191, 36), 0.25);
+  color: var(--color-warning);
+  font-weight: 600;
+}
+
+html.dark .info-chip.loss-high {
+  background: rgba(var(--color-danger-rgb, 248, 113, 113), 0.25);
+  color: var(--color-danger);
+  font-weight: 600;
+}
+
+html.dark .info-chip.lat-medium {
+  background: rgba(255, 193, 7, 0.25);
+  color: #ffd54f;
+  font-weight: 600;
+}
+
+html.dark .info-chip.lat-high {
+  background: rgba(255, 82, 82, 0.25);
+  color: #ff6b6b;
+  font-weight: 600;
+}
+
+html.dark .info-chip.nat-chip {
+  background: rgba(41, 121, 255, 0.18);
+  color: #6ea8fe;
+}
+
+html.dark .info-chip.cidr-chip {
+  background: rgba(76, 175, 80, 0.18);
+  color: #81c784;
+}
+
+html.dark .info-chip.host-chip {
+  background: rgba(0, 150, 136, 0.22);
+  color: #4db6ac;
+}
+
+.traffic-item {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-on-surface-variant);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+html.dark .traffic-item {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.node-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--color-outline-variant);
+  overflow: hidden;
+}
+
+.node-card-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.version-text {
+  font-size: 11px;
+  color: var(--color-text-disabled);
+  font-weight: 400;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 20px;
+  color: var(--color-text-disabled);
+  gap: 12px;
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 14px;
 }
 </style>
