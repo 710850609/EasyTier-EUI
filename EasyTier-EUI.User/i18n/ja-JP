@@ -1,0 +1,17 @@
+[manifest]
+display_name="EasyTier-EUI (Lite)"
+desc="EasyTierを簡単に使うためのUIインターフェース、ネットワークの敷居を下げ、リモートネットワークデバイスに素早くアクセス</br>EasyTierの利点：無料、デバイス数無制限、マルチプラットフォーム対応などをお楽しみください</br>他のデバイスを仮想ネットワークに参加させるには、【アプリ】メニューから対応するシステム・アーキテクチャのアプリをダウンロードしてインストールし、手順に従って参加してください</br>EasyTierの詳細な使い方については、<a href="https://easytier.cn" target="_blank">公式ドキュメント</a>をご覧ください</br></br>EasyTier-EUI（ユーザー版）は非root権限で実行され、デフォルトではネットワーク内の他のノードにアクティブにアクセスすることはできません</br>完全な機能を体験するには、非ユーザー版をインストールしてください：</br>方法1：EasyTier-EUIの【アプリ】->【FnOS】メニューからダウンロードしてインストール</br>方法2：<a href='https://github.com/710850609/EasyTier-EUI/releases' target="_blank">GitHubリポジトリ</a>からダウンロードしてインストール</br></br></br><a href="/cgi/ThirdParty/EasyTier-EUI.User/index.cgi/index.html" target="_blank">Web UI クイックアクセス</a></br>"
+
+[install]
+stepTitle="インストールを歓迎します"
+tips1.helpText="EasyTier-EUIのインストールへようこそ。EasyTierを簡単に使うためのUIです"
+tips2.helpText="これはユーザー版で、非root権限で実行されます。root権限が必要な機能は使用できません"
+
+[uninstall]
+stepTitle="アンインストールの確認"
+tips1.helpText="このアプリをアンインストールしようとしています。アプリデータの処理方法を選択してください"
+wizard_data_action.label="データ保持オプション"
+wizard_data_action.options1.label="データを保持（推奨）- 再インストール時に復元可能"
+wizard_data_action.options2.label="すべてのデータを削除 - この操作は元に戻せません"
+wizard_data_action.rules1.message="データ保持オプションを選択してください"
+tips2.helpText="<strong>警告：</strong> データ削除を選択すると、すべてのアプリデータが永久に失われ、復元できません。"

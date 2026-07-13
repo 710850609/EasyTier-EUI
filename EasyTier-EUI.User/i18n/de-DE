@@ -1,0 +1,17 @@
+[manifest]
+display_name="EasyTier-EUI (Lite)"
+desc="Vereinfachte UI für EasyTier, senkt die Einstiegshürde für Netzwerke und ermöglicht schnellen Zugriff auf entfernte Netzwerkgeräte</br>Nutzen Sie EasyTier Vorteile: kostenlos, unbegrenzte Geräte, Multi-Plattform-Unterstützung und mehr</br>Damit andere Geräte dem virtuellen Netzwerk beitreten können, gehen Sie zum [Apps]-Menü, laden Sie die App für das entsprechende System/die Architektur herunter und folgen Sie den Anweisungen zum Beitritt</br>Weitere EasyTier-Tipps finden Sie in der <a href="https://easytier.cn" target="_blank">offiziellen Dokumentation</a></br></br>EasyTier-EUI (Benutzerversion) läuft ohne Root-Rechte und unterstützt standardmäßig keinen aktiven Zugriff auf andere Knoten im Netzwerk</br>Um die vollen Funktionen zu nutzen, installieren Sie bitte die Nicht-Benutzer-Version:</br>Methode 1: Gehen Sie zu [Apps] -> [FnOS] in EasyTier-EUI zum Herunterladen und Installieren</br>Methode 2: <a href='https://github.com/710850609/EasyTier-EUI/releases' target="_blank">GitHub-Repository</a> herunterladen und installieren</br></br></br><a href="/cgi/ThirdParty/EasyTier-EUI.User/index.cgi/index.html" target="_blank">Web-UI Schnellzugriff</a></br>"
+
+[install]
+stepTitle="Willkommen zur Installation"
+tips1.helpText="Willkommen zur Installation von EasyTier-EUI, einer praktischen UI für EasyTier"
+tips2.helpText="Dies ist die Benutzerversion, die ohne Root-Rechte läuft. Funktionen, die Root benötigen, sind nicht verfügbar"
+
+[uninstall]
+stepTitle="Deinstallation bestätigen"
+tips1.helpText="Sie sind dabei, diese App zu deinstallieren. Bitte wählen Sie, wie mit den App-Daten verfahren werden soll"
+wizard_data_action.label="Datenaufbewahrungsoption"
+wizard_data_action.options1.label="Daten behalten (Empfohlen) - Bei Neuinstallation wiederherstellbar"
+wizard_data_action.options2.label="Alle Daten löschen - Diese Aktion kann nicht rückgängig gemacht werden"
+wizard_data_action.rules1.message="Bitte wählen Sie eine Datenaufbewahrungsoption"
+tips2.helpText="<strong>Warnung:</strong> Nach dem Löschen der Daten gehen alle App-Daten dauerhaft verloren und können nicht wiederhergestellt werden."

@@ -1,0 +1,17 @@
+[manifest]
+display_name="EasyTier-EUI (Lite)"
+desc="Interface simplifiée pour EasyTier, abaissant la barrière d'entrée pour la mise en réseau et permettant un accès rapide aux appareils réseau distants</br>Profitez des avantages d'EasyTier : gratuit, appareils illimités, support multi-plateforme, etc.</br>Pour que d'autres appareils rejoignent le réseau virtuel, allez dans le menu [Apps], téléchargez et installez l'application pour le système/l'architecture correspondant, et suivez les instructions pour rejoindre</br>Pour plus de conseils EasyTier, consultez la <a href="https://easytier.cn" target="_blank">documentation officielle</a></br></br>EasyTier-EUI (Version Utilisateur) fonctionne sans privilèges root et ne prend pas en charge par défaut l'accès actif aux autres nœuds du réseau</br>Pour profiter de toutes les fonctionnalités, veuillez installer la version non-utilisateur :</br>Méthode 1 : Allez dans [Apps] -> [FnOS] dans EasyTier-EUI pour télécharger et installer</br>Méthode 2 : <a href='https://github.com/710850609/EasyTier-EUI/releases' target="_blank">Dépôt GitHub</a> télécharger et installer</br></br></br><a href="/cgi/ThirdParty/EasyTier-EUI.User/index.cgi/index.html" target="_blank">Accès rapide à l'interface Web</a></br>"
+
+[install]
+stepTitle="Bienvenue à l'installation"
+tips1.helpText="Bienvenue à l'installation d'EasyTier-EUI, une interface pratique pour utiliser EasyTier"
+tips2.helpText="Ceci est la Version Utilisateur, fonctionnant sans privilèges root. Les fonctionnalités nécessitant root ne seront pas disponibles"
+
+[uninstall]
+stepTitle="Confirmer la désinstallation"
+tips1.helpText="Vous êtes sur le point de désinstaller cette application. Veuillez choisir comment gérer les données de l'application"
+wizard_data_action.label="Option de conservation des données"
+wizard_data_action.options1.label="Conserver les données (Recommandé) - Restaurable lors de la réinstallation"
+wizard_data_action.options2.label="Supprimer toutes les données - Cette action est irréversible"
+wizard_data_action.rules1.message="Veuillez sélectionner une option de conservation des données"
+tips2.helpText="<strong>Avertissement :</strong> Après avoir choisi de supprimer les données, toutes les données de l'application seront définitivement perdues et ne pourront pas être récupérées."

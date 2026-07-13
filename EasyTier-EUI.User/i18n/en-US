@@ -1,0 +1,17 @@
+[manifest]
+display_name="EasyTier-EUI (Lite)"
+desc="A simplified UI for EasyTier, lowering the entry barrier for networking and enabling quick access to remote network devices</br>Enjoy EasyTier's advantages: free, unlimited devices, multi-platform support, and more</br>For other devices to join the virtual network, go to the [Apps] menu, download and install the app for the corresponding system/architecture, and follow the instructions to join</br>For more EasyTier tips, check the <a href="https://easytier.cn" target="_blank">official documentation</a></br></br>EasyTier-EUI (User Version) runs without root privileges and does not support actively accessing other nodes in the network by default</br>To experience the full features, please install the non-user version:</br>Method 1: Go to [Apps] -> [FnOS] menu in EasyTier-EUI to download and install</br>Method 2: <a href='https://github.com/710850609/EasyTier-EUI/releases' target="_blank">GitHub repository</a> download and install</br></br></br><a href="/cgi/ThirdParty/EasyTier-EUI.User/index.cgi/index.html" target="_blank">Web UI quick access</a></br>"
+
+[install]
+stepTitle="Welcome to Install"
+tips1.helpText="Welcome to install EasyTier-EUI, a convenient UI for using EasyTier"
+tips2.helpText="This is the User Version, running without root privileges. Features requiring root will not be available"
+
+[uninstall]
+stepTitle="Confirm Uninstall"
+tips1.helpText="You are about to uninstall this app. Please choose how to handle app data"
+wizard_data_action.label="Data Retention Option"
+wizard_data_action.options1.label="Keep data (Recommended) - Restorable when reinstalling"
+wizard_data_action.options2.label="Delete all data - This action cannot be undone"
+wizard_data_action.rules1.message="Please select a data retention option"
+tips2.helpText="<strong>Warning:</strong> After choosing to delete data, all app data will be permanently lost and cannot be recovered."
