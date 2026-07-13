@@ -1,5 +1,6 @@
 <template>
   <div class="platform-page">
+    <!-- 易组网 -->
     <var-paper class="download-card" :elevation="1">
       <div class="platform-header">
         <div class="platform-info">
@@ -43,10 +44,39 @@
       </div>
     </var-paper>
 
+    <!-- socoldkiller/easytier-macos -->
     <var-paper class="download-card" :elevation="1">
       <div class="platform-header">
         <div class="platform-info">
-          <h2>{{ $t('software.macOSGuiVersion') }}</h2>
+          <h2>{{ $t('software.macOSAppDownload') }}</h2>
+        </div>
+      </div>
+      <div class="version-info">
+        <var-cell>{{ $t('software.installAndImport') }}</var-cell>
+        <var-cell><span style="font-style: italic;">{{ $t('software.macOSAppDesc') }}</span></var-cell>
+        <var-cell>
+          <var-link type="primary" underline="none" href="https://github.com/socoldkiller/easytier-macos/releases" target="_blank"><img :src="socoldkillerStableBadgeUrl" /></var-link>
+        </var-cell>
+        <var-space :size="[20, 20]" justify="center">
+          <var-button type="primary" size="normal" block @click="downloadSocoldkiller" auto-loading>
+            <template #default>
+              <var-icon name="download"/>
+              {{ $t('software.stable') }}
+            </template>
+          </var-button>
+        </var-space>
+      </div>
+    </var-paper>
+
+    <!-- 官方 -->
+    <var-paper class="download-card" :elevation="1">
+      <div class="platform-header">
+        <div class="platform-info">
+          <h2>{{ $t('software.macOSGuiVersion') }}
+            <var-badge type="primary">
+               <template #value>{{ $t('software.official') }}</template>
+            </var-badge>
+          </h2>
         </div>
       </div>
       <div class="version-info">
@@ -141,6 +171,11 @@ const stableBadgeUrl = computed(() => {
   return `https://img.shields.io/github/v/release/710850609/EasyTier-EUI?color=blue&label=${label}`
 })
 
+const socoldkillerStableBadgeUrl = computed(() => {
+  const label = encodeURIComponent(t('software.stableLabel'))
+  return `https://img.shields.io/github/v/release/socoldkiller/easytier-macos?color=blue&label=${label}`
+})
+
 onMounted(() => {
   api.etApp.getAppInfo().then((resp) => {
     const data = resp.data
@@ -202,6 +237,19 @@ const handleConfigConfirm = async () => {
     })
   }
   selectedConfig.value = null
+}
+
+const downloadSocoldkiller = async () => {
+  return new Promise((resolve, reject) => {
+    api.settings.getGithubMirrors({'refresh': true}).then((resp) => {
+      const urls = resp.data
+      window.open(`${urls[0]}/https://github.com/socoldkiller/easytier-macos/releases/latest/download/EasyTier-macOS-ARM64.dmg`, '_blank')
+    }).finally(() => {
+      resolve()
+    })
+  }).finally(() => {
+    resolve()
+  })
 }
 </script>
 

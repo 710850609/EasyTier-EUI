@@ -498,6 +498,7 @@ export default {
   software: {
     easyTierEui: 'EasyTier-EUI',
     newbieRecommended: 'Recommended',
+    official: 'Official',
     preview: 'Preview',
     stable: 'Release',
     stableLabel: 'Release',
@@ -528,6 +529,8 @@ export default {
     appleSiliconVersion: 'Apple Silicon',
     intelChipVersion: 'Intel Chip',
     macOSGuiVersion: 'EasyTier macOS GUI',
+    macOSAppDownload: 'EasyTier Mac Desktop Client',
+    macOSAppDesc: 'Native Mac desktop client written in SwiftUI, powered by EasyTier Core via Rust FFI. Requires aarch64, macOS 15 or later',
     linuxGuiVersion: 'EasyTier Linux GUI',
     x64Version: 'x86_64',
     arm64Version: 'arm64',

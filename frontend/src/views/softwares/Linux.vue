@@ -1,5 +1,6 @@
 <template>
   <div class="platform-page">
+    <!-- 易组网 -->
     <var-paper class="download-card" :elevation="1">
       <div class="platform-header">
         <div class="platform-info">
@@ -86,10 +87,15 @@
       </div>
     </var-paper>
 
+    <!-- 官方 -->
     <var-paper class="download-card" :elevation="1">
       <div class="platform-header">
         <div class="platform-info">
-          <h2>{{ $t('software.linuxGuiVersion') }}</h2>
+          <h2>{{ $t('software.linuxGuiVersion') }}
+            <var-badge type="primary">
+               <template #value>{{ $t('software.official') }}</template>
+            </var-badge>
+          </h2>
         </div>
       </div>
       <div class="version-info">
