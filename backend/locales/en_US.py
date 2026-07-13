@@ -89,6 +89,10 @@ MESSAGES = {
         "unknown_profile": "Unknown profile",
         "config_not_found": "Config file not found",
         "profile_required": "Profile is required",
+        "arch_required": "arch parameter is required",
+        "type_required": "type parameter is required",
+        "prerelease_required": "prerelease parameter is required",
+        "version_required": "version parameter is required",
     },
     "peer": {
         "checking": "Checking node status",

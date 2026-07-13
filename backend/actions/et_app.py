@@ -27,9 +27,9 @@ def get_app_info(params: dict, *args, **kwargs):
 
 def get_download_url(params: dict, *args, **kwargs):
     params = params or {}
-    arch, _ = Validator.not_empty(params, 'arch')
-    type, _ = Validator.not_empty(params, 'type')
-    prerelease, _ = Validator.not_empty(params, 'prerelease')
+    arch, _ = Validator.not_empty(params, 'arch', 'validate.arch_required')
+    type, _ = Validator.not_empty(params, 'type', 'validate.type_required')
+    prerelease, _ = Validator.not_empty(params, 'prerelease', 'validate.prerelease_required')
     prerelease = prerelease.lower() == 'true'
 
     release_info = et_core.get_release_info({})

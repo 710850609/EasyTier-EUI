@@ -89,6 +89,10 @@ MESSAGES = {
         "unknown_profile": "Profil inconnu",
         "config_not_found": "Fichier de configuration introuvable",
         "profile_required": "Le profil est requis",
+        "arch_required": "Le paramètre arch est requis",
+        "type_required": "Le paramètre type est requis",
+        "prerelease_required": "Le paramètre prerelease est requis",
+        "version_required": "Le paramètre version est requis",
     },
     "peer": {
         "checking": "Vérification de l'état du nœud",

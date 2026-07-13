@@ -277,6 +277,7 @@ export const api = {
     install: (data) => post('/et_core/install', data),
     getEtLogLevel: (params = {}) => get('/et_core/get_log_level', params),
     setEtLogLevel: (params = {}) => post('/et_core/set_log_level', params),
+    getVersionChangeLog: (params = {}) => get('/et_core/version_changelog', params),
   },
   // 设置相关
   settings: {

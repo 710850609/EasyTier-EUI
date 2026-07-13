@@ -16,6 +16,7 @@ from actions import services
 from http_dispatcher.dispatcher import HttpException
 from locales import get_message
 from utils import run_configs, et_run_info, log_util
+from utils.validators import Validator
 
 
 def get_log_level(params:dict, *args, **kwargs):
@@ -108,24 +109,22 @@ def get_release_info(params: dict, *args, **kwargs) -> dict:
 
 def version_list(params: dict, *args, **kwargs):
     release_info = get_release_info(params)
+    # 减少返回数据量
     for ver in release_info.get('versions', []):
-        del ver['assets']
-        pass
+        ver.pop('assets', None)
+        ver.pop('changelog', None)
     return release_info
 
-    # refresh = (params or {}).get('refresh', 'false').lower() == 'true'
-    # version_file = Path(run_configs.data_dir()).joinpath('et_versions.json')
-    # release_info = {'create_time': int(time.time() * 1000), 'versions': []}
-    # if not version_file.exists() or refresh:
-    #     releases = github_util.get_api('https://api.github.com/repos/EasyTier/EasyTier/releases')
-    #     for item in releases:
-    #         release_info['versions'].append({'version': item.get('name'), 'prerelease': item.get('prerelease')})
-    #     with open(version_file, "w", encoding="utf-8") as f:
-    #         f.write(json.dumps(release_info, ensure_ascii=False, indent=2))
-    # else:
-    #     with open(version_file, "r", encoding="utf-8") as f:
-    #         release_info = json.load(f)
-    # return release_info
+def version_changelog(params: dict, *args, **kwargs):
+    params = params or {}
+    select_ver, _ = Validator.not_empty(params, 'version', 'validate.version_required')
+    release_info = get_release_info({})
+    changelog = ''
+    for ver in release_info.get('versions', []):
+        if ver.get('version') == select_ver:
+            changelog = ver.get('changelog')
+            break
+    return changelog
 
 def install(data, *args, **kwargs):
     et_version = data['version']

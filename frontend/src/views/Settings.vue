@@ -717,8 +717,16 @@ ${ info.changelog }
 
 const handleShowEtChangeLog = () => {
   const selectedVersion = etVersion.value.selected_version
-  etChangeLog.value = etVersionList.value.find(item => item.version === selectedVersion)?.changelog || ''
-  showEtChangeLog.value = true
+  return new Promise((resolve, reject) => {
+    api.etCore.getVersionChangeLog({
+      version: selectedVersion
+    }).then(data => {
+      etChangeLog.value = data.data || ''
+      showEtChangeLog.value = true
+    })
+  }).finally(() => {
+    resolve()
+  })
 }
 
 const deleteCache = async () => {

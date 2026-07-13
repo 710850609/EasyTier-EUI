@@ -89,6 +89,10 @@ MESSAGES = {
         "unknown_profile": "未知profile",
         "config_not_found": "設定檔不存在",
         "profile_required": "profile不能為空",
+        "arch_required": "arch參數不能為空",
+        "type_required": "type參數不能為空",
+        "prerelease_required": "prerelease參數不能為空",
+        "version_required": "version參數不能為空",
     },
     "peer": {
         "checking": "檢測節點可用狀態中",

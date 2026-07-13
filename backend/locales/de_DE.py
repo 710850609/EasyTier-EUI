@@ -89,6 +89,10 @@ MESSAGES = {
         "unknown_profile": "Unbekanntes Profil",
         "config_not_found": "Konfigurationsdatei nicht gefunden",
         "profile_required": "Profil ist erforderlich",
+        "arch_required": "arch-Parameter ist erforderlich",
+        "type_required": "type-Parameter ist erforderlich",
+        "prerelease_required": "prerelease-Parameter ist erforderlich",
+        "version_required": "version-Parameter ist erforderlich",
     },
     "peer": {
         "checking": "Knotenstatus wird überprüft",
