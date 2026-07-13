@@ -149,7 +149,7 @@
     <var-paper class="table-container" :elevation="1">
       <div class="table-wrapper" ref="tableWrapper">
         <!-- 骨架屏 - PC 表格骨架 -->
-        <div v-if="loadingSkeleton && !useMobileList" class="skeleton-container skeleton-pc">
+        <div v-if="loadingSkeleton && (!isMobile || !useMobileList)" class="skeleton-container skeleton-pc">
           <div class="sk-pc-header">
             <div class="sk-pill sk-pill-hdr" v-for="n in visibleColumns.length" :key="'h'+n">
               <div class="sk-breathe"></div>
@@ -167,7 +167,7 @@
         </div>
 
         <!-- 骨架屏 - 移动端卡片骨架 -->
-        <div v-else-if="loadingSkeleton && useMobileList" class="skeleton-container skeleton-mobile">
+        <div v-else-if="loadingSkeleton && isMobile && useMobileList" class="skeleton-container skeleton-mobile">
           <div v-for="card in 4" :key="card" class="sk-card" :style="{ animationDelay: `${card * 0.08}s` }">
             <div class="sk-card-top">
               <div class="sk-icon"><div class="sk-breathe"></div></div>
@@ -186,7 +186,7 @@
         </div>
         
         <!-- 实际表格 - PC模式 -->
-        <table v-else-if="!useMobileList" class="data-table" :class="{ 'mobile-hidden': useMobileList }">
+        <table v-else-if="!isMobile || !useMobileList" class="data-table" :class="{ 'mobile-hidden': isMobile && useMobileList }">
           <thead class="fixed-header">
             <tr>
               <th 
@@ -321,7 +321,7 @@ import { copyToClipboard } from '../utils/clipboard.js'
 import { api, cancelAllRequests } from '../utils/api.js'
 import toast from '../components/toast.js'
 import { Poller } from '../utils/poller.js'
-import { NODES_SELECTED_COLUMNS_KEY, NODES_MOBILE_COLUMNS_KEY, NODES_SELECTED_NODE_TYPES_KEY, NODES_REFRESH_STEP_KEY, NODES_MOBILE_LIST_KEY } from '../config/storage-keys.js'
+import { NODES_SETTINGS_PC_KEY, NODES_SETTINGS_MOBILE_KEY } from '../config/storage-keys.js'
 import { mdiCircle } from '@mdi/js'
 import { mdilArrowDown, mdilArrowUp } from '@mdi/light-js'
 import SvgIcon from '@jamescoyle/vue-icon'
@@ -346,9 +346,12 @@ const PC_DEFAULT_COLUMNS = ['ipv4', 'hostname', 'cost', 'tunnel_proto', 'lat_ms'
 // 移动端模式默认选中的列
 const MOBILE_DEFAULT_COLUMNS = ['hostname', 'cost', 'tunnel_proto', 'lat_ms', 'loss_rate']
 
+// 根据当前屏幕宽度判断是否为移动端
+const isMobile = ref(window.innerWidth <= 768)
+
 // 根据当前屏幕宽度获取默认列
 const getDefaultColumns = () => {
-  return window.innerWidth <= 768 ? [...MOBILE_DEFAULT_COLUMNS] : [...PC_DEFAULT_COLUMNS]
+  return isMobile.value ? [...MOBILE_DEFAULT_COLUMNS] : [...PC_DEFAULT_COLUMNS]
 }
 
 // 默认选中的列（根据屏幕宽度初始化）
@@ -357,8 +360,8 @@ const selectedColumns = ref(getDefaultColumns())
 const selectedNodeTypes = ref(['normal'])
 // 刷新速度
 const refreshStep = ref(3)
-// 移动端列表模式（默认根据屏幕宽度判断）
-const useMobileList = ref(window.innerWidth <= 768)
+// 移动端列表模式（仅移动端有效，PC 端强制为 false）
+const useMobileList = ref(isMobile.value)
 // 节点数据
 const allNodes = ref([])
 
@@ -368,71 +371,79 @@ const serviceRunning = ref(false)
 const serviceOperating = ref(false)
 const pendingAction = ref('')
 
+// 获取当前模式对应的存储 key
+const getSettingsKey = () => {
+  return isMobile.value ? NODES_SETTINGS_MOBILE_KEY : NODES_SETTINGS_PC_KEY
+}
 
-// 获取当前模式对应的列存储 key
-const getColumnsStorageKey = () => {
-  return useMobileList.value ? NODES_MOBILE_COLUMNS_KEY : NODES_SELECTED_COLUMNS_KEY
+// 从旧格式迁移到新格式
+const migrateOldSettings = () => {
+  // 旧 key 映射
+  const oldKeyMap = [
+    ['eui-nodes-columns', 'pc', 'columns', JSON.parse],
+    ['eui-nodes-mobile-columns', 'mobile', 'columns', JSON.parse],
+    ['eui-nodes-rows', 'pc', 'nodeTypes', JSON.parse],
+    ['eui-nodes-mobile-rows', 'mobile', 'nodeTypes', JSON.parse],
+    ['eui-nodes-refresh-step', 'pc', 'refreshStep', v => parseInt(v, 10) || 3],
+    ['eui-nodes-mobile-refresh-step', 'mobile', 'refreshStep', v => parseInt(v, 10) || 3],
+    ['eui-nodes-mobile-list', 'mobile', 'cardList', v => JSON.parse(v)],
+  ]
+  const pc = {}, mobile = {}
+  let migrated = false
+
+  for (const [key, mode, field, parser] of oldKeyMap) {
+    const val = localStorage.getItem(key)
+    if (val !== null) {
+      try {
+        ;(mode === 'pc' ? pc : mobile)[field] = parser(val)
+      } catch (e) {
+        console.error(`迁移旧设置失败 ${key}:`, e)
+      }
+      localStorage.removeItem(key)
+      migrated = true
+    }
+  }
+
+  if (migrated) {
+    localStorage.setItem(NODES_SETTINGS_PC_KEY, JSON.stringify(pc))
+    localStorage.setItem(NODES_SETTINGS_MOBILE_KEY, JSON.stringify(mobile))
+    console.info('Nodes 设置已从旧格式迁移到新格式')
+  }
+  return migrated
 }
 
 // 从 localStorage 加载设置
 const loadSettings = () => {
-  const columnsKey = getColumnsStorageKey()
-  const savedColumns = localStorage.getItem(columnsKey)
-  if (savedColumns) {
-    try {
-      selectedColumns.value = JSON.parse(savedColumns)
-    } catch (e) {
-      console.error('加载列设置失败:', e)
-    }
+  // 检查是否需要旧格式迁移
+  if (!localStorage.getItem(getSettingsKey())) {
+    migrateOldSettings()
   }
 
-  const savedNodeTypes = localStorage.getItem(NODES_SELECTED_NODE_TYPES_KEY)
-  if (savedNodeTypes) {
-    try {
-      selectedNodeTypes.value = JSON.parse(savedNodeTypes)
-    } catch (e) {
-      console.error('加载节点类型设置失败:', e)
-    }
+  const raw = localStorage.getItem(getSettingsKey())
+  let settings = {}
+  try {
+    settings = JSON.parse(raw) || {}
+  } catch (e) {
+    console.error('加载设置失败:', e)
   }
 
-  const savedRefreshStep = localStorage.getItem(NODES_REFRESH_STEP_KEY)
-  if (savedRefreshStep) {
-    refreshStep.value = parseInt(savedRefreshStep, 10) || 3000
-  }
-
-  const savedMobileList = localStorage.getItem(NODES_MOBILE_LIST_KEY)
-  if (savedMobileList !== null) {
-    try {
-      useMobileList.value = JSON.parse(savedMobileList)
-    } catch (e) {
-      console.error('加载移动端列表模式失败:', e)
-    }
-  }
+  selectedColumns.value = settings.columns || getDefaultColumns()
+  selectedNodeTypes.value = settings.nodeTypes || ['normal']
+  refreshStep.value = settings.refreshStep || 3
+  useMobileList.value = isMobile.value ? (settings.cardList ?? isMobile.value) : false
 }
 
-// 监听变化并保存到 localStorage（根据当前模式保存到不同 key）
-watch(selectedColumns, (newVal) => {
-  localStorage.setItem(getColumnsStorageKey(), JSON.stringify(newVal))
-}, { deep: true })
-
-watch(selectedNodeTypes, (newVal) => {
-  localStorage.setItem(NODES_SELECTED_NODE_TYPES_KEY, JSON.stringify(newVal))
-}, { deep: true })
-
-watch(useMobileList, (newVal) => {
-  localStorage.setItem(NODES_MOBILE_LIST_KEY, JSON.stringify(newVal))
-  // 切换模式时，从对应 storage 加载列设置，没有则用默认值
-  const columnsKey = getColumnsStorageKey()
-  const savedColumns = localStorage.getItem(columnsKey)
-  if (savedColumns) {
-    try {
-      selectedColumns.value = JSON.parse(savedColumns)
-    } catch (e) {
-      selectedColumns.value = getDefaultColumns()
-    }
-  } else {
-    selectedColumns.value = getDefaultColumns()
+// 统一保存到 localStorage（一个 watchEffect 自动追踪所有依赖）
+watchEffect(() => {
+  const settings = {
+    columns: selectedColumns.value,
+    nodeTypes: selectedNodeTypes.value,
+    refreshStep: refreshStep.value,
   }
+  if (isMobile.value) {
+    settings.cardList = useMobileList.value
+  }
+  localStorage.setItem(getSettingsKey(), JSON.stringify(settings))
 })
 
 // 创建节点列表轮询器实例
@@ -451,7 +462,7 @@ const configStatusPoller = new Poller({
 
 // 监听刷新间隔变化，更新轮询器
 watch(refreshStep, (newVal) => {
-  localStorage.setItem(NODES_REFRESH_STEP_KEY, newVal.toString())
+  localStorage.setItem(getRefreshStepStorageKey(), newVal.toString())
   nodesPoller.setInterval(newVal * 1000)
   configStatusPoller.setInterval(newVal * 1000)
 })
@@ -603,7 +614,7 @@ const visibleCount = ref(20)
 
 const virtualFilteredNodes = computed(() => {
   const nodes = filteredNodes.value
-  if (nodes.length <= VIRTUAL_THRESHOLD || useMobileList.value) return nodes
+  if (nodes.length <= VIRTUAL_THRESHOLD || (isMobile.value && useMobileList.value)) return nodes
   const start = Math.max(0, visibleStart.value - VIRTUAL_BUFFER)
   const end = Math.min(nodes.length, visibleStart.value + visibleCount.value + VIRTUAL_BUFFER)
   return nodes.slice(start, end)
@@ -611,7 +622,7 @@ const virtualFilteredNodes = computed(() => {
 
 const virtualStartIndex = computed(() => {
   const nodes = filteredNodes.value
-  if (nodes.length <= VIRTUAL_THRESHOLD || useMobileList.value) return 0
+  if (nodes.length <= VIRTUAL_THRESHOLD || (isMobile.value && useMobileList.value)) return 0
   return Math.max(0, visibleStart.value - VIRTUAL_BUFFER)
 })
 
@@ -621,19 +632,20 @@ const topSpacerHeight = computed(() => {
 
 const bottomSpacerHeight = computed(() => {
   const nodes = filteredNodes.value
-  if (nodes.length <= VIRTUAL_THRESHOLD || useMobileList.value) return 0
+  if (nodes.length <= VIRTUAL_THRESHOLD || (isMobile.value && useMobileList.value)) return 0
   const renderedEnd = virtualStartIndex.value + virtualFilteredNodes.value.length
   return Math.max(0, (nodes.length - renderedEnd) * VIRTUAL_ROW_HEIGHT)
 })
 
 const handleTableScroll = () => {
-  if (!tableWrapper.value || useMobileList.value) return
+  if (!tableWrapper.value || (isMobile.value && useMobileList.value)) return
   const scrollTop = tableWrapper.value.scrollTop
   visibleStart.value = Math.floor(scrollTop / VIRTUAL_ROW_HEIGHT)
   visibleCount.value = Math.ceil(tableWrapper.value.clientHeight / VIRTUAL_ROW_HEIGHT) + 2
 }
 
 let tableScrollHandler = null
+let resizeHandler = null
 const tableWrapper = ref(null)
 
 const fetchNodes = async () => {
@@ -795,6 +807,27 @@ onMounted(async () => {
     toast.error(t('nodes.loadConfigListFailed'))
     return
   }
+  // 屏幕大小变化时，更新模式并重新加载对应设置
+  let resizeTimer = null
+  resizeHandler = () => {
+    clearTimeout(resizeTimer)
+    resizeTimer = setTimeout(() => {
+      const newIsMobile = window.innerWidth <= 768
+      if (newIsMobile !== isMobile.value) {
+        isMobile.value = newIsMobile
+        // PC 强制表格，移动端按用户设置
+        useMobileList.value = newIsMobile ? (() => {
+          const raw = localStorage.getItem(NODES_SETTINGS_MOBILE_KEY)
+          let settings = {}
+          try { settings = JSON.parse(raw) || {} } catch {}
+          return settings.cardList ?? newIsMobile
+        })() : false
+        // 重新加载对应模式的设置
+        loadSettings()
+      }
+    }, 200)
+  }
+  window.addEventListener('resize', resizeHandler)
   // 绑定滚动事件用于虚拟滚动
   if (tableWrapper.value) {
     tableScrollHandler = handleTableScroll
@@ -840,6 +873,10 @@ onUnmounted(() => {
   cancelAllRequests()
   if (tableWrapper.value && tableScrollHandler) {
     tableWrapper.value.removeEventListener('scroll', tableScrollHandler)
+  }
+  if (resizeHandler) {
+    window.removeEventListener('resize', resizeHandler)
+    resizeHandler = null
   }
 })
 

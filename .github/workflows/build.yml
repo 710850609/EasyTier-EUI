@@ -601,7 +601,7 @@ jobs:
             | 包名前缀 | 类型 | 说明 |
             |:---|:---|:---|
             | **EasyTier-EUI** | 正常版 | 以 root 权限运行 |
-            | **EasyTier-EUI.User** | 残血版 | 为适配官方上架要求，非 root 应用 |
+            | **EasyTier-EUI.User** | 用户版 | 为适配官方上架要求，非 root 应用，部分功能不可用 |
           fail_on_unmatched_files: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

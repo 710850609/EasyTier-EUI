@@ -10,11 +10,8 @@ export const VCONSOLE_ENABLED_KEY = 'eui-vconsole-enabled'
 export const THEME_MODE_KEY = 'eui-theme'
 
 // Nodes 页面设置
-export const NODES_SELECTED_COLUMNS_KEY = 'eui-nodes-columns'
-export const NODES_MOBILE_COLUMNS_KEY = 'eui-nodes-mobile-columns'
-export const NODES_SELECTED_NODE_TYPES_KEY = 'eui-nodes-rows'
-export const NODES_REFRESH_STEP_KEY = 'eui-nodes-refresh-step'
-export const NODES_MOBILE_LIST_KEY = 'eui-nodes-mobile-list'
+export const NODES_SETTINGS_PC_KEY = 'eui-nodes-settings-pc'
+export const NODES_SETTINGS_MOBILE_KEY = 'eui-nodes-settings-mobile'
 
 // 侧边栏折叠状态
 export const SIDEBAR_COLLAPSED_KEY = 'eui-sidebar-collapsed'
