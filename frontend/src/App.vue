@@ -257,6 +257,21 @@ html.dark .var-popup__content[var-popup-cover] {
   z-index: 1;
 }
 
+/* 顶部弹出层：高光条移到底部，发光边框渐变反转，视觉聚焦在屏幕中间 */
+.var-popup__content.var-popup--top::after {
+  top: auto;
+  bottom: 0;
+}
+
+.var-popup__content.var-popup--top::before {
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.06) 0%,
+    transparent 50%,
+    rgba(255, 255, 255, 0.3) 100%
+  );
+}
+
 html.dark .var-popup__content::after {
   background: linear-gradient(
     90deg,
@@ -292,6 +307,15 @@ html.dark .var-popup__content::before {
     rgba(255, 255, 255, 0.15) 0%,
     transparent 50%,
     rgba(255, 255, 255, 0.06) 100%
+  );
+}
+
+html.dark .var-popup__content.var-popup--top::before {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.06) 0%,
+    transparent 50%,
+    rgba(255, 255, 255, 0.15) 100%
   );
 }
 
