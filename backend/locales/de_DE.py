@@ -15,7 +15,7 @@ MESSAGES = {
     },
     "settings": {
         "cache_cleared": "Cache vollständig geleert",
-        "cache_deleted": "Cache gelöscht",
+        "cache_deleted": "Cache gelöscht ({size})",
         "shutting_down": "Dienst wird heruntergefahren",
         "proxy_config_failed": "Proxy-Konfiguration konnte nicht gelesen werden",
     },
@@ -130,5 +130,12 @@ MESSAGES = {
         "fetch_failed": "Netzwerkinformationen konnten nicht abgerufen werden: {error}",
         "reconnect_success": "Erfolgreich wieder verbunden",
         "reconnect_failed": "Wiederherstellung der Verbindung fehlgeschlagen: {error}",
+    },
+    "github": {
+        "getting_proxy_nodes": "GitHub-Proxy-Knoten werden abgerufen",
+        "checking_proxy_nodes": "GitHub-Proxy-Knoten werden überprüft",
+        "proxy_nodes_found": "{count} verfügbare GitHub-Proxy-Knoten gefunden",
+        "chunk_download_progress": "Chunk-Download-Fortschritt: {percent}%",
+        "single_download_progress": "Einzelthread-Download-Fortschritt: {percent}%",
     },
 }

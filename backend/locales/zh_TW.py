@@ -15,7 +15,7 @@ MESSAGES = {
     },
     "settings": {
         "cache_cleared": "快取已刪除乾淨",
-        "cache_deleted": "快取已刪除",
+        "cache_deleted": "快取已刪除 ({size})",
         "shutting_down": "正在關閉服務",
         "proxy_config_failed": "讀取代理設定失敗",
     },
@@ -130,5 +130,12 @@ MESSAGES = {
         "fetch_failed": "獲取網路資訊失敗: {error}",
         "reconnect_success": "重新連線成功",
         "reconnect_failed": "重新連線失敗: {error}",
+    },
+    "github": {
+        "getting_proxy_nodes": "取得GitHub加速節點中",
+        "checking_proxy_nodes": "檢測GitHub加速節點中",
+        "proxy_nodes_found": "檢測到可用GitHub加速節點: {count} 個",
+        "chunk_download_progress": "分片下載進度: {percent}%",
+        "single_download_progress": "單執行緒下載進度: {percent}%",
     },
 }

@@ -55,7 +55,10 @@ class AsyncTask:
             self._save()
 
     def start(self, target_func, *args):
+        from locales import get_lang, set_lang
+        current_lang = get_lang()
         def _run():
+            set_lang(current_lang)
             try:
                 target_func(self, *args)
             except Exception as e:

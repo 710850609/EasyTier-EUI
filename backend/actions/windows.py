@@ -64,7 +64,7 @@ def _do_download_mgr_pro(task: DownloadTask, profile: str):
 
     def on_et_download(percent, desc):
         mapped = 10 + int(percent * 0.40)
-        task.update_progress(mapped, get_message('download.downloading_core') + f' {et_version}({desc or percent}%)')
+        task.update_progress(mapped, get_message('download.downloading_core') + f' {et_version}({desc or percent})')
 
     et_package = et_util.download_package(download_dir, 'windows', 'x86_64', et_version, progress_callback=on_et_download)
     task.update_progress(50, get_message('download.fetching_version') + ' - EasyTier Manager')
@@ -73,7 +73,7 @@ def _do_download_mgr_pro(task: DownloadTask, profile: str):
 
     def on_mgr_download(percent, desc):
         mapped = 55 + int(percent * 0.35)
-        task.update_progress(mapped, get_message('download.downloading_manager') + f' {et_mgr_version}({desc or percent}%)')
+        task.update_progress(mapped, get_message('download.downloading_manager') + f' {et_mgr_version}({desc or percent})')
 
     et_mgr_package = _get_et_mgr_package(et_mgr_version, download_dir, progress_callback=on_mgr_download)
     task.update_progress(90, get_message('download.merging_package'))

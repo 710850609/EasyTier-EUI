@@ -15,7 +15,7 @@ MESSAGES = {
     },
     "settings": {
         "cache_cleared": "缓存已删除干净",
-        "cache_deleted": "缓存已删除",
+        "cache_deleted": "缓存已删除 ({size})",
         "shutting_down": "正在关闭服务",
         "proxy_config_failed": "读取代理配置失败",
     },
@@ -130,5 +130,12 @@ MESSAGES = {
         "fetch_failed": "获取网络信息失败: {error}",
         "reconnect_success": "重新连接成功",
         "reconnect_failed": "重新连接失败: {error}",
+    },
+    "github": {
+        "getting_proxy_nodes": "获取GitHub加速节点中",
+        "checking_proxy_nodes": "检测GitHub加速节点中",
+        "proxy_nodes_found": "检测到可用GitHub加速节点: {count} 个",
+        "chunk_download_progress": "分片下载进度: {percent}%",
+        "single_download_progress": "单线程下载进度: {percent}%",
     },
 }

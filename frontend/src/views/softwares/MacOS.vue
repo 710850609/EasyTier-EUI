@@ -293,6 +293,17 @@ const handleConfigConfirm = async () => {
   flex-wrap: nowrap !important;
 }
 
+.download-progress {
+  margin-top: 16px;
+  text-align: center;
+}
+
+.progress-desc {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--color-on-surface-variant);
+}
+
 .shield-badge {
   display: inline-flex;
   align-items: center;

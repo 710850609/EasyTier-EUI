@@ -11,7 +11,6 @@ from . import zh_TW
 from . import en_US
 from . import de_DE
 from . import fr_FR
-from . import ja_JP
 
 # 支持的语言
 SUPPORTED_LANGS = {
@@ -20,7 +19,6 @@ SUPPORTED_LANGS = {
     'en_US': en_US.MESSAGES,
     'de_DE': de_DE.MESSAGES,
     'fr_FR': fr_FR.MESSAGES,
-    'ja_JP': ja_JP.MESSAGES,
 }
 
 # 默认语言
@@ -107,18 +105,20 @@ def get_lang() -> str:
     return lang_ctx.get()
 
 
-def get_message(key: str, **kwargs: Any) -> str:
+def get_message(key: str, lang: str = None, **kwargs: Any) -> str:
     """
     获取翻译消息
     
     Args:
         key: 消息键，格式如 "error.module_load_failed"
+        lang: 可选，指定语言代码，不传则从 ContextVar 读取
         **kwargs: 插值参数
         
     Returns:
         翻译后的字符串，如果key不存在返回key本身
     """
-    lang = lang_ctx.get()
+    if lang is None:
+        lang = lang_ctx.get()
     lang_messages = SUPPORTED_LANGS.get(lang, SUPPORTED_LANGS[DEFAULT_LANG])
     
     # 逐级查找

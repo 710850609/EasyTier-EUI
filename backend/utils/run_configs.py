@@ -79,7 +79,7 @@ def setup_env():
     _is_inited_evn = True
 
 
-BUILD_VERSION = "1.2.020604"
+BUILD_VERSION = "1.4.020604-20260713130029"
 
 
 def is_fn_system():

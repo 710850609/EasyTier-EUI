@@ -19,7 +19,7 @@ from typing import Optional, List, Tuple, Callable
 import requests
 
 from http_dispatcher.dispatcher import HttpException
-from locales import get_message
+from locales import get_message, get_lang, set_lang
 from utils import run_configs
 from utils.dns_util import get_dns_txt_records
 
@@ -135,6 +135,7 @@ def get_api(url: str, proxy_url: str = ""):
 
 def get_proxy_urls(refresh:bool = False, progress_callback:Optional[Callable[[int, str], None]] = None, target_url:Optional[str] = None) -> list:
     """获取 GitHub 代理列表"""
+    current_lang = get_lang()
     proxy_file_path = Path(run_configs.data_dir(), 'github_proxy.json')
     cur_time = int(time.time() * 1000)
     if not refresh and proxy_file_path.exists() and not target_url:
@@ -146,7 +147,7 @@ def get_proxy_urls(refresh:bool = False, progress_callback:Optional[Callable[[in
 
     #  https://github.akams.cn/
     if progress_callback:
-        progress_callback(0, '获取GitHub加速节点中')
+        progress_callback(0, get_message('github.getting_proxy_nodes', lang=current_lang))
     url_list = get_dns_txt_records('github-proxy.v6.army')
     if not url_list:
         logging.warning("DNS TXT 查询返回空，使用默认加速地址")
@@ -170,14 +171,14 @@ def get_proxy_urls(refresh:bool = False, progress_callback:Optional[Callable[[in
     logging.info(f"获取到GitHub 加速地址: {url_list}")
     url_list = [{'url': item} for item in url_list]
     if progress_callback:
-        progress_callback(0, '检测GitHub加速节点中')
+        progress_callback(0, get_message('github.checking_proxy_nodes', lang=current_lang))
 
     url_list = check_proxy_url(url_list, progress_callback=progress_callback, target_url=target_url)
     url_list = [item for item in url_list if item['status'] == 'ok']
     logging.debug(f"GitHub加速地址检测结果: {url_list}")
 
     if progress_callback:
-        progress_callback(0, f'检测到可用GitHub加速节点: {len(url_list)} 个')
+        progress_callback(0, get_message('github.proxy_nodes_found', lang=current_lang, count=len(url_list)))
     if url_list and len(url_list) > 0:
         with open(proxy_file_path, 'w', encoding="utf-8") as f:
             f.write(json.dumps({'sources': url_list, 'create_time': cur_time}, indent=2))
@@ -402,6 +403,7 @@ def download_release_file(
     :param timeout: 请求超时时间，默认 300 秒
     :param progress_callback: 进度回调 callback(percent: int, description: str)
     """
+    current_lang = get_lang()
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -423,7 +425,7 @@ def download_release_file(
     if not usable_range_urls:
         # 全都不支持 Range，回退到单线程，挑第一个可用的
         logging.warning("没有地址支持 Range，回退到单线程下载")
-        _download_single(usable_urls[0], temp_dir / output_path.name, desc, timeout, progress_callback=progress_callback)
+        _download_single(usable_urls[0], temp_dir / output_path.name, desc, timeout, progress_callback=progress_callback, lang=current_lang)
         shutil.move(str(temp_dir / output_path.name), str(output_path))
         return
     
@@ -484,7 +486,7 @@ def download_release_file(
                         logging.info(f"{desc} 分片下载进度: {p}%")
                         last_percent[0] = p
                         if progress_callback:
-                            progress_callback(p, f'分片下载进度: {p}%')
+                            progress_callback(p, get_message('github.chunk_download_progress', lang=current_lang, percent=p))
 
         for url in candidates:
             logging.debug(f"尝试下载 [{start}-{end}] from {url}")
@@ -502,7 +504,7 @@ def download_release_file(
 
     failed = False
     try:
-        with ThreadPoolExecutor(max_workers=num_threads) as executor:
+        with ThreadPoolExecutor(max_workers=num_threads, initializer=set_lang, initargs=(current_lang,)) as executor:
             future_map = {
                 executor.submit(_download_with_fallback, s, e, p): (s, e, p)
                 for s, e, p in chunks
@@ -554,8 +556,10 @@ def download_release_file(
         shutil.rmtree(str(temp_dir), ignore_errors=True)
 
 
-def _download_single(url: str, output_path: Path, desc: str, timeout: int, progress_callback:Optional[Callable[[int, str], None]] = None):
+def _download_single(url: str, output_path: Path, desc: str, timeout: int, progress_callback:Optional[Callable[[int, str], None]] = None, lang: str = None):
     """不支持 Range 时的单线程回退"""
+    if lang is None:
+        lang = get_lang()
     logging.info(f"{desc} 单线程下载: {url}")
     with requests.get(url, stream=True, timeout=timeout) as resp:
         resp.raise_for_status()
@@ -573,5 +577,5 @@ def _download_single(url: str, output_path: Path, desc: str, timeout: int, progr
                             last_percent = p
                             if progress_callback:
                                 logging.info(f"{desc} 单线程下载进度: {p}%")
-                                progress_callback(p, f'单线程下载进度: {p}%')
+                                progress_callback(p, get_message('github.single_download_progress', lang=lang, percent=p))
     logging.info(f"{desc} 下载完成")
