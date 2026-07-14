@@ -166,22 +166,8 @@
 
       <div class="content-area" v-if="selectedConfig || fastSettingMode">
         <var-form ref="form">
-          <!-- 骨架屏：切换配置时显示 -->
-          <template v-if="isLoadingConfig">
-            <div class="sk-config-section" v-for="section in 3" :key="section" :style="{ animationDelay: `${section * 0.08}s` }">
-              <div class="sk-section-title">
-                <div class="sk-pill sk-pill-title"><div class="sk-breathe"></div></div>
-              </div>
-              <div class="sk-fields">
-                <div class="sk-field" v-for="field in (section === 3 ? 4 : 3)" :key="field">
-                  <div class="sk-pill sk-pill-label"><div class="sk-breathe"></div></div>
-                  <div class="sk-pill sk-pill-input"><div class="sk-breathe"></div></div>
-                </div>
-              </div>
-            </div>
-          </template>
-
-          <template v-else>
+          <!-- 骨架屏遮罩层：覆盖在内容上方 -->
+          <div v-if="isLoadingConfig" class="sk-overlay"></div>
           <var-paper class="config-section merged-section" :elevation="2">
             <!-- 基础设置 -->
             <div class="section-header">
@@ -339,7 +325,7 @@
                   <span class="section-title">{{ $t('config.advancedSettings') }}</span>
                 </div>
               </template>
-                <div class="flags-content">
+                <div class="flags-content" :key="'flags-' + selectedConfig + '-' + flagsRenderKey">
                   <div class="feature-section">
                     <div class="section-subtitle">{{ $t('config.featureToggles') }}</div>
                     <div class="feature-grid">
@@ -530,7 +516,7 @@
                     <span class="section-title">{{ $t('config.proxyForward') }}</span>
                   </div>
                 </template>
-                  <div class="forward-content">
+                  <div class="forward-content" :key="'forward-' + selectedConfig + '-' + forwardRenderKey">
                     <div class="input-row">
                       <div class="input-section">
                         <div class="section-subtitle">{{ $t('config.socks5Port') }}
@@ -690,7 +676,6 @@
               </var-collapse-item>
             </var-collapse>
           </var-paper>
-          </template>
         </var-form>
       </div>
     </template>
@@ -789,7 +774,7 @@
 <script setup>
 import { copyToClipboard } from '../utils/clipboard.js'
 import { validateIP, validateIPPort } from '../utils/validate.js'
-import { ref, computed, inject, onMounted, nextTick } from 'vue'
+import { ref, computed, inject, onMounted, nextTick, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import toast from '../components/toast.js'
 import { api } from '../utils/api.js'
@@ -809,6 +794,8 @@ const customProxyNetwork = ref('')
 const customListener = ref('')
 const flagsOpen = ref(['flags'])
 const forwardOpen = ref(['forward'])
+const flagsRenderKey = ref(0)
+const forwardRenderKey = ref(0)
 const form = ref(null)
 const showShareConfigType = ref(false)
 const showCodePage = ref(false)
@@ -1124,11 +1111,9 @@ const checkPeers = () => {
 
 const loadConfig = (profile) => {
   isLoadingConfig.value = true
-  // flagsOpen.value = ['flags']
-  // forwardOpen.value = ['forward']
+  flagsOpen.value = []
+  forwardOpen.value = []
   return api.configs.get(profile).then(data => {
-    flagsOpen.value = ['']
-    forwardOpen.value = ['']
     const json = data.data
     json.peer = (json.peer || []).map(e => e.uri)
     json.proxy_network = (json.proxy_network || []).map(e => e.cidr)
@@ -1145,15 +1130,19 @@ const loadConfig = (profile) => {
     if (json.flags?.instance_recv_bps_limit) json.flags.instance_recv_bps_limit = ensureInt(json.flags.instance_recv_bps_limit)
     config.value = {
       ...json,
-      hostname: json.hostname || undefined,
-      ipv4: json.ipv4 || undefined,
+      hostname: json.hostname ?? '',
+      ipv4: json.ipv4 ?? '',
       flags: {
         ...config.value.flags,
         ...json.flags,
-        mtu: json.flags?.mtu || undefined,
-        multi_thread_count: json.flags?.multi_thread_count || undefined
+        mtu: json.flags?.mtu ?? undefined,
+        multi_thread_count: json.flags?.multi_thread_count ?? undefined
       }
     }
+    // 将 flags 中 undefined 的字符串字段统一设为空字符串，确保 var-input/var-select 的 placeholder 正常显示
+    ;['dev_name', 'encryption_algorithm', 'default_protocol', 'compression', 'relay_network_whitelist'].forEach(key => {
+      if (config.value.flags[key] == null) config.value.flags[key] = ''
+    })
   }).finally(() => {
     isLoadingConfig.value = false
   })
@@ -1185,6 +1174,26 @@ const onConfigSwitch = async (profile) => {
     }
   }
 }
+
+watch(flagsOpen, (newVal) => {
+  if (newVal.includes('flags')) {
+    nextTick(() => {
+      setTimeout(() => {
+        flagsRenderKey.value++
+      }, 350)
+    })
+  }
+})
+
+watch(forwardOpen, (newVal) => {
+  if (newVal.includes('forward')) {
+    nextTick(() => {
+      setTimeout(() => {
+        forwardRenderKey.value++
+      }, 350)
+    })
+  }
+})
 
 const deleteCurrentConfig = async () => {
   const cfg = currentConfigData.value
@@ -1586,6 +1595,17 @@ html.dark .sk-breathe {
   width: 100%;
   max-width: 420px;
   border-radius: 8px;
+}
+
+/* ── 骨架屏遮罩层（切换配置时） ── */
+.sk-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  background: var(--color-surface);
+  opacity: 0.6;
+  border-radius: 16px;
+  cursor: wait;
 }
 
 /* ── 表单骨架（切换配置时） ── */
