@@ -1,18 +1,25 @@
 <template>
   <div class="config-page">
     <div v-if="isLoadingConfigList" class="config-skeleton">
-      <div class="skeleton-toolbar">
-        <var-skeleton title :rows="1" />
+      <div class="sk-toolbar">
+        <div class="sk-pill sk-pill-select"><div class="sk-breathe"></div></div>
+        <div class="sk-pill sk-pill-btn"><div class="sk-breathe"></div></div>
+        <div class="sk-pill sk-pill-btn"><div class="sk-breathe"></div></div>
+        <div class="sk-pill sk-pill-btn"><div class="sk-breathe"></div></div>
+        <div class="sk-pill sk-pill-btn sk-pill-btn-sm"><div class="sk-breathe"></div></div>
       </div>
-      <div class="skeleton-content">
-        <var-paper class="skeleton-paper" :elevation="1">
-          <var-skeleton title :rows="0" />
-          <var-skeleton :rows="2" />
-          <var-skeleton title :rows="0" />
-          <var-skeleton :rows="3" />
-          <var-skeleton title :rows="0" />
-          <var-skeleton :rows="4" />
-        </var-paper>
+      <div class="sk-content">
+        <div class="sk-section" v-for="section in 3" :key="section" :style="{ animationDelay: `${section * 0.08}s` }">
+          <div class="sk-section-title">
+            <div class="sk-pill sk-pill-title"><div class="sk-breathe"></div></div>
+          </div>
+          <div class="sk-fields">
+            <div class="sk-field" v-for="field in (section === 3 ? 4 : 3)" :key="field">
+              <div class="sk-pill sk-pill-label"><div class="sk-breathe"></div></div>
+              <div class="sk-pill sk-pill-input"><div class="sk-breathe"></div></div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -159,6 +166,22 @@
 
       <div class="content-area" v-if="selectedConfig || fastSettingMode">
         <var-form ref="form">
+          <!-- 骨架屏：切换配置时显示 -->
+          <template v-if="isLoadingConfig">
+            <div class="sk-config-section" v-for="section in 3" :key="section" :style="{ animationDelay: `${section * 0.08}s` }">
+              <div class="sk-section-title">
+                <div class="sk-pill sk-pill-title"><div class="sk-breathe"></div></div>
+              </div>
+              <div class="sk-fields">
+                <div class="sk-field" v-for="field in (section === 3 ? 4 : 3)" :key="field">
+                  <div class="sk-pill sk-pill-label"><div class="sk-breathe"></div></div>
+                  <div class="sk-pill sk-pill-input"><div class="sk-breathe"></div></div>
+                </div>
+              </div>
+            </div>
+          </template>
+
+          <template v-else>
           <var-paper class="config-section merged-section" :elevation="2">
             <!-- 基础设置 -->
             <div class="section-header">
@@ -172,7 +195,6 @@
               </div>
             </div>
 
-            <var-skeleton :loading="isLoadingConfig">
               <div class="input-row">
                 <var-cell>
                   <var-input
@@ -305,7 +327,6 @@
                   </p>
                 </div>
               </var-cell>
-            </var-skeleton>
           </var-paper>
 
           <!-- 高级设置 -->
@@ -318,7 +339,6 @@
                   <span class="section-title">{{ $t('config.advancedSettings') }}</span>
                 </div>
               </template>
-              <var-skeleton :loading="isLoadingConfig">
                 <div class="flags-content">
                   <div class="feature-section">
                     <div class="section-subtitle">{{ $t('config.featureToggles') }}</div>
@@ -495,8 +515,7 @@
                       <var-option v-for="(e, index) in listenerOptions" :key="index" :label="e" :value="e" />
                     </var-select>
                   </div>
-                </div>
-              </var-skeleton>
+              </div>
             </var-collapse-item>
           </var-collapse>
           </var-paper>
@@ -511,7 +530,6 @@
                     <span class="section-title">{{ $t('config.proxyForward') }}</span>
                   </div>
                 </template>
-                <var-skeleton :loading="isLoadingConfig">
                   <div class="forward-content">
                     <div class="input-row">
                       <div class="input-section">
@@ -669,10 +687,10 @@
                       </div>
                     </div>
                   </div>
-                </var-skeleton>
               </var-collapse-item>
             </var-collapse>
           </var-paper>
+          </template>
         </var-form>
       </div>
     </template>
@@ -1106,6 +1124,8 @@ const checkPeers = () => {
 
 const loadConfig = (profile) => {
   isLoadingConfig.value = true
+  // flagsOpen.value = ['flags']
+  // forwardOpen.value = ['forward']
   return api.configs.get(profile).then(data => {
     flagsOpen.value = ['']
     forwardOpen.value = ['']
@@ -1433,27 +1453,155 @@ onUnmounted(() => {
   overflow: hidden;
 }
 
-.skeleton-toolbar {
+/* ── 工具栏骨架 ── */
+.sk-toolbar {
   flex-shrink: 0;
   margin: 12px 16px 0;
   padding: 12px 20px;
   border-radius: 12px;
   background: var(--color-surface-container);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
-.skeleton-content {
+/* 通用圆角条 */
+.sk-pill {
+  border-radius: 7px;
+  background: rgba(var(--color-on-surface-rgb, 0, 0, 0), 0.05);
+  overflow: hidden;
+  position: relative;
+}
+
+html.dark .sk-pill {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.sk-pill-select {
+  height: 32px;
+  width: 160px;
+  border-radius: 8px;
+}
+
+.sk-pill-btn {
+  height: 28px;
+  width: 56px;
+  border-radius: 6px;
+}
+
+.sk-pill-btn-sm {
+  width: 40px;
+}
+
+/* 呼吸微光 */
+.sk-breathe {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(99, 132, 255, 0.12) 20%,
+    rgba(127, 90, 240, 0.18) 40%,
+    rgba(99, 132, 255, 0.12) 60%,
+    transparent 80%
+  );
+  animation: sk-breathe 2.4s ease-in-out infinite;
+  will-change: opacity;
+}
+
+html.dark .sk-breathe {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(99, 132, 255, 0.2) 20%,
+    rgba(167, 139, 250, 0.28) 40%,
+    rgba(99, 132, 255, 0.2) 60%,
+    transparent 80%
+  );
+}
+
+@keyframes sk-breathe {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+/* ── 内容骨架 ── */
+.sk-content {
   flex: 1;
   overflow-y: auto;
   padding: 16px;
-}
-
-.skeleton-paper {
-  padding: 20px;
-  border-radius: 16px;
-  background: var(--color-surface-container) !important;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 14px;
+}
+
+.sk-section {
+  padding: 18px 20px;
+  border-radius: 14px;
+  background: var(--color-surface-container);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  animation: sk-slideUp 0.4s ease both;
+}
+
+@keyframes sk-slideUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.sk-section-title {
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--color-outline-variant);
+}
+
+.sk-pill-title {
+  height: 18px;
+  width: 120px;
+  border-radius: 9px;
+}
+
+.sk-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sk-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sk-pill-label {
+  height: 13px;
+  width: 72px;
+  border-radius: 6px;
+}
+
+.sk-pill-input {
+  height: 34px;
+  width: 100%;
+  max-width: 420px;
+  border-radius: 8px;
+}
+
+/* ── 表单骨架（切换配置时） ── */
+.sk-config-section {
+  margin: 0 16px;
+  padding: 18px 20px;
+  border-radius: 14px;
+  background: var(--color-surface-container);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  animation: sk-slideUp 0.4s ease both;
+}
+
+.sk-config-section + .sk-config-section {
+  margin-top: 14px;
 }
 
 .empty-state-full {
