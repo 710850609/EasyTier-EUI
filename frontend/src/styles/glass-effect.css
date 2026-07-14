@@ -1,9 +1,9 @@
 /* var-select 下拉框毛玻璃效果 - 全局样式 */
 html body .var-select__scroller,
 html body .var-select__scroller.var-elevation--3 {
-  --select-scroller-background: rgba(var(--color-surface-container-rgb, 226, 236, 250), 0.18) !important;
-  background: rgba(var(--color-surface-container-rgb, 226, 236, 250), 0.18) !important;
-  background-color: rgba(var(--color-surface-container-rgb, 226, 236, 250), 0.18) !important;
+  --select-scroller-background: rgba(var(--color-surface-container-rgb, 234, 240, 248), 0.18) !important;
+  background: rgba(var(--color-surface-container-rgb, 234, 240, 248), 0.18) !important;
+  background-color: rgba(var(--color-surface-container-rgb, 234, 240, 248), 0.18) !important;
   backdrop-filter: blur(28px) saturate(140%) !important;
   -webkit-backdrop-filter: blur(28px) saturate(140%) !important;
   border: none !important;
@@ -16,9 +16,9 @@ html body .var-select__scroller.var-elevation--3 {
 
 html.dark body .var-select__scroller,
 html.dark body .var-select__scroller.var-elevation--3 {
-  --select-scroller-background: rgba(var(--color-surface-container-rgb, 51, 65, 85), 0.38) !important;
-  background: rgba(var(--color-surface-container-rgb, 51, 65, 85), 0.38) !important;
-  background-color: rgba(var(--color-surface-container-rgb, 51, 65, 85), 0.38) !important;
+  --select-scroller-background: rgba(var(--color-surface-container-rgb, 30, 36, 53), 0.38) !important;
+  background: rgba(var(--color-surface-container-rgb, 30, 36, 53), 0.38) !important;
+  background-color: rgba(var(--color-surface-container-rgb, 30, 36, 53), 0.38) !important;
   box-shadow:
     0 12px 48px rgba(0, 0, 0, 0.5),
     0 0 0 1px rgba(255, 255, 255, 0.06),

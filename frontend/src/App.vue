@@ -44,14 +44,14 @@ body {
 :root {
   --app-primary: var(--color-primary);
   /* RGB 变量用于 rgba() */
-  --color-surface-rgb: 255, 255, 255;
-  --color-surface-container-rgb: 226, 236, 250;
+  --color-surface-rgb: 253, 253, 254;
+  --color-surface-container-rgb: 234, 240, 248;
 }
 
 /* 暗色主题 RGB 变量 - 使用 html.dark 提高优先级 */
 html.dark {
-  --color-surface-rgb: 30, 41, 59;
-  --color-surface-container-rgb: 51, 65, 85;
+  --color-surface-rgb: 22, 27, 36;
+  --color-surface-container-rgb: 30, 36, 53;
 }
 
 /* 隐藏 Snackbar 图标 */
@@ -108,9 +108,9 @@ html.dark {
 /* var-select 下拉框毛玻璃效果 */
 html body .var-select__scroller,
 html body .var-select__scroller.var-elevation--3 {
-  --select-scroller-background: rgba(var(--color-surface-container-rgb, 226, 236, 250), 0.08) !important;
-  background: rgba(var(--color-surface-container-rgb, 226, 236, 250), 0.08) !important;
-  background-color: rgba(var(--color-surface-container-rgb, 226, 236, 250), 0.08) !important;
+  --select-scroller-background: rgba(var(--color-surface-container-rgb, 234, 240, 248), 0.08) !important;
+  background: rgba(var(--color-surface-container-rgb, 234, 240, 248), 0.08) !important;
+  background-color: rgba(var(--color-surface-container-rgb, 234, 240, 248), 0.08) !important;
   backdrop-filter: blur(20px) saturate(140%) !important;
   -webkit-backdrop-filter: blur(20px) saturate(140%) !important;
   will-change: backdrop-filter !important;
@@ -123,9 +123,9 @@ html body .var-select__scroller.var-elevation--3 {
 
 html.dark body .var-select__scroller,
 html.dark body .var-select__scroller.var-elevation--3 {
-  --select-scroller-background: rgba(var(--color-surface-container-rgb, 51, 65, 85), 0.18) !important;
-  background: rgba(var(--color-surface-container-rgb, 51, 65, 85), 0.18) !important;
-  background-color: rgba(var(--color-surface-container-rgb, 51, 65, 85), 0.18) !important;
+  --select-scroller-background: rgba(var(--color-surface-container-rgb, 30, 36, 53), 0.18) !important;
+  background: rgba(var(--color-surface-container-rgb, 30, 36, 53), 0.18) !important;
+  background-color: rgba(var(--color-surface-container-rgb, 30, 36, 53), 0.18) !important;
   box-shadow:
     0 8px 32px rgba(0, 0, 0, 0.35),
     inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
