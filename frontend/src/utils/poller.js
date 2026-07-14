@@ -46,6 +46,11 @@ export class Poller {
    */
   setInterval(interval) {
     this.interval = interval
+    // 如果已有调度，取消它，用新间隔重新调度，使新间隔立即生效
+    if (this._active && this._timeoutId) {
+      clearTimeout(this._timeoutId)
+      this._scheduleNext()
+    }
   }
 
   /**
@@ -80,6 +85,9 @@ export class Poller {
    */
   _scheduleNext() {
     if (!this._active) return
+    if (this._timeoutId) {
+      clearTimeout(this._timeoutId)
+    }
     this._timeoutId = setTimeout(() => this._poll(), this.interval)
   }
 }

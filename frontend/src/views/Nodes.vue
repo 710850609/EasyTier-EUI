@@ -420,7 +420,6 @@ const configStatusPoller = new Poller({
 
 // 监听刷新间隔变化，更新轮询器
 watch(refreshStep, (newVal) => {
-  localStorage.setItem(getRefreshStepStorageKey(), newVal.toString())
   nodesPoller.setInterval(newVal * 1000)
   configStatusPoller.setInterval(newVal * 1000)
 })
