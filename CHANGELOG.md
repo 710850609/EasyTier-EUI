@@ -7,6 +7,8 @@
 - 优化：小屏幕适配，默认只显示核心数据，避免信息过载
 - 优化：统一多语言命令，飞牛用户版改回：易组网 (用户版)
 - 新增：【应用】-【MacOS】页面增加 [socoldkiller/easytier-macos](https://github.com/socoldkiller/easytier-macos) 下载链接
+----
+- 优化：【应用】官方应用下载优选GitHub加速地址，避免下载失败
 
 
 ## 1.4

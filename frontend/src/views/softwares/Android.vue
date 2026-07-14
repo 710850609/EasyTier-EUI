@@ -122,7 +122,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-// import { downloadEasyTierApk } from '../../utils/github.js'
+import { getAcceleratedDownloadUrl } from '../../utils/github.js'
 import { api } from '../../utils/api.js'
 
 const prereleaseVersion = ref('')
@@ -136,15 +136,10 @@ onMounted(() => {
   })
 })
 
-const download = (arch, prerelease) => {
-  // downloadEasyTierApk(prerelease)
-  return new Promise((resolve, reject) => {
-    api.etApp.getDownloadUrl({type:'apk', arch, prerelease}).then((resp) => {
-      window.open(resp.data, '_blank')
-    }).finally(() => {
-      resolve()
-    })
-  })
+const download = async (arch, prerelease) => {
+  const resp = await api.etApp.getDownloadUrl({type:'apk', arch, prerelease})
+  const url = await getAcceleratedDownloadUrl(resp.data)
+  window.open(url, '_blank')
 }
 
 </script>

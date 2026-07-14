@@ -233,6 +233,7 @@ import { useI18n } from 'vue-i18n'
 import toast from '../../components/toast.js'
 import { api } from '../../utils/api.js'
 import { useAsyncDownload } from '../../utils/downloadProgress.js'
+import { getAcceleratedDownloadUrl } from '../../utils/github.js'
 
 const { t } = useI18n()
 
@@ -258,14 +259,10 @@ const { startDownload, progress, downloadingKey } = useAsyncDownload(
   api.etEui.getDownloadResultUrl,
 )
 
-const download = (type, arch, prerelease) => {
-  return new Promise((resolve, reject) => {
-    api.etApp.getDownloadUrl({type: type, arch: arch, prerelease: prerelease}).then((resp) => {
-      window.open(resp.data, '_blank')
-    }).finally(() => {
-      resolve()
-    })
-  })
+const download = async (type, arch, prerelease) => {
+  const resp = await api.etApp.getDownloadUrl({type: type, arch: arch, prerelease: prerelease})
+  const url = await getAcceleratedDownloadUrl(resp.data)
+  window.open(url, '_blank')
 }
 
 

@@ -54,6 +54,40 @@ export async function getGithubMirror() {
 }
 
 /**
+ * GitHub 加速下载：并发探测所有镜像地址，使用最快响应的镜像拼接下载 URL
+ * @param {string} githubUrl - 原始 GitHub 下载地址
+ * @param {number} timeout - 单次探测超时（毫秒），默认 3000
+ * @returns {Promise<string>} 拼接了最快镜像的完整下载地址
+ */
+export async function getAcceleratedDownloadUrl(githubUrl, timeout = 3000) {
+  const { data: urls } = await api.settings.getGithubMirrors({ refresh: false })
+  if (!urls || urls.length === 0) return githubUrl
+
+  const probe = (item) => new Promise((resolve) => {
+    const controller = new AbortController()
+    const timer = setTimeout(() => { controller.abort(); resolve(null) }, timeout)
+    fetch(item.url, { method: 'HEAD', mode: 'no-cors', signal: controller.signal })
+      .then(() => { clearTimeout(timer); resolve(item) })
+      .catch(() => { clearTimeout(timer); resolve(null) })
+  })
+
+  return new Promise((resolve) => {
+    let pending = urls.length
+    const fallback = urls[0]
+    urls.forEach((item) => {
+      probe(item).then(result => {
+        if (result !== null) {
+          resolve(`${result.url}/${githubUrl}`)
+        } else {
+          pending--
+          if (pending === 0) resolve(`${fallback.url}/${githubUrl}`)
+        }
+      })
+    })
+  })
+}
+
+/**
  * 从 GitHub releases 下载资源
  * @param {string} repo - GitHub 仓库，格式：owner/repo
  * @param {Function} matcher - 匹配资源的函数 (asset) => boolean
@@ -85,10 +119,7 @@ export function downloadFromGithub(repo, matcher, prerelease = false) {
       return asset.browser_download_url
     })
     .then(async url => {
-      const githubMirror = await getGithubMirror()
-      if (githubMirror) {
-        url = `${githubMirror}/${url}`
-      }
+      url = await getAcceleratedDownloadUrl(url)
       window.open(url, '_blank')
       return url
     })

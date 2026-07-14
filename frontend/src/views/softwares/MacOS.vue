@@ -163,6 +163,7 @@ import { useI18n } from 'vue-i18n'
 import toast from '../../components/toast.js'
 import { api } from '../../utils/api.js'
 import { useAsyncDownload } from '../../utils/downloadProgress.js'
+import { getAcceleratedDownloadUrl } from '../../utils/github.js'
 
 const { t } = useI18n()
 
@@ -243,16 +244,10 @@ const handleConfigConfirm = async () => {
 }
 
 const downloadSocoldkiller = async () => {
-  return new Promise((resolve, reject) => {
-    api.settings.getGithubMirrors({'refresh': false}).then((resp) => {
-      const urls = resp.data
-      window.open(`${urls[0].url}/https://github.com/socoldkiller/easytier-macos/releases/latest/download/EasyTier-macOS-ARM64.dmg`, '_blank')
-    }).finally(() => {
-      resolve()
-    })
-  }).finally(() => {
-    resolve()
-  })
+  const url = await getAcceleratedDownloadUrl(
+    'https://github.com/socoldkiller/easytier-macos/releases/latest/download/EasyTier-macOS-ARM64.dmg'
+  )
+  window.open(url, '_blank')
 }
 </script>
 

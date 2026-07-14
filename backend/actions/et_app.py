@@ -29,6 +29,7 @@ def get_download_url(params: dict, *args, **kwargs):
     params = params or {}
     arch, _ = Validator.not_empty(params, 'arch', 'validate.arch_required')
     type, _ = Validator.not_empty(params, 'type', 'validate.type_required')
+    used_proxy_url = params.get('used_proxy_url', 'false').lower() == 'true'
     prerelease, _ = Validator.not_empty(params, 'prerelease', 'validate.prerelease_required')
     prerelease = prerelease.lower() == 'true'
 
@@ -42,4 +43,7 @@ def get_download_url(params: dict, *args, **kwargs):
             break
     if download_url == '':
         raise HttpException(get_message('download.platform_arch_not_found', arch=arch, type=type))
-    return github_util.get_download_url_proxy(download_url)
+    if used_proxy_url:
+        return github_util.get_download_url_proxy(download_url)
+    else:
+        return download_url
