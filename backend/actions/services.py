@@ -233,10 +233,15 @@ def change_log_level(log_level):
                 need_handle_systemed = True
         if info.use_system_service:
             profiles_systemed.append(info.profile)
-    if need_handle_systemed:
-        _system_service_stop()
+    # 处理系统服务
+    if len(profiles_systemed) > 0:
+        if need_handle_systemed:
+            _system_service_stop()
         _system_service_uninstall()
         _system_service_install(profiles_systemed, log_level)
+        if need_handle_systemed:
+            _system_service_start()
+    # 处理非系统服务
     for profile in need_handle_profiles_no_systemed:
         info = et_run_info.get(profile)
         log_level = 'disabled' if log_level == 'off' else log_level

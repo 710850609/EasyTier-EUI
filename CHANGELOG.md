@@ -9,7 +9,8 @@
 - 新增：【应用】-【MacOS】页面增加 [socoldkiller/easytier-macos](https://github.com/socoldkiller/easytier-macos) 下载链接
 ----
 - 优化：【应用】官方应用下载优选GitHub加速地址，避免下载失败
-
+- 新增：【设置】页面，【其它】模块增加【辅助GitHub下载】功能，支持前端设备无法下载其它GitHub资源问题
+- 修复：配置开机自启时，【设置】页面修改内核日志级别后，未能自动重启，导致设备下线问题
 
 ## 1.4
 - 优化：GitHub资源下载，优化识别处理加速地址返回HTTP状态码 567，导致下载失败情况
