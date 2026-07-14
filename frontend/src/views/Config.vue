@@ -240,9 +240,10 @@
                   :placeholder="$t('config.nodeCountHint', { count: config.peer.length })"
                   :chip="true"
                   class="peer-select"
+                  @focus="onSelectFocus('peer')"
                 >
                   <template #default>
-                    <div class="peer-custom-input">
+                    <div class="peer-custom-input" :key="selectInputRenderKey.peer">
                       <svg-icon type="mdi" :path="mdilPencil" color="var(--color-primary)" size="20" />
                       <var-input 
                         :placeholder="$t('config.customNodePlaceholder')" 
@@ -381,8 +382,7 @@
                           <var-icon name="help-circle-outline" size="16" class="help-icon" />
                         </div>
                         <template #content>
-                          <div class="tooltip-multiline" v-html="$t('config.tunMtuHint')">
-                          </div>
+                          <div class="tooltip-multiline">{{ $t('config.tunMtuHint') }}</div>
                         </template>
                       </var-tooltip>
                       <var-input
@@ -486,8 +486,9 @@
                       variant="outlined"
                       :chip="true"
                       size="small"
+                      @focus="onSelectFocus('listener')"
                     >
-                      <var-cell>
+                      <var-cell :key="selectInputRenderKey.listener">
                         <template #icon>
                           <svg-icon type="mdi" :path="mdilPencil" color="var(--color-primary)" />
                         </template>
@@ -546,8 +547,9 @@
                           variant="outlined"
                           :chip="true"
                           size="small"
+                          @focus="onSelectFocus('exitNode')"
                         >
-                          <var-cell>
+                          <var-cell :key="selectInputRenderKey.exitNode">
                             <template #icon>
                               <svg-icon type="mdi" :path="mdilPencil" color="var(--color-primary)" />
                             </template>
@@ -587,8 +589,9 @@
                           variant="outlined"
                           :chip="true"
                           size="small"
+                          @focus="onSelectFocus('proxyNetwork')"
                         >
-                          <var-cell>
+                          <var-cell :key="selectInputRenderKey.proxyNetwork">
                             <template #icon>
                               <svg-icon type="mdi" :path="mdilPencil" color="var(--color-primary)" />
                             </template>
@@ -612,8 +615,7 @@
                           </div>
                         </template>
                         <template #content>
-                          <div class="tooltip-multiline" v-html="$t('config.portForwardHint')">
-                          </div>
+                          <div class="tooltip-multiline">{{ $t('config.portForwardHint') }}</div>
                         </template>
                       </var-tooltip>
                       <div class="port-forward-table">
@@ -796,6 +798,21 @@ const flagsOpen = ref(['flags'])
 const forwardOpen = ref(['forward'])
 const flagsRenderKey = ref(0)
 const forwardRenderKey = ref(0)
+// 下拉菜单内 var-input 渲染键，用于下拉打开后强制重建以正确显示 placeholder
+const selectInputRenderKey = ref({
+  peer: 0,
+  listener: 0,
+  exitNode: 0,
+  proxyNetwork: 0
+})
+
+const onSelectFocus = (name) => {
+  nextTick(() => {
+    setTimeout(() => {
+      selectInputRenderKey.value[name]++
+    }, 150)
+  })
+}
 const form = ref(null)
 const showShareConfigType = ref(false)
 const showCodePage = ref(false)
@@ -886,8 +903,13 @@ const featureSwitches = [
 ]
 
 const listenerOptions = ref([
-  'tcp://0.0.0.0:11010', 'udp://0.0.0.0:11010', 'wg://0.0.0.0:11011',
-  'ws://0.0.0.0:11011', 'wss://0.0.0.0:11012', 'quic://0.0.0.0:11012', 'faketcp://0.0.0.0:11013',
+  'tcp://0.0.0.0:11010', 'tcp://[::]:11010',
+  'udp://0.0.0.0:11010', 'udp://[::]:11010',
+  'wg://0.0.0.0:11011', 'wg://[::]:11011',
+  'ws://0.0.0.0:11011', 'ws://[::]:11011',
+  'wss://0.0.0.0:11012', 'wss://[::]:11012',
+  'quic://0.0.0.0:11012', 'quic://[::]:11012',
+  'faketcp://0.0.0.0:11013', 'faketcp://[::]:11013',
 ])
 
 const addListener = () => {
@@ -1176,7 +1198,7 @@ const onConfigSwitch = async (profile) => {
 }
 
 watch(flagsOpen, (newVal) => {
-  if (newVal.includes('flags')) {
+  if (newVal?.includes('flags')) {
     nextTick(() => {
       setTimeout(() => {
         flagsRenderKey.value++
@@ -1186,7 +1208,7 @@ watch(flagsOpen, (newVal) => {
 })
 
 watch(forwardOpen, (newVal) => {
-  if (newVal.includes('forward')) {
+  if (newVal?.includes('forward')) {
     nextTick(() => {
       setTimeout(() => {
         forwardRenderKey.value++

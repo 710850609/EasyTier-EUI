@@ -365,7 +365,7 @@ export default {
     tunNameHint: 'When multiple networks use the same TUN interface name, conflicts will occur when setting TUN IP',
     tunNamePlaceholder: 'Leave empty to auto-generate random name',
     tunMtu: 'TUN MTU',
-    tunMtuHint: 'TUN device MTU, range 400 ~ 1380<br/>Default with encryption: 1360, without: 1380.',
+    tunMtuHint: 'TUN device MTU, range 400 ~ 1380\nDefault with encryption: 1360, without: 1380.',
     tunMtuPlaceholder: 'Empty defaults to 1360 (encrypted) or 1380 (unencrypted)',
     mtuRangeError: 'MTU value out of range [400, 1380]',
     workerCount: 'Workers',
