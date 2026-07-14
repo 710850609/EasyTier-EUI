@@ -1,9 +1,15 @@
 <template>
   <div class="platform-page">
+    <!-- 官方 -->
     <var-paper class="download-card" :elevation="1">
       <div class="platform-header">
         <div class="platform-info">
-          <h2>{{ $t('software.androidVersion') }}</h2>
+          <h2>
+            {{ $t('software.androidVersion') }}
+            <var-badge type="primary">
+               <template #value>{{ $t('software.official') }}</template>
+            </var-badge>
+          </h2>
         </div>
       </div>
       <div class="version-info">
@@ -35,9 +41,9 @@
           <div class="item-header">
             <var-icon name="package" size="24" />
             <span class="item-title">arm64
-              <var-badge color="var(--color-primary)">
-                 <template #value>{{ $t('software.commonModel') }}</template>
-              </var-badge>
+            <var-badge type="primary">
+               <template #value>{{ $t('software.commonModel') }}</template>
+            </var-badge>
             </span>
           </div>
           <div class="item-actions">
@@ -57,9 +63,9 @@
           <div class="item-header">
             <var-icon name="package" size="24" />
             <span class="item-title">arm
-              <var-badge color="var(--color-primary)">
-                 <template #value>{{ $t('software.oldModel') }}</template>
-              </var-badge>
+            <var-badge type="primary">
+               <template #value>{{ $t('software.oldModel') }}</template>
+            </var-badge>
             </span>
           </div>
           <div class="item-actions">

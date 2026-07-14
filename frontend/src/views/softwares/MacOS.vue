@@ -244,9 +244,9 @@ const handleConfigConfirm = async () => {
 
 const downloadSocoldkiller = async () => {
   return new Promise((resolve, reject) => {
-    api.settings.getGithubMirrors({'refresh': true}).then((resp) => {
+    api.settings.getGithubMirrors({'refresh': false}).then((resp) => {
       const urls = resp.data
-      window.open(`${urls[0]}/https://github.com/socoldkiller/easytier-macos/releases/latest/download/EasyTier-macOS-ARM64.dmg`, '_blank')
+      window.open(`${urls[0].url}/https://github.com/socoldkiller/easytier-macos/releases/latest/download/EasyTier-macOS-ARM64.dmg`, '_blank')
     }).finally(() => {
       resolve()
     })

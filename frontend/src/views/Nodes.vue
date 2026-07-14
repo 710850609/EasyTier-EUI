@@ -168,19 +168,18 @@
 
         <!-- 骨架屏 - 移动端卡片骨架 -->
         <div v-else-if="loadingSkeleton && isMobile && useMobileList" class="skeleton-container skeleton-mobile">
-          <div v-for="card in 4" :key="card" class="sk-card" :style="{ animationDelay: `${card * 0.08}s` }">
-            <div class="sk-card-top">
-              <div class="sk-icon"><div class="sk-breathe"></div></div>
+          <div v-for="card in 2" :key="card" class="sk-card" :style="{ animationDelay: `${card * 0.08}s` }">
+            <!-- <div class="sk-card-top">
               <div class="sk-card-title"><div class="sk-breathe"></div></div>
+            </div> -->
+            <div class="sk-card-meta">
+              <div class="sk-chip sk-chip-sm"><div class="sk-breathe"></div></div>
+              <div class="sk-chip sk-chip-md"><div class="sk-breathe"></div></div>
             </div>
             <div class="sk-card-chips">
               <div class="sk-chip sk-chip-sm"><div class="sk-breathe"></div></div>
               <div class="sk-chip sk-chip-md"><div class="sk-breathe"></div></div>
               <div class="sk-chip sk-chip-lg"><div class="sk-breathe"></div></div>
-            </div>
-            <div class="sk-card-meta">
-              <div class="sk-chip sk-chip-sm"><div class="sk-breathe"></div></div>
-              <div class="sk-chip sk-chip-md"><div class="sk-breathe"></div></div>
             </div>
           </div>
         </div>
@@ -344,7 +343,7 @@ const loadingSkeleton = ref(true)
 // PC 模式默认选中的列
 const PC_DEFAULT_COLUMNS = ['ipv4', 'hostname', 'cost', 'tunnel_proto', 'lat_ms', 'loss_rate', 'rx_bytes', 'tx_bytes', 'nat_type']
 // 移动端模式默认选中的列
-const MOBILE_DEFAULT_COLUMNS = ['hostname', 'cost', 'tunnel_proto', 'lat_ms', 'loss_rate']
+const MOBILE_DEFAULT_COLUMNS = ['ipv4', 'hostname', 'cost', 'tunnel_proto', 'lat_ms', 'loss_rate']
 
 // 根据当前屏幕宽度判断是否为移动端
 const isMobile = ref(window.innerWidth <= 768)
@@ -376,49 +375,8 @@ const getSettingsKey = () => {
   return isMobile.value ? NODES_SETTINGS_MOBILE_KEY : NODES_SETTINGS_PC_KEY
 }
 
-// 从旧格式迁移到新格式
-const migrateOldSettings = () => {
-  // 旧 key 映射
-  const oldKeyMap = [
-    ['eui-nodes-columns', 'pc', 'columns', JSON.parse],
-    ['eui-nodes-mobile-columns', 'mobile', 'columns', JSON.parse],
-    ['eui-nodes-rows', 'pc', 'nodeTypes', JSON.parse],
-    ['eui-nodes-mobile-rows', 'mobile', 'nodeTypes', JSON.parse],
-    ['eui-nodes-refresh-step', 'pc', 'refreshStep', v => parseInt(v, 10) || 3],
-    ['eui-nodes-mobile-refresh-step', 'mobile', 'refreshStep', v => parseInt(v, 10) || 3],
-    ['eui-nodes-mobile-list', 'mobile', 'cardList', v => JSON.parse(v)],
-  ]
-  const pc = {}, mobile = {}
-  let migrated = false
-
-  for (const [key, mode, field, parser] of oldKeyMap) {
-    const val = localStorage.getItem(key)
-    if (val !== null) {
-      try {
-        ;(mode === 'pc' ? pc : mobile)[field] = parser(val)
-      } catch (e) {
-        console.error(`迁移旧设置失败 ${key}:`, e)
-      }
-      localStorage.removeItem(key)
-      migrated = true
-    }
-  }
-
-  if (migrated) {
-    localStorage.setItem(NODES_SETTINGS_PC_KEY, JSON.stringify(pc))
-    localStorage.setItem(NODES_SETTINGS_MOBILE_KEY, JSON.stringify(mobile))
-    console.info('Nodes 设置已从旧格式迁移到新格式')
-  }
-  return migrated
-}
-
 // 从 localStorage 加载设置
 const loadSettings = () => {
-  // 检查是否需要旧格式迁移
-  if (!localStorage.getItem(getSettingsKey())) {
-    migrateOldSettings()
-  }
-
   const raw = localStorage.getItem(getSettingsKey())
   let settings = {}
   try {
