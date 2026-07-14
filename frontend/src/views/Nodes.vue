@@ -149,7 +149,7 @@
     <var-paper class="table-container" :elevation="1">
       <div class="table-wrapper" ref="tableWrapper">
         <!-- 骨架屏 - PC 表格骨架 -->
-        <div v-if="loadingSkeleton && (!isMobile || !useMobileList)" class="skeleton-container skeleton-pc">
+        <div v-if="loadingSkeleton && !useMobileList" class="skeleton-container skeleton-pc">
           <div class="sk-pc-header">
             <div class="sk-pill sk-pill-hdr" v-for="n in visibleColumns.length" :key="'h'+n">
               <div class="sk-breathe"></div>
@@ -167,8 +167,8 @@
         </div>
 
         <!-- 骨架屏 - 移动端卡片骨架 -->
-        <div v-else-if="loadingSkeleton && isMobile && useMobileList" class="skeleton-container skeleton-mobile">
-          <div v-for="card in 2" :key="card" class="sk-card" :style="{ animationDelay: `${card * 0.08}s` }">
+        <div v-else-if="loadingSkeleton && useMobileList" class="skeleton-container skeleton-mobile">
+          <div v-for="card in 3" :key="card" class="sk-card" :style="{ animationDelay: `${card * 0.08}s` }">
             <!-- <div class="sk-card-top">
               <div class="sk-card-title"><div class="sk-breathe"></div></div>
             </div> -->
@@ -361,6 +361,9 @@ const selectedNodeTypes = ref(['normal'])
 const refreshStep = ref(3)
 // 移动端列表模式（仅移动端有效，PC 端强制为 false）
 const useMobileList = ref(isMobile.value)
+// 标记设置是否已加载，防止 watchEffect 在初始化时覆盖用户保存的值
+const settingsLoaded = ref(false)
+
 // 节点数据
 const allNodes = ref([])
 
@@ -389,10 +392,12 @@ const loadSettings = () => {
   selectedNodeTypes.value = settings.nodeTypes || ['normal']
   refreshStep.value = settings.refreshStep || 3
   useMobileList.value = isMobile.value ? (settings.cardList ?? isMobile.value) : false
+  settingsLoaded.value = true
 }
 
 // 统一保存到 localStorage（一个 watchEffect 自动追踪所有依赖）
 watchEffect(() => {
+  if (!settingsLoaded.value) return
   const settings = {
     columns: selectedColumns.value,
     nodeTypes: selectedNodeTypes.value,
@@ -1132,7 +1137,7 @@ tr[aria-hidden="true"]:hover td {
 }
 
 .sk-pill-hdr {
-  height: 14px;
+  height: 16px;
   width: 100%;
   max-width: 100px;
   border-radius: 7px;
@@ -1154,7 +1159,7 @@ html.dark .sk-pill-hdr {
 .sk-pc-row {
   display: flex;
   gap: 10px;
-  padding: 9px 16px;
+  padding: 12px 16px;
   animation: sk-slideUp 0.45s ease both;
 }
 
@@ -1167,7 +1172,7 @@ html.dark .sk-pill-hdr {
 
 /* 通用圆角条 */
 .sk-pill {
-  height: 12px;
+  height: 16px;
   border-radius: 7px;
   background: rgba(var(--color-on-surface-rgb, 0, 0, 0), 0.05);
   overflow: hidden;
@@ -1284,7 +1289,7 @@ html.dark .sk-card-title {
 }
 
 .sk-chip {
-  height: 22px;
+  height: 20px;
   border-radius: 6px;
   background: rgba(var(--color-on-surface-rgb, 0, 0, 0), 0.05);
   overflow: hidden;
@@ -1300,9 +1305,7 @@ html.dark .sk-chip {
 .sk-chip-lg { width: 100px; }
 
 @media (max-width: 768px) {
-  .skeleton-pc {
-    display: none !important;
-  }
+  /* 由 Vue 条件控制显示哪种骨架屏，无需 CSS 强制隐藏 */
 }
 
 @media (min-width: 769px) {

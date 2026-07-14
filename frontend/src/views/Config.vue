@@ -1569,12 +1569,12 @@ html.dark .sk-breathe {
 }
 
 .sk-section {
-  padding: 18px 20px;
+  padding: 12px 16px;
   border-radius: 14px;
   background: var(--color-surface-container);
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
   animation: sk-slideUp 0.4s ease both;
 }
 
@@ -1597,23 +1597,23 @@ html.dark .sk-breathe {
 .sk-fields {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .sk-field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .sk-pill-label {
-  height: 13px;
-  width: 72px;
+  height: 12px;
+  width: 64px;
   border-radius: 6px;
 }
 
 .sk-pill-input {
-  height: 34px;
+  height: 28px;
   width: 100%;
   max-width: 420px;
   border-radius: 8px;
