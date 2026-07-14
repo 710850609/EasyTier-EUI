@@ -26,7 +26,8 @@ export default {
     prerelease: '預發',
     newVersion: '新版本',
     canUpgrade: '可升級',
-    updateContent: '更新內容'
+    updateContent: '更新內容',
+    download: '下載'
   },
   menu: {
     nodes: {
@@ -103,6 +104,12 @@ export default {
     stable: '穩定',
     prerelease: '預發',
     others: '其他',
+    githubDownload: '輔助GitHub下載',
+    githubDownloadTitle: 'GitHub加速下載',
+    githubDownloadDesc: '基於本地網路優選GitHub加速地址，\n用優選後的加速地址下載，盡量提高下載速度',
+    githubDownloadReadClipboard: '讀取剪貼簿地址下載',
+    githubDownloadEmpty: '未讀取到GitHub下載地址',
+    githubDownloadInvalid: '不是有效的GitHub下載地址',
 
     developer: {
       title: '開發者選項',

@@ -26,7 +26,8 @@ export default {
     prerelease: 'Prerelease',
     newVersion: 'New Version',
     canUpgrade: 'Upgrade Available',
-    updateContent: 'Changelog'
+    updateContent: 'Changelog',
+    download: 'Download'
   },
   menu: {
     nodes: {
@@ -103,6 +104,12 @@ export default {
     stable: 'Rel',
     prerelease: 'Pre',
     others: 'Others',
+    githubDownload: 'GitHub Acceleration Download',
+    githubDownloadTitle: 'GitHub Acceleration Download',
+    githubDownloadDesc: 'Selects the optimal GitHub mirror based on local network,\nusing the fastest mirror to maximize download speed',
+    githubDownloadReadClipboard: 'Read Clipboard URL & Download',
+    githubDownloadEmpty: 'No GitHub URL found in clipboard',
+    githubDownloadInvalid: 'Not a valid GitHub download URL',
 
     developer: {
       title: 'Developer',

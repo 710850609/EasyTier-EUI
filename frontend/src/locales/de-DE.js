@@ -25,8 +25,9 @@ export default {
     stable: 'Release',
     prerelease: 'Prerelease',
     newVersion: 'Neue Version',
-    canUpgrade: 'Upgrade',
-    updateContent: 'Änderungen'
+    canUpgrade: 'Upgrade verfügbar',
+    updateContent: 'Änderungen',
+    download: 'Download'
   },
   menu: {
     nodes: { label: 'Knoten', title: 'Knotenverwaltung' },
@@ -52,6 +53,12 @@ export default {
     stable: 'Rel',
     prerelease: 'Pre',
     others: 'Andere',
+    githubDownload: 'GitHub Beschleunigungs-Download',
+    githubDownloadTitle: 'GitHub Beschleunigungs-Download',
+    githubDownloadDesc: 'Wählt den optimalen GitHub-Spiegel basierend auf dem lokalen Netzwerk,\nverwendet den schnellsten Spiegel für maximale Download-Geschwindigkeit',
+    githubDownloadReadClipboard: 'Zwischenablage-URL lesen & herunterladen',
+    githubDownloadEmpty: 'Keine GitHub-URL in der Zwischenablage',
+    githubDownloadInvalid: 'Keine gültige GitHub-Download-URL',
     developer: { title: 'Entwickler', mobileDebug: 'Mobile Debug (VConsole)', testPeers: 'Test Community-Knoten', githubMirror: 'GitHub Mirror', enabled: 'Aktiviert', disabled: 'Deaktiviert' },
     about: {
       title: 'Über',

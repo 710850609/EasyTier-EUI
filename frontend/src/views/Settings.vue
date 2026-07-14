@@ -217,6 +217,15 @@
         </span>
         <var-chip type="primary" size="small">{{ installPath }}</var-chip>
       </div>
+      <div class="setting-row">
+        <span class="setting-label">
+          {{ $t('settings.githubDownload') }}
+        </span>
+        <var-button type="primary" size="small" @click="showGithubUrlPopup = true">
+          <var-icon name="download" size="18" />
+          {{ $t('common.download') }}
+        </var-button>
+      </div>
     </var-paper>    
 
     <!-- 开发者选项 -->
@@ -307,6 +316,12 @@
   <div>      
   </div>
 
+  <!-- GitHub辅助下载 -->
+  <var-dialog v-model:show="showGithubUrlPopup" :title="$t('settings.githubDownload')" :confirm-button-text="$t('settings.githubDownloadReadClipboard')" @confirm="confirmGithubDownload" @cancel="showGithubUrlPopup = false">
+    <p>{{ $t('settings.githubDownloadDesc') }}</p>
+  </var-dialog>
+
+  <!-- 赞赏码 -->
   <var-popup v-model:show="showRewardCdoe">
     <var-result :description="$t('settings.about.rewardDesc')">
       <template #image>
@@ -330,6 +345,7 @@
     </var-result>
   </var-popup>
   
+  <!-- ET 版本更新说明 -->
   <var-popup :default-style="false" v-model:show="showEtChangeLog">
     <var-result type="info">
       <template #image>
@@ -349,6 +365,7 @@ import { themeOptions, setThemeMode, themeMode, glassEffectEnabled, setGlassEffe
 import { VCONSOLE_ENABLED_KEY } from '../config/storage-keys.js'
 import toast from '../components/toast.js'
 import api from '../utils/api.js'
+import { getAcceleratedDownloadUrl } from '../utils/github.js'
 import { setLanguage, getLanguage } from '../locales/index.js'
 import { useI18n } from 'vue-i18n'
 // import { getLatestVersionWithCache } from '../utils/github.js'
@@ -374,6 +391,7 @@ const buildVersion = ref('')
 const installPath = ref('')
 const forUser = ref(false)
 const showRewardCdoe = ref(false)
+const showGithubUrlPopup = ref(false)
 const platform = ref('')
 const etLogLevel = ref('error')
 const euiReleaseInfo = ref({})
@@ -737,6 +755,44 @@ const deleteCache = async () => {
       resolve()
     })
   })
+}
+
+const extractRealGithubUrl = (url) => {
+  const githubIndex = url.indexOf('https://github.com')
+  if (githubIndex > 0) {
+    return url.substring(githubIndex)
+  }
+  return url
+}
+
+const isValidGithubUrl = (url) => {
+  const githubDomains = [
+    'https://github.com',
+    'https://api.github.com',
+    'https://raw.githubusercontent.com',
+    'https://codeload.github.com'
+  ]
+  return githubDomains.some(domain => url.startsWith(domain))
+}
+
+const confirmGithubDownload = async () => {
+  try {
+    const rawUrl = await navigator.clipboard.readText()
+    if (!rawUrl || !rawUrl.trim()) {
+      toast.warning(t('settings.githubDownloadEmpty'))
+      return
+    }
+    const realUrl = extractRealGithubUrl(rawUrl.trim())
+    if (!isValidGithubUrl(realUrl)) {
+      toast.warning(`${t('settings.githubDownloadInvalid')}\n${realUrl}`)
+      return
+    }
+    const acceleratedUrl = await getAcceleratedDownloadUrl(realUrl)
+    showGithubUrlPopup.value = false
+    window.open(acceleratedUrl, '_blank')
+  } catch {
+    toast.warning(t('settings.githubDownloadEmpty'))
+  }
 }
 
 const formatDate = (date, sep = '-') => {

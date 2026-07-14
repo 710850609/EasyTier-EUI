@@ -26,7 +26,8 @@ export default {
     prerelease: 'Prerelease',
     newVersion: 'Nouvelle version',
     canUpgrade: 'Mettre à jour',
-    updateContent: 'Nouveautés'
+    updateContent: 'Nouveautés',
+    download: 'Télécharger'
   },
   menu: {
     nodes: { label: 'Nœuds', title: 'Gestion des nœuds' },
@@ -52,6 +53,12 @@ export default {
     stable: 'Rel',
     prerelease: 'Pre',
     others: 'Autres',
+    githubDownload: 'Aide au téléchargement GitHub',
+    githubDownloadTitle: 'Téléchargement accéléré GitHub',
+    githubDownloadDesc: 'Sélectionne le miroir GitHub optimal selon le réseau local,\nutilise le miroir le plus rapide pour maximiser la vitesse de téléchargement',
+    githubDownloadReadClipboard: 'Lire le presse-papiers & télécharger',
+    githubDownloadEmpty: 'Aucune URL GitHub trouvée dans le presse-papiers',
+    githubDownloadInvalid: 'URL de téléchargement GitHub non valide',
     developer: { title: 'Développeur', mobileDebug: 'Debug mobile (VConsole)', testPeers: 'Nœuds communautaires test', githubMirror: 'Miroir GitHub', enabled: 'Activé', disabled: 'Désactivé' },
     about: {
       title: 'À propos',
