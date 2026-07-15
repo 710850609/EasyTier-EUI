@@ -12,7 +12,7 @@ from utils import run_configs, log_util
 class WebWin:
     """主窗口 + 托盘组合控制器"""
 
-    def __init__(self, host: str, port: int, win_title: str, win_width: int = 1100, win_height: int = 750):
+    def __init__(self, host: str, port: int, win_title: str, win_width: int = 1200, win_height: int = 750):
         self.win_title = win_title
         self.win_width = win_width
         self.win_height = win_height
