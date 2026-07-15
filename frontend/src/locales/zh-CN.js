@@ -71,12 +71,6 @@ export default {
 
     language: {
       label: '语言',
-      zh: '中文简体',
-      zhtw: '中文繁体',
-      en: 'English',
-      de: 'Deutsch',
-      fr: 'Français',
-      ja: '日本語',
     },
 
     kernel: {
@@ -270,7 +264,7 @@ export default {
     shareNetwork: '分享网络',
     delete: '删除',
     exitAdd: '退出新增',
-    listeners: '监听器',
+    listeners: '监听地址',
     portForwarding: '端口转发',
     peers: 'Peer列表',
     externalNodes: '外部节点',
@@ -356,6 +350,9 @@ export default {
     fastSetupReconfig: '重新选择',
     fastSetupReconfigHint: '如不想用，请点击',
     advancedSettings: '高级设置',
+    hostInfo: '本机信息',
+    connectionMethod: '连接方式',
+    performanceSecurity: '性能安全',
     featureToggles: '功能开关',
     hostname: '主机名',
     hostnamePlaceholder: '留空默认为主机名',
@@ -514,7 +511,7 @@ export default {
     prerelease: '预发版',
     integratedConfig: '集成当前配置，解压启动后启动服务即可组网',
     selfBuildNode: '自建初始节点，请自行修改配置',
-    installAndImport: '安装应用，并导出飞牛上配置toml文件后。把toml配置文件导入到easytier中，并启动网络即可。',
+    installAndImport: '安装此应用，并从配置页面分享网络得到配置，把配置导入到此应用中，并启动网络即可',
     visitForHelp: '其他使用说明，请访问',
     easyTierWebsite: 'EasyTier官网',
     selectConfig: '选择内置配置',

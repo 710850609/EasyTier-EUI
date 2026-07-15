@@ -9,12 +9,12 @@
         <div class="sk-pill sk-pill-btn sk-pill-btn-sm"><div class="sk-breathe"></div></div>
       </div>
       <div class="sk-content">
-        <div class="sk-section" v-for="section in 3" :key="section" :style="{ animationDelay: `${section * 0.08}s` }">
-          <div class="sk-section-title">
+        <div class="sk-section" v-for="section in 5" :key="section" :style="{ animationDelay: `${section * 0.08}s` }">
+          <div class="sk-section-title" :class="{ 'sk-section-title--only': section > 1 }">
             <div class="sk-pill sk-pill-title"><div class="sk-breathe"></div></div>
           </div>
-          <div class="sk-fields">
-            <div class="sk-field" v-for="field in (section === 3 ? 4 : 3)" :key="field">
+          <div class="sk-fields" v-if="section === 1">
+            <div class="sk-field" v-for="field in 5" :key="field">
               <div class="sk-pill sk-pill-label"><div class="sk-breathe"></div></div>
               <div class="sk-pill sk-pill-input"><div class="sk-breathe"></div></div>
             </div>
@@ -316,22 +316,21 @@
               </var-cell>
           </var-paper>
 
-          <!-- 高级设置 -->
-          <var-paper v-if="!fastSettingMode" :elevation="2" class="flags-section-paper">
-            <var-collapse v-model="flagsOpen" :accordion="true" class="flags-section-inner">
-              <var-collapse-item name="flags">
+          <!-- 本机信息 -->
+          <var-paper v-if="!fastSettingMode" :elevation="2" class="config-section-panel">
+            <var-collapse v-model="advancedOpen" class="panel-section-inner">
+              <var-collapse-item name="hostInfo">
               <template #title>
                 <div class="collapse-title">
-                  <svg-icon type="mdi" :path="mdiShieldEdit" width="24" height="24" color="var(--color-primary)" />
-                  <span class="section-title">{{ $t('config.advancedSettings') }}</span>
+                  <svg-icon type="mdi" :path="mdiMonitor" width="24" height="24" color="var(--color-primary)" />
+                  <span class="section-title">{{ $t('config.hostInfo') }}</span>
                 </div>
               </template>
-                <div class="flags-content" :key="'flags-' + selectedConfig + '-' + flagsRenderKey">
+                <div class="flags-content" :key="'hostInfo-' + selectedConfig + '-' + advancedRenderKeys.hostInfo">
                   <div class="feature-section">
-                    <div class="section-subtitle">{{ $t('config.featureToggles') }}</div>
                     <div class="feature-grid">
                       <div
-                        v-for="feature in featureSwitches"
+                        v-for="feature in hostInfoSwitches"
                         :key="feature.key"
                         class="feature-item"
                       >
@@ -395,37 +394,44 @@
                       />
                     </div>
                   </div>
+              </div>
+            </var-collapse-item>
+          </var-collapse>
+          </var-paper>
 
-                  <div class="input-row">
-                    <div class="input-section">
-                      <var-tooltip :content="$t('config.workerCountHint')" trigger="click">
-                        <div class="section-subtitle">{{ $t('config.workerCount') }}
-                          <var-icon name="help-circle-outline" size="16" class="help-icon" />
-                        </div>
-                      </var-tooltip>
-                      <var-input
-                        v-model="multiThreadCountStr"
-                        :placeholder="$t('config.workerCountPlaceholder')"
-                        variant="outlined"
-                        type="number"
-                        :rules="(v) => (v === '' || v >= 2) || $t('config.workerCountError')"
-                        size="small"
-                      />
-                    </div>
-                    <div class="input-section">
-                      <div class="section-subtitle">{{ $t('config.cipher') }}</div>
-                      <var-select
-                        v-model="config.flags.encryption_algorithm"
-                        :placeholder="$t('config.cipherPlaceholder')"
-                        variant="outlined"
-                        :chip="true"
-                        size="small"
-                        :line="true"
+          <!-- 连接方式 -->
+          <var-paper v-if="!fastSettingMode" :elevation="2" class="config-section-panel">
+            <var-collapse v-model="advancedOpen" class="panel-section-inner">
+              <var-collapse-item name="connection">
+              <template #title>
+                <div class="collapse-title">
+                  <svg-icon type="mdi" :path="mdiLanConnect" width="24" height="24" color="var(--color-primary)" />
+                  <span class="section-title">{{ $t('config.connectionMethod') }}</span>
+                </div>
+              </template>
+                <div class="flags-content" :key="'connection-' + selectedConfig + '-' + advancedRenderKeys.connection">
+                  <div class="feature-section">
+                    <div class="feature-grid">
+                      <div
+                        v-for="feature in connectionSwitches"
+                        :key="feature.key"
+                        class="feature-item"
                       >
-                        <var-option v-for="(e, index) in encryptionAlgorithmList" :key="index" :label="e" :value="e" />
-                      </var-select>
+                        <var-checkbox v-model="config.flags[feature.key]">
+                          {{ $t(feature.label) }}
+                        </var-checkbox>
+                        <var-tooltip v-if="feature.tooltip" teleport="body">
+                          <var-icon name="help-circle-outline" size="16" class="help-icon" />
+                          <template #content>
+                            <div class="tooltip-multiline">
+                              {{ $t(feature.tooltip) }}
+                            </div>
+                          </template>
+                        </var-tooltip>
+                      </div>
                     </div>
                   </div>
+                  <var-divider />
 
                   <div class="input-row">
                     <div class="input-section">
@@ -439,35 +445,6 @@
                       >
                         <var-option v-for="(e, index) in defaultProtocolList" :key="index" :label="e.label" :value="e.value" />
                       </var-select>
-                    </div>
-                    <div class="input-section">
-                      <div class="section-subtitle">{{ $t('config.compression') }}</div>
-                      <var-select
-                        v-model="config.flags.compression"
-                        :placeholder="$t('config.compressionPlaceholder')"
-                        variant="outlined"
-                        :chip="true"
-                        size="small"
-                      >
-                        <var-option v-for="(e, index) in compressionOptions" :key="index" :label="e.label" :value="e.value" />
-                      </var-select>
-                    </div>
-                  </div>
-
-                  <div class="input-row">
-                    <div class="input-section">
-                      <var-tooltip :content="$t('config.rateLimitRxHint')" trigger="click">
-                        <div class="section-subtitle">{{ $t('config.rateLimitRx') }}
-                          <var-icon name="help-circle-outline" size="16" class="help-icon" />
-                        </div>
-                      </var-tooltip>
-                      <var-input
-                        v-model="config.flags.instance_recv_bps_limit"
-                        :placeholder="$t('config.rateLimitRxPlaceholder')"
-                        variant="outlined"
-                        type="number"
-                        size="small"
-                      />
                     </div>
                     <div class="input-section">
                     </div>
@@ -507,9 +484,107 @@
           </var-collapse>
           </var-paper>
 
+          <!-- 性能安全 -->
+          <var-paper v-if="!fastSettingMode" :elevation="2" class="config-section-panel">
+            <var-collapse v-model="advancedOpen" class="panel-section-inner">
+              <var-collapse-item name="performance">
+              <template #title>
+                <div class="collapse-title">
+                  <svg-icon type="mdi" :path="mdiTuneVariant" width="24" height="24" color="var(--color-primary)" />
+                  <span class="section-title">{{ $t('config.performanceSecurity') }}</span>
+                </div>
+              </template>
+                <div class="flags-content" :key="'performance-' + selectedConfig + '-' + advancedRenderKeys.performance">
+                  <div class="feature-section">
+                    <div class="feature-grid">
+                      <div
+                        v-for="feature in performanceSwitches"
+                        :key="feature.key"
+                        class="feature-item"
+                      >
+                        <var-checkbox v-model="config.flags[feature.key]">
+                          {{ $t(feature.label) }}
+                        </var-checkbox>
+                        <var-tooltip v-if="feature.tooltip" teleport="body">
+                          <var-icon name="help-circle-outline" size="16" class="help-icon" />
+                          <template #content>
+                            <div class="tooltip-multiline">
+                              {{ $t(feature.tooltip) }}
+                            </div>
+                          </template>
+                        </var-tooltip>
+                      </div>
+                    </div>
+                  </div>
+                  <var-divider />
+
+                  <div class="input-row">
+                    <div class="input-section">
+                      <var-tooltip :content="$t('config.workerCountHint')" trigger="click">
+                        <div class="section-subtitle">{{ $t('config.workerCount') }}
+                          <var-icon name="help-circle-outline" size="16" class="help-icon" />
+                        </div>
+                      </var-tooltip>
+                      <var-input
+                        v-model="multiThreadCountStr"
+                        :placeholder="$t('config.workerCountPlaceholder')"
+                        variant="outlined"
+                        type="number"
+                        :rules="(v) => (v === '' || v >= 2) || $t('config.workerCountError')"
+                        size="small"
+                      />
+                    </div>
+                    <div class="input-section">
+                      <div class="section-subtitle">{{ $t('config.cipher') }}</div>
+                      <var-select
+                        v-model="config.flags.encryption_algorithm"
+                        :placeholder="$t('config.cipherPlaceholder')"
+                        variant="outlined"
+                        :chip="true"
+                        size="small"
+                        :line="true"
+                      >
+                        <var-option v-for="(e, index) in encryptionAlgorithmList" :key="index" :label="e" :value="e" />
+                      </var-select>
+                    </div>
+                  </div>
+
+                  <div class="input-row">
+                    <div class="input-section">
+                      <div class="section-subtitle">{{ $t('config.compression') }}</div>
+                      <var-select
+                        v-model="config.flags.compression"
+                        :placeholder="$t('config.compressionPlaceholder')"
+                        variant="outlined"
+                        :chip="true"
+                        size="small"
+                      >
+                        <var-option v-for="(e, index) in compressionOptions" :key="index" :label="e.label" :value="e.value" />
+                      </var-select>
+                    </div>
+                    <div class="input-section">
+                      <var-tooltip :content="$t('config.rateLimitRxHint')" trigger="click">
+                        <div class="section-subtitle">{{ $t('config.rateLimitRx') }}
+                          <var-icon name="help-circle-outline" size="16" class="help-icon" />
+                        </div>
+                      </var-tooltip>
+                      <var-input
+                        v-model="config.flags.instance_recv_bps_limit"
+                        :placeholder="$t('config.rateLimitRxPlaceholder')"
+                        variant="outlined"
+                        type="number"
+                        size="small"
+                      />
+                    </div>
+                  </div>
+              </div>
+            </var-collapse-item>
+          </var-collapse>
+          </var-paper>
+
           <!-- 代理与转发 -->
-          <var-paper v-if="!fastSettingMode" :elevation="2" class="forward-section-paper">
-            <var-collapse v-model="forwardOpen" :accordion="true" class="forward-section-inner">
+          <var-paper v-if="!fastSettingMode" :elevation="2" class="config-section-panel">
+            <var-collapse v-model="forwardOpen" class="panel-section-inner">
               <var-collapse-item name="forward">
                 <template #title>
                   <div class="collapse-title">
@@ -518,6 +593,37 @@
                   </div>
                 </template>
                   <div class="forward-content" :key="'forward-' + selectedConfig + '-' + forwardRenderKey">
+                    <div class="feature-section">
+                      <div class="feature-grid">
+                        <div class="feature-item">
+                          <var-checkbox v-model="config.flags.enable_exit_node">
+                            {{ $t('config.flags.enable_exit_node.label') }}
+                          </var-checkbox>
+                          <var-tooltip teleport="body">
+                            <var-icon name="help-circle-outline" size="16" class="help-icon" />
+                            <template #content>
+                              <div class="tooltip-multiline">
+                                {{ $t('config.flags.enable_exit_node.tooltip') }}
+                              </div>
+                            </template>
+                          </var-tooltip>
+                        </div>
+                        <div class="feature-item">
+                          <var-checkbox v-model="config.flags.relay_all_peer_rpc">
+                            {{ $t('config.flags.relay_all_peer_rpc.label') }}
+                          </var-checkbox>
+                          <var-tooltip teleport="body">
+                            <var-icon name="help-circle-outline" size="16" class="help-icon" />
+                            <template #content>
+                              <div class="tooltip-multiline">
+                                {{ $t('config.flags.relay_all_peer_rpc.tooltip') }}
+                              </div>
+                            </template>
+                          </var-tooltip>
+                        </div>
+                      </div>
+                    </div>
+                    <var-divider />
                     <div class="input-row">
                       <div class="input-section">
                         <div class="section-subtitle">{{ $t('config.socks5Port') }}
@@ -782,7 +888,7 @@ import toast from '../components/toast.js'
 import { api } from '../utils/api.js'
 import CodeEditor from '../components/CodeEditor.vue'
 import SvgIcon from '@jamescoyle/vue-icon'
-import { mdiEye, mdiEyeOff, mdiHomeEdit, mdiShieldEdit, mdiCircle, mdiRouterNetwork } from '@mdi/js'
+import { mdiEye, mdiEyeOff, mdiHomeEdit, mdiRouterNetwork, mdiMonitor, mdiLanConnect, mdiTuneVariant } from '@mdi/js'
 import { mdilPencil, mdilAccount, mdilLock } from '@mdi/light-js'
 
 
@@ -794,10 +900,14 @@ const publicPeerOptions = ref([])
 const customPeer = ref('')
 const customProxyNetwork = ref('')
 const customListener = ref('')
-const flagsOpen = ref(['flags'])
+const advancedOpen = ref([])
 const forwardOpen = ref(['forward'])
-const flagsRenderKey = ref(0)
 const forwardRenderKey = ref(0)
+const advancedRenderKeys = ref({
+  hostInfo: 0,
+  connection: 0,
+  performance: 0
+})
 // 下拉菜单内 var-input 渲染键，用于下拉打开后强制重建以正确显示 placeholder
 const selectInputRenderKey = ref({
   peer: 0,
@@ -875,14 +985,16 @@ const proxyNetworkOptions = computed(() =>
   ])]
 )
 
-const featureSwitches = [
-  { key: 'latency_first', label: 'config.flags.latency_first.label', tooltip: 'config.flags.latency_first.tooltip' },
-  { key: 'multi_thread', label: 'config.flags.multi_thread.label', tooltip: 'config.flags.multi_thread.tooltip' },
-  { key: 'private_mode', label: 'config.flags.private_mode.label', tooltip: 'config.flags.private_mode.tooltip' },
-  { key: 'enable_kcp_proxy', label: 'config.flags.enable_kcp_proxy.label', tooltip: 'config.flags.enable_kcp_proxy.tooltip' },
-  { key: 'disable_kcp_input', label: 'config.flags.disable_kcp_input.label', tooltip: 'config.flags.disable_kcp_input.tooltip' },
-  { key: 'enable_quic_proxy', label: 'config.flags.enable_quic_proxy.label', tooltip: 'config.flags.enable_quic_proxy.tooltip' },
-  { key: 'disable_quic_input', label: 'config.flags.disable_quic_input.label', tooltip: 'config.flags.disable_quic_input.tooltip' },
+const hostInfoSwitches = [
+  { key: 'enable_ipv6', label: 'config.flags.enable_ipv6.label', tooltip: 'config.flags.enable_ipv6.tooltip' },
+  { key: 'no_tun', label: 'config.flags.no_tun.label', tooltip: 'config.flags.no_tun.tooltip' },
+  { key: 'bind_device', label: 'config.flags.bind_device.label', tooltip: 'config.flags.bind_device.tooltip' },
+  { key: 'accept_dns', label: 'config.flags.accept_dns.label', tooltip: 'config.flags.accept_dns.tooltip' },
+  { key: 'use_smoltcp', label: 'config.flags.use_smoltcp.label', tooltip: 'config.flags.use_smoltcp.tooltip' },
+  { key: 'proxy_forward_by_system', label: 'config.flags.proxy_forward_by_system.label', tooltip: 'config.flags.proxy_forward_by_system.tooltip' },
+]
+
+const connectionSwitches = [
   { key: 'p2p_only', label: 'config.flags.p2p_only.label', tooltip: 'config.flags.p2p_only.tooltip' },
   { key: 'disable_p2p', label: 'config.flags.disable_p2p.label', tooltip: 'config.flags.disable_p2p.tooltip' },
   { key: 'lazy_p2p', label: 'config.flags.lazy_p2p.label', tooltip: 'config.flags.lazy_p2p.tooltip' },
@@ -891,15 +1003,17 @@ const featureSwitches = [
   { key: 'disable_udp_hole_punching', label: 'config.flags.disable_udp_hole_punching.label', tooltip: 'config.flags.disable_udp_hole_punching.tooltip' },
   { key: 'disable_sym_hole_punching', label: 'config.flags.disable_sym_hole_punching.label', tooltip: 'config.flags.disable_sym_hole_punching.tooltip' },
   { key: 'disable_upnp', label: 'config.flags.disable_upnp.label', tooltip: 'config.flags.disable_upnp.tooltip' },
-  { key: 'use_smoltcp', label: 'config.flags.use_smoltcp.label', tooltip: 'config.flags.use_smoltcp.tooltip' },
-  { key: 'proxy_forward_by_system', label: 'config.flags.proxy_forward_by_system.label', tooltip: 'config.flags.proxy_forward_by_system.tooltip' },
-  { key: 'enable_exit_node', label: 'config.flags.enable_exit_node.label', tooltip: 'config.flags.enable_exit_node.tooltip' },
-  { key: 'relay_all_peer_rpc', label: 'config.flags.relay_all_peer_rpc.label', tooltip: 'config.flags.relay_all_peer_rpc.tooltip' },
+  { key: 'enable_kcp_proxy', label: 'config.flags.enable_kcp_proxy.label', tooltip: 'config.flags.enable_kcp_proxy.tooltip' },
+  { key: 'disable_kcp_input', label: 'config.flags.disable_kcp_input.label', tooltip: 'config.flags.disable_kcp_input.tooltip' },
+  { key: 'enable_quic_proxy', label: 'config.flags.enable_quic_proxy.label', tooltip: 'config.flags.enable_quic_proxy.tooltip' },
+  { key: 'disable_quic_input', label: 'config.flags.disable_quic_input.label', tooltip: 'config.flags.disable_quic_input.tooltip' },
+]
+
+const performanceSwitches = [
+  { key: 'latency_first', label: 'config.flags.latency_first.label', tooltip: 'config.flags.latency_first.tooltip' },
+  { key: 'multi_thread', label: 'config.flags.multi_thread.label', tooltip: 'config.flags.multi_thread.tooltip' },
+  { key: 'private_mode', label: 'config.flags.private_mode.label', tooltip: 'config.flags.private_mode.tooltip' },
   { key: 'enable_encryption', label: 'config.flags.enable_encryption.label', tooltip: 'config.flags.enable_encryption.tooltip' },
-  { key: 'enable_ipv6', label: 'config.flags.enable_ipv6.label', tooltip: 'config.flags.enable_ipv6.tooltip' },
-  { key: 'no_tun', label: 'config.flags.no_tun.label', tooltip: 'config.flags.no_tun.tooltip' },
-  { key: 'accept_dns', label: 'config.flags.accept_dns.label', tooltip: 'config.flags.accept_dns.tooltip' },
-  { key: 'bind_device', label: 'config.flags.bind_device.label', tooltip: 'config.flags.bind_device.tooltip' },
 ]
 
 const listenerOptions = ref([
@@ -1133,7 +1247,7 @@ const checkPeers = () => {
 
 const loadConfig = (profile) => {
   isLoadingConfig.value = true
-  flagsOpen.value = []
+  advancedOpen.value = []
   forwardOpen.value = []
   return api.configs.get(profile).then(data => {
     const json = data.data
@@ -1197,11 +1311,25 @@ const onConfigSwitch = async (profile) => {
   }
 }
 
-watch(flagsOpen, (newVal) => {
-  if (newVal?.includes('flags')) {
+watch(advancedOpen, (newVal) => {
+  if (newVal?.includes('hostInfo')) {
     nextTick(() => {
       setTimeout(() => {
-        flagsRenderKey.value++
+        advancedRenderKeys.value.hostInfo++
+      }, 350)
+    })
+  }
+  if (newVal?.includes('connection')) {
+    nextTick(() => {
+      setTimeout(() => {
+        advancedRenderKeys.value.connection++
+      }, 350)
+    })
+  }
+  if (newVal?.includes('performance')) {
+    nextTick(() => {
+      setTimeout(() => {
+        advancedRenderKeys.value.performance++
       }, 350)
     })
   }
@@ -1586,6 +1714,11 @@ html.dark .sk-breathe {
 .sk-section-title {
   padding-bottom: 8px;
   border-bottom: 1px solid var(--color-outline-variant);
+}
+
+.sk-section-title--only {
+  padding-bottom: 0;
+  border-bottom: none;
 }
 
 .sk-pill-title {
@@ -2050,35 +2183,29 @@ html.dark .merged-section {
   border-color: var(--color-primary);
 }
 
-/* ===== 高级设置样式 ===== */
-.flags-section-paper {
-  /* margin-top: 8px; */
+/* ===== 配置面板通用样式 ===== */
+.config-section-panel {
+  margin-top: 12px;
   border-radius: 16px;
   overflow: hidden;
   background: rgba(var(--color-surface-container-rgb, 226, 236, 250), 0.08) !important;
 }
 
-html.dark .flags-section-paper {
+html.dark .config-section-panel {
   background: rgba(var(--color-surface-container-rgb, 51, 65, 85), 0.1) !important;
 }
 
-:deep(.flags-section .var-collapse-item) {
-  border-radius: 16px;
-  overflow: hidden;
-  background: var(--color-surface-container) !important;
-}
-
-:deep(.flags-section-inner .var-collapse-item) {
+:deep(.panel-section-inner .var-collapse-item) {
   border-radius: 12px;
   overflow: hidden;
   background: transparent !important;
 }
 
-:deep(.flags-section-inner .var-collapse-item__header) {
+:deep(.panel-section-inner .var-collapse-item__header) {
   padding: 12px 16px;
 }
 
-:deep(.flags-section-inner .var-divider) {
+:deep(.panel-section-inner .var-divider) {
   margin: 8px 0;
 }
 
@@ -2144,35 +2271,6 @@ html.dark .flags-section-paper {
   white-space: pre-line;   /* 识别 \n 换行 */
   line-height: 1.6;        /* 行间距 */
   max-width: 300px;
-}
-
-/* ===== 代理与转发样式 ===== */
-.forward-section-paper {
-  margin-top: 16px;
-  border-radius: 16px;
-  overflow: hidden;
-  color: var(--color-text);
-  background: rgba(var(--color-surface-container-rgb, 226, 236, 250), 0.08) !important;
-}
-
-html.dark .forward-section-paper {
-  background: rgba(var(--color-surface-container-rgb, 51, 65, 85), 0.1) !important;
-}
-
-:deep(.forward-section-inner .var-collapse-item) {
-  border-radius: 12px;
-  overflow: hidden;
-  color: var(--color-text);
-  background: transparent !important;
-}
-
-:deep(.forward-section-inner .var-collapse-item__header) {
-  padding: 12px 16px;
-  color: var(--color-text);
-}
-
-:deep(.forward-section-inner .var-divider) {
-  margin: 8px 0;
 }
 
 .forward-content {
@@ -2742,8 +2840,8 @@ html.dark .forward-section-paper {
     display: none;
   }
 
-  .forward-section-paper {
-    margin-top: 12px;
+  .config-section-panel {
+    margin-top: 8px;
   }
 
   .port-forward-row {

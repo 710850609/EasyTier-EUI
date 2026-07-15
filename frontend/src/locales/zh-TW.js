@@ -71,12 +71,6 @@ export default {
 
     language: {
       label: '語言',
-      zh: '中文簡體',
-      zhtw: '中文繁體',
-      en: 'English',
-      de: 'Deutsch',
-      fr: 'Français',
-      ja: '日本語',
     },
 
     kernel: {
@@ -270,7 +264,7 @@ export default {
     shareNetwork: '分享網路',
     delete: '刪除',
     exitAdd: '退出新增',
-    listeners: '監聽器',
+    listeners: '監聽地址',
     portForwarding: '連接埠轉發',
     peers: 'Peer列表',
     externalNodes: '外部節點',
@@ -356,6 +350,9 @@ export default {
     fastSetupReconfig: '重新選擇',
     fastSetupReconfigHint: '如不想用，請點選',
     advancedSettings: '進階設定',
+    hostInfo: '本機資訊',
+    connectionMethod: '連線方式',
+    performanceSecurity: '效能安全',
     featureToggles: '功能開關',
     hostname: '主機名稱',
     hostnamePlaceholder: '留空預設為主機名稱',
@@ -532,7 +529,7 @@ export default {
     noConfigDownload: '暫無設定，無法下載整合設定版本',
     selectConfig: '選擇設定',
     unknownApp: '未知應用',
-    installAndImport: '安裝EasyTier命令列工具，並匯入設定',
+    installAndImport: '安裝此應用，並從配置頁面分享網路得到配置，把配置匯入到此應用中，並啟動網路即可',
     managerUsage: 'EasyTier Manager（圖形化管理工具）',
     managerUsageMore: '更多內容請參考',
     managerUsageLink: 'EasyTier Manager使用說明',

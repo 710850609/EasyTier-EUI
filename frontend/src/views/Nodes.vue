@@ -168,7 +168,7 @@
 
         <!-- 骨架屏 - 移动端卡片骨架 -->
         <div v-else-if="loadingSkeleton && useMobileList" class="skeleton-container skeleton-mobile">
-          <div v-for="card in 3" :key="card" class="sk-card" :style="{ animationDelay: `${card * 0.08}s` }">
+          <div v-for="card in 5" :key="card" class="sk-card" :style="{ animationDelay: `${card * 0.08}s` }">
             <!-- <div class="sk-card-top">
               <div class="sk-card-title"><div class="sk-breathe"></div></div>
             </div> -->
@@ -1289,7 +1289,7 @@ html.dark .sk-card-title {
 }
 
 .sk-chip {
-  height: 20px;
+  height: 18px;
   border-radius: 6px;
   background: rgba(var(--color-on-surface-rgb, 0, 0, 0), 0.05);
   overflow: hidden;

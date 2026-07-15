@@ -71,12 +71,6 @@ export default {
 
     language: {
       label: 'Language',
-      zh: '简体中文',
-      zhtw: '繁體中文',
-      en: 'English',
-      de: 'Deutsch',
-      fr: 'Français',
-      ja: '日本語',
     },
 
     kernel: {
@@ -356,6 +350,9 @@ export default {
     fastSetupReconfig: 'Reconfigure',
     fastSetupReconfigHint: 'If not desired, please click ',
     advancedSettings: 'Advanced Settings',
+    hostInfo: 'Host Info',
+    connectionMethod: 'Connection',
+    performanceSecurity: 'Performance & Security',
     featureToggles: 'Feature Toggles',
     hostname: 'Hostname',
     hostnamePlaceholder: 'Leave empty to use system hostname',
@@ -512,7 +509,7 @@ export default {
     prerelease: 'Pre-release',
     integratedConfig: 'Integrates current config, extract and start service to join the network',
     selfBuildNode: 'To create your own initial node, modify the config accordingly',
-    installAndImport: 'Install the app, export the TOML config file from FnOS, import it into EasyTier, and start the network.',
+    installAndImport: 'Install this app, share the network from the config page to get the configuration, import the configuration into this app, and start the network.',
     visitForHelp: 'For more usage instructions, visit',
     easyTierWebsite: 'EasyTier Website',
     selectConfig: 'Select Config',
