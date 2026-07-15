@@ -607,7 +607,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Push FnDepot
-        if: ${{ needs.build-info.outputs.prerelease == 'false' }}
+        if: ${{ needs.build-info.outputs.prerelease == 'false' && github.event.inputs.no-draft == 'true' }}
         run: |
          new_version="${{ needs.build-info.outputs.version }}"
          changelog="${{ needs.build-info.outputs.release_notes }}"
