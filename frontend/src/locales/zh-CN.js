@@ -104,6 +104,8 @@ export default {
     githubDownloadReadClipboard: '读取剪切板地址下载',
     githubDownloadEmpty: '未读取到GitHub下载地址',
     githubDownloadInvalid: '不是有效的GitHub下载地址',
+    specifyIpPort: '配置IP端口',
+    releaseConfig: '释放配置',
 
     developer: {
       title: '开发者选项',

@@ -93,13 +93,15 @@ def run():
     global BASE_URI
     import argparse
     parser = argparse.ArgumentParser(description='CGI Proxy HTTP Server')
-    parser.add_argument('--host', default='0.0.0.0', help='Host to bind to (default: 0.0.0.0)')
-    parser.add_argument('--port', type=int, default=5666, help='Port to bind to (default: 5666)')
+    parser.add_argument('--host', help='Host to bind to')
+    parser.add_argument('--port', type=int, help='Port to bind to')
     parser.add_argument('--base_uri', default=BASE_URI, help=f'Base URI to use (default: {BASE_URI})')
     args = parser.parse_args()
 
     BASE_URI = args.base_uri
-    handle = start_server(args.host, args.port, exit_on_failure=True)
+    host = args.host or run_configs.EUI_RUN_HOST or '0.0.0.0'
+    port = args.port or run_configs.EUI_RUN_PORT or 5666
+    handle = start_server(host, port, exit_on_failure=True)
     if handle is None:
         sys.exit(1)
 
@@ -111,8 +113,8 @@ def run():
     original_sigint = signal.signal(signal.SIGINT, _on_sigint)
 
     try:
-        acc_host = args.host
-        acc_port = args.port
+        acc_host = host
+        acc_port = port
         if acc_host == '0.0.0.0':
             if run_mode == 0:
                 acc_host = '127.0.0.1'

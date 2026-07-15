@@ -59,6 +59,8 @@ export default {
     githubDownloadReadClipboard: 'Lire le presse-papiers & télécharger',
     githubDownloadEmpty: 'Aucune URL GitHub trouvée dans le presse-papiers',
     githubDownloadInvalid: 'URL de téléchargement GitHub non valide',
+    specifyIpPort: 'Configurer IP et port',
+    releaseConfig: 'Libérer la configuration',
     developer: { title: 'Développeur', mobileDebug: 'Debug mobile (VConsole)', testPeers: 'Nœuds communautaires test', githubMirror: 'Miroir GitHub', enabled: 'Activé', disabled: 'Désactivé' },
     about: {
       title: 'À propos',

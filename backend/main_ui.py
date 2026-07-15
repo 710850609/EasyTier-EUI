@@ -73,13 +73,15 @@ if __name__ == '__main__':
                        enabled_console=run_mode == 0)
     import argparse
     parser = argparse.ArgumentParser(description='CGI Proxy HTTP Server')
-    parser.add_argument('--host', default='127.0.0.1', help='Host to bind to (default: 127.0.0.1)')
-    parser.add_argument('--port', type=int, default=5666, help='Port to bind to (default: 5666)')
+    parser.add_argument('--host', help='Host to bind to')
+    parser.add_argument('--port', type=int, help='Port to bind to')
     args = parser.parse_args()
     ver = run_configs.build_version()
     win = None
     try:
-        win = WebWin(args.host, args.port, f'易组网 {ver}')
+        host = args.host or run_configs.EUI_RUN_HOST or '127.0.0.1'
+        port = args.port or run_configs.EUI_RUN_PORT or 5666
+        win = WebWin(host, port, f'易组网 {ver}')
     except BaseException:
         logging.exception("程序异常退出")
         raise

@@ -18,6 +18,8 @@ MESSAGES = {
         "cache_deleted": "快取已刪除 ({size})",
         "shutting_down": "正在關閉服務",
         "proxy_config_failed": "讀取代理設定失敗",
+        "eui_config_file_exists": "已存在易組網配置，請按需修改後重啟生效：\n{path}",
+        "eui_config_released": "已生成易組網配置，請手動修復配置後重啟生效：\n{path}",
     },
     "service": {
         "profile_required": "設定不能為空",

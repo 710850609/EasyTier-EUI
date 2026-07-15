@@ -18,6 +18,8 @@ MESSAGES = {
         "cache_deleted": "Cache supprimé ({size})",
         "shutting_down": "Arrêt du service en cours",
         "proxy_config_failed": "Échec de la lecture de la configuration proxy",
+        "eui_config_file_exists": "Configuration EasyTier déjà existante, modifiez si nécessaire et redémarrez:\n{path}",
+        "eui_config_released": "Configuration EasyTier générée, veuillez corriger manuellement et redémarrer:\n{path}",
     },
     "service": {
         "profile_required": "Le profil est requis",

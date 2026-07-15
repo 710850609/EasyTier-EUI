@@ -10,6 +10,8 @@ import sys
 from pathlib import Path
 from typing import Optional, List
 
+import tomlkit
+
 FRONTEND_PATH:str = None
 CONFIG_DIR:str = None
 CORE_DIR:str = None
@@ -17,7 +19,9 @@ DATA_DIR:str = None
 LOG_DIR:str = None
 UPGRADE_SCRIPT_PATH:str = None
 DEFAULT_TRIM_APPNAME:str = 'EasyTier-EUI'
-
+EUI_RUN_HOST:str = None
+EUI_RUN_PORT:int = None
+EUI_CONFIG_FILE:str = 'eui.toml'
 
 _is_inited_evn = False
 _run_mode = 0
@@ -26,7 +30,8 @@ def setup_env():
     global _is_inited_evn
     if _is_inited_evn:
         return
-    global FRONTEND_PATH, CONFIG_DIR, CORE_DIR, DATA_DIR, LOG_DIR, UPGRADE_SCRIPT_PATH, _run_mode, DEFAULT_TRIM_APPNAME
+    global FRONTEND_PATH, CONFIG_DIR, CORE_DIR, DATA_DIR, LOG_DIR, UPGRADE_SCRIPT_PATH, _run_mode, DEFAULT_TRIM_APPNAME, \
+        EUI_RUN_HOST, EUI_RUN_PORT, EUI_CONFIG_FILE
     # 是否在 PyInstaller 打包环境中
     WORK_DIR = None
     if is_fn_system():
@@ -61,6 +66,13 @@ def setup_env():
         CONFIG_DIR = os.path.join(WORK_DIR, 'config')
         DATA_DIR = os.path.join(WORK_DIR, 'data')
         LOG_DIR = os.path.join(WORK_DIR, 'logs')
+        EUI_CONFIG_FILE = os.path.join(WORK_DIR, EUI_CONFIG_FILE)
+        if os.path.exists(EUI_CONFIG_FILE):
+            with open(EUI_CONFIG_FILE, "r", encoding="utf-8") as f:
+                eui_config = tomlkit.parse(f.read())
+                server_config = eui_config.get('server', {})
+                EUI_RUN_HOST = server_config.get('host', None)
+                EUI_RUN_PORT = server_config.get('port', None)
 
     Path(CORE_DIR).mkdir(parents=True, exist_ok=True)
     Path(CONFIG_DIR).mkdir(parents=True, exist_ok=True)

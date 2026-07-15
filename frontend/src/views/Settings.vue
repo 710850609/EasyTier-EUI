@@ -204,6 +204,12 @@
       <var-divider />
       <div class="setting-row">
         <span class="setting-label">
+          {{ $t('common.installationPath') }}
+        </span>
+        <var-chip type="primary" size="small">{{ installPath }}</var-chip>
+      </div>
+      <div class="setting-row">
+        <span class="setting-label">
           {{ $t('common.deleteCache') }}
         </span>
         <var-button type="primary" size="small" @click="deleteCache" auto-loading >
@@ -212,10 +218,10 @@
         </var-button>
       </div>
       <div class="setting-row">
-        <span class="setting-label">
-          {{ $t('common.installationPath') }}
-        </span>
-        <var-chip type="primary" size="small">{{ installPath }}</var-chip>
+        <span class="setting-label">{{ $t('settings.specifyIpPort') }}</span>
+        <var-button type="primary" size="small" @click="releaseConfig" auto-loading>
+          {{ $t('settings.releaseConfig') }}
+        </var-button>
       </div>
       <div class="setting-row">
         <span class="setting-label">
@@ -751,6 +757,16 @@ const deleteCache = async () => {
   return new Promise((resolve, reject) => {
     api.settings.deleteCache().then(data => {
       toast.success(data.data || t('settings.cacheCleared'))
+    }).finally(() => {
+      resolve()
+    })
+  })
+}
+
+const releaseConfig = async () => {
+  return new Promise((resolve, reject) => {
+    api.settings.releaseConfig().then(data => {
+      toast.success(data.data || t('common.save'))
     }).finally(() => {
       resolve()
     })

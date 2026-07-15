@@ -104,6 +104,8 @@ export default {
     githubDownloadReadClipboard: 'Read Clipboard URL & Download',
     githubDownloadEmpty: 'No GitHub URL found in clipboard',
     githubDownloadInvalid: 'Not a valid GitHub download URL',
+    specifyIpPort: 'Configure IP Port',
+    releaseConfig: 'Release Config',
 
     developer: {
       title: 'Developer',

@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import logging
+import os
 import shutil
 import sys
 import time
 from pathlib import Path
+
+import tomlkit
 
 from http_dispatcher.dispatcher import HttpException
 from locales import get_message
@@ -33,6 +36,22 @@ def github_mirrors(params:dict, *args, **kwargs):
     except Exception as e:
         logging.warning(f"读取代理配置失败: {e}")
         raise HttpException(get_message('settings.proxy_config_failed', error=str(e))) from e
+
+def release_eui_config(params=None, *args, **kwargs):
+    eui_config_file = run_configs.EUI_CONFIG_FILE
+    if os.path.exists(eui_config_file):
+        return get_message('settings.eui_config_file_exists', path=eui_config_file)
+    doc = {
+        'server': {
+            'host': '0.0.0.0',
+            'port': 5666,
+            }
+        }
+    with open(eui_config_file, "w", encoding="utf-8") as f:
+        f.write(tomlkit.dumps(doc))
+        os.remove(eui_config_file)
+        logging.info(f"删除配置文件: {eui_config_file}")
+    return get_message('settings.eui_config_released', path=eui_config_file)
 
 def delete_cache(params=None, *args, **kwargs):
     download_path = Path(run_configs.data_dir(), 'download')

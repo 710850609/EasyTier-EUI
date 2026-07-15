@@ -11,6 +11,29 @@
 - 优化：【应用】官方应用下载优选GitHub加速地址，避免下载失败
 - 新增：【设置】页面，【其它】模块增加【辅助GitHub下载】功能，支持前端设备无法下载其它GitHub资源问题
 - 修复：配置开机自启时，【设置】页面修改内核日志级别后，未能自动重启，导致设备下线问题
+- 优化：【配置】页面控件提示文案展示，监听器增加IPv6地址选项
+---
+- 新增：支持生成自定义服务IP端口配置，在【设置】页面生成配置后，手动修改重启生效
+
+<br>
+
+----
+- Optimized: Overall visual refinement — more transparent, more dimensional
+- New: Internationalization support, multi-language support
+----
+- New: Added Glassmorphism toggle in [Settings], allowing users to disable the frosted glass effect to prevent performance stutter on older hardware
+- Fixed: Linux version startup prompt about missing executable permissions
+- Optimized: Small screen adaptation — core data displayed by default to avoid information overload
+- Optimized: Unified multilingual naming; FeiNiu User Edition reverted to: EasyTier (User Edition)
+- New: Added socoldkiller/easytier-macos download link in [Apps] - [macOS]
+---- 
+- Optimized: Official app downloads in [Apps] now prefer GitHub-accelerated mirrors to avoid download failures
+- New: Added GitHub Download Assistant in [Settings] - [Others] module, helping front-end devices that cannot access GitHub resources directly
+- Fixed: After changing kernel log level in [Settings], auto-restart failed during boot-startup configuration, causing device to go offline
+- Optimized: Improved tooltip copy in [Configuration] page; listener options now include IPv6 address support
+----
+- New: Support for generating custom service IP/port configurations. Generate in [Settings], then manually edit and restart to apply
+
 
 ## 1.4
 - 优化：GitHub资源下载，优化识别处理加速地址返回HTTP状态码 567，导致下载失败情况

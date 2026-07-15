@@ -285,6 +285,7 @@ export const api = {
     getEuiInfo: () => get('/settings/eui_info', {}, { toastError: false }),
     getGithubMirrors: (params = {}) => get('/settings/github_mirrors', params),
     deleteCache: () => post('/settings/delete_cache'),
+    releaseConfig: () => post('/settings/release_eui_config'),
   },
   // et app
   etApp: {

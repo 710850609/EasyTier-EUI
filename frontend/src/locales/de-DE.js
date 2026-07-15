@@ -59,6 +59,8 @@ export default {
     githubDownloadReadClipboard: 'Zwischenablage-URL lesen & herunterladen',
     githubDownloadEmpty: 'Keine GitHub-URL in der Zwischenablage',
     githubDownloadInvalid: 'Keine gültige GitHub-Download-URL',
+    specifyIpPort: 'IP-Port konfigurieren',
+    releaseConfig: 'Konfiguration freigeben',
     developer: { title: 'Entwickler', mobileDebug: 'Mobile Debug (VConsole)', testPeers: 'Test Community-Knoten', githubMirror: 'GitHub Mirror', enabled: 'Aktiviert', disabled: 'Deaktiviert' },
     about: {
       title: 'Über',
