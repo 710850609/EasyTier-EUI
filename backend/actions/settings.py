@@ -49,8 +49,9 @@ def release_eui_config(params=None, *args, **kwargs):
         }
     with open(eui_config_file, "w", encoding="utf-8") as f:
         f.write(tomlkit.dumps(doc))
-        os.remove(eui_config_file)
-        logging.info(f"删除配置文件: {eui_config_file}")
+        logging.info(f"生成配置文件: {eui_config_file}")
+        if sys.platform != 'win32':
+            os.chmod(eui_config_file, 0o666)
     return get_message('settings.eui_config_released', path=eui_config_file)
 
 def delete_cache(params=None, *args, **kwargs):
