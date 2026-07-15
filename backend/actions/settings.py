@@ -38,6 +38,8 @@ def github_mirrors(params:dict, *args, **kwargs):
         raise HttpException(get_message('settings.proxy_config_failed', error=str(e))) from e
 
 def release_eui_config(params=None, *args, **kwargs):
+    if run_configs.is_fn_system():
+        raise HttpException(get_message('settings.current_system_not_support'))
     eui_config_file = run_configs.EUI_CONFIG_FILE
     if os.path.exists(eui_config_file):
         return get_message('settings.eui_config_file_exists', path=eui_config_file)

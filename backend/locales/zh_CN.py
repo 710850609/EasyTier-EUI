@@ -18,6 +18,7 @@ MESSAGES = {
         "cache_deleted": "缓存已删除 ({size})",
         "shutting_down": "正在关闭服务",
         "proxy_config_failed": "读取代理配置失败",
+        "current_system_not_support": "当前系统不支持配置",
         "eui_config_file_exists": "已存在易组网配置，请按需修改后重启生效：\n{path}",
         "eui_config_released": "已生成易组网配置，请手动修复配置后重启生效：\n{path}",
     },

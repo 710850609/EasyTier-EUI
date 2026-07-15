@@ -18,6 +18,7 @@ MESSAGES = {
         "cache_deleted": "Cache gelöscht ({size})",
         "shutting_down": "Dienst wird heruntergefahren",
         "proxy_config_failed": "Proxy-Konfiguration konnte nicht gelesen werden",
+        "current_system_not_support": "Aktuelles System unterstützt keine Konfiguration",
         "eui_config_file_exists": "EasyTier-Konfiguration bereits vorhanden, bei Bedarf anpassen und neu starten:\n{path}",
         "eui_config_released": "EasyTier-Konfiguration generiert, bitte manuell korrigieren und neu starten:\n{path}",
     },
