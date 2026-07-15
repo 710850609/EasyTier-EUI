@@ -217,7 +217,7 @@
           {{ $t('common.delete') }}
         </var-button>
       </div>
-      <div class="setting-row">
+      <div class="setting-row" v-if="platform !== 'trim'">
         <span class="setting-label">{{ $t('settings.specifyIpPort') }}</span>
         <var-button type="primary" size="small" @click="releaseConfig" auto-loading>
           {{ $t('settings.releaseConfig') }}
