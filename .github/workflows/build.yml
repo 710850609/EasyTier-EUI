@@ -39,6 +39,10 @@ on:
         description: '构建 Linux (armv7)'
         type: boolean
         default: true
+      build_linux_alpine:
+        description: '构建 Linux (Alpine)'
+        type: boolean
+        default: true
 
 env:
   PYTHON_VERSION: '3.12'
@@ -563,20 +567,96 @@ jobs:
           name: linux-armv7
           path: backend/dist/*.zip
 
+  # ========== Alpine musl 构建（用于 Docker 镜像） ==========
+  build-linux-alpine:
+    if: ${{ github.event.inputs.build_linux_alpine == 'true' }}
+    needs: [ build-frontend, build-info ]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - arch: amd64
+            artifact: linux-alpine-x64
+            platform: linux/amd64
+#          - arch: arm64
+#            artifact: linux-alpine-arm64
+#            platform: linux/arm64
+#          - arch: riscv64
+#            artifact: linux-alpine-riscv64
+#            platform: linux/riscv64
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        if: ${{ matrix.arch != 'amd64' }}
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: ${{ matrix.arch }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Download frontend
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
+
+      - name: Build Alpine buildenv image (${{ matrix.arch }})
+        uses: docker/build-push-action@v5
+        with:
+          context: .github/docker
+          file: .github/docker/linux-buildenv-alpine.Dockerfile
+          platforms: ${{ matrix.platform }}
+          tags: linux-buildenv:alpine-${{ matrix.arch }}
+          load: true
+          cache-from: type=gha,scope=linux-buildenv-alpine-${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=linux-buildenv-alpine-${{ matrix.arch }}
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: linux-alpine-${{ matrix.arch }}-pip-${{ hashFiles('backend/requirements-base.txt', 'backend/requirements-gui.txt') }}
+
+      - name: Build in Alpine container (${{ matrix.arch }})
+        run: |
+          docker run --rm --platform ${{ matrix.platform }} \
+            -v ${{ github.workspace }}:/workspace \
+            -v ~/.cache/pip:/root/.cache/pip \
+            -w /workspace \
+            -e CI=true \
+            -e GITHUB_ACTIONS=true \
+            -e ET_VER=${{ needs.build-info.outputs.et_ver }} \
+            -e BUILD_VER=${{ needs.build-info.outputs.version }} \
+            linux-buildenv:alpine-${{ matrix.arch }} \
+            sh -c '
+              export PIP_ROOT_USER_ACTION=ignore
+              mkdir -p /root/.cache/pip && chown -R root:root /root/.cache/pip
+              cd backend &&
+              python3 build.py --et_ver "${ET_VER}" --build_ver "${BUILD_VER}" --github_proxy_url "" --pip_cache_dir /root/.cache/pip --pypi_mirror ""
+            '
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: backend/dist/*.zip
+
   # ========== Docker 镜像构建 ==========
   build-docker:
-    needs: [build-linux-amd64, build-linux-arm64, build-linux-riscv64, build-info]
+    needs: [build-linux-alpine, build-info]
     runs-on: ubuntu-latest
     if: ${{ always() && !failure() && !cancelled() }}
     strategy:
       matrix:
         include:
           - arch: amd64
-            artifact: linux-x64
+            artifact: linux-alpine-x64
           - arch: arm64
-            artifact: linux-arm64
+            artifact: linux-alpine-arm64
           - arch: riscv64
-            artifact: linux-riscv64
+            artifact: linux-alpine-riscv64
     steps:
       - uses: actions/checkout@v4
 

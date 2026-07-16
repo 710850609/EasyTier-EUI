@@ -1,19 +1,15 @@
 # ============================================
 # EasyTier-EUI 运行时 Docker 镜像
-# 基于 PyInstaller 打包好的 Linux 二进制
-# 基础镜像选 Debian Bookworm Slim：glibc 2.36，兼容构建环境(glibc 2.28)，体积小
-# 不可用 Alpine：PyInstaller 二进制依赖 glibc，非 musl
+# 基于 Alpine musl，与 build-linux-alpine 构建产物一致
+# 无需 glibc 兼容层，镜像体积最小
 # ============================================
 
-FROM debian:bookworm-slim
+FROM alpine:3.20
 
 LABEL org.opencontainers.image.source="https://github.com/710850609/EasyTier-EUI"
 LABEL org.opencontainers.image.description="EasyTier-EUI - Web-based GUI for EasyTier"
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache ca-certificates curl
 
 WORKDIR /app
 
