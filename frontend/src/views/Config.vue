@@ -686,30 +686,63 @@
                           size="small"
                         />
                       </div>
-                      <div class="input-section">
-                        <div class="section-subtitle">{{ $t('config.subnetProxy') }}</div>
-                        <var-select
-                          v-model="config.proxy_network"
-                          multiple
-                          :placeholder="$t('config.subnetProxyPlaceholder')"
-                          variant="outlined"
-                          :chip="true"
-                          size="small"
-                          @focus="onSelectFocus('proxyNetwork')"
-                        >
-                          <var-cell :key="selectInputRenderKey.proxyNetwork">
-                            <template #icon>
-                              <svg-icon type="mdi" :path="mdilPencil" color="var(--color-primary)" />
-                            </template>
-                            <template #description>
-                              <var-input :placeholder="$t('config.customProxyNetworkPlaceholder')" size="small" v-model="customProxyNetwork" blur-color="var(--color-primary)" />
-                            </template>
-                            <template #extra>
-                              <var-button type="primary" size="small" @click="addProxyNetwork">{{ $t('config.addProxyNetwork') }}</var-button>
-                            </template>
-                          </var-cell>
-                          <var-option v-for="(e, index) in proxyNetworkOptions" :key="index" :label="e" :value="e" />
-                        </var-select>
+                      </div>
+                    <var-divider />
+                    <div class="forward-section">
+                      <var-tooltip teleport="body" trigger="click" :offset-x="80">
+                        <template #default>
+                          <div class="section-subtitle">{{ $t('config.subnetProxy') }}
+                            <var-icon name="help-circle-outline" size="16" class="help-icon" />
+                          </div>
+                        </template>
+                        <template #content>
+                          <div class="tooltip-multiline">{{ $t('config.subnetProxyHint') }}</div>
+                        </template>
+                      </var-tooltip>
+                      <div class="port-forward-table">
+                        <div class="port-forward-row port-forward-header subnet-proxy-row">
+                          <div class="port-forward-cell">{{ $t('config.subnetCidr') }}</div>
+                          <div class="port-forward-cell">{{ $t('config.mappedCidr') }}</div>
+                          <div class="port-forward-cell port-forward-actions">{{ $t('config.subnetProxyAction') }}</div>
+                        </div>
+                        <div class="port-forward-row subnet-proxy-row" v-for="(item, index) in config.proxy_network" :key="index">
+                          <div class="port-forward-cell">
+                            <span class="port-forward-label">{{ $t('config.subnetCidr') }}</span>
+                            <var-input
+                              v-model="item.subnet_cidr"
+                              :placeholder="$t('config.subnetCidrPlaceholder')"
+                              variant="outlined"
+                              size="small"
+                              :rules="[(v) => validateCidr(v, index, 'subnet')]"
+                            />
+                          </div>
+                          <div class="port-forward-cell">
+                            <span class="port-forward-label">{{ $t('config.mappedCidr') }}</span>
+                            <var-input
+                              v-model="item.mapped_cidr"
+                              :placeholder="$t('config.mappedCidrPlaceholder')"
+                              variant="outlined"
+                              size="small"
+                              :rules="[(v) => validateCidr(v, index, 'mapped')]"
+                            />
+                          </div>
+                          <div class="port-forward-cell port-forward-actions">
+                            <var-button
+                              type="danger"
+                              size="small"
+                              @click="removeProxyNetwork(index)"
+                              icon
+                            >
+                              <var-icon name="trash-can-outline" />
+                            </var-button>
+                          </div>
+                        </div>
+                        <div class="port-forward-add-row">
+                          <var-button type="primary" size="small" @click="addProxyNetwork">
+                            <var-icon name="plus" />
+                            {{ $t('config.addSubnetProxy') }}
+                          </var-button>
+                        </div>
                       </div>
                     </div>
                     <var-divider />
@@ -898,7 +931,6 @@ const showMode = ref(0)
 const fastSettingMode = inject('fastSettingMode', ref(false))
 const publicPeerOptions = ref([])
 const customPeer = ref('')
-const customProxyNetwork = ref('')
 const customListener = ref('')
 const advancedOpen = ref([])
 const forwardOpen = ref(['forward'])
@@ -912,8 +944,7 @@ const advancedRenderKeys = ref({
 const selectInputRenderKey = ref({
   peer: 0,
   listener: 0,
-  exitNode: 0,
-  proxyNetwork: 0
+  exitNode: 0
 })
 
 const onSelectFocus = (name) => {
@@ -978,12 +1009,6 @@ const config = ref({
 
 const currentConfigData = computed(() => configList.value.find(c => c.profile === selectedConfig.value) || {})
 const currentConfigAutostart = computed(() => currentConfigData.value.autostart || false)
-const proxyNetworkOptions = computed(() => 
-  [...new Set([
-    ...(config.value.proxy_network || []), 
-    ...(lanIps.value || [])
-  ])]
-)
 
 const hostInfoSwitches = [
   { key: 'enable_ipv6', label: 'config.flags.enable_ipv6.label', tooltip: 'config.flags.enable_ipv6.tooltip' },
@@ -1052,10 +1077,87 @@ const addPeer = () => {
 }
 
 const addProxyNetwork = () => {
-  const proxy = customProxyNetwork.value
-  if (!proxy) return
-  config.value.proxy_network.unshift(proxy)
-  customProxyNetwork.value = ''
+  if (!config.value.proxy_network) {
+    config.value.proxy_network = []
+  }
+  const entries = config.value.proxy_network
+  for (let i = 0; i < entries.length; i++) {
+    const item = entries[i]
+    if (!item.subnet_cidr || !item.subnet_cidr.trim()) {
+      toast.warning(t('config.subnetCidrRequired', { index: i + 1 }))
+      return
+    }
+    if (!cidrRegex.test(item.subnet_cidr.trim())) {
+      toast.warning(t('config.subnetCidrInvalid', { index: i + 1 }))
+      return
+    }
+    if (item.mapped_cidr && item.mapped_cidr.trim() && !cidrRegex.test(item.mapped_cidr.trim())) {
+      toast.warning(t('config.mappedCidrInvalid', { index: i + 1 }))
+      return
+    }
+  }
+  config.value.proxy_network.push({ subnet_cidr: '', mapped_cidr: '' })
+}
+
+const removeProxyNetwork = (index) => {
+  config.value.proxy_network.splice(index, 1)
+}
+
+function getCidrPrefixLength(cidr) {
+  if (!cidr || !cidr.includes('/')) return -1
+  const parts = cidr.split('/')
+  const prefix = parseInt(parts[1], 10)
+  if (isNaN(prefix) || prefix < 0 || prefix > 32) return -1
+  return prefix
+}
+
+const cidrRegex = /^(\d{1,3}\.){3}\d{1,3}\/\d{1,2}$/
+
+const validateCidr = (v, index, field) => {
+  if (!v) return true
+  if (!cidrRegex.test(v)) {
+    return t('config.invalidCidrFormat')
+  }
+  const prefix = getCidrPrefixLength(v)
+  if (prefix < 0) {
+    return t('config.invalidCidrFormat')
+  }
+  const item = config.value.proxy_network[index]
+  if (item) {
+    const otherField = field === 'subnet' ? item.mapped_cidr : item.subnet_cidr
+    if (otherField && otherField.includes('/')) {
+      const otherPrefix = getCidrPrefixLength(otherField)
+      if (otherPrefix >= 0 && prefix !== otherPrefix) {
+        return t('config.cidrPrefixMismatch')
+      }
+    }
+  }
+  return true
+}
+
+const validateSubnetProxy = () => {
+  if (!config.value.proxy_network) return null
+  const entries = config.value.proxy_network
+  for (let i = 0; i < entries.length; i++) {
+    const item = entries[i]
+    if (!item.subnet_cidr || !item.subnet_cidr.trim()) {
+      return t('config.subnetCidrRequired', { index: i + 1 })
+    }
+    if (!cidrRegex.test(item.subnet_cidr.trim())) {
+      return t('config.subnetCidrInvalid', { index: i + 1 })
+    }
+    if (item.mapped_cidr && item.mapped_cidr.trim()) {
+      if (!cidrRegex.test(item.mapped_cidr.trim())) {
+        return t('config.mappedCidrInvalid', { index: i + 1 })
+      }
+      const subnetPrefix = getCidrPrefixLength(item.subnet_cidr.trim())
+      const mappedPrefix = getCidrPrefixLength(item.mapped_cidr.trim())
+      if (subnetPrefix !== mappedPrefix) {
+        return t('config.cidrPrefixSizeMismatch', { index: i + 1 })
+      }
+    }
+  }
+  return null
 }
 
 const ensureInt = (str) => {
@@ -1075,6 +1177,12 @@ const saveConfig = () => {
     if (pfError) {
       reject();
       toast.error(pfError)
+      return
+    }
+    const spError = validateSubnetProxy()
+    if (spError) {
+      reject();
+      toast.error(spError)
       return
     }      
 
@@ -1104,7 +1212,9 @@ const saveConfig = () => {
     }
     data._profile = selectedConfig.value
     data.peer = data.peer.map(e => ({ uri: e }))
-    data.proxy_network = data.proxy_network.map(e => ({ cidr: e }))
+    data.proxy_network = data.proxy_network
+      .filter(e => e.subnet_cidr && e.subnet_cidr.trim())
+      .map(e => ({ cidr: e.subnet_cidr.trim(), mapped_cidr: e.mapped_cidr.trim() }))
     data.dhcp = !data.ipv4 || !(data.ipv4.trim())
     if (data.flags.enable_ipv6 === undefined) data.flags.enable_ipv6 = true
     if (data.flags.enable_encryption === undefined) data.flags.enable_encryption = true
@@ -1252,7 +1362,10 @@ const loadConfig = (profile) => {
   return api.configs.get(profile).then(data => {
     const json = data.data
     json.peer = (json.peer || []).map(e => e.uri)
-    json.proxy_network = (json.proxy_network || []).map(e => e.cidr)
+    json.proxy_network = (json.proxy_network || []).map(e => ({
+      subnet_cidr: e.cidr || '',
+      mapped_cidr: e.mapped_cidr || ''
+    }))
     if (json.socks5_proxy) {
       json.socks5_proxy = json.socks5_proxy.replace('socks5://0.0.0.0:', '')
     }
@@ -2293,6 +2406,13 @@ html.dark .config-section-panel {
 .port-forward-row {
   display: grid;
   grid-template-columns: 100px 1fr 1fr 60px;
+  gap: 12px;
+  align-items: center;
+}
+
+.subnet-proxy-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 60px;
   gap: 12px;
   align-items: center;
 }

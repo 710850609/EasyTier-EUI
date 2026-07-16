@@ -1,3 +1,12 @@
+##  
+- 新增：【配置】-代理与转发，支持网段映射
+
+<br>
+----
+- New: [Configuration] - Proxy & Forwarding, now supports subnet mapping
+
+
+
 ##  1.5
 - 优化：整体视觉优化，更通透，更立体
 - 新增：支持国际化，支持多语言
