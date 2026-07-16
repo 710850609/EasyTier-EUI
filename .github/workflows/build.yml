@@ -578,12 +578,12 @@ jobs:
           - arch: amd64
             artifact: linux-alpine-x64
             platform: linux/amd64
-#          - arch: arm64
-#            artifact: linux-alpine-arm64
-#            platform: linux/arm64
-#          - arch: riscv64
-#            artifact: linux-alpine-riscv64
-#            platform: linux/riscv64
+          - arch: arm64
+            artifact: linux-alpine-arm64
+            platform: linux/arm64
+          - arch: riscv64
+            artifact: linux-alpine-riscv64
+            platform: linux/riscv64
     steps:
       - uses: actions/checkout@v4
 
