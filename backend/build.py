@@ -49,6 +49,10 @@ def run_command(cmd, cwd=None):
 def install_deps(pip_cache_dir:str = "", pypi_mirror:str = ""):
     """安装依赖"""
     print(" 安装依赖...")
+    
+    # 检测是否是 Alpine Linux（PEP 668 限制）
+    is_alpine = os.path.exists('/etc/alpine-release')
+    
     # 检测是否在 CI 环境
     in_ci = os.environ.get('CI') == 'true' or os.environ.get('GITHUB_ACTIONS') == 'true'
     # 检测是否在虚拟环境中
@@ -80,17 +84,20 @@ def install_deps(pip_cache_dir:str = "", pypi_mirror:str = ""):
     if pip_cache_dir:
         os.makedirs(pip_cache_dir, exist_ok=True)
         pip_cache = f"--cache-dir {pip_cache_dir}"
+    
+    # Alpine Linux 需要 --break-system-packages 参数
+    break_system = "--break-system-packages" if is_alpine else ""
 
     print("  更新 pip")
-    run_command(f'{python_path} -m pip install {pip_cache} --upgrade pip')
+    run_command(f'{python_path} -m pip install {pip_cache} {break_system} --upgrade pip')
 
     # 安装依赖（带清华镜像）
     mirror = f"-i {pypi_mirror}" if pypi_mirror else ""
     print("  安装 pyinstaller qrcode 依赖")
-    if not run_command(f'{pip_cmd} install {pip_cache} pyinstaller qrcode {mirror}'):
+    if not run_command(f'{pip_cmd} install {pip_cache} {break_system} pyinstaller qrcode {mirror}'):
         raise Exception(f"安装失败: {pip_cmd}")
     print("  安装 base 依赖")
-    if not run_command(f'{pip_cmd} install {pip_cache} -r requirements-base.txt {mirror}'):
+    if not run_command(f'{pip_cmd} install {pip_cache} {break_system} -r requirements-base.txt {mirror}'):
         raise Exception(f"安装失败: {pip_cmd}")
 
     if sys.platform == "linux":
