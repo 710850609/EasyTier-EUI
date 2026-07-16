@@ -2,7 +2,9 @@
 - 新增：【配置】-代理与转发，支持网段映射
 
 <br>
+
 ----
+
 - New: [Configuration] - Proxy & Forwarding, now supports subnet mapping
 
 
