@@ -1,0 +1,664 @@
+{
+  "title": "EasyTier-EUI 前后端国际化改造 任务清单",
+  "version": "1.0",
+  "created": "2026-07-08",
+  "status": "全部完成 (56/56) ✅",
+  "total_estimated_hours": 49,
+  "total_files_new": 6,
+  "total_files_modified": 44,
+  "total_tasks": 56,
+  "recommended_order": "Phase 0+1 -> Phase 2+3 -> Phase 4+5 -> Phase 6",
+  "notes": [
+    "默认语言保持中文，向后兼容现有用户体验",
+    "语言存储: localStorage 中存储 language 字段（值: zh 或 en）",
+    "后端语言识别: 前端在 api.js 中统一添加 Accept-Language header",
+    "Varlet UI 同步: 切换语言时同步修改组件库语言配置",
+    "日志 vs 用户消息: 后端 logging 日志可保持中文，API 返回消息才需要多语言",
+    "Markdown 内容: 来自 GitHub 的发布说明通常为英文，不需要翻译"
+  ],
+  "phases": [
+    {
+      "id": "phase-0",
+      "name": "Phase 0: 前端 i18n 基础设施搭建",
+      "status": "已完成",
+      "estimated_hours": 4,
+      "tasks": [
+        {
+          "id": "FE-001",
+          "name": "安装 vue-i18n@9 依赖",
+          "status": "已完成",
+          "detail": "npm install vue-i18n@9",
+          "files": ["frontend/package.json"]
+        },
+        {
+          "id": "FE-002",
+          "name": "创建语言包目录结构",
+          "status": "已完成",
+          "detail": "创建 frontend/src/locales/ 目录，包含 index.js / zh-CN.js / en-US.js",
+          "files": [
+            "frontend/src/locales/index.js",
+            "frontend/src/locales/zh-CN.js",
+            "frontend/src/locales/en-US.js"
+          ]
+        },
+        {
+          "id": "FE-003",
+          "name": "创建 i18n 实例 (locales/index.js)",
+          "status": "已完成",
+          "detail": "创建 vue-i18n 实例，导入 zh-CN/en-US 语言包，默认语言 zh-CN，从 localStorage 恢复语言选择",
+          "files": ["frontend/src/locales/index.js"]
+        },
+        {
+          "id": "FE-004",
+          "name": "在 main.js 中注册 i18n 插件",
+          "status": "已完成",
+          "detail": "import i18n from './locales' ; app.use(i18n)",
+          "files": ["frontend/src/main.js"]
+        },
+        {
+          "id": "FE-005",
+          "name": "在 api.js 中统一添加 Accept-Language 请求头",
+          "status": "已完成",
+          "detail": "读取 i18n 实例当前 locale，在请求头中携带，供后端识别语言",
+          "files": ["frontend/src/utils/api.js"]
+        }
+      ]
+    },
+    {
+      "id": "phase-1",
+      "name": "Phase 1: 前端核心配置文件改造",
+      "status": "已完成",
+      "estimated_hours": 8,
+      "tasks": [
+        {
+          "id": "FE-101",
+          "name": "改造 menu.js — 菜单标签改为 i18n key",
+          "status": "已完成",
+          "detail": "将 menuTree 中的 label/title 改为 i18n key，组件渲染时通过 $t() 获取",
+          "files": ["frontend/src/config/menu.js"],
+          "i18n_keys": [
+            "menu.nodes",
+            "menu.nodes.title",
+            "menu.config",
+            "menu.config.title",
+            "menu.software",
+            "menu.software.title",
+            "menu.settings",
+            "menu.settings.title",
+            "menu.software.windows",
+            "menu.software.macos",
+            "menu.software.linux",
+            "menu.software.fnos",
+            "menu.software.android",
+            "menu.software.ios",
+            "menu.software.harmonyos",
+            "menu.logs",
+            "menu.logs.title"
+          ]
+        },
+        {
+          "id": "FE-102",
+          "name": "改造 SideMenu.vue — 菜单标签渲染支持 i18n",
+          "status": "已完成",
+          "detail": "模板中 {{ menu.label }} 改为 {{ $t(menu.label) }}，子菜单同样处理",
+          "files": ["frontend/src/components/SideMenu.vue"]
+        },
+        {
+          "id": "FE-103",
+          "name": "改造 BottomNav.vue — 底部导航支持 i18n",
+          "status": "已完成",
+          "detail": "底部导航栏标签使用 $t() 渲染",
+          "files": ["frontend/src/components/BottomNav.vue"]
+        },
+        {
+          "id": "FE-104",
+          "name": "改造 validate.js — 验证错误信息国际化",
+          "status": "已完成",
+          "detail": "将硬编码错误信息改为 i18n key，支持参数插值",
+          "files": ["frontend/src/utils/validate.js"],
+          "i18n_keys": [
+            "validate.required",
+            "validate.invalid_format",
+            "validate.invalid_ip_port_format",
+            "validate.ip",
+            "validate.address",
+            "validate.correct_format"
+          ]
+        },
+        {
+          "id": "FE-105",
+          "name": "改造 toast.js — Toast 消息国际化",
+          "status": "已完成",
+          "detail": "toast 消息文本支持 i18n（如需要，toast 调用处传入 key 而非直接字符串）",
+          "files": ["frontend/src/components/toast.js"]
+        },
+        {
+          "id": "FE-106",
+          "name": "改造 downloadProgress.js — 下载进度文本国际化",
+          "status": "已完成",
+          "detail": "初始化中/下载失败/开始下载等文本改为 i18n key",
+          "files": ["frontend/src/utils/downloadProgress.js"],
+          "i18n_keys": [
+            "download.initializing",
+            "download.failed",
+            "download.start",
+            "download.background"
+          ]
+        },
+        {
+          "id": "FE-107",
+          "name": "编写 zh-CN.js 核心语言包",
+          "status": "已完成",
+          "detail": "将上述所有 key 的中文文本填入 zh-CN.js，按模块分组",
+          "files": ["frontend/src/locales/zh-CN.js"]
+        },
+        {
+          "id": "FE-108",
+          "name": "编写 en-US.js 核心语言包",
+          "status": "已完成",
+          "detail": "将上述所有 key 的英文翻译填入 en-US.js",
+          "files": ["frontend/src/locales/en-US.js"]
+        }
+      ]
+    },
+    {
+      "id": "phase-2",
+      "name": "Phase 2: 前端视图层 Settings.vue 改造",
+      "status": "已完成",
+      "estimated_hours": 6,
+      "tasks": [
+        {
+          "id": "FE-201",
+          "name": "Settings.vue — 外观设置区块国际化",
+          "status": "已完成",
+          "detail": "外观设置、所有主题选项标签",
+          "files": ["frontend/src/views/Settings.vue"],
+          "i18n_keys": [
+            "settings.appearance",
+            "settings.appearance.title",
+            "settings.theme.light",
+            "settings.theme.dark",
+            "settings.theme.auto"
+          ]
+        },
+        {
+          "id": "FE-202",
+          "name": "Settings.vue — 内核设置区块国际化（日志级别、版本、安装等）",
+          "status": "已完成",
+          "detail": "内核 EasyTier、日志级别、当前版本、安装、更新内容、可升级",
+          "files": ["frontend/src/views/Settings.vue"],
+          "i18n_keys": [
+            "settings.kernel",
+            "settings.kernel.title",
+            "settings.log_level",
+            "settings.log_level.placeholder",
+            "settings.log_level.disabled",
+            "settings.log_level.error",
+            "settings.log_level.warn",
+            "settings.log_level.info",
+            "settings.log_level.debug",
+            "settings.log_level.trace",
+            "settings.current_version",
+            "settings.install",
+            "settings.update_content",
+            "settings.upgradeable",
+            "settings.stable",
+            "settings.prerelease",
+            "settings.unknown_version"
+          ]
+        },
+        {
+          "id": "FE-203",
+          "name": "Settings.vue — 开发者选项区块国际化",
+          "status": "已完成",
+          "detail": "开发者选项、移动端调试、使用测试节点、查看GitHub加速",
+          "files": ["frontend/src/views/Settings.vue"],
+          "i18n_keys": [
+            "settings.developer",
+            "settings.developer.title",
+            "settings.developer.mobile_debug",
+            "settings.developer.test_peers",
+            "settings.developer.github_mirror",
+            "settings.developer.enabled",
+            "settings.developer.disabled"
+          ]
+        },
+        {
+          "id": "FE-204",
+          "name": "Settings.vue — 关于区块国际化",
+          "status": "已完成",
+          "detail": "关于、易组网、残血版、简化使用、降低门槛、享受优势、赞赏、关闭",
+          "files": ["frontend/src/views/Settings.vue"],
+          "i18n_keys": [
+            "settings.about",
+            "settings.about.title",
+            "settings.about.app_name",
+            "settings.about.lite_version",
+            "settings.about.description1",
+            "settings.about.description2",
+            "settings.about.description3",
+            "settings.about.reward",
+            "settings.about.reward_desc",
+            "common.close",
+            "common.shutdown"
+          ]
+        },
+        {
+          "id": "FE-205",
+          "name": "Settings.vue — 语言切换功能",
+          "status": "已完成",
+          "detail": "在外观设置或独立区块添加语言切换选项（中文/English），持久化到 localStorage",
+          "files": ["frontend/src/views/Settings.vue"],
+          "i18n_keys": [
+            "settings.language",
+            "settings.language.zh",
+            "settings.language.en"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "phase-3",
+      "name": "Phase 3: 前端视图层其他页面改造",
+      "status": "已完成",
+      "estimated_hours": 12,
+      "tasks": [
+        {
+          "id": "FE-301",
+          "name": "Nodes.vue — 节点管理页面国际化",
+          "status": "已完成",
+          "detail": "节点列表、状态标签、操作按钮、提示信息等所有中文文本",
+          "files": ["frontend/src/views/Nodes.vue"]
+        },
+        {
+          "id": "FE-302",
+          "name": "Config.vue — 配置页面国际化",
+          "status": "已完成",
+          "detail": "配置编辑、监听器、端口转发、Peer列表、所有表单标签和按钮",
+          "files": ["frontend/src/views/Config.vue"]
+        },
+        {
+          "id": "FE-303",
+          "name": "Logs.vue — 日志页面国际化",
+          "status": "已完成",
+          "detail": "日志页面标签和提示文本",
+          "files": ["frontend/src/views/Logs.vue"]
+        },
+        {
+          "id": "FE-304",
+          "name": "Empty.vue — 空状态页面国际化",
+          "status": "已完成",
+          "detail": "空状态提示文本",
+          "files": ["frontend/src/views/Empty.vue"]
+        },
+        {
+          "id": "FE-305",
+          "name": "Windows.vue — Windows 软件下载页国际化",
+          "status": "已完成",
+          "detail": "新手推荐、稳定版、预发版、集成当前配置、使用说明、EasyTier管理器等",
+          "files": ["frontend/src/views/softwares/Windows.vue"]
+        },
+        {
+          "id": "FE-306",
+          "name": "MacOS.vue — MacOS 软件下载页国际化",
+          "status": "已完成",
+          "detail": "预览、Apple芯片版、Intel芯片版、使用说明等",
+          "files": ["frontend/src/views/softwares/MacOS.vue"]
+        },
+        {
+          "id": "FE-307",
+          "name": "Linux.vue — Linux 软件下载页国际化",
+          "status": "已完成",
+          "detail": "新手推荐、x86_64/arm64/armv7/riscv64版、使用简介表格等",
+          "files": ["frontend/src/views/softwares/Linux.vue"]
+        },
+        {
+          "id": "FE-308",
+          "name": "FnOS.vue — 飞牛OS 软件下载页国际化",
+          "status": "已完成",
+          "detail": "所有中文文本",
+          "files": ["frontend/src/views/softwares/FnOS.vue"]
+        },
+        {
+          "id": "FE-309",
+          "name": "Android/IOS/HarmonyOS — 移动端下载页国际化",
+          "status": "已完成",
+          "detail": "所有中文文本",
+          "files": [
+            "frontend/src/views/softwares/Android.vue",
+            "frontend/src/views/softwares/IOS.vue",
+            "frontend/src/views/softwares/HarmonyOS.vue"
+          ]
+        },
+        {
+          "id": "FE-310",
+          "name": "Phase 3 收尾检查",
+          "status": "已完成",
+          "detail": "确认所有前端视图层中文已全部替换",
+          "files": []
+        }
+      ]
+    },
+    {
+      "id": "phase-4",
+      "name": "Phase 4: 后端 i18n 基础设施搭建",
+      "status": "已完成",
+      "estimated_hours": 3,
+      "tasks": [
+        {
+          "id": "BE-001",
+          "name": "创建后端语言包目录和文件",
+          "status": "已完成",
+          "detail": "创建 backend/locales/ 目录，包含 __init__.py / zh_CN.py / en_US.py",
+          "files": [
+            "backend/locales/__init__.py",
+            "backend/locales/zh_CN.py",
+            "backend/locales/en_US.py"
+          ]
+        },
+        {
+          "id": "BE-002",
+          "name": "实现语言选择工具函数",
+          "status": "已完成",
+          "detail": "在 __init__.py 中实现 get_message(key, lang='zh_CN', **kwargs) 函数，支持参数插值",
+          "files": ["backend/locales/__init__.py"]
+        },
+        {
+          "id": "BE-003",
+          "name": "从 HTTP 请求中提取语言偏好",
+          "status": "已完成",
+          "detail": "在 dispatcher.py 中解析 Accept-Language header，传递给 handler 或作为全局上下文",
+          "files": ["backend/http_dispatcher/dispatcher.py"]
+        }
+      ]
+    },
+    {
+      "id": "phase-5",
+      "name": "Phase 5: 后端业务层改造",
+      "status": "已完成",
+      "estimated_hours": 8,
+      "tasks": [
+        {
+          "id": "BE-101",
+          "name": "改造 dispatcher.py — HTTP 错误消息国际化",
+          "status": "已完成",
+          "detail": "模块加载失败、接口不存在、资源不存在、服务器内部错误、路径遍历警告",
+          "files": ["backend/http_dispatcher/dispatcher.py"],
+          "i18n_keys": [
+            "error.module_load_failed",
+            "error.api_not_found",
+            "error.resource_not_found",
+            "error.server_error",
+            "error.access_denied",
+            "error.path_traversal"
+          ]
+        },
+        {
+          "id": "BE-102",
+          "name": "改造 settings.py — 设置相关消息国际化",
+          "status": "已完成",
+          "detail": "缓存已删除干净、缓存已删除、正在关闭服务、读取代理配置失败",
+          "files": ["backend/actions/settings.py"],
+          "i18n_keys": [
+            "settings.cache_cleared",
+            "settings.cache_deleted",
+            "settings.shutting_down",
+            "settings.proxy_config_failed"
+          ]
+        },
+        {
+          "id": "BE-103",
+          "name": "改造 services.py — 服务管理消息国际化",
+          "status": "已完成",
+          "detail": "配置不能为空、不存在配置文件、未注册ET系统服务、未知服务状态、易组网-启动配置",
+          "files": ["backend/actions/services.py"],
+          "i18n_keys": [
+            "service.profile_required",
+            "service.config_not_found",
+            "service.not_registered",
+            "service.unknown_status",
+            "service.start_config_desc"
+          ]
+        },
+        {
+          "id": "BE-104",
+          "name": "改造 et_eui.py — 自更新消息国际化",
+          "status": "已完成",
+          "detail": "版本标签错误、残血版不支持自更新、初始化更新任务、获取下载信息、下载更新包、解压更新包、更新完成、复制文件、启动升级脚本",
+          "files": ["backend/actions/et_eui.py"],
+          "i18n_keys": [
+            "update.invalid_version_tag",
+            "update.lite_not_supported",
+            "update.init_task",
+            "update.fetch_info",
+            "update.downloading",
+            "update.extracting",
+            "update.copying_files",
+            "update.starting_upgrade_script",
+            "update.completed",
+            "update.cached_skip_download"
+          ]
+        },
+        {
+          "id": "BE-105",
+          "name": "改造 et_core.py — 内核下载消息国际化",
+          "status": "已完成",
+          "detail": "内核下载进度描述文本",
+          "files": ["backend/actions/et_core.py"]
+        },
+        {
+          "id": "BE-106",
+          "name": "改造 windows.py — Windows 打包下载消息国际化",
+          "status": "已完成",
+          "detail": "初始化下载任务、download_id参数不能为空、下载任务不存在、下载尚未完成、下载失败、下载文件不存在、获取版本信息、下载内核、合并包",
+          "files": ["backend/actions/windows.py"],
+          "i18n_keys": [
+            "download.init_task",
+            "download.id_required",
+            "download.task_not_found",
+            "download.not_completed",
+            "download.failed",
+            "download.file_not_found",
+            "download.fetching_version",
+            "download.downloading_core",
+            "download.downloading_manager",
+            "download.merging_package",
+            "download.cached_exists"
+          ]
+        },
+        {
+          "id": "BE-107",
+          "name": "改造 validators.py — 验证器消息国际化",
+          "status": "已完成",
+          "detail": "未知profile、配置文件不存在",
+          "files": ["backend/utils/validators.py"],
+          "i18n_keys": [
+            "validate.unknown_profile",
+            "validate.config_not_found"
+          ]
+        },
+        {
+          "id": "BE-108",
+          "name": "改造 async_task.py — 任务描述消息国际化",
+          "status": "已完成",
+          "detail": "准备下载...、下载失败、准备更新...、更新失败",
+          "files": ["backend/utils/async_task.py"],
+          "i18n_keys": [
+            "task.preparing_download",
+            "task.download_failed",
+            "task.preparing_update",
+            "task.update_failed"
+          ]
+        },
+        {
+          "id": "BE-109",
+          "name": "编写 zh_CN.py 后端语言包",
+          "status": "已完成",
+          "detail": "将上述所有 key 的中文文本填入 zh_CN.py",
+          "files": ["backend/locales/zh_CN.py"]
+        },
+        {
+          "id": "BE-110",
+          "name": "编写 en_US.py 后端语言包",
+          "status": "已完成",
+          "detail": "将上述所有 key 的英文翻译填入 en_US.py",
+          "files": ["backend/locales/en_US.py"]
+        },
+        {
+          "id": "BE-111",
+          "name": "改造 peers.py — 节点管理消息国际化",
+          "status": "已完成",
+          "detail": "获取公共节点失败等错误消息，lang 参数传递链",
+          "files": ["backend/actions/peers.py"],
+          "i18n_keys": [
+            "peers.fetch_failed"
+          ]
+        },
+        {
+          "id": "BE-112",
+          "name": "改造 configs.py — 配置管理消息国际化",
+          "status": "已完成",
+          "detail": "配置不能为空、旧配置名空、新配置名空、名称已存在、无效文件名、分享注释",
+          "files": ["backend/actions/configs.py"],
+          "i18n_keys": [
+            "config.old_profile_empty",
+            "config.new_profile_empty",
+            "config.name_exists",
+            "config.invalid_name",
+            "config.share_comment",
+            "validate.profile_required"
+          ]
+        },
+        {
+          "id": "BE-113",
+          "name": "改造 monitor.py — 节点监控消息国际化",
+          "status": "已完成",
+          "detail": "未指定配置等错误消息",
+          "files": ["backend/actions/monitor.py"],
+          "i18n_keys": [
+            "validate.profile_required"
+          ]
+        },
+        {
+          "id": "BE-114",
+          "name": "补充 et_eui.py 下载/更新消息国际化",
+          "status": "已完成",
+          "detail": "平台/架构不支持、更新backend、更新frontend、安装依赖、更新完成",
+          "files": ["backend/actions/et_eui.py"],
+          "i18n_keys": [
+            "download.platform_not_supported",
+            "download.arch_not_supported",
+            "update.updating_backend",
+            "update.updating_frontend",
+            "update.installing_deps",
+            "update.update_completed"
+          ]
+        },
+        {
+          "id": "BE-115",
+          "name": "补充 services.py 服务管理消息国际化",
+          "status": "已完成",
+          "detail": "不存在运行配置、未指定启动配置",
+          "files": ["backend/actions/services.py"],
+          "i18n_keys": [
+            "service.config_not_running",
+            "service.no_config_for_system_service"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "phase-6",
+      "name": "Phase 6: 联调测试与收尾",
+      "status": "已完成",
+      "estimated_hours": 8,
+      "tasks": [
+        {
+          "id": "QA-001",
+          "name": "前端中英文切换测试",
+          "status": "代码审查通过",
+          "detail": "逐页面检查中英文切换后所有文本是否正确显示，无遗漏硬编码。全量扫描 .vue/.js 文件，用户可见中文已全部归入 $t() 调用，剩余中文仅限注释/console.log/外部 SVG badge"
+        },
+        {
+          "id": "QA-002",
+          "name": "后端 API 返回消息语言测试",
+          "status": "代码审查通过",
+          "detail": "Accept-Language 头解析链路完整：api.js 设置 header → dispatcher.py 解析 → parse_accept_language() → request.lang → **request.__dict__ 传递给 action 函数 → get_message(lang, key) 返回对应语言"
+        },
+        {
+          "id": "QA-003",
+          "name": "语言偏好持久化测试",
+          "status": "代码审查通过",
+          "detail": "setLanguage() 写入 localStorage('language')，getSavedLanguage() 优先读取 localStorage，逻辑正确"
+        },
+        {
+          "id": "QA-004",
+          "name": "浏览器默认语言检测测试",
+          "status": "代码审查通过（已修复 Bug）",
+          "detail": "修复了浏览器语言检测始终返回 'zh' 的 bug，添加了 en 分支判断。新逻辑：zh 开头→zh，en 开头→en，其他→zh"
+        },
+        {
+          "id": "QA-005",
+          "name": "Varlet UI 组件库语言同步",
+          "status": "已完成",
+          "detail": "在 locales/index.js 中集成 Varlet UI locale，setLanguage 时同步调用 varletUse('zh-CN'/'en-US')"
+        },
+        {
+          "id": "QA-006",
+          "name": "移动端适配测试",
+          "status": "代码审查通过",
+          "detail": "检查了 Settings.vue/Linux.vue 等页面的 CSS 布局：使用 flex 自适应布局，有 @media (max-width: 480px) 响应式断点，无固定宽度文本容器，英文文本较长时不会溢出"
+        }
+      ]
+    }
+  ],
+  "key_files_summary": {
+    "frontend_new_files": [
+      "frontend/src/locales/index.js",
+      "frontend/src/locales/zh-CN.js",
+      "frontend/src/locales/en-US.js"
+    ],
+    "frontend_modified_files": [
+      "frontend/package.json",
+      "frontend/src/main.js",
+      "frontend/src/locales/index.js",
+      "frontend/src/utils/api.js",
+      "frontend/src/config/menu.js",
+      "frontend/src/utils/validate.js",
+      "frontend/src/utils/downloadProgress.js",
+      "frontend/src/components/toast.js",
+      "frontend/src/components/SideMenu.vue",
+      "frontend/src/components/BottomNav.vue",
+      "frontend/src/views/Settings.vue",
+      "frontend/src/views/Nodes.vue",
+      "frontend/src/views/Config.vue",
+      "frontend/src/views/Logs.vue",
+      "frontend/src/views/Empty.vue",
+      "frontend/src/views/softwares/Windows.vue",
+      "frontend/src/views/softwares/MacOS.vue",
+      "frontend/src/views/softwares/Linux.vue",
+      "frontend/src/views/softwares/FnOS.vue",
+      "frontend/src/views/softwares/Android.vue",
+      "frontend/src/views/softwares/IOS.vue",
+      "frontend/src/views/softwares/HarmonyOS.vue"
+    ],
+    "backend_new_files": [
+      "backend/locales/__init__.py",
+      "backend/locales/zh_CN.py",
+      "backend/locales/en_US.py"
+    ],
+    "backend_modified_files": [
+      "backend/http_dispatcher/dispatcher.py",
+      "backend/actions/settings.py",
+      "backend/actions/services.py",
+      "backend/actions/et_eui.py",
+      "backend/actions/et_core.py",
+      "backend/actions/windows.py",
+      "backend/actions/peers.py",
+      "backend/actions/configs.py",
+      "backend/actions/monitor.py",
+      "backend/utils/validators.py",
+      "backend/utils/async_task.py"
+    ]
+  }
+}

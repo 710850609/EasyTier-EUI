@@ -1,0 +1,14 @@
+version: '3'
+
+services:
+  easytier-eui:
+    image: ghcr.io/710850609/easytier-eui:latest
+    network_mode: host
+    environment:
+      - PORT=5666
+    volumes:
+      - ./config:/app/config
+      - ./core:/app/core
+      - ./data:/app/data
+      - ./logs:/app/logs
+    restart: unless-stopped
