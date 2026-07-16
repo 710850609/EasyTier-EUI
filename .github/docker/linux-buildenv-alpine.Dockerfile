@@ -12,7 +12,7 @@ RUN apk add --no-cache \
 
 ARG PYPI_MIRROR="https://pypi.org/simple"
 
-RUN python3 -m pip install --upgrade pip setuptools wheel -i ${PYPI_MIRROR} && \
-    python3 -m pip install pyinstaller psutil requests -i ${PYPI_MIRROR}
+RUN python3 -m pip install --break-system-packages --upgrade pip setuptools wheel -i ${PYPI_MIRROR} && \
+    python3 -m pip install --break-system-packages pyinstaller psutil requests -i ${PYPI_MIRROR}
 
 WORKDIR /app
