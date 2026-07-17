@@ -10,6 +10,7 @@ import platform
 import shutil
 import subprocess
 import sys
+import sysconfig
 import venv
 import zipfile
 from pathlib import Path
@@ -237,7 +238,10 @@ def get_platform_name():
     arch_name = arch_map.get(machine.lower())
     if not arch_name:
         raise AssertionError(f"不支持的系统架构：: {system} {machine}")
-    
+
+    host = sysconfig.get_config_var('HOST_GNU_TYPE')  # 如 x86_64-pc-linux-musl
+    if host and 'musl' in host:
+        sys_name = f"{sys_name}-musl"
     return f"{sys_name}-{arch_name}"
 
 def get_latest_version():
