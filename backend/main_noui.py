@@ -7,6 +7,7 @@ import webbrowser
 import threading
 from typing import Optional
 
+from actions import services
 from http_dispatcher import http_server
 from utils import run_configs, log_util, permissions_util, ip_util, qrcode_util, et_run_info
 from utils.permissions_util import ServerHandle
@@ -131,6 +132,7 @@ def run():
     except Exception as e:
         logging.error(f"打开本地设备不支持浏览器访问: {e}")
 
+    start_hook()
     try:
         logging.info("按 Ctrl+C 停止服务")
         while not _shutdown_requested:
@@ -143,6 +145,11 @@ def run():
         except KeyboardInterrupt:
             pass
 
+def start_hook():
+    """启动钩子服务"""
+    if run_configs.is_docker():
+        services.start_all()
+    pass
 
 if __name__ == '__main__':
     run()

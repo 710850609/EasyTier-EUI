@@ -160,8 +160,8 @@ def auto_start(params: Optional[dict]=None, keep_run_status:bool=True, *args, **
     is_running = status(params)
     info.autostart = is_enabled
     info.use_system_service = is_enabled
-    if run_configs.is_fn_system():
-        # 如果是飞牛，则不注册系统服务
+    if run_configs.is_fn_system() or run_configs.is_docker():
+        # 如果是飞牛环境或 Docker 容器环境，则不注册系统服务
         info.use_system_service = False
         et_run_info.save(*info.__dict__.values())
         return

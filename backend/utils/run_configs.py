@@ -93,15 +93,19 @@ def setup_env():
 
 BUILD_VERSION = "1.4.020604-20260713130029"
 
+def is_docker():
+    if os.path.exists("/.dockerenv"):
+       # 检查是否为 Docker 容器环境
+       return False
+    return True
 
 def is_fn_system():
     """
     检查是否为飞牛系统
     等效 uname -r
     """
-    if os.path.exists("/.dockerenv"):
-       # 检查是否为 Docker 容器环境
-       return False
+    if is_docker():
+        return False
     kernel_version = platform.release()
     return kernel_version.lower().find('trim') != -1
 
