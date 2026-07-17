@@ -720,8 +720,8 @@ jobs:
           platforms: linux/${{ matrix.arch }}
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/easytier-eui:${{ matrix.arch }}-${{ needs.build-info.outputs.version }}
-            ghcr.io/${{ github.repository_owner }}/easytier-eui:${{ matrix.arch }}-latest
+            ghcr.io/${{ github.actor }}/easytier-eui:${{ matrix.arch }}-${{ needs.build-info.outputs.version }}
+            ghcr.io/${{ github.actor }}/easytier-eui:${{ matrix.arch }}-latest
           cache-from: type=gha,scope=docker-${{ matrix.arch }}
           cache-to: type=gha,mode=max,scope=docker-${{ matrix.arch }}
 
@@ -740,7 +740,7 @@ jobs:
 
       - name: Create and push multi-arch manifest
         run: |
-          REPO="ghcr.io/${{ github.repository_owner }}/easytier-eui"
+          REPO="ghcr.io/${{ github.actor }}/easytier-eui"
           VERSION="${{ needs.build-info.outputs.version }}"
 
           docker manifest create ${REPO}:${VERSION} \
