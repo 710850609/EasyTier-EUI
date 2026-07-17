@@ -710,9 +710,8 @@ jobs:
           fi
 
       - name: Build and push Docker image (${{ matrix.arch }})
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v4
         with:
-          builder: ${{ steps.buildx.outputs.name }}
           context: dist/${{ matrix.arch }}/extracted/EasyTier-EUI
           file: .github/docker/runtime.Dockerfile
           platforms: linux/${{ matrix.arch }}
