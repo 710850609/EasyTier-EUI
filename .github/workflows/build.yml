@@ -744,18 +744,15 @@ jobs:
           REPO="ghcr.io/${{ github.actor }}/easytier-eui"
           VERSION="${{ needs.build-info.outputs.version }}"
 
-          docker manifest create ${REPO}:${VERSION} \
+          docker buildx imagetools create -t ${REPO}:${VERSION} \
             ${REPO}:amd64-${VERSION} \
             ${REPO}:arm64-${VERSION} \
             ${REPO}:riscv64-${VERSION}
 
-          docker manifest create ${REPO}:latest \
+          docker buildx imagetools create -t ${REPO}:latest \
             ${REPO}:amd64-latest \
             ${REPO}:arm64-latest \
             ${REPO}:riscv64-latest
-
-          docker manifest push ${REPO}:${VERSION}
-          docker manifest push ${REPO}:latest
 
   release:
     needs:
