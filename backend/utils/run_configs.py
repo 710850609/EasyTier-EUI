@@ -99,6 +99,9 @@ def is_fn_system():
     检查是否为飞牛系统
     等效 uname -r
     """
+    if os.path.exists("/.dockerenv"):
+       # 检查是否为 Docker 容器环境
+       return False
     kernel_version = platform.release()
     return kernel_version.lower().find('trim') != -1
 

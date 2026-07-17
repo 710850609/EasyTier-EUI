@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # EasyTier-EUI 升级脚本
 # 由主进程以独立进程组启动，负责等待旧进程退出 → 替换二进制 → 重启
 
@@ -20,7 +20,7 @@ mkdir -p "$LOG_DIR"
 
 # 统一日志输出（同时输出到终端和日志文件）
 log() {
-    local msg="$(date '+%Y-%m-%d %H:%M:%S') - [$SCRIPT_NAME] - $*"
+    msg="$(date '+%Y-%m-%d %H:%M:%S') - [$SCRIPT_NAME] - $*"
     echo "$msg"
     echo "$msg" >> "$LOG_DIR/app.log"
 }
@@ -58,14 +58,17 @@ rm -rf "$UPDATE_DIR"
 log "更新目录已清理"
 
 # 启动
-if [[ "$OSTYPE" == "darwin"* ]]; then
-    log "在 macOS 上启动..."
-    open "$APP_DIR/$APP_NAME"
-else
-    log "在 Linux 上启动..."
-    sudo "$APP_DIR/start.sh" &
-    log "启动命令已执行"
-fi
+case "$(uname -s)" in
+    Darwin)
+        log "在 macOS 上启动..."
+        open "$APP_DIR/$APP_NAME"
+        ;;
+    *)
+        log "在 Linux 上启动..."
+        sudo "$APP_DIR/start.sh" &
+        log "启动命令已执行"
+        ;;
+esac
 
 log "完成"
 

@@ -96,7 +96,7 @@ def _do_update(task: UpdateTask, ver_tag: str):
 
         task.update_progress(97, get_message('update.starting_upgrade_script'))
         if sys.platform != 'win32':
-            cmd = ['bash', persistent_script, str(app_path)]
+            cmd = ['sh', persistent_script, str(app_path)]
         else:
             cmd = [persistent_script, str(app_path)]
         logging.info(f"执行升级脚本：{' '.join(cmd)}")

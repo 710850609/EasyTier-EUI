@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # 停止 EasyTier-EUI 的所有进程
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -11,7 +11,7 @@ mkdir -p "$SCRIPT_DIR/logs"
 
 # 统一日志输出（同时输出到终端和日志文件）
 log() {
-    local msg="$(date '+%Y-%m-%d %H:%M:%S') - [ $SCRIPT_NAME ] - $*"
+    msg="$(date '+%Y-%m-%d %H:%M:%S') - [ $SCRIPT_NAME ] - $*"
     echo "$msg"
     echo "$msg" >> "$LOG_FILE"
 }
