@@ -696,9 +696,23 @@ jobs:
           echo "DOCKER_CONTEXT=$INNER_DIR" >> $GITHUB_ENV
           ls -la "$INNER_DIR"
 
+      - name: Verify context directory
+        run: |
+          CONTEXT_DIR="dist/${{ matrix.arch }}/extracted/EasyTier-EUI"
+          echo "Checking context directory: $CONTEXT_DIR"
+          if [ -d "$CONTEXT_DIR" ]; then
+            echo "Directory exists"
+            ls -la "$CONTEXT_DIR"
+          else
+            echo "Directory does NOT exist"
+            find dist -type d 2>/dev/null | head -30
+            exit 1
+          fi
+
       - name: Build and push Docker image (${{ matrix.arch }})
         uses: docker/build-push-action@v5
         with:
+          builder: ${{ steps.buildx.outputs.name }}
           context: dist/${{ matrix.arch }}/extracted/EasyTier-EUI
           file: .github/docker/runtime.Dockerfile
           platforms: linux/${{ matrix.arch }}
