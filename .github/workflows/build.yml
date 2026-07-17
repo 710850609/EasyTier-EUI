@@ -724,7 +724,7 @@ jobs:
       - name: Build and push Docker image (${{ matrix.arch }})
         uses: docker/build-push-action@v5
         with:
-          context: ${{ env.DOCKER_CONTEXT }}
+          context: dist/${{ matrix.arch }}/extracted/EasyTier-EUI
           file: .github/docker/runtime.Dockerfile
           platforms: linux/${{ matrix.arch }}
           push: true
