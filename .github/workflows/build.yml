@@ -692,9 +692,8 @@ jobs:
         run: |
           cd dist/${{ matrix.arch }}
           unzip -o *.zip -d extracted
-          INNER_DIR=$(find extracted -type d -name "EasyTier-EUI" -not -path "*/core/*" | head -1)
-          echo "DOCKER_CONTEXT=$INNER_DIR" >> $GITHUB_ENV
-          ls -la "$INNER_DIR"
+          # 列出目录内容（不设置 DOCKER_CONTEXT 环境变量，避免与 Docker context 冲突）
+          ls -la extracted/EasyTier-EUI
 
       - name: Verify context directory
         run: |
