@@ -15,6 +15,8 @@ import venv
 import zipfile
 from pathlib import Path
 
+from utils import run_configs
+
 # Fix Windows console encoding for GitHub Actions
 if sys.platform == "win32":
     import io
@@ -239,8 +241,7 @@ def get_platform_name():
     if not arch_name:
         raise AssertionError(f"不支持的系统架构：: {system} {machine}")
 
-    host = sysconfig.get_config_var('HOST_GNU_TYPE')  # 如 x86_64-pc-linux-musl
-    if host and 'musl' in host:
+    if run_configs.is_musl_sys():
         sys_name = f"{sys_name}-musl"
     return f"{sys_name}-{arch_name}"
 

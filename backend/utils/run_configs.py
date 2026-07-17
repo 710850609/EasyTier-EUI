@@ -6,6 +6,7 @@
 import logging
 import os
 import platform
+import subprocess
 import sys
 from pathlib import Path
 from typing import Optional, List
@@ -92,6 +93,22 @@ def setup_env():
 
 
 BUILD_VERSION = "1.4.020604-20260713130029"
+
+
+def is_musl_sys():
+    """检测当前 Linux 系统是否是 musl libc，跨平台安全"""
+    if not sys.platform.startswith("linux"):
+        return False
+    try:
+        result = subprocess.run(
+            ['ldd', '--version'],
+            capture_output=True,
+            text=True,
+            timeout=3
+        )
+        return 'musl' in (result.stdout + result.stderr)
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        return False
 
 def is_docker():
     if os.path.exists("/.dockerenv"):

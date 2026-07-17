@@ -352,8 +352,12 @@ def __get_download_url(is_release: bool) -> tuple[str, str, str]:
     machine = os.uname().machine if hasattr(os, 'uname') else platform.machine()
     sys_name = sys_map.get(system, system)
     arch_name = arch_map.get(machine.lower())
+
     if run_configs.is_fn_system():
         sys_name = 'fnos'
+    if run_configs.is_musl_sys():
+        sys_name = f"{sys_name}-musl"
+
     try:
         release_infos = get_release_info({'refresh': 'true'})
     except Exception as e:
