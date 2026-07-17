@@ -96,8 +96,8 @@ BUILD_VERSION = "1.4.020604-20260713130029"
 def is_docker():
     if os.path.exists("/.dockerenv"):
        # 检查是否为 Docker 容器环境
-       return False
-    return True
+       return True
+    return False
 
 def is_fn_system():
     """
