@@ -1,12 +1,15 @@
 ##  
 - 新增：【配置】-代理与转发，支持网段映射
+----
+- 修复：【配置】-代理与转发，网段映射为空时，保存启动失败问题
 
 <br>
 
 ----
 
 - New: [Configuration] - Proxy & Forwarding, now supports subnet mapping
-
+----
+- Fix: [Config] - Proxy & Forward, save startup failure when subnet mapping is empty
 
 
 ##  1.5
