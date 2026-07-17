@@ -1214,7 +1214,12 @@ const saveConfig = () => {
     data.peer = data.peer.map(e => ({ uri: e }))
     data.proxy_network = data.proxy_network
       .filter(e => e.subnet_cidr && e.subnet_cidr.trim())
-      .map(e => ({ cidr: e.subnet_cidr.trim(), mapped_cidr: e.mapped_cidr.trim() }))
+      .map(e => {
+        const result = { cidr: e.subnet_cidr.trim() }
+        const mapped = e.mapped_cidr ? e.mapped_cidr.trim() : ''
+        if (mapped) result.mapped_cidr = mapped
+        return result
+      })
     data.dhcp = !data.ipv4 || !(data.ipv4.trim())
     if (data.flags.enable_ipv6 === undefined) data.flags.enable_ipv6 = true
     if (data.flags.enable_encryption === undefined) data.flags.enable_encryption = true
