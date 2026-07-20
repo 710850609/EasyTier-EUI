@@ -214,7 +214,7 @@ def build_executable(build_ver:str = None, one_file:bool = True):
     result = run_command(" ".join(cmd), cwd=str(PROJECT_DIR))
     return result, output_name
 
-def get_platform_name():
+def get_platform_name(for_eui:bool = False):
     """获取 EasyTier 平台标识"""
     system = sys.platform
     machine = os.uname().machine if hasattr(os, 'uname') else platform.machine()
@@ -241,7 +241,7 @@ def get_platform_name():
     if not arch_name:
         raise AssertionError(f"不支持的系统架构：: {system} {machine}")
 
-    if run_configs.is_musl_sys():
+    if run_configs.is_musl_sys() and for_eui:
         sys_name = f"{sys_name}-musl"
     return f"{sys_name}-{arch_name}"
 
@@ -269,7 +269,7 @@ def download_easytier(version:str=None, proxy_url=None):
     print(f"  版本: {version}")
     
     # 获取平台标识
-    platform = get_platform_name()
+    platform = get_platform_name(for_eui=False)
     print(f"  平台: {platform}")
     
     # 构建下载链接
@@ -364,7 +364,7 @@ def copy_output(output_name, et_file, build_ver, one_file:bool):
     """复制输出文件"""
     print("[4/5] 复制输出文件...")
     
-    platform_name = get_platform_name()
+    platform_name = get_platform_name(for_eui=True)
     output_dir = DIST_DIR.joinpath(f"{APP_NAME}-{platform_name}{'-' + build_ver if build_ver else ""}").joinpath(APP_NAME)
     # output_dir = DIST_DIR.joinpath(f"{APP_NAME}")
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -428,7 +428,7 @@ def main(et_ver:str=None, github_proxy_url:str=None, build_ver:str="", one_file:
     """主函数"""
     print("=" * 50)
     print(f"{APP_NAME} Server 多平台打包")
-    print(f"当前平台: {get_platform_name()}")
+    print(f"当前平台: {get_platform_name(for_eui=True)}")
     print(f"et_ver: {et_ver}")
     print(f"build_ver: {build_ver}")
     print(f"pypi_mirror: {pypi_mirror}")
