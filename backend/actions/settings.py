@@ -19,11 +19,13 @@ def eui_info(*args, **kwargs):
     install_path = Path(run_configs.core_dir()).parent
     # 解析符号链接，获取真实路径
     install_path = install_path.resolve()
+    is_docker = run_configs.is_docker()
     return {
         'build_version': run_configs.build_version(),
         'install_path': str(install_path),
         'platform': platform,
         'for_user': run_configs.is_fn_system() and run_configs.DEFAULT_TRIM_APPNAME == 'EasyTier-EUI.User',
+        'is_docker': is_docker,
     }
 
 def github_mirrors(params:dict, *args, **kwargs):

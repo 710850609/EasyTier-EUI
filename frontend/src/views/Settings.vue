@@ -217,7 +217,7 @@
           {{ $t('common.delete') }}
         </var-button>
       </div>
-      <div class="setting-row" v-if="platform !== 'trim'">
+      <div class="setting-row" v-if="platform !== 'trim' && !isDocker">
         <span class="setting-label">{{ $t('settings.specifyIpPort') }}</span>
         <var-button type="primary" size="small" @click="releaseConfig" auto-loading>
           {{ $t('settings.releaseConfig') }}
@@ -314,7 +314,7 @@
       </div>
     </var-paper>
 
-    <var-button block type="danger" v-if="platform === 'linux'" @click="shutdown">
+    <var-button block type="danger" v-if="platform === 'linux' && !isDocker" @click="shutdown">
       <template #default>
         <var-icon name="power" size="20" /> {{ $t('common.shutdown') }} {{ $t('settings.about.appName') }}
       </template>
@@ -399,6 +399,7 @@ const forUser = ref(false)
 const showRewardCdoe = ref(false)
 const showGithubUrlPopup = ref(false)
 const platform = ref('')
+const isDocker = ref(false)
 const etLogLevel = ref('error')
 const euiReleaseInfo = ref({})
 const euiRelease = ref({})
@@ -588,6 +589,7 @@ const getEuiInfo = async () => {
     installPath.value = data.install_path
     forUser.value = data.for_user
     platform.value = data.platform
+    isDocker.value = data.is_docker
   } catch (e) {
     console.error('获取版本号失败:', e)
     buildVersion.value = t('settings.toast.fetchVersionFailed')
