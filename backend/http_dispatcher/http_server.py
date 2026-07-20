@@ -9,7 +9,7 @@ import sys
 import urllib.parse
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from socketserver import ThreadingMixIn
-from time import sleep
+
 from typing import Optional
 
 import psutil
@@ -142,7 +142,7 @@ class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
         super().__init__(server_address, RequestHandlerClass)
 
 
-def _acquire_instance_lock(force_boot:bool) -> bool:
+def _acquire_instance_lock() -> bool:
     """获取单实例锁（PID 文件），失败则说明已有实例在运行"""
     pid_file = os.path.join(run_configs.data_dir(), 'server.pid')
     if os.path.exists(pid_file):
@@ -152,18 +152,10 @@ def _acquire_instance_lock(force_boot:bool) -> bool:
             if psutil.pid_exists(existing_pid):
                 logging.warning(f"HTTP 服务已在运行中，{pid_file} 【{existing_pid}】")
                 p = psutil.Process(existing_pid)
-                if force_boot:
-                    cmdline = ' '.join(p.cmdline())
-                    logging.warning(f"强制启动 HTTP 服务，停止先前运行实例： 【{cmdline}】")
-                    p.terminate()
-                    try:
-                        p.wait(timeout=1)
-                    except psutil.TimeoutExpired:
-                        p.kill()
-                        p.wait()
-                    except psutil.NoSuchProcess:
-                        pass
-                    os.remove(pid_file)
+                cmdline = ' '.join(p.cmdline())
+                logging.info(f"上次运行命令行参数： 【{cmdline}】")
+                if run_configs.is_docker() and existing_pid == os.getpid() and 'EasyTier-EUI' in cmdline:
+                    logging.info(f"服务 pid 未变，继续运行： 【{existing_pid}】")
                     return True
                 return False
             else:
@@ -189,10 +181,10 @@ def _release_instance_lock():
         except (ValueError, OSError):
             pass
 
-def build(host:str, port:int=5666, base_uri: str = '', force_boot:bool=False) -> Optional[ThreadedHTTPServer]:
+def build(host:str, port:int=5666, base_uri: str = '') -> Optional[ThreadedHTTPServer]:
     """构建 HTTP 服务器，不阻塞。由调用方调用 serve_forever() 进入事件循环"""
     try:
-        if not _acquire_instance_lock(force_boot):
+        if not _acquire_instance_lock():
             logging.warning(f"HTTP 服务已在运行中，不能重复启动")
             return None
         atexit.register(_release_instance_lock)

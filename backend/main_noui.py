@@ -40,8 +40,7 @@ def start_server(host: str, port: int, exit_on_failure: bool = False) -> Optiona
     else:
         logging.info(f"当前用户已是管理员权限")
         # docker 环境下强制启动，避免启动不成功
-        force_boot = True if run_configs.is_docker() else False
-        server = http_server.build(host, port, BASE_URI, force_boot=force_boot)
+        server = http_server.build(host, port, BASE_URI)
         if server is None:
             logging.error("HTTP 服务启动失败")
             if exit_on_failure:
