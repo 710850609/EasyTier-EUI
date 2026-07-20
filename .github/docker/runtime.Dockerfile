@@ -22,7 +22,7 @@ RUN chmod +x /app/EasyTier-EUI /app/core/easytier-core /app/core/easytier-cli /a
 
 RUN mkdir -p /app/data /app/logs /app/config
 
-VOLUME ["/app/data", "/app/logs", "/app/config"]
+VOLUME ["/app/config"]
 
 ENV PORT=5666
 

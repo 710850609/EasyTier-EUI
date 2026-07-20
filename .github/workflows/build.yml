@@ -743,13 +743,14 @@ jobs:
         run: |
           REPO="ghcr.io/${{ github.actor }}/easytier-eui"
           VERSION="${{ needs.build-info.outputs.version }}"
+          RELEASE_TAG="${{ needs.build-info.outputs.prerelease == 'true' && 'edge' || 'latest' }}"
 
           docker buildx imagetools create -t ${REPO}:${VERSION} \
             ${REPO}:amd64-${VERSION} \
             ${REPO}:arm64-${VERSION} \
             ${REPO}:riscv64-${VERSION}
 
-          docker buildx imagetools create -t ${REPO}:latest \
+          docker buildx imagetools create -t ${REPO}:${RELEASE_TAG} \
             ${REPO}:amd64-latest \
             ${REPO}:arm64-latest \
             ${REPO}:riscv64-latest
