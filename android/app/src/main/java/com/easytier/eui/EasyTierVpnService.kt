@@ -49,7 +49,7 @@ class EasyTierVpnService : VpnService() {
 
         try {
             builder.addDnsServer("114.114.114.114")
-            builder.addDnsServer("2335.5.5.5")
+            builder.addDnsServer("233.5.5.5")
         } catch (_: Exception) {}
 
         try {
