@@ -96,7 +96,7 @@ def start_android_server(data_dir: str, host: str = "127.0.0.1", port: int = 0) 
         if handle is None:
             py_log("ERROR: start_server returned None")
             raise RuntimeError("HTTP server start failed")
-        actual_port = handle.server.server_address[1]
+        actual_port = handle._server.server_address[1]
         py_log(f"HTTP server started on {host}:{actual_port}")
         return {"port": actual_port, "host": host}
     except Exception as e:
