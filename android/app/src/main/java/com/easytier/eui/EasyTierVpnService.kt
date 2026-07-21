@@ -24,6 +24,7 @@ class EasyTierVpnService : VpnService() {
     }
 
     private var vpnInterface: ParcelFileDescriptor? = null
+    @Volatile private var isRunning = false
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     override fun onCreate() {
@@ -47,8 +48,8 @@ class EasyTierVpnService : VpnService() {
             .setBlocking(false)
 
         try {
-            builder.addDnsServer("8.8.8.8")
-            builder.addDnsServer("1.1.1.1")
+            builder.addDnsServer("114.114.114.114")
+            builder.addDnsServer("2335.5.5.5")
         } catch (_: Exception) {}
 
         try {
@@ -64,11 +65,13 @@ class EasyTierVpnService : VpnService() {
             return
         }
 
+        isRunning = true
         startForeground(NOTIFICATION_ID, buildNotification("VPN Connected"))
         startVpnDataForwarding()
     }
 
     private fun stopVpn() {
+        isRunning = false
         scope.cancel()
         try { vpnInterface?.close() } catch (_: Exception) {}
         vpnInterface = null
@@ -89,7 +92,7 @@ class EasyTierVpnService : VpnService() {
 
     private fun forwardPackets(fd: java.io.FileDescriptor) {
         val buffer = ByteArray(32767)
-        while (isActive) {
+        while (isRunning) {
             try {
                 val inputStream = java.io.FileInputStream(fd)
                 val length = inputStream.read(buffer)
@@ -97,7 +100,7 @@ class EasyTierVpnService : VpnService() {
                     processOutgoingPacket(buffer, length)
                 }
             } catch (e: Exception) {
-                if (!isActive) break
+                if (!isRunning) break
             }
         }
     }

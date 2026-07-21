@@ -56,7 +56,7 @@ class MainActivity : AppCompatActivity() {
         webView.evaluateJavascript("window.__API_BASE__ = 'http://127.0.0.1:$httpServerPort';", null)
     }
 
-    private fun startPythonBackend() {
+    private suspend fun startPythonBackend() {
         if (!Python.isStarted()) {
             Python.start(AndroidPlatform(this))
         }
