@@ -13,7 +13,10 @@ import signal
 import subprocess
 import logging
 from pathlib import Path
-import psutil
+try:
+    import psutil
+except ImportError:
+    psutil = None
 
 
 _ANSI_PATTERN = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
@@ -30,7 +33,13 @@ class ProcessManager:
 
 
     def __check_process(self, pid: int) -> bool:
-        return psutil.pid_exists(pid)
+        if psutil is not None:
+            return psutil.pid_exists(pid)
+        try:
+            os.kill(pid, 0)
+            return True
+        except (OSError, ProcessLookupError):
+            return False
 
     def status(self) -> bool:
         """

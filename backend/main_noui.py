@@ -17,11 +17,11 @@ BASE_URI = "/cgi/ThirdParty/EasyTier-EUI/index.cgi"
 
 def start_server(host: str, port: int, exit_on_failure: bool = False) -> Optional[ServerHandle]:
     """启动 HTTP 服务（提权 + 启动），不打开浏览器。
-
+    Android 或已 root/admin 时直接启动，无需提权。
     返回 (success: bool, handle: ServerHandle | None)
     调用 handle.stop() 即可停止服务，无论管理员还是提权模式。
     """
-    if not permissions_util.is_admin():
+    if not run_configs.IS_ANDROID and not permissions_util.is_admin():
         try:
             handle = permissions_util.run_elevated_module(
                 'http_dispatcher.http_server', args=[f'--host={host}', f'--port={port}', f'--base_uri={BASE_URI}'])
@@ -71,6 +71,21 @@ def stop_server(handle: ServerHandle, port: int):
                 logging.info("已通过 handle.stop() 停止服务")
             except Exception:
                 pass
+
+
+def start_android_server(data_dir: str, host: str = "127.0.0.1", port: int = 0) -> dict:
+    """Android 入口：初始化环境 + 启动 HTTP 服务，返回 {'port': int, 'host': str}"""
+    os.environ['EUI_DATA_DIR'] = data_dir
+    os.environ['EUI_FRONTEND_DIR'] = os.path.join(data_dir, 'frontend')
+    run_configs.setup_env()
+    host = host or run_configs.EUI_RUN_HOST or '127.0.0.1'
+    port = port or run_configs.EUI_RUN_PORT or 0
+    handle = start_server(host, port, exit_on_failure=True)
+    if handle is None:
+        raise RuntimeError("HTTP server start failed")
+    actual_port = handle.server.server_address[1]
+    logging.info(f"Android HTTP server started on {host}:{actual_port}")
+    return {"port": actual_port, "host": host}
 
 
 def run():

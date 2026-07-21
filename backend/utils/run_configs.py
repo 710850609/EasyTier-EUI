@@ -13,6 +13,8 @@ from typing import Optional, List
 
 import tomlkit
 
+IS_ANDROID = False
+
 FRONTEND_PATH:str = None
 CONFIG_DIR:str = None
 CORE_DIR:str = None
@@ -32,7 +34,24 @@ def setup_env():
     if _is_inited_evn:
         return
     global FRONTEND_PATH, CONFIG_DIR, CORE_DIR, DATA_DIR, LOG_DIR, UPGRADE_SCRIPT_PATH, _run_mode, DEFAULT_TRIM_APPNAME, \
-        EUI_RUN_HOST, EUI_RUN_PORT, EUI_CONFIG_FILE
+        EUI_RUN_HOST, EUI_RUN_PORT, EUI_CONFIG_FILE, IS_ANDROID
+    # Android 平台检测
+    IS_ANDROID = 'ANDROID_ARGUMENT' in os.environ or 'ANDROID_ROOT' in os.environ
+    if IS_ANDROID:
+        data_dir = os.environ.get('EUI_DATA_DIR', '/data/data/com.easytier.eui/files')
+        CONFIG_DIR = os.path.join(data_dir, 'config')
+        DATA_DIR = os.path.join(data_dir, 'data')
+        LOG_DIR = os.path.join(data_dir, 'log')
+        CORE_DIR = os.path.join(data_dir, 'core')
+        FRONTEND_PATH = os.environ.get('EUI_FRONTEND_DIR', os.path.join(data_dir, 'frontend'))
+        UPGRADE_SCRIPT_PATH = ''
+        EUI_CONFIG_FILE = os.path.join(CONFIG_DIR, 'eui.toml')
+        EUI_RUN_HOST = '127.0.0.1'
+        EUI_RUN_PORT = 0
+        for d in [CONFIG_DIR, DATA_DIR, LOG_DIR, CORE_DIR]:
+            os.makedirs(d, exist_ok=True)
+        _is_inited_evn = True
+        return
     # 是否在 PyInstaller 打包环境中
     WORK_DIR = None
     if is_fn_system():
