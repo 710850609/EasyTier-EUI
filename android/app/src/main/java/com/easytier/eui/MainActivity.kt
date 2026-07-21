@@ -139,16 +139,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadWebView() {
-        val apiBase = "http://127.0.0.1:$httpServerPort/cgi/ThirdParty/EasyTier-EUI/index.cgi"
-        try {
-            val html = assets.open("frontend/index.html").bufferedReader().use { it.readText() }
-            val injectedHtml = html.replace("<head>", "<head><script>window.__API_BASE__='$apiBase';</script>")
-            webView.loadDataWithBaseURL("file:///android_asset/frontend/", injectedHtml, "text/html", "UTF-8", null)
-            log("INFO", "WebView loaded with injected API_BASE=$apiBase")
-        } catch (e: Exception) {
-            logError("Failed to load frontend HTML", e)
-            webView.loadData("<h2>Load Error</h2><pre>${e.message}</pre>", "text/html", "UTF-8")
-        }
+        val url = "http://127.0.0.1:$httpServerPort/cgi/ThirdParty/EasyTier-EUI/index.cgi"
+        log("INFO", "Loading WebView from $url")
+        webView.loadUrl(url)
     }
 
     override fun onDestroy() {
