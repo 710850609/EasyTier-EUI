@@ -1,3 +1,13 @@
+buildscript {
+    repositories {
+        mavenCentral()
+        maven { url = uri("https://chaquo.com/maven") }
+    }
+    dependencies {
+        classpath("com.chaquo.python:gradle:17.0.0")
+    }
+}
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
