@@ -47,6 +47,22 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
+      - name: Cache debug keystore
+        id: cache-keystore
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: android-debug-keystore-v1
+
+      - name: Generate debug keystore
+        if: steps.cache-keystore.outputs.cache-hit != 'true'
+        run: |
+          keytool -genkey -v \
+            -keystore ~/.android/debug.keystore \
+            -storepass android -keypass android \
+            -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 \
+            -dname "CN=Android Debug,O=Android,C=US"
+
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
         with:
@@ -54,9 +70,9 @@ jobs:
 
       - name: Setup Gradle
         run: |
-          curl -L -o /tmp/gradle.zip https://services.gradle.org/distributions/gradle-8.5-bin.zip
+          curl -L -o /tmp/gradle.zip https://services.gradle.org/distributions/gradle-8.7-bin.zip
           unzip -q /tmp/gradle.zip -d /opt
-          echo "/opt/gradle-8.5/bin" >> $GITHUB_PATH
+          echo "/opt/gradle-8.7/bin" >> $GITHUB_PATH
 
       - name: Setup Python 3.11
         uses: actions/setup-python@v5
