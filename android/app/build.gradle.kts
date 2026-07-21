@@ -6,12 +6,12 @@ plugins {
 
 android {
     namespace = "com.easytier.eui"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.easytier.eui"
         minSdk = 26
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.4.0"
 
