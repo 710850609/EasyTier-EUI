@@ -57,6 +57,7 @@ jobs:
       - name: Generate debug keystore
         if: steps.cache-keystore.outputs.cache-hit != 'true'
         run: |
+          mkdir -p ~/.android
           keytool -genkey -v \
             -keystore ~/.android/debug.keystore \
             -storepass android -keypass android \
