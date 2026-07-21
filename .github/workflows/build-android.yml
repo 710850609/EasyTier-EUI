@@ -1,13 +1,13 @@
 name: Build Android APK
 
 on:
-#  push:
-#    branches: [main, master]
-#    paths:
-#      - 'android/**'
-#      - 'backend/**'
-#      - 'frontend/**'
-#      - '.github/workflows/build-android.yml'
+  push:
+    branches: [main, master, feature/apk]
+    paths:
+      - 'android/**'
+      - 'backend/**'
+      - 'frontend/**'
+      - '.github/workflows/build-android.yml'
   workflow_dispatch:
 
 jobs:
@@ -55,7 +55,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
         with:
-          gradle-version: 8.9
+          gradle-version: 8.11.1
           build-root-directory: android
           generate-job-summary: false
 
