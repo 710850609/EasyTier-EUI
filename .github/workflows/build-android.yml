@@ -58,6 +58,11 @@ jobs:
           unzip -q /tmp/gradle.zip -d /opt
           echo "/opt/gradle-8.5/bin" >> $GITHUB_PATH
 
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
       - name: Build Debug APK
         working-directory: android
         run: gradle assembleDebug --no-daemon --stacktrace
