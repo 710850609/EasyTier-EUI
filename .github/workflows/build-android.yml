@@ -58,6 +58,17 @@ jobs:
           unzip -q /tmp/gradle.zip -d /opt
           echo "/opt/gradle-8.5/bin" >> $GITHUB_PATH
 
+      - name: Debug - Test Chaquopy Maven repo
+        run: |
+          echo "=== Testing Chaquopy Maven repo ==="
+          curl -I --max-time 10 https://chaquo.com/maven/com/chaquo/python/gradle/15.0.1/gradle-15.0.1.pom 2>&1 || echo "FAILED"
+          echo ""
+          echo "=== Testing Maven Central for plugin marker ==="
+          curl -I --max-time 10 https://repo1.maven.org/maven2/com/chaquo/python/com.chaquo.python.gradle.plugin/15.0.1/com.chaquo.python.gradle.plugin-15.0.1.pom 2>&1 || echo "FAILED"
+          echo ""
+          echo "=== Testing Maven Central for plugin JAR ==="
+          curl -I --max-time 10 https://repo1.maven.org/maven2/com/chaquo/python/gradle/15.0.1/gradle-15.0.1.pom 2>&1 || echo "FAILED"
+
       - name: Build Debug APK
         working-directory: android
         run: gradle assembleDebug --no-daemon --stacktrace
