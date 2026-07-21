@@ -43,6 +43,8 @@ def _get_process_manager(profile:str = None) -> Union[ProcessManager]:
     return cur_pm
 
 def status(params=None, *args, **kwargs) -> bool:
+    if run_configs.IS_ANDROID:
+        return False  # Android mock: 服务未运行
     profile, _ = Validator.not_empty(params, 'profile', 'validate.profile_required')
     info = et_run_info.get(profile)
     if info is not None and info.use_system_service:
@@ -52,6 +54,8 @@ def status(params=None, *args, **kwargs) -> bool:
         return pm.status()
 
 def stop(params=None, *args, **kwargs):
+    if run_configs.IS_ANDROID:
+        return  # Android mock: 无需停止
     profile, _ = Validator.not_empty(params, 'profile', 'validate.profile_required')
     info = et_run_info.get(profile)
     if info is not None and info.use_system_service:
@@ -67,6 +71,8 @@ def stop(params=None, *args, **kwargs):
         pm.stop()
 
 def start(params=None, *args, **kwargs):
+    if run_configs.IS_ANDROID:
+        raise HttpException(get_message('service.not_supported_android'))
     profile, _ = Validator.not_empty(params, 'profile', 'validate.profile_required')
     config_file = run_configs.et_config_file(profile)
     if not Path(config_file).exists():
@@ -128,6 +134,8 @@ def start_all(*args, **kwargs):
         start({'profile': system_service_profiles[0]})
 
 def stop_all(*args, **kwargs) -> List[str]:
+    if run_configs.IS_ANDROID:
+        return []  # Android mock: 无运行中服务
     stop_profiles = []
     infos = et_run_info.get_all()
     system_service_profile = None

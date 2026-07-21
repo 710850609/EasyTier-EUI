@@ -12,7 +12,10 @@ from socketserver import ThreadingMixIn
 
 from typing import Optional
 
-import psutil
+try:
+    import psutil
+except ImportError:
+    psutil = None
 
 from http_dispatcher import dispatcher
 from utils import run_configs, log_util
@@ -145,7 +148,7 @@ class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
 def _acquire_instance_lock() -> bool:
     """获取单实例锁（PID 文件），失败则说明已有实例在运行"""
     pid_file = os.path.join(run_configs.data_dir(), 'server.pid')
-    if os.path.exists(pid_file):
+    if psutil is not None and os.path.exists(pid_file):
         try:
             with open(pid_file, 'r') as f:
                 existing_pid = int(f.read().strip())

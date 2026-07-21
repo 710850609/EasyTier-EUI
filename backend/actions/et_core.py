@@ -30,6 +30,8 @@ def set_log_level(params:dict, *args, **kwargs):
     services.change_log_level(log_level)
 
 def check_core(*args, **kwargs):
+    if run_configs.IS_ANDROID:
+        return True  # Android 上 mock 可用
     core_dir = run_configs.core_dir()
     ext = ".exe" if sys.platform == "win32" else ""
     cli_file = f'{core_dir}/easytier-cli{ext}'
@@ -37,6 +39,8 @@ def check_core(*args, **kwargs):
     return os.path.exists(cli_file) and os.path.exists(core_file)
 
 def version(params=None, *args, **kwargs):
+    if run_configs.IS_ANDROID:
+        return {'version': 'v2.0.0-android', 'raw_version': 'easytier-core 2.0.0-android'}
     if not check_core():
         raise HttpException(get_message('download.task_not_found'))
         
@@ -50,6 +54,8 @@ def version(params=None, *args, **kwargs):
 
 
 def get_release_info(params: dict, *args, **kwargs) -> dict:
+    if run_configs.IS_ANDROID:
+        return {'update_time': 0, 'total_download': 0, 'versions': []}
     params = params or {}
     refresh = params.get('refresh', 'false').lower() == 'true'
     release_file = Path(run_configs.data_dir()).joinpath('et_release.json')
@@ -127,6 +133,8 @@ def version_changelog(params: dict, *args, **kwargs):
     return changelog
 
 def install(data, *args, **kwargs):
+    if run_configs.IS_ANDROID:
+        raise HttpException(get_message('download.not_supported_android'))
     et_version = data['version']
     if not et_version:
         raise HttpException(get_message('download.id_required', param='version'))

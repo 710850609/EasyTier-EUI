@@ -11,7 +11,10 @@ import time
 from pathlib import Path
 from typing import Optional, List
 
-import psutil
+try:
+    import psutil
+except ImportError:
+    psutil = None
 
 
 def is_frozen() -> bool:

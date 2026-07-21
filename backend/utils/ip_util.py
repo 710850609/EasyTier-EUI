@@ -2,7 +2,10 @@
 # # -*- coding: utf-8 -*-
 import socket
 import ipaddress
-import psutil
+try:
+    import psutil
+except ImportError:
+    psutil = None
 import platform
 from typing import List, Dict, Optional, Tuple
 

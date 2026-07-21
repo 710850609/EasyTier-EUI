@@ -23,6 +23,7 @@ MESSAGES = {
         "eui_config_released": "已生成易组网配置，请手动修复配置后重启生效：\n{path}",
     },
     "service": {
+        "not_supported_android": "Android 平台暂不支持启动服务",
         "profile_required": "配置不能为空",
         "config_not_found": "不存在配置文件",
         "config_not_running": "不存在运行配置： {old_profile}",
@@ -60,6 +61,7 @@ MESSAGES = {
         "update_completed": "更新到 {ver_tag} 版本完成",
     },
     "download": {
+        "not_supported_android": "Android 平台不支持下载内核",
         "init_task": "初始化下载任务",
         "id_required": "download_id参数不能为空",
         "task_not_found": "下载任务不存在",
