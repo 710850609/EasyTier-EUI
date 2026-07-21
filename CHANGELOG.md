@@ -4,7 +4,7 @@
 - 新增：支持 musl Linux，支持 x86_64, aarch64, riscv64 架构
 - 新增：支持 docker 部署
 - 新增：【应用】-【Docker】页面增加docker版本使用说明
-- 修复：自定义易组网IP未0.0.0.0时，win、macos版本启动界面加载失败
+- 修复：自定义易组网IP为0.0.0.0时，win、macos版本启动界面加载失败
 
 <br>
 
@@ -15,6 +15,8 @@
 - New: Support for musl Linux, supporting x86_64, aarch64, riscv64 architectures
 - New: Support for Docker deployment
 - New: [Apps] - [Docker] page added with Docker version usage guide
+- Fix: Windows and macOS versions failed to load the startup interface when the custom EasyTier-EUI IP was set to 0.0.0.0
+
 
 ##  1.5
 - 优化：整体视觉优化，更通透，更立体
