@@ -44,7 +44,7 @@ android {
     }
 }
 
-python {
+extensions.configure<com.chaquo.python.PythonExtension> {
     buildPython("python3.11")
     pip {
         install("tomlkit")
