@@ -28,7 +28,7 @@ jobs:
       - name: Build Frontend
         run: |
           cd frontend
-          npm ci
+          npm install
           npm run build
 
       - name: Copy Frontend to Android Assets
