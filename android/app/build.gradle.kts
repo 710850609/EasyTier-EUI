@@ -20,7 +20,7 @@ android {
         }
 
         python {
-            buildPython("python3.10")
+            buildPython("python3.12")
             pip {
                 install("tomlkit")
                 install("requests")
