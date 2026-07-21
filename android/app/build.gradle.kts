@@ -20,17 +20,6 @@ android {
         }
     }
 
-    python {
-        buildPython("python3.11")
-        pip {
-            install("tomlkit")
-            install("requests")
-            install("dnspython")
-            install("qrcode")
-        }
-        srcDir("src/main/python")
-    }
-
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -53,6 +42,17 @@ android {
     buildFeatures {
         viewBinding = true
     }
+}
+
+python {
+    buildPython("python3.11")
+    pip {
+        install("tomlkit")
+        install("requests")
+        install("dnspython")
+        install("qrcode")
+    }
+    srcDir("src/main/python")
 }
 
 dependencies {
