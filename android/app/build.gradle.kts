@@ -1,17 +1,17 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
-    id("com.chaquo.python") version "17.0.0"
+    id("com.chaquo.python")
 }
 
 android {
     namespace = "com.easytier.eui"
-    compileSdk = 35
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.easytier.eui"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 34
         versionCode = 1
         versionName = "1.4.0"
 
@@ -20,7 +20,7 @@ android {
         }
 
         python {
-            buildPython("python3.12")
+            buildPython("python3.11")
             pip {
                 install("tomlkit")
                 install("requests")

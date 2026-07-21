@@ -50,13 +50,13 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
         with:
-          packages: 'platforms;android-35 build-tools;35.0.0 ndk;26.1.10909125'
+          packages: 'platforms;android-34 build-tools;34.0.0 ndk;26.1.10909125'
 
       - name: Setup Gradle
         run: |
-          curl -L -o /tmp/gradle.zip https://services.gradle.org/distributions/gradle-8.11.1-bin.zip
+          curl -L -o /tmp/gradle.zip https://services.gradle.org/distributions/gradle-8.5-bin.zip
           unzip -q /tmp/gradle.zip -d /opt
-          echo "/opt/gradle-8.11.1/bin" >> $GITHUB_PATH
+          echo "/opt/gradle-8.5/bin" >> $GITHUB_PATH
 
       - name: Build Debug APK
         working-directory: android
