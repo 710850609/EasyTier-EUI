@@ -52,7 +52,18 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.android/debug.keystore
-          key: android-debug-keystore-v1
+          key: android-debug-keystore-v2-${{ github.ref_name }}
+          restore-keys: |
+            android-debug-keystore-v2-
+
+      - name: Verify keystore
+        run: |
+          if [ -f ~/.android/debug.keystore ]; then
+            echo "Keystore found, fingerprint:"
+            keytool -list -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey 2>/dev/null || true
+          else
+            echo "Keystore NOT found"
+          fi
 
       - name: Generate debug keystore
         if: steps.cache-keystore.outputs.cache-hit != 'true'
@@ -63,6 +74,8 @@ jobs:
             -storepass android -keypass android \
             -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 \
             -dname "CN=Android Debug,O=Android,C=US"
+          echo "New keystore generated, fingerprint:"
+          keytool -list -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey 2>/dev/null || true
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3

@@ -130,9 +130,9 @@ class MainActivity : AppCompatActivity() {
 
         log("INFO", "Calling start_android_server with data_dir=${filesDir.absolutePath}...")
         val result = module.callAttr("start_android_server", filesDir.absolutePath)
-        log("INFO", "start_android_server returned: $result")
+        log("INFO", "start_android_server returned: $result, type=${result::class.java.simpleName}")
 
-        val portPyObj = result["port"]!!
+        val portPyObj = result.callAttr("get", "port")
         httpServerPort = portPyObj.toJava(Int::class.java) as Int
         log("INFO", "HTTP server port: $httpServerPort")
 
