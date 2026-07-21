@@ -19,6 +19,7 @@ android {
             abiFilters += listOf("arm64-v8a")
         }
 
+        /*
         python {
             buildPython("python3.11")
             pip {
@@ -29,6 +30,7 @@ android {
             }
             srcDir("src/main/python")
         }
+        */
     }
 
     buildTypes {
