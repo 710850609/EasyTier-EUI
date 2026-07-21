@@ -16,9 +16,9 @@
         <var-cell>
           <p>{{ $t('software.dockerIntro') }}</p>
         </var-cell>
-        <var-cell>
-          <var-link type="primary" underline="none" href="https://github.com/710850609/EasyTier-EUI/releases" target="_blank"><img :src="stableBadgeUrl" /></var-link>
-        </var-cell>
+<!--        <var-cell>-->
+<!--          <var-link type="primary" underline="none" href="https://github.com/710850609/EasyTier-EUI/releases" target="_blank"><img :src="stableBadgeUrl" /></var-link>-->
+<!--        </var-cell>-->
         <var-divider />
         <var-cell>
           <p style="margin-bottom: 12px; font-weight: 600;">{{ $t('software.dockerStepTitle') }}</p>

@@ -80,6 +80,8 @@ if __name__ == '__main__':
     win = None
     try:
         host = args.host or run_configs.EUI_RUN_HOST or '127.0.0.1'
+        if host == '0.0.0.0':
+            host = '127.0.0.1'
         port = args.port or run_configs.EUI_RUN_PORT or 5666
         win = WebWin(host, port, f'易组网 {ver}')
     except BaseException:

@@ -4,6 +4,7 @@
 - 新增：支持 musl Linux，支持 x86_64, aarch64, riscv64 架构
 - 新增：支持 docker 部署
 - 新增：【应用】-【Docker】页面增加docker版本使用说明
+- 修复：自定义易组网IP未0.0.0.0时，win、macos版本启动界面加载失败
 
 <br>
 
