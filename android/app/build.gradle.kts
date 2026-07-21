@@ -27,6 +27,7 @@ android {
                 install("dnspython")
                 install("qrcode")
             }
+            srcDir("src/main/python")
         }
     }
 
