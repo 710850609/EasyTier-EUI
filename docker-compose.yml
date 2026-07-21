@@ -2,16 +2,20 @@ services:
   easytier-eui:
     image: ghcr.io/710850609/easytier-eui:latest
     container_name: easytier-eui
-    network_mode: host
     cap_add:
       - NET_ADMIN
       - NET_RAW
     devices:
       - /dev/net/tun:/dev/net/tun
+    network_mode: host
+    ports:
+      # 非host模式下，映射端口。暴露给某些docker工具生成UI入口
+      - "15666:15666"
     environment:
-      - PORT=5666
+      - PORT=15666
+      - TZ=Asia/Shanghai
     volumes:
+      - /etc/machine-id:/etc/machine-id:ro
       - ./config:/app/config
-      - ./data:/app/data
       - ./logs:/app/logs
     restart: unless-stopped

@@ -40,7 +40,7 @@ on:
         type: boolean
         default: true
       build_linux_alpine:
-        description: '构建 Linux (Alpine)'
+        description: '构建 Linux (Alpine) 和 Docker 镜像'
         type: boolean
         default: true
 
@@ -743,7 +743,7 @@ jobs:
         run: |
           REPO="ghcr.io/${{ github.actor }}/easytier-eui"
           VERSION="${{ needs.build-info.outputs.version }}"
-          RELEASE_TAG="${{ needs.build-info.outputs.prerelease == 'true' && 'edge' || 'latest' }}"
+          RELEASE_TAG="${{ github.event.inputs.no-draft != 'true' && 'dev' || (needs.build-info.outputs.prerelease == 'true' && 'edge' || 'latest') }}"
 
           docker buildx imagetools create -t ${REPO}:${VERSION} \
             ${REPO}:amd64-${VERSION} \

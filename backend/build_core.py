@@ -161,7 +161,6 @@ def build_executable(build_ver:str = None, one_file:bool = True):
         "--hidden-import", "utils.et_run_info",
         "--hidden-import", "utils.et_util",
         "--hidden-import", "utils.github_util",
-        "--hidden-import", "utils.http_util",
         "--hidden-import", "utils.ip_util",
         "--hidden-import", "utils.log_util",
         "--hidden-import", "utils.process_util",

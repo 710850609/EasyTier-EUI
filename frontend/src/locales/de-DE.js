@@ -32,7 +32,7 @@ export default {
   menu: {
     nodes: { label: 'Knoten', title: 'Knotenverwaltung' },
     config: { label: 'Konfig', title: 'Konfiguration' },
-    software: { label: 'Apps', title: 'Software Downloads', windows: 'Windows', macos: 'MacOS', linux: 'Linux', fnos: 'FnOS', android: 'Android', ios: 'IOS', harmonyos: 'HarmonyOS' },
+    software: { label: 'Apps', title: 'Software Downloads', windows: 'Windows', macos: 'MacOS', linux: 'Linux', docker: 'Docker', fnos: 'FnOS', android: 'Android', ios: 'IOS', harmonyos: 'HarmonyOS' },
     settings: { label: 'Einstellungen', title: 'Systemeinstellungen' },
     logs: { label: 'Logs', title: 'Log-Anzeige' }
   },
@@ -506,6 +506,25 @@ export default {
     iosVersion: 'EasyTier iOS',
     iosInstallDesc: 'TestFlight installieren falls nötig, dann Button klicken',
     iosInstallDesc2: 'App installieren, Konfiguration teilen und in EasyTier-App einfügen',
-    goToTestFlight: 'Zu TestFlight'
+    goToTestFlight: 'Zu TestFlight',
+    dockerIntro: 'EasyTier-EUI Docker-Edition, geeignet für Szenarien, in denen EasyTier im Nicht-Web-Modus läuft und Sie eine Benutzeroberfläche zum Anzeigen und Verwalten eines einzelnen Knotens benötigen. Benötigt ca. 40 MB zusätzlichen Arbeitsspeicher über den EasyTier-Kerndienst hinaus (nur als Referenz, tatsächliche Nutzung kann abweichen). Bitte wählen Sie die passende Version nach Bedarf.',
+    dockerStepTitle: 'Drei Schritte zum Start',
+    dockerStep1Title: 'Konfiguration herunterladen',
+    dockerStep1Desc: 'Laden Sie docker-compose.yml auf Ihren Server herunter',
+    dockerStep2Title: 'Container starten',
+    dockerStep2Desc: 'Ein Befehl zum Abrufen und Starten des Images',
+    dockerStep3Title: 'Seite öffnen',
+    dockerStep3Desc: 'Im Browser öffnen und loslegen',
+    dockerHostIP: 'Host-IP',
+    dockerImageTags: 'Image-Tags',
+    dockerImageTagsDesc: 'Ändern Sie den Image-Tag in docker-compose.yml, um die Version zu wechseln',
+    dockerTag: 'Tag',
+    dockerArch: 'Architektur',
+    dockerDesc: 'Beschreibung',
+    dockerLatest: 'Stabil (Empfohlen)',
+    dockerEdge: 'Vorabversion',
+    dockerDev: 'Entwicklung',
+    dockerComposeTitle: 'Vollständige Konfiguration',
+    dockerComposeDesc: 'Konfiguration und Daten werden in den Ordnern config und logs im aktuellen Verzeichnis gespeichert',
   }
 }

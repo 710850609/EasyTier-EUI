@@ -21,32 +21,54 @@
           <var-link type="primary" underline="none" href="https://github.com/710850609/EasyTier-EUI/releases" target="_blank"><img :src="stableBadgeUrl" /></var-link>
         </var-cell>
         <var-divider />
-        <var-space class="eui-download-btn-group" :size="[20, 20]" justify="center">
-          <var-button type="primary" size="normal" block @click="downloadEasyTierEui('linux', 'x86_64')" :loading="downloadingKey === 'linux-x86_64'">
-            <template #default>
-              <var-icon name="download"/>
-              {{ $t('software.x64Version') }}
-            </template>
-          </var-button>
-          <var-button type="primary" size="normal" block @click="downloadEasyTierEui('linux', 'aarch64')" :loading="downloadingKey === 'linux-aarch64'">
-            <template #default>
-              <var-icon name="download"/>
-              {{ $t('software.arm64Version') }}
-            </template>
-          </var-button>
-          <var-button type="primary" size="normal" block @click="downloadEasyTierEui('linux', 'armv7')" :loading="downloadingKey === 'linux-armv7'">
-            <template #default>
-              <var-icon name="download"/>
-              {{ $t('software.armv7Version') }}
-            </template>
-          </var-button>
-          <var-button type="primary" size="normal" block @click="downloadEasyTierEui('linux', 'riscv64')" :loading="downloadingKey === 'linux-riscv64'">
-            <template #default>
-              <var-icon name="download"/>
-              {{ $t('software.riscv64Version') }}
-            </template>
-          </var-button>
-        </var-space>
+        <div class="download-grid">
+          <var-paper class="download-item" :elevation="3">
+            <div class="item-header">
+              <span class="item-title">glibc Linux (Ubuntu / Debian / UOS ...)</span>
+            </div>
+            <div class="item-actions eui-platform-actions">
+              <var-button type="primary" size="normal" @click="downloadEasyTierEui('linux', 'x86_64')" :loading="downloadingKey === 'linux-x86_64'">
+                <var-icon name="download"/>
+                {{ $t('software.x64Version') }}
+              </var-button>
+              <var-button type="primary" size="normal" @click="downloadEasyTierEui('linux', 'aarch64')" :loading="downloadingKey === 'linux-aarch64'">
+                <var-icon name="download"/>
+                {{ $t('software.arm64Version') }}
+              </var-button>
+              <var-button type="primary" size="normal" @click="downloadEasyTierEui('linux', 'armv7')" :loading="downloadingKey === 'linux-armv7'">
+                <var-icon name="download"/>
+                {{ $t('software.armv7Version') }}
+              </var-button>
+              <var-button type="primary" size="normal" @click="downloadEasyTierEui('linux', 'riscv64')" :loading="downloadingKey === 'linux-riscv64'">
+                <var-icon name="download"/>
+                {{ $t('software.riscv64Version') }}
+              </var-button>
+            </div>
+          </var-paper>
+          <var-paper class="download-item" :elevation="3">
+            <div class="item-header">
+              <span class="item-title">musl Linux (Alpine / OpenWrt ...)</span>
+            </div>
+            <div class="item-actions eui-platform-actions">
+              <var-button type="primary" size="normal" @click="downloadEasyTierEui('linux-musl', 'x86_64')" :loading="downloadingKey === 'linux-musl-x86_64'">
+                <var-icon name="download"/>
+                {{ $t('software.x64Version') }}
+              </var-button>
+              <var-button type="primary" size="normal" @click="downloadEasyTierEui('linux-musl', 'aarch64')" :loading="downloadingKey === 'linux-musl-aarch64'">
+                <var-icon name="download"/>
+                {{ $t('software.arm64Version') }}
+              </var-button>
+<!--              <var-button type="primary" size="normal" @click="downloadEasyTierEui('linux-musl', 'armv7')" :loading="downloadingKey === 'linux-musl-armv7'">-->
+<!--                <var-icon name="download"/>-->
+<!--                {{ $t('software.armv7Version') }}-->
+<!--              </var-button>-->
+              <var-button type="primary" size="normal" @click="downloadEasyTierEui('linux-musl', 'riscv64')" :loading="downloadingKey === 'linux-musl-riscv64'">
+                <var-icon name="download"/>
+                {{ $t('software.riscv64Version') }}
+              </var-button>
+            </div>
+          </var-paper>
+        </div>
         <div v-if="progress" class="download-progress">
           <var-progress :value="progress.current_progress" :track="true" />
           <p class="progress-desc">{{ progress.description }}</p>
@@ -389,6 +411,17 @@ const handleConfigConfirm = async () => {
   min-width: 90px;
 }
 
+/* 平台下载按钮：2x2 网格布局 */
+.eui-platform-actions {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.eui-platform-actions .var-button {
+  min-width: 0;
+}
+
 .item-actions .var-button :deep(.var-button__content) {
   flex-wrap: nowrap !important;
 }
@@ -400,44 +433,25 @@ const handleConfigConfirm = async () => {
   border-spacing: 0;
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  background: var(--color-surface);
-  border: 1px solid var(--color-outline);
+  background: var(--color-surface-container-high);
+  border: 1px solid var(--color-outline-variant);
 }
 
 .eui-opt-desc-table :deep(th) {
-  background: var(--color-surface-container);
-  color: var(--color-on-surface-container);
+  background: var(--color-surface-container-high);
+  color: var(--color-on-surface);
   font-weight: 600;
   padding: 14px 16px;
   text-align: center;
-  border-bottom: 2px solid var(--color-outline);
-  border-left: 1px solid var(--color-outline-variant);
-}
-
-.eui-opt-desc-table :deep(th:first-child) {
-  border-left: none;
-}
-
-.eui-opt-desc-table :deep(th:last-child) {
-  border-right: 1px solid var(--color-outline-variant);
+  border-bottom: 2px solid var(--color-outline-variant);
 }
 
 .eui-opt-desc-table :deep(td) {
   padding: 14px 16px;
   border-bottom: 1px solid var(--color-outline-variant);
-  border-left: 1px solid var(--color-outline-variant);
-  background: var(--color-surface);
+  background: var(--color-surface-container-high);
   color: var(--color-on-surface);
   text-align: center;
-}
-
-.eui-opt-desc-table :deep(td:first-child) {
-  border-left: none;
-}
-
-.eui-opt-desc-table :deep(td:last-child) {
-  border-right: 1px solid var(--color-outline-variant);
 }
 
 .eui-opt-desc-table :deep(tr:last-child td) {
@@ -445,7 +459,7 @@ const handleConfigConfirm = async () => {
 }
 
 .eui-opt-desc-table :deep(tr:hover td) {
-  background: var(--color-surface-container-low);
+  background: var(--color-surface-container);
 }
 
 .eui-opt-desc-table :deep(code) {
@@ -482,15 +496,14 @@ const handleConfigConfirm = async () => {
   }
 
   /* 下载按钮移动端优化 */
-  .eui-download-btn-group {
-    display: grid !important;
-    grid-template-columns: repeat(2, 120px) !important;
-    gap: 12px !important;
-    width: 100% !important;
+  .download-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px;
   }
 
-  .eui-download-btn-group :deep(.var-button) {
-    width: 120px !important; 
+  .eui-platform-actions {
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
   }
 }
 

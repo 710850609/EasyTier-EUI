@@ -1,16 +1,19 @@
 ##  
 - 新增：【配置】-代理与转发，支持网段映射
-----
 - 修复：【配置】-代理与转发，网段映射为空时，保存启动失败问题
+- 新增：支持 musl Linux，支持 x86_64, aarch64, riscv64 架构
+- 新增：支持 docker 部署
+- 新增：【应用】-【Docker】页面增加docker版本使用说明
 
 <br>
 
 ----
 
 - New: [Configuration] - Proxy & Forwarding, now supports subnet mapping
-----
 - Fix: [Config] - Proxy & Forward, save startup failure when subnet mapping is empty
-
+- New: Support for musl Linux, supporting x86_64, aarch64, riscv64 architectures
+-New: Support for Docker deployment
+- New: [Apps] - [Docker] page added with Docker version usage guide
 
 ##  1.5
 - 优化：整体视觉优化，更通透，更立体

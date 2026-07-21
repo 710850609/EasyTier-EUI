@@ -16,7 +16,7 @@
 // import * as mdilIcons from '@mdi/light-js'
 
 // 改成 Tree Shaking 按需导入
-import { mdiMicrosoftWindows, mdiAndroid, mdiPenguin, mdiLaptop, mdiApple, mdiCellphone, mdiAlphaFBox }  from '@mdi/js'
+import { mdiMicrosoftWindows, mdiAndroid, mdiPenguin, mdiLaptop, mdiApple, mdiCellphone, mdiAlphaFBox, mdiDocker }  from '@mdi/js'
 const mdiIcons = {
   mdiMicrosoftWindows,
   mdiAndroid,
@@ -24,7 +24,8 @@ const mdiIcons = {
   mdiLaptop,
   mdiApple,
   mdiCellphone,
-  mdiAlphaFBox
+  mdiAlphaFBox,
+  mdiDocker,
 }
 
 /**

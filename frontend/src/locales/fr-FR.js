@@ -32,7 +32,7 @@ export default {
   menu: {
     nodes: { label: 'Nœuds', title: 'Gestion des nœuds' },
     config: { label: 'Config', title: 'Configuration' },
-    software: { label: 'Apps', title: 'Téléchargements', windows: 'Windows', macos: 'MacOS', linux: 'Linux', fnos: 'FnOS', android: 'Android', ios: 'IOS', harmonyos: 'HarmonyOS' },
+    software: { label: 'Apps', title: 'Téléchargements', windows: 'Windows', macos: 'MacOS', linux: 'Linux', docker: 'Docker', fnos: 'FnOS', android: 'Android', ios: 'IOS', harmonyos: 'HarmonyOS' },
     settings: { label: 'Paramètres', title: 'Paramètres système' },
     logs: { label: 'Logs', title: 'Affichage des logs' }
   },
@@ -506,6 +506,25 @@ export default {
     iosVersion: 'EasyTier iOS',
     iosInstallDesc: 'Installer TestFlight si nécessaire, puis cliquer pour télécharger',
     iosInstallDesc2: 'Installer l\'app, partager config et coller dans EasyTier mobile',
-    goToTestFlight: 'Vers TestFlight'
+    goToTestFlight: 'Vers TestFlight',
+    dockerIntro: 'Édition Docker d\'EasyTier-EUI, adaptée aux scénarios où EasyTier fonctionne en mode non-Web et où vous avez besoin d\'une interface pour visualiser et gérer un nœud unique. Nécessite environ 40 Mo de mémoire supplémentaire en plus du service principal EasyTier (à titre indicatif, l\'utilisation réelle peut varier). Veuillez choisir la version appropriée selon vos besoins.',
+    dockerStepTitle: 'Démarrage en trois étapes',
+    dockerStep1Title: 'Télécharger la config',
+    dockerStep1Desc: 'Téléchargez docker-compose.yml sur votre serveur',
+    dockerStep2Title: 'Lancer le conteneur',
+    dockerStep2Desc: 'Une commande pour récupérer l\'image et démarrer',
+    dockerStep3Title: 'Ouvrir la page',
+    dockerStep3Desc: 'Ouvrez dans le navigateur pour commencer',
+    dockerHostIP: 'IP de l\'hôte',
+    dockerImageTags: 'Versions d\'image',
+    dockerImageTagsDesc: 'Modifiez le tag image dans docker-compose.yml pour changer de version',
+    dockerTag: 'Tag',
+    dockerArch: 'Architecture',
+    dockerDesc: 'Description',
+    dockerLatest: 'Stable (Recommandé)',
+    dockerEdge: 'Pré-version',
+    dockerDev: 'Développement',
+    dockerComposeTitle: 'Configuration complète',
+    dockerComposeDesc: 'Les configs et données sont sauvegardées dans les dossiers config et logs du répertoire courant',
   }
 }

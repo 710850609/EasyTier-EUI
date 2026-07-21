@@ -228,7 +228,7 @@ def _do_download_easytier_eui(task: DownloadTask, platform: str, arch: str, prof
     platform_arch_key = f'{platform}-{arch}'
     download_url = latest_release.get('assets', {}).get(platform_arch_key, {}).get('download_url', '')
     if not et_lite_version or not download_url:
-        raise HttpResponse(get_message('download.task_not_found'))
+        raise HttpResponse(get_message('download.resource_not_found', url=download_url))
     task.update_progress(10, get_message('download.preparing') + f' ({et_lite_version})')
 
     def on_download_progress(percent, desc):

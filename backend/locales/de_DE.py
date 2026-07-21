@@ -63,6 +63,7 @@ MESSAGES = {
         "init_task": "Download-Aufgabe wird initialisiert",
         "id_required": "download_id-Parameter ist erforderlich",
         "task_not_found": "Download-Aufgabe nicht gefunden",
+        "resource_not_found": "Download-Ressource nicht gefunden\n{url}",
         "not_completed": "Download noch nicht abgeschlossen",
         "failed": "Download fehlgeschlagen",
         "file_not_found": "Download-Datei nicht gefunden",

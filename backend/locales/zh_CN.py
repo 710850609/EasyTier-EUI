@@ -63,6 +63,7 @@ MESSAGES = {
         "init_task": "初始化下载任务",
         "id_required": "download_id参数不能为空",
         "task_not_found": "下载任务不存在",
+        "resource_not_found": "下载资源不存在\n{url}",
         "not_completed": "下载尚未完成",
         "failed": "下载失败",
         "file_not_found": "下载文件不存在",

@@ -63,6 +63,7 @@ MESSAGES = {
         "init_task": "Initialisation de la tâche de téléchargement",
         "id_required": "Le paramètre download_id est requis",
         "task_not_found": "Tâche de téléchargement introuvable",
+        "resource_not_found": "Ressource de téléchargement introuvable\n{url}",
         "not_completed": "Téléchargement pas encore terminé",
         "failed": "Échec du téléchargement",
         "file_not_found": "Fichier de téléchargement introuvable",
