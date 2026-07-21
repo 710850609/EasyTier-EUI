@@ -97,16 +97,11 @@ class MainActivity : AppCompatActivity() {
                 override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean = false
                 override fun onPageFinished(view: WebView?, url: String?) {
                     super.onPageFinished(view, url)
-                    injectApiConfig()
                 }
             }
 
             addJavascriptInterface(AndroidBridge(), "AndroidBridge")
         }
-    }
-
-    private fun injectApiConfig() {
-        webView.evaluateJavascript("window.__API_BASE__ = 'http://127.0.0.1:$httpServerPort';", null)
     }
 
     private suspend fun startPythonBackend() {
@@ -129,7 +124,8 @@ class MainActivity : AppCompatActivity() {
         log("INFO", "main_noui module imported successfully")
 
         log("INFO", "Calling start_android_server with data_dir=${filesDir.absolutePath}...")
-        val result = module.callAttr("start_android_server", filesDir.absolutePath)
+        val externalDir = getExternalFilesDir(null)?.absolutePath ?: ""
+        val result = module.callAttr("start_android_server", filesDir.absolutePath, externalDir)
         log("INFO", "start_android_server returned: $result, type=${result::class.java.simpleName}")
 
         val portPyObj = result.callAttr("get", "port")
@@ -143,8 +139,16 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadWebView() {
-        webView.loadUrl("file:///android_asset/frontend/index.html")
-        log("INFO", "WebView loadUrl called")
+        val apiBase = "http://127.0.0.1:$httpServerPort/cgi/ThirdParty/EasyTier-EUI/index.cgi"
+        try {
+            val html = assets.open("frontend/index.html").bufferedReader().use { it.readText() }
+            val injectedHtml = html.replace("<head>", "<head><script>window.__API_BASE__='$apiBase';</script>")
+            webView.loadDataWithBaseURL("file:///android_asset/frontend/", injectedHtml, "text/html", "UTF-8", null)
+            log("INFO", "WebView loaded with injected API_BASE=$apiBase")
+        } catch (e: Exception) {
+            logError("Failed to load frontend HTML", e)
+            webView.loadData("<h2>Load Error</h2><pre>${e.message}</pre>", "text/html", "UTF-8")
+        }
     }
 
     override fun onDestroy() {

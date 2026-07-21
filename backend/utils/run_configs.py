@@ -41,7 +41,7 @@ def setup_env():
         data_dir = os.environ.get('EUI_DATA_DIR', '/data/data/com.easytier.eui/files')
         CONFIG_DIR = os.path.join(data_dir, 'config')
         DATA_DIR = os.path.join(data_dir, 'data')
-        LOG_DIR = os.path.join(data_dir, 'log')
+        LOG_DIR = os.environ.get('EUI_LOG_DIR', os.path.join(data_dir, 'log'))
         CORE_DIR = os.path.join(data_dir, 'core')
         FRONTEND_PATH = os.environ.get('EUI_FRONTEND_DIR', os.path.join(data_dir, 'frontend'))
         UPGRADE_SCRIPT_PATH = ''

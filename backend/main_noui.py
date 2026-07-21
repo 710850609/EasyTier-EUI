@@ -71,10 +71,10 @@ def stop_server(handle: ServerHandle, port: int):
                 pass
 
 
-def start_android_server(data_dir: str, host: str = "127.0.0.1", port: int = 0) -> dict:
+def start_android_server(data_dir: str, external_dir: str = "", host: str = "127.0.0.1", port: int = 0) -> dict:
     """Android 入口：初始化环境 + 启动 HTTP 服务，返回 {'port': int, 'host': str}"""
     import traceback
-    log_file = os.path.join(data_dir, 'easytier_py.log')
+    log_file = os.path.join(external_dir or data_dir, 'easytier_py.log')
     def py_log(msg):
         try:
             with open(log_file, 'a') as f:
@@ -86,6 +86,8 @@ def start_android_server(data_dir: str, host: str = "127.0.0.1", port: int = 0) 
         py_log(f"data_dir={data_dir}")
         os.environ['EUI_DATA_DIR'] = data_dir
         os.environ['EUI_FRONTEND_DIR'] = os.path.join(data_dir, 'frontend')
+        if external_dir:
+            os.environ['EUI_LOG_DIR'] = os.path.join(external_dir, 'log')
         py_log("calling setup_env...")
         run_configs.setup_env()
         py_log(f"setup_env done, IS_ANDROID={run_configs.IS_ANDROID}")
