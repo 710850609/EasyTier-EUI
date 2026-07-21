@@ -1,9 +1,7 @@
 import logging
 import os
-import signal
 import sys
 import time
-import webbrowser
 import threading
 from typing import Optional
 
@@ -75,21 +73,41 @@ def stop_server(handle: ServerHandle, port: int):
 
 def start_android_server(data_dir: str, host: str = "127.0.0.1", port: int = 0) -> dict:
     """Android 入口：初始化环境 + 启动 HTTP 服务，返回 {'port': int, 'host': str}"""
-    os.environ['EUI_DATA_DIR'] = data_dir
-    os.environ['EUI_FRONTEND_DIR'] = os.path.join(data_dir, 'frontend')
-    run_configs.setup_env()
-    host = host or run_configs.EUI_RUN_HOST or '127.0.0.1'
-    port = port or run_configs.EUI_RUN_PORT or 0
-    handle = start_server(host, port, exit_on_failure=True)
-    if handle is None:
-        raise RuntimeError("HTTP server start failed")
-    actual_port = handle.server.server_address[1]
-    logging.info(f"Android HTTP server started on {host}:{actual_port}")
-    return {"port": actual_port, "host": host}
+    import traceback
+    log_file = os.path.join(data_dir, 'easytier_py.log')
+    def py_log(msg):
+        try:
+            with open(log_file, 'a') as f:
+                f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} [PY] {msg}\n")
+        except:
+            pass
+    try:
+        py_log("start_android_server called")
+        py_log(f"data_dir={data_dir}")
+        os.environ['EUI_DATA_DIR'] = data_dir
+        os.environ['EUI_FRONTEND_DIR'] = os.path.join(data_dir, 'frontend')
+        py_log("calling setup_env...")
+        run_configs.setup_env()
+        py_log(f"setup_env done, IS_ANDROID={run_configs.IS_ANDROID}")
+        host = host or run_configs.EUI_RUN_HOST or '127.0.0.1'
+        port = port or run_configs.EUI_RUN_PORT or 0
+        py_log(f"calling start_server host={host} port={port}...")
+        handle = start_server(host, port, exit_on_failure=True)
+        if handle is None:
+            py_log("ERROR: start_server returned None")
+            raise RuntimeError("HTTP server start failed")
+        actual_port = handle.server.server_address[1]
+        py_log(f"HTTP server started on {host}:{actual_port}")
+        return {"port": actual_port, "host": host}
+    except Exception as e:
+        py_log(f"EXCEPTION: {e}\n{traceback.format_exc()}")
+        raise
 
 
 def run():
     """main_noui 完整入口：启动服务 + 打开浏览器 + 等待 Ctrl+C 停止"""
+    import signal
+    import webbrowser
     permissions_util.handle_elevated_run()
     run_configs.setup_env()
     run_mode = run_configs.get_run_mode()
