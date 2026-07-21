@@ -1,0 +1,74 @@
+name: Build Android APK
+
+on:
+#  push:
+#    branches: [main, master]
+#    paths:
+#      - 'android/**'
+#      - 'backend/**'
+#      - 'frontend/**'
+#      - '.github/workflows/build-android.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Build Frontend
+        run: |
+          cd frontend
+          npm ci
+          npm run build
+
+      - name: Copy Frontend to Android Assets
+        run: |
+          mkdir -p android/app/src/main/assets/frontend
+          cp -r frontend/dist/* android/app/src/main/assets/frontend/
+
+      - name: Copy Python Backend
+        run: |
+          mkdir -p android/app/src/main/python
+          cp -r backend/* android/app/src/main/python/
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'platforms;android-34 build-tools;34.0.0 ndk;26.1.10909125'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          build-root-directory: android
+          generate-job-summary: false
+
+      - name: Generate Gradle Wrapper
+        working-directory: android
+        run: gradle wrapper --gradle-version 8.5
+
+      - name: Build Debug APK
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: EasyTier-EUI-debug
+          path: android/app/build/outputs/apk/debug/*.apk
+          retention-days: 30
