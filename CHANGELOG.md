@@ -12,7 +12,7 @@
 - New: [Configuration] - Proxy & Forwarding, now supports subnet mapping
 - Fix: [Config] - Proxy & Forward, save startup failure when subnet mapping is empty
 - New: Support for musl Linux, supporting x86_64, aarch64, riscv64 architectures
--New: Support for Docker deployment
+- New: Support for Docker deployment
 - New: [Apps] - [Docker] page added with Docker version usage guide
 
 ##  1.5
