@@ -18,19 +18,17 @@ android {
         ndk {
             abiFilters += listOf("arm64-v8a")
         }
+    }
 
-        /*
-        python {
-            buildPython("python3.11")
-            pip {
-                install("tomlkit")
-                install("requests")
-                install("dnspython")
-                install("qrcode")
-            }
-            srcDir("src/main/python")
+    python {
+        buildPython("python3.11")
+        pip {
+            install("tomlkit")
+            install("requests")
+            install("dnspython")
+            install("qrcode")
         }
-        */
+        srcDir("src/main/python")
     }
 
     buildTypes {
