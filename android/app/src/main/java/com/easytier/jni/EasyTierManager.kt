@@ -148,13 +148,7 @@ class EasyTierManager(
         if (addr < 0) return null
         val networkLength = inet.optInt("network_length", 24)
 
-        val ip = String.format(
-            "%d.%d.%d.%d",
-            (addr shr 24) and 0xFF,
-            (addr shr 16) and 0xFF,
-            (addr shr 8) and 0xFF,
-            addr and 0xFF
-        )
+        val ip = "${(addr shr 24) and 0xFF}.${(addr shr 16) and 0xFF}.${(addr shr 8) and 0xFF}.${addr and 0xFF}"
         return "$ip/$networkLength"
     }
 
