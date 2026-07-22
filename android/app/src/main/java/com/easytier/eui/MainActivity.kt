@@ -91,7 +91,11 @@ class MainActivity : AppCompatActivity() {
 
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                WebView.setDataDirectorySuffix(applicationContext.packageName)
+                try {
+                    WebView.setDataDirectorySuffix(applicationContext.packageName)
+                } catch (e: IllegalStateException) {
+                    Log.w(TAG, "WebView.setDataDirectorySuffix failed (already initialized)", e)
+                }
             }
             enableEdgeToEdge(
                 statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT),
