@@ -7,6 +7,8 @@ import android.app.PendingIntent
 import android.content.Intent
 import android.net.VpnService
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.os.ParcelFileDescriptor
 import android.util.Log
 import androidx.core.app.NotificationCompat
@@ -18,6 +20,7 @@ class EasyTierVpnService : VpnService() {
     private var vpnInterface: ParcelFileDescriptor? = null
     private var isRunning = false
     private var instanceName: String? = null
+    private val handler = Handler(Looper.getMainLooper())
 
     companion object {
         private const val TAG = "EasyTierVpnService"
@@ -46,76 +49,89 @@ class EasyTierVpnService : VpnService() {
 
         Log.i(TAG, "Starting VPN - IPv4: $ipv4Address, Proxy CIDRs: $proxyCidrs, Instance: $instanceName")
 
-        thread {
-            try {
-                setupVpnInterface(ipv4Address, proxyCidrs)
-            } catch (t: Throwable) {
-                Log.e(TAG, "VPN setup failed", t)
+        try {
+            val pfd = createVpnInterface(ipv4Address, proxyCidrs)
+            if (pfd == null) {
+                Log.e(TAG, "Failed to create VPN interface")
                 stopForeground(STOP_FOREGROUND_REMOVE)
                 stopSelf()
+                return START_NOT_STICKY
             }
+
+            vpnInterface = pfd
+            startForeground(NOTIFICATION_ID, buildNotification("EasyTier VPN Connected"))
+
+            val name = instanceName!!
+            val fd = pfd.fd
+            thread {
+                try {
+                    setTunFd(name, fd)
+                    runKeepAliveLoop()
+                } catch (t: Throwable) {
+                    Log.e(TAG, "VPN background error", t)
+                } finally {
+                    handler.post {
+                        stopForeground(STOP_FOREGROUND_REMOVE)
+                        stopSelf()
+                    }
+                }
+            }
+        } catch (t: Throwable) {
+            Log.e(TAG, "VPN setup failed", t)
+            stopForeground(STOP_FOREGROUND_REMOVE)
+            stopSelf()
         }
 
         return START_STICKY
     }
 
-    private fun setupVpnInterface(ipv4Address: String, proxyCidrs: List<String>) {
+    private fun createVpnInterface(ipv4Address: String, proxyCidrs: List<String>): ParcelFileDescriptor? {
+        val (ip, networkLength) = parseIpv4Address(ipv4Address)
+
+        val builder = Builder()
+        builder.setSession("EasyTier VPN")
+            .addAddress(ip, networkLength)
+            .addDnsServer("223.5.5.5")
+            .addDnsServer("114.114.114.114")
+            .addDisallowedApplication(packageName)
+
+        proxyCidrs.forEach { cidr ->
+            try {
+                val (routeIp, routeLength) = parseCidr(cidr)
+                builder.addRoute(routeIp, routeLength)
+                Log.d(TAG, "Added route: $routeIp/$routeLength")
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to parse CIDR: $cidr", e)
+            }
+        }
+
+        return builder.establish()
+    }
+
+    private fun setTunFd(instanceName: String, fd: Int) {
         try {
-            val (ip, networkLength) = parseIpv4Address(ipv4Address)
-
-            val builder = Builder()
-            builder.setSession("EasyTier VPN")
-                .addAddress(ip, networkLength)
-                .addDnsServer("223.5.5.5")
-                .addDnsServer("114.114.114.114")
-                .addDisallowedApplication(packageName)
-
-            proxyCidrs.forEach { cidr ->
-                try {
-                    val (routeIp, routeLength) = parseCidr(cidr)
-                    builder.addRoute(routeIp, routeLength)
-                    Log.d(TAG, "Added route: $routeIp/$routeLength")
-                } catch (e: Exception) {
-                    Log.w(TAG, "Failed to parse CIDR: $cidr", e)
-                }
-            }
-
-            vpnInterface = builder.establish()
-
-            if (vpnInterface == null) {
-                Log.e(TAG, "Failed to create VPN interface - VPN permission not granted?")
-                stopForeground(STOP_FOREGROUND_REMOVE)
-                stopSelf()
-                return
-            }
-
-            Log.i(TAG, "VPN interface created successfully")
-
-            startForeground(NOTIFICATION_ID, buildNotification("EasyTier VPN Connected"))
-
-            instanceName?.let { name ->
-                val fd = vpnInterface!!.fd
-                val bridge = Python.getInstance().getModule("utils.et_bridge")!!.get("et_bridge")!!
-                val result = bridge.callAttr("set_tun_fd", name, fd).toInt()
-                if (result == 0) {
-                    Log.i(TAG, "TUN fd set successfully: $fd")
-                } else {
-                    Log.e(TAG, "TUN fd set failed: $result")
-                }
-            }
-
-            isRunning = true
-
-            while (isRunning && vpnInterface != null) {
-                Thread.sleep(1000)
+            val bridge = Python.getInstance().getModule("utils.et_bridge")!!.get("et_bridge")!!
+            val result = bridge.callAttr("set_tun_fd", instanceName, fd).toInt()
+            if (result == 0) {
+                Log.i(TAG, "TUN fd set successfully: $fd")
+            } else {
+                Log.e(TAG, "TUN fd set failed: $result")
             }
         } catch (t: Throwable) {
-            Log.e(TAG, "Error during VPN interface setup", t)
-            stopForeground(STOP_FOREGROUND_REMOVE)
-            stopSelf()
-        } finally {
-            cleanup()
+            Log.e(TAG, "TUN fd set error", t)
         }
+    }
+
+    private fun runKeepAliveLoop() {
+        isRunning = true
+        while (isRunning && vpnInterface != null) {
+            try {
+                Thread.sleep(1000)
+            } catch (e: InterruptedException) {
+                break
+            }
+        }
+        Log.i(TAG, "Keep-alive loop ended")
     }
 
     private fun parseIpv4Address(ipv4Address: String): Pair<String, Int> {

@@ -10,6 +10,7 @@ import com.chaquo.python.Python
 import com.easytier.eui.EasyTierVpnService
 import org.json.JSONArray
 import org.json.JSONObject
+import java.util.concurrent.Executors
 
 class EasyTierManager(
     private val activity: Activity,
@@ -21,6 +22,9 @@ class EasyTierManager(
     }
 
     private val handler = Handler(Looper.getMainLooper())
+    private val monitorExecutor = Executors.newSingleThreadExecutor { r ->
+        Thread(r, "EasyTierMonitor").apply { isDaemon = true }
+    }
     private var isMonitoring = false
     private var currentIpv4: String? = null
     private var currentProxyCidrs: List<String> = emptyList()
@@ -32,8 +36,18 @@ class EasyTierManager(
 
     private val monitorRunnable = object : Runnable {
         override fun run() {
-            if (isMonitoring) {
-                monitorNetworkStatus()
+            if (!isMonitoring) return
+            monitorExecutor.execute {
+                try {
+                    val result = collectNetworkStatus()
+                    handler.post {
+                        if (isMonitoring) {
+                            processNetworkStatus(result)
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Monitor background error", e)
+                }
                 handler.postDelayed(this, MONITOR_INTERVAL)
             }
         }
@@ -62,15 +76,25 @@ class EasyTierManager(
         Log.i(TAG, "Monitoring stopped")
     }
 
-    private fun monitorNetworkStatus() {
+    private data class NetworkStatus(
+        val infosJson: String?,
+        val error: String?
+    )
+
+    private fun collectNetworkStatus(): NetworkStatus {
         try {
-            val infosJson = try {
-                val bridge = Python.getInstance().getModule("utils.et_bridge")!!.get("et_bridge")!!
-                bridge.callAttr("collect_network_infos_json", 10).toString()
-            } catch (e: Exception) {
-                Log.w(TAG, "Python FFI call failed", e)
-                null
-            }
+            val bridge = Python.getInstance().getModule("utils.et_bridge")!!.get("et_bridge")!!
+            val json = bridge.callAttr("collect_network_infos_json", 10).toString()
+            return NetworkStatus(json, null)
+        } catch (e: Exception) {
+            Log.w(TAG, "Python FFI call failed", e)
+            return NetworkStatus(null, null)
+        }
+    }
+
+    private fun processNetworkStatus(status: NetworkStatus) {
+        try {
+            val infosJson = status.infosJson
             if (infosJson.isNullOrEmpty() || infosJson == "{}") {
                 if (currentInstanceName != null) {
                     stopVpnService()
