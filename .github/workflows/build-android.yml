@@ -51,36 +51,34 @@ jobs:
         id: cache-keystore
         uses: actions/cache@v4
         with:
-          path: ~/.android/debug.keystore
-          key: android-debug-keystore-v2-${{ github.ref_name }}
+          path: ~/.easytier-keystore/debug.keystore
+          key: android-debug-keystore-v3-${{ github.ref_name }}
           restore-keys: |
+            android-debug-keystore-v3-
             android-debug-keystore-v2-
 
-      - name: Verify keystore
-        run: |
-          if [ -f ~/.android/debug.keystore ]; then
-            echo "Keystore found, fingerprint:"
-            keytool -list -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey 2>/dev/null || true
-          else
-            echo "Keystore NOT found"
-          fi
-
-      - name: Generate debug keystore
+      - name: Generate debug keystore (if not cached)
         if: steps.cache-keystore.outputs.cache-hit != 'true'
         run: |
-          mkdir -p ~/.android
+          mkdir -p ~/.easytier-keystore
           keytool -genkey -v \
-            -keystore ~/.android/debug.keystore \
+            -keystore ~/.easytier-keystore/debug.keystore \
             -storepass android -keypass android \
             -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 \
             -dname "CN=Android Debug,O=Android,C=US"
-          echo "New keystore generated, fingerprint:"
-          keytool -list -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey 2>/dev/null || true
+          echo "New keystore generated"
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
         with:
           packages: 'platforms;android-34 build-tools;34.0.0 ndk;26.1.10909125'
+
+      - name: Install debug keystore
+        run: |
+          mkdir -p ~/.android
+          cp ~/.easytier-keystore/debug.keystore ~/.android/debug.keystore
+          echo "Keystore installed, fingerprint:"
+          keytool -list -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey 2>/dev/null || true
 
       - name: Setup Gradle
         run: |

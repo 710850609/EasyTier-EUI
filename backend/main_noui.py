@@ -76,7 +76,7 @@ def start_android_server(data_dir: str, external_dir: str = "", host: str = "127
     import traceback
     run_configs.setup_env()
     run_mode = run_configs.get_run_mode()
-    log_util.setup_log(log_file=os.path.join(run_configs.log_dir(), 'app.log'),
+    log_util.setup_log(log_file=os.path.join(external_dir, 'app.log'),
                        log_level=logging.INFO if run_mode > 0 else logging.DEBUG,
                        enabled_console=run_mode == 0)
     log_file = os.path.join(external_dir or data_dir, 'easytier_py.log')
