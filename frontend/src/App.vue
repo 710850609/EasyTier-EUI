@@ -13,11 +13,23 @@ import Layout from './components/Layout.vue'
   box-sizing: border-box;
 }
 
+:root {
+  --sat: env(safe-area-inset-top);
+  --sar: env(safe-area-inset-right);
+  --sab: env(safe-area-inset-bottom);
+  --sal: env(safe-area-inset-left);
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   background: var(--color-body);
   color: var(--color-text);
   transition: background-color 0.3s, color 0.3s;
+  padding-top: var(--sat);
+  padding-right: var(--sar);
+  padding-bottom: var(--sab);
+  padding-left: var(--sal);
+  min-height: 100vh;
 }
 
 /* 全局滚动条样式 */

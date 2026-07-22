@@ -114,7 +114,8 @@ const handleSubMenuClick = (key) => {
   bottom: 0;
   left: 0;
   right: 0;
-  height: 64px;
+  height: calc(64px + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
   background: rgba(var(--color-surface-rgb, 255, 255, 255), 0.55);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);

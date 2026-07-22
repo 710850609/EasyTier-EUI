@@ -144,7 +144,7 @@ onUnmounted(() => {
 }
 
 .main-content.has-bottom-nav {
-  padding-bottom: 64px;
+  padding-bottom: calc(64px + env(safe-area-inset-bottom));
 }
 
 .content-wrapper {
