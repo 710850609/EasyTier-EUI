@@ -39,6 +39,8 @@ def setup_env():
     IS_ANDROID = 'ANDROID_ARGUMENT' in os.environ or 'ANDROID_ROOT' in os.environ
     if IS_ANDROID:
         data_dir = os.environ.get('EUI_DATA_DIR', '/data/data/com.easytier.eui/files')
+        # 使用外部目录
+        data_dir = os.environ.get('EUI_LOG_DIR', data_dir)
         CONFIG_DIR = os.path.join(data_dir, 'config')
         DATA_DIR = os.path.join(data_dir, 'data')
         LOG_DIR = os.environ.get('EUI_LOG_DIR', os.path.join(data_dir, 'log'))

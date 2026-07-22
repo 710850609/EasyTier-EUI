@@ -105,10 +105,11 @@ def start(params=None, *args, **kwargs):
         doc = tomlkit.parse(toml_config)
         # 兼容 compression -> data_compress_algo
         flags = doc.get('flags', {})
-        compression = flags.get('compression')
-        if compression:
+        if 'compression' in flags:
+            compression = flags['compression']
+            if compression:
+                flags['data_compress_algo'] = compression.capitalize()
             del flags['compression']
-            flags['data_compress_algo'] = compression
             doc['flags'] = flags
             logging.info(f"兼容处理 compression -> data_compress_algo")
             toml_config = tomlkit.dumps(doc)

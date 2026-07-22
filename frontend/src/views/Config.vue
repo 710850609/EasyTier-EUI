@@ -2937,7 +2937,11 @@ html.dark .config-section-panel {
       max-width: 100vw !important;
       max-height: 100vh !important;
       border-radius: 0 !important;
-      padding-top: var(--sat) !important;
+      padding-top: 0 !important;
+    }
+    .code-editor-wrapper {
+      padding-top: var(--sat);
+      height: calc(100% - var(--sat));
     }
     .code-editor-content-area {
       padding-bottom: var(--sab);
