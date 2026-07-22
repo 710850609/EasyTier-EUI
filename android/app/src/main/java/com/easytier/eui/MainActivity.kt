@@ -1,6 +1,7 @@
 package com.easytier.eui
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.Color
 import android.os.Bundle
@@ -121,6 +122,7 @@ class MainActivity : AppCompatActivity() {
             }
             // 设置 WebView 背景色匹配主题，避免启动闪白
             setBackgroundColor(getWebViewBackgroundColor())
+            overScrollMode = android.view.View.OVER_SCROLL_NEVER
 
             webChromeClient = WebChromeClient()
             webViewClient = object : WebViewClient() {
@@ -237,6 +239,14 @@ class MainActivity : AppCompatActivity() {
         easyTierManager?.stopMonitoring()
         scope.cancel()
         super.onDestroy()
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == EasyTierManager.VPN_REQUEST_CODE) {
+            log("INFO", "VPN authorization result: $resultCode")
+            easyTierManager?.onVpnAuthorizationResult(resultCode)
+        }
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {

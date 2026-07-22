@@ -20,6 +20,10 @@ import Layout from './components/Layout.vue'
   --sal: env(safe-area-inset-left);
 }
 
+html {
+  overscroll-behavior: none;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   background: var(--color-body);
@@ -30,6 +34,7 @@ body {
   padding-bottom: var(--sab);
   padding-left: var(--sal);
   min-height: 100vh;
+  overscroll-behavior: none;
 }
 
 /* 全局滚动条样式 */

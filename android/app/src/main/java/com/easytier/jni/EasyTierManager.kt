@@ -2,6 +2,7 @@ package com.easytier.jni
 
 import android.app.Activity
 import android.content.Intent
+import android.net.VpnService
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
@@ -16,6 +17,7 @@ class EasyTierManager(
     companion object {
         private const val TAG = "EasyTierManager"
         private const val MONITOR_INTERVAL = 3000L
+        const val VPN_REQUEST_CODE = 1001
     }
 
     private val handler = Handler(Looper.getMainLooper())
@@ -24,6 +26,9 @@ class EasyTierManager(
     private var currentProxyCidrs: List<String> = emptyList()
     private var currentInstanceName: String? = null
     private var vpnServiceIntent: Intent? = null
+    private var pendingVpnIpv4: String? = null
+    private var pendingVpnProxyCidrs: List<String> = emptyList()
+    private var isVpnAuthorizationPending = false
 
     private val monitorRunnable = object : Runnable {
         override fun run() {
@@ -162,6 +167,31 @@ class EasyTierManager(
     }
 
     private fun startVpnService(ipv4: String, proxyCidrs: List<String>) {
+        if (isVpnAuthorizationPending) {
+            Log.w(TAG, "VPN authorization already pending, queuing request")
+            pendingVpnIpv4 = ipv4
+            pendingVpnProxyCidrs = proxyCidrs
+            return
+        }
+
+        try {
+            val prepareIntent = VpnService.prepare(activity)
+            if (prepareIntent != null) {
+                Log.i(TAG, "VPN not authorized, requesting user permission")
+                isVpnAuthorizationPending = true
+                pendingVpnIpv4 = ipv4
+                pendingVpnProxyCidrs = proxyCidrs
+                activity.startActivityForResult(prepareIntent, VPN_REQUEST_CODE)
+                return
+            }
+
+            doStartVpnService(ipv4, proxyCidrs)
+        } catch (e: Exception) {
+            Log.e(TAG, "Start VPN error", e)
+        }
+    }
+
+    private fun doStartVpnService(ipv4: String, proxyCidrs: List<String>) {
         try {
             val intent = Intent(activity, EasyTierVpnService::class.java)
             intent.putExtra("ipv4_address", ipv4)
@@ -177,11 +207,33 @@ class EasyTierManager(
         }
     }
 
+    fun onVpnAuthorizationResult(resultCode: Int) {
+        isVpnAuthorizationPending = false
+        if (resultCode == Activity.RESULT_OK) {
+            Log.i(TAG, "VPN authorization granted")
+            val ipv4 = pendingVpnIpv4
+            val proxyCidrs = pendingVpnProxyCidrs
+            pendingVpnIpv4 = null
+            pendingVpnProxyCidrs = emptyList()
+            if (ipv4 != null) {
+                doStartVpnService(ipv4, proxyCidrs)
+            }
+        } else {
+            Log.w(TAG, "VPN authorization denied by user")
+            pendingVpnIpv4 = null
+            pendingVpnProxyCidrs = emptyList()
+        }
+    }
+
     private fun stopVpnService() {
         try {
-            vpnServiceIntent?.let { intent ->
-                activity.stopService(intent)
+            if (vpnServiceIntent != null) {
+                activity.stopService(vpnServiceIntent)
                 Log.i(TAG, "VPN stopped")
+            } else {
+                val intent = Intent(activity, EasyTierVpnService::class.java)
+                activity.stopService(intent)
+                Log.i(TAG, "VPN stopped (fallback intent)")
             }
             vpnServiceIntent = null
         } catch (e: Exception) {

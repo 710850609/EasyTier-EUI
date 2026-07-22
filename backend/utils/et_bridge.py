@@ -216,7 +216,7 @@ class EasyTierFFI:
 
     def collect_network_infos_json(self, max_length: int = 10) -> str:
         info = self.collect_network_infos(max_length)
-        return json.dumps(info)
+        return json.dumps({"map": info})
 
     def set_tun_fd(self, instance_name: str, fd: int) -> int:
         """
@@ -247,12 +247,54 @@ class EasyTierFFI:
         self._lib.free_string(out)
         return result
 
+    def _cost_to_string(self, cost: int) -> str:
+        if cost == 0:
+            return 'Local'
+        elif cost == 1:
+            return 'p2p'
+        else:
+            return f'relay{cost - 1}'
+
+    def _nat_type_to_string(self, nat_type: int) -> str:
+        nat_types = {
+            0: 'Unknown',
+            1: 'FullCone',
+            2: 'Restricted',
+            3: 'PortRestricted',
+            4: 'Symmetric',
+            5: 'SymmetricEasyInc',
+            6: 'SymmetricEasyDec',
+            7: 'SymUdpFirewall',
+            8: 'NoPAT',
+            9: 'OpenInternet',
+        }
+        return nat_types.get(nat_type, 'Unknown')
+
+    def _ipv4_addr_to_string(self, addr_obj) -> str:
+        if not addr_obj:
+            return ''
+        address = addr_obj.get('address', {})
+        addr = address.get('addr', 0)
+        if not addr:
+            return ''
+        return f"{(addr >> 24) & 0xFF}.{(addr >> 16) & 0xFF}.{(addr >> 8) & 0xFF}.{addr & 0xFF}"
+
+    def _ipv4_inet_to_string(self, inet_obj) -> str:
+        if not inet_obj:
+            return ''
+        ip = self._ipv4_addr_to_string(inet_obj)
+        if not ip:
+            return ''
+        network_length = inet_obj.get('network_length', 24)
+        return f"{ip}/{network_length}"
+
     def get_version(self) -> str:
         info = self.collect_network_infos(1)
         if info:
             inst = next(iter(info.values()), {})
             if isinstance(inst, dict):
-                return inst.get('version', 'unknown')
+                my_node = inst.get('my_node_info', {})
+                return my_node.get('version', 'unknown')
         return 'unknown'
 
     def get_status(self) -> Optional[Dict[str, Any]]:
@@ -261,9 +303,10 @@ class EasyTierFFI:
             return None
         inst = next(iter(info.values()), {})
         if isinstance(inst, dict):
+            pairs = inst.get('peer_route_pairs', [])
             return {
                 'running': inst.get('running', False),
-                'peers_count': len(inst.get('peer_nodes', [])),
+                'peers_count': len(pairs),
                 'error_msg': inst.get('error_msg', ''),
             }
         return None
@@ -273,20 +316,91 @@ class EasyTierFFI:
         if not info:
             return []
         inst = next(iter(info.values()), {})
-        if isinstance(inst, dict):
-            peers = []
-            for node in inst.get('peer_nodes', []):
-                peers.append({
-                    'peer_id': node.get('peer_id', ''),
-                    'ip_address': node.get('virtual_ipv4', ''),
-                    'hostname': node.get('hostname', ''),
-                    'latency_ms': node.get('latency_ms', 0),
-                    'bytes_sent': node.get('bytes_sent', 0),
-                    'bytes_received': node.get('bytes_received', 0),
-                    'connected': node.get('connected', False),
-                })
-            return peers
-        return []
+        if not isinstance(inst, dict):
+            return []
+
+        my_node = inst.get('my_node_info', {})
+        my_stun = my_node.get('stun_info', {})
+        my_nat_type = self._nat_type_to_string(my_stun.get('udp_nat_type', 0))
+        my_version = my_node.get('version', '')
+        my_hostname = my_node.get('hostname', '')
+        my_ipv4 = self._ipv4_inet_to_string(my_node.get('virtual_ipv4'))
+
+        peers = []
+        pairs = inst.get('peer_route_pairs', [])
+        for pair in pairs:
+            route = pair.get('route', {})
+            peer = pair.get('peer', {})
+
+            peer_id = route.get('peer_id', 0)
+            hostname = route.get('hostname', '')
+            version = route.get('version', '')
+            cost = self._cost_to_string(route.get('cost', 0))
+            proxy_cidrs = route.get('proxy_cidrs', [])
+            cidr = proxy_cidrs[0] if proxy_cidrs else ''
+            ipv4 = self._ipv4_inet_to_string(route.get('ipv4_addr'))
+
+            conns = peer.get('conns', [])
+            conn = conns[0] if conns else {}
+            stats = conn.get('stats', {})
+            tunnel = conn.get('tunnel', {})
+
+            lat_us = stats.get('latency_us', 0)
+            if isinstance(lat_us, str):
+                try:
+                    lat_us = int(lat_us)
+                except ValueError:
+                    lat_us = 0
+            lat_ms = max(1, lat_us // 1000) if lat_us else 0
+
+            rx_bytes = stats.get('rx_bytes', 0)
+            tx_bytes = stats.get('tx_bytes', 0)
+            loss_rate = conn.get('loss_rate', 0)
+            tunnel_proto = tunnel.get('tunnel_type', '')
+
+            stun = route.get('stun_info', {})
+            nat_type = self._nat_type_to_string(stun.get('udp_nat_type', 0))
+
+            node_type = 'server' if hostname.startswith('PublicServer_') else 'normal'
+            if node_type == 'server':
+                hostname = hostname.replace('PublicServer_', '')
+
+            peers.append({
+                'id': peer_id,
+                'peer_id': peer_id,
+                'ipv4': ipv4,
+                'hostname': hostname,
+                'cost': cost,
+                'lat_ms': lat_ms,
+                'loss_rate': loss_rate,
+                'rx_bytes': rx_bytes,
+                'tx_bytes': tx_bytes,
+                'nat_type': nat_type,
+                'tunnel_proto': tunnel_proto,
+                'cidr': cidr,
+                'version': version,
+                'type': node_type,
+            })
+
+        if my_ipv4:
+            peers.append({
+                'id': my_node.get('peer_id', 0),
+                'peer_id': my_node.get('peer_id', 0),
+                'ipv4': my_ipv4,
+                'hostname': my_hostname,
+                'cost': 'Local',
+                'lat_ms': 0,
+                'loss_rate': 0,
+                'rx_bytes': '-',
+                'tx_bytes': '-',
+                'nat_type': my_nat_type,
+                'tunnel_proto': '',
+                'cidr': my_ipv4,
+                'version': my_version,
+                'type': 'normal',
+            })
+
+        return peers
 
 
 et_bridge = EasyTierFFI()

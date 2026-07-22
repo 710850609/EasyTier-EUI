@@ -7,6 +7,7 @@ import sys
 
 from utils import common_util, et_run_info
 from utils import run_configs
+from utils.et_bridge import et_bridge
 from utils.validators import Validator
 
 
@@ -16,7 +17,13 @@ def list(params, *args, **kwargs):
     :param request_data: 请求数据（可选）
     """
     if run_configs.IS_ANDROID:
-        return []  # Android mock: 无节点
+        if et_bridge is None or et_bridge._lib is None:
+            return []
+        try:
+            return et_bridge.get_peers()
+        except Exception as e:
+            logging.warning(f"Android: Failed to get peers: {e}")
+            return []
     profile, _ = Validator.not_empty(params, 'profile', 'validate.profile_required')
     profile = Validator.check_profile(profile)
     info = et_run_info.get(profile)

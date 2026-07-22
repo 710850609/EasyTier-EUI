@@ -42,6 +42,8 @@ class EasyTierVpnService : VpnService() {
             return START_NOT_STICKY
         }
 
+        startForeground(NOTIFICATION_ID, buildNotification("EasyTier VPN Starting..."))
+
         Log.i(TAG, "Starting VPN - IPv4: $ipv4Address, Proxy CIDRs: $proxyCidrs, Instance: $instanceName")
 
         thread {
@@ -49,6 +51,7 @@ class EasyTierVpnService : VpnService() {
                 setupVpnInterface(ipv4Address, proxyCidrs)
             } catch (t: Throwable) {
                 Log.e(TAG, "VPN setup failed", t)
+                stopForeground(STOP_FOREGROUND_REMOVE)
                 stopSelf()
             }
         }
@@ -80,7 +83,9 @@ class EasyTierVpnService : VpnService() {
             vpnInterface = builder.establish()
 
             if (vpnInterface == null) {
-                Log.e(TAG, "Failed to create VPN interface")
+                Log.e(TAG, "Failed to create VPN interface - VPN permission not granted?")
+                stopForeground(STOP_FOREGROUND_REMOVE)
+                stopSelf()
                 return
             }
 
@@ -90,7 +95,6 @@ class EasyTierVpnService : VpnService() {
 
             instanceName?.let { name ->
                 val fd = vpnInterface!!.fd
-                // !! 只是对 Kotlin 编译器声明"这个返回值不会是 null"
                 val bridge = Python.getInstance().getModule("utils.et_bridge")!!.get("et_bridge")!!
                 val result = bridge.callAttr("set_tun_fd", name, fd).toInt()
                 if (result == 0) {
@@ -107,6 +111,8 @@ class EasyTierVpnService : VpnService() {
             }
         } catch (t: Throwable) {
             Log.e(TAG, "Error during VPN interface setup", t)
+            stopForeground(STOP_FOREGROUND_REMOVE)
+            stopSelf()
         } finally {
             cleanup()
         }
@@ -166,6 +172,7 @@ class EasyTierVpnService : VpnService() {
 
     override fun onDestroy() {
         cleanup()
+        stopForeground(STOP_FOREGROUND_REMOVE)
         super.onDestroy()
         Log.d(TAG, "VPN Service destroyed")
     }
