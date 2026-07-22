@@ -96,30 +96,52 @@ def start(params=None, *args, **kwargs):
     if run_configs.IS_ANDROID:
         if not _FFI_AVAILABLE or et_bridge is None or et_bridge._lib is None:
             raise HttpException(get_message('service.not_supported_android'))
-        profile, _ = Validator.not_empty(params, 'profile', 'validate.profile_required')
-        config_file = run_configs.et_config_file(profile)
-        if not Path(config_file).exists():
-            raise HttpException(get_message('service.config_not_found'))
-        with open(config_file, 'r', encoding='utf-8') as f:
-            toml_config = f.read()
-        doc = tomlkit.parse(toml_config)
-        # 兼容 compression -> data_compress_algo
-        flags = doc.get('flags', {})
-        if 'compression' in flags:
-            compression = flags['compression']
-            if compression:
-                flags['data_compress_algo'] = compression.capitalize()
-            del flags['compression']
-            doc['flags'] = flags
-            logging.info(f"兼容处理 compression -> data_compress_algo")
-            toml_config = tomlkit.dumps(doc)
-        ret = et_bridge.parse_config(toml_config)
-        if ret != 0:
-            raise HttpException(f"Config parse failed: {et_bridge.get_last_error()}")
-        ret = et_bridge.run_network_instance(toml_config)
-        if ret != 0:
-            raise HttpException(f"Failed to start instance: {et_bridge.get_last_error()}")
-        logging.info(f"Android: Started EasyTier instance '{profile}' via FFI")
+        try:
+            profile, _ = Validator.not_empty(params, 'profile', 'validate.profile_required')
+            logging.info(f"Android: Starting EasyTier instance '{profile}'...")
+            config_file = run_configs.et_config_file(profile)
+            if not Path(config_file).exists():
+                raise HttpException(get_message('service.config_not_found'))
+            logging.info(f"Android: Config file: {config_file}")
+            with open(config_file, 'r', encoding='utf-8') as f:
+                toml_config = f.read()
+            logging.info(f"Android: Config loaded, {len(toml_config)} bytes")
+            doc = tomlkit.parse(toml_config)
+            # 兼容 compression -> data_compress_algo
+            flags = doc.get('flags', {})
+            if 'compression' in flags:
+                compression = flags['compression']
+                if compression:
+                    flags['data_compress_algo'] = compression.capitalize()
+                del flags['compression']
+                doc['flags'] = flags
+                logging.info(f"兼容处理 compression -> data_compress_algo")
+                toml_config = tomlkit.dumps(doc)
+            logging.info(f"Android: Parsing config via FFI...")
+            ret = et_bridge.parse_config(toml_config)
+            if ret != 0:
+                raise HttpException(f"Config parse failed: {et_bridge.get_last_error()}")
+            logging.info(f"Android: Config parsed OK, running instance via FFI...")
+            ret = et_bridge.run_network_instance(toml_config)
+            if ret != 0:
+                raise HttpException(f"Failed to start instance: {et_bridge.get_last_error()}")
+            logging.info(f"Android: Started EasyTier instance '{profile}' via FFI")
+            # 启动后立即检查实例状态
+            try:
+                infos = et_bridge.collect_network_infos(5)
+                keys = list(infos.keys())
+                logging.info(f"Android: After start, instances found: {keys}")
+                for k, v in infos.items():
+                    if isinstance(v, dict):
+                        running = v.get('running', False)
+                        my_node = v.get('my_node_info', {})
+                        virtual_ipv4 = my_node.get('virtual_ipv4', {})
+                        logging.info(f"Android: Instance '{k}' running={running}, ipv4={virtual_ipv4}")
+            except Exception as check_err:
+                logging.warning(f"Android: Failed to check instance after start: {check_err}")
+        except Exception as e:
+            logging.exception(f"Android: Failed to start instance: {e}")
+            raise
         return
     profile, _ = Validator.not_empty(params, 'profile', 'validate.profile_required')
     config_file = run_configs.et_config_file(profile)

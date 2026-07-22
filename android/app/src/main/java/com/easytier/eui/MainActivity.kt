@@ -308,6 +308,26 @@ class MainActivity : AppCompatActivity() {
         log("INFO", "onDestroy: done")
     }
 
+    override fun onPause() {
+        super.onPause()
+        log("INFO", "onPause: isFinishing=$isFinishing")
+    }
+
+    override fun onResume() {
+        super.onResume()
+        log("INFO", "onResume")
+    }
+
+    override fun onStop() {
+        super.onStop()
+        log("INFO", "onStop: isFinishing=$isFinishing")
+    }
+
+    override fun onStart() {
+        super.onStart()
+        log("INFO", "onStart")
+    }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         log("INFO", "onActivityResult: requestCode=$requestCode, resultCode=$resultCode")

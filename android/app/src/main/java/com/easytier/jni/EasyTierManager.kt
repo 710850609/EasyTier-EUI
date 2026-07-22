@@ -3,6 +3,7 @@ package com.easytier.jni
 import android.app.Activity
 import android.content.Intent
 import android.net.VpnService
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
@@ -277,6 +278,14 @@ class EasyTierManager(
 
     private fun restartVpnService(ipv4: String, proxyCidrs: List<String>) {
         try {
+            if (activity.isFinishing) {
+                logToFile("ERROR", "Activity is finishing, cannot restart VPN")
+                return
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1 && activity.isDestroyed) {
+                logToFile("ERROR", "Activity is destroyed, cannot restart VPN")
+                return
+            }
             logToFile("INFO", "Restarting VPN: $ipv4")
             stopVpnService()
             startVpnService(ipv4, proxyCidrs)
@@ -297,18 +306,33 @@ class EasyTierManager(
             return
         }
 
+        if (activity.isFinishing) {
+            logToFile("ERROR", "Activity is finishing, cannot start VPN")
+            Log.e(TAG, "Activity is finishing, cannot start VPN")
+            return
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1 && activity.isDestroyed) {
+            logToFile("ERROR", "Activity is destroyed, cannot start VPN")
+            Log.e(TAG, "Activity is destroyed, cannot start VPN")
+            return
+        }
+
         try {
+            logToFile("INFO", "Calling VpnService.prepare()...")
             val prepareIntent = VpnService.prepare(activity)
             if (prepareIntent != null) {
-                logToFile("INFO", "VPN not authorized, requesting user permission")
+                logToFile("INFO", "VPN not authorized, prepareIntent class=${prepareIntent.component?.className}")
                 Log.i(TAG, "VPN not authorized, requesting user permission")
                 isVpnAuthorizationPending = true
                 pendingVpnIpv4 = ipv4
                 pendingVpnProxyCidrs = proxyCidrs
                 activity.startActivityForResult(prepareIntent, VPN_REQUEST_CODE)
+                logToFile("INFO", "startActivityForResult called, VPN_REQUEST_CODE=$VPN_REQUEST_CODE")
                 return
             }
 
+            logToFile("INFO", "VPN already authorized, starting service directly")
             doStartVpnService(ipv4, proxyCidrs)
         } catch (e: Exception) {
             val sw = StringWriter()
@@ -320,12 +344,32 @@ class EasyTierManager(
 
     private fun doStartVpnService(ipv4: String, proxyCidrs: List<String>) {
         try {
+            if (activity.isFinishing) {
+                logToFile("ERROR", "Activity is finishing, cannot doStartVpnService")
+                return
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1 && activity.isDestroyed) {
+                logToFile("ERROR", "Activity is destroyed, cannot doStartVpnService")
+                return
+            }
+
+            val recheck = VpnService.prepare(activity)
+            if (recheck != null) {
+                logToFile("WARN", "VPN authorization lost between check and start, re-requesting")
+                isVpnAuthorizationPending = true
+                pendingVpnIpv4 = ipv4
+                pendingVpnProxyCidrs = proxyCidrs
+                activity.startActivityForResult(recheck, VPN_REQUEST_CODE)
+                return
+            }
+
             EasyTierVpnService.logFile = logFile
             val intent = Intent(activity, EasyTierVpnService::class.java)
             intent.putExtra("ipv4_address", ipv4)
             intent.putStringArrayListExtra("proxy_cidrs", ArrayList(proxyCidrs))
             intent.putExtra("instance_name", currentInstanceName ?: "unknown")
 
+            logToFile("INFO", "doStartVpnService: calling startService")
             activity.startService(intent)
             vpnServiceIntent = intent
 
@@ -349,6 +393,10 @@ class EasyTierManager(
             pendingVpnIpv4 = null
             pendingVpnProxyCidrs = emptyList()
             if (ipv4 != null) {
+                if (activity.isFinishing || (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1 && activity.isDestroyed)) {
+                    logToFile("ERROR", "Activity is finishing/destroyed, cannot start VPN after auth")
+                    return
+                }
                 doStartVpnService(ipv4, proxyCidrs)
             }
         } else {
