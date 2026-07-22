@@ -2,6 +2,7 @@ package com.easytier.eui
 
 import android.annotation.SuppressLint
 import android.content.res.Configuration
+import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -13,8 +14,9 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.SystemBarStyle
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.webkit.WebSettingsCompat
 import androidx.webkit.WebViewFeature
@@ -73,9 +75,12 @@ class MainActivity : AppCompatActivity() {
         log("INFO", "ExternalFilesDir: ${getExternalFilesDir(null)?.absolutePath}")
 
         try {
+            enableEdgeToEdge(
+                statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT),
+                navigationBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT)
+            )
             setContentView(R.layout.activity_main)
             webView = findViewById(R.id.webview)
-            setupImmersiveMode()
             setupWebView()
             setupBackPress()
 
@@ -110,6 +115,8 @@ class MainActivity : AppCompatActivity() {
             if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
                 WebSettingsCompat.setAlgorithmicDarkeningAllowed(settings, false)
             }
+            // 设置 WebView 背景色匹配主题，避免启动闪白
+            setBackgroundColor(getWebViewBackgroundColor())
 
             webChromeClient = WebChromeClient()
             webViewClient = object : WebViewClient() {
@@ -121,17 +128,6 @@ class MainActivity : AppCompatActivity() {
             }
 
             addJavascriptInterface(AndroidBridge(), "AndroidBridge")
-        }
-    }
-
-    private fun setupImmersiveMode() {
-        WindowCompat.setDecorFitsSystemWindows(window, true)
-        window.statusBarColor = android.graphics.Color.TRANSPARENT
-        window.navigationBarColor = android.graphics.Color.TRANSPARENT
-        val isDark = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
-        WindowInsetsControllerCompat(window, window.decorView).apply {
-            isAppearanceLightStatusBars = !isDark
-            isAppearanceLightNavigationBars = !isDark
         }
     }
 
@@ -153,9 +149,9 @@ class MainActivity : AppCompatActivity() {
         webView.evaluateJavascript("""
             (function() {
                 if (${isDark}) {
-                    document.documentElement.classList.add('dark-mode');
+                    document.documentElement.classList.add('dark');
                 } else {
-                    document.documentElement.classList.remove('dark-mode');
+                    document.documentElement.classList.remove('dark');
                 }
                 document.documentElement.style.setProperty('--system-dark', '${if (isDark) "1" else "0"}');
             })();
@@ -244,8 +240,18 @@ class MainActivity : AppCompatActivity() {
         val isDark = (newConfig.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
         WindowInsetsControllerCompat(window, window.decorView).apply {
             isAppearanceLightStatusBars = !isDark
+            isAppearanceLightNavigationBars = !isDark
         }
+        webView.setBackgroundColor(getWebViewBackgroundColor())
         injectDarkMode()
+    }
+
+    private fun getWebViewBackgroundColor(): Int {
+        return if ((resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES) {
+            Color.parseColor("#121212")
+        } else {
+            Color.parseColor("#FFFFFF")
+        }
     }
 
     inner class AndroidBridge {

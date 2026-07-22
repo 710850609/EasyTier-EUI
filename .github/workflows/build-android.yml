@@ -104,7 +104,9 @@ jobs:
           VERSION=$(sed -n 's/^version = "\([^"]*\)"/\1/p' easytier/Cargo.toml | head -n 1)
           echo "EasyTier version: $VERSION"
           echo "EasyTier commit: $(git rev-parse HEAD)"
-          cd easytier-contrib/easytier-android-jni
+          cd easytier-contrib/easytier-ffi
+          cargo ndk -t arm64-v8a build --release
+          cd ../easytier-android-jni
           cargo ndk -t arm64-v8a build --release
 
       - name: Integrate FFI into APK

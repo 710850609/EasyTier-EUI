@@ -127,7 +127,9 @@ jobs:
         working-directory: ${{ env.EASYTIER_DIR }}
         if: matrix.target == 'aarch64-linux-android'
         run: |
-          cd easytier-contrib/easytier-android-jni
+          cd easytier-contrib/easytier-ffi
+          cargo ndk -t arm64-v8a build --release
+          cd ../easytier-android-jni
           cargo ndk -t arm64-v8a build --release
 
       - name: Package artifact
