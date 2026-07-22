@@ -11,11 +11,17 @@ import json
 import logging
 import os
 import platform
+import time
 from ctypes import c_char_p, c_int, c_void_p, POINTER, Structure, c_ulonglong
 from pathlib import Path
 from typing import Optional, Dict, Any, List
 
 logger = logging.getLogger(__name__)
+
+# 全局初始化保护：run_network_instance 后需要等待 core 初始化完成
+# 在此期间，collect_network_infos 会自动阻塞等待，防止 Rust 层 SIGABRT
+_last_instance_start_time = 0.0
+MIN_INIT_WAIT_SECONDS = 3.0
 
 
 class KeyValuePair(Structure):
@@ -137,7 +143,13 @@ class EasyTierFFI:
         if self._lib is None:
             return -1
         try:
-            return self._lib.run_network_instance(toml_config.encode('utf-8'))
+            ret = self._lib.run_network_instance(toml_config.encode('utf-8'))
+            if ret == 0:
+                global _last_instance_start_time
+                _last_instance_start_time = time.time()
+                logger.info(f"Instance started at {_last_instance_start_time}, "
+                           f"collect_network_infos will wait {MIN_INIT_WAIT_SECONDS}s before FFI calls")
+            return ret
         except Exception as e:
             logger.exception(f"run_network_instance failed: {e}")
             return -1
@@ -165,6 +177,8 @@ class EasyTierFFI:
         停止所有实例
         return: 0 成功，-1 失败
         """
+        global _last_instance_start_time
+        _last_instance_start_time = 0.0  # 重置，下次启动重新计时
         return self.retain_network_instance([])
 
     def delete_network_instance(self, instance_names: List[str]) -> int:
@@ -194,6 +208,14 @@ class EasyTierFFI:
         if self._lib is None:
             return {}
         try:
+            # 全局初始化保护：如果实例刚启动，等待 core 完成初始化
+            global _last_instance_start_time
+            elapsed = time.time() - _last_instance_start_time
+            if elapsed < MIN_INIT_WAIT_SECONDS:
+                wait_time = MIN_INIT_WAIT_SECONDS - elapsed
+                logger.info(f"collect_network_infos: waiting {wait_time:.1f}s for core init "
+                           f"(elapsed={elapsed:.1f}s, min={MIN_INIT_WAIT_SECONDS}s)")
+                time.sleep(wait_time)
             infos = (KeyValuePair * max_length)()
             count = self._lib.collect_network_infos(infos, max_length)
             if count < 0:
@@ -351,14 +373,6 @@ class EasyTierFFI:
 
     def get_peers(self) -> list:
         try:
-            # Android：等待 core 就绪的短暂延迟，防止 race condition 导致 SIGSEGV
-            try:
-                from utils import run_configs
-                if run_configs.IS_ANDROID:
-                    import time as _time
-                    _time.sleep(0.5)
-            except ImportError:
-                pass
             info = self.collect_network_infos(1)
             if not info:
                 return []

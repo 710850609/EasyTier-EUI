@@ -126,30 +126,19 @@ def start(params=None, *args, **kwargs):
             if ret != 0:
                 raise HttpException(f"Failed to start instance: {et_bridge.get_last_error()}")
             logging.info(f"Android: Started EasyTier instance '{profile}' via FFI")
-            # 等待 core 完全初始化，避免 collect_network_infos 访问未就绪数据结构导致 SIGSEGV
-            import time
-            max_retries = 5
-            for attempt in range(max_retries):
-                time.sleep(1.0)
-                logging.info(f"Android: Waiting for core init (attempt {attempt + 1}/{max_retries})...")
-                try:
-                    infos = et_bridge.collect_network_infos(5)
-                    keys = list(infos.keys())
-                    logging.info(f"Android: After start, instances found: {keys}")
-                    if keys:
-                        for k, v in infos.items():
-                            if isinstance(v, dict):
-                                running = v.get('running', False)
-                                my_node = v.get('my_node_info', {})
-                                virtual_ipv4 = my_node.get('virtual_ipv4', {})
-                                logging.info(f"Android: Instance '{k}' running={running}, ipv4={virtual_ipv4}")
-                        break  # 找到了实例，退出重试
-                    else:
-                        logging.info(f"Android: No instances found yet, will retry...")
-                except Exception as check_err:
-                    logging.warning(f"Android: Failed to check instance after start: {check_err}")
-            else:
-                logging.warning(f"Android: Instance not found after {max_retries} retries, may still be initializing")
+            # 检查实例状态（collect_network_infos 内部会自动等待 core 初始化完成）
+            try:
+                infos = et_bridge.collect_network_infos(5)
+                keys = list(infos.keys())
+                logging.info(f"Android: After start, instances found: {keys}")
+                for k, v in infos.items():
+                    if isinstance(v, dict):
+                        running = v.get('running', False)
+                        my_node = v.get('my_node_info', {})
+                        virtual_ipv4 = my_node.get('virtual_ipv4', {})
+                        logging.info(f"Android: Instance '{k}' running={running}, ipv4={virtual_ipv4}")
+            except Exception as check_err:
+                logging.warning(f"Android: Failed to check instance after start: {check_err}")
         except Exception as e:
             logging.exception(f"Android: Failed to start instance: {e}")
             raise
