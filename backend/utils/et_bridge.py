@@ -122,7 +122,11 @@ class EasyTierFFI:
         """
         if self._lib is None:
             return -1
-        return self._lib.parse_config(toml_config.encode('utf-8'))
+        try:
+            return self._lib.parse_config(toml_config.encode('utf-8'))
+        except Exception as e:
+            logger.exception(f"parse_config failed: {e}")
+            return -1
 
     def run_network_instance(self, toml_config: str) -> int:
         """
@@ -132,7 +136,11 @@ class EasyTierFFI:
         """
         if self._lib is None:
             return -1
-        return self._lib.run_network_instance(toml_config.encode('utf-8'))
+        try:
+            return self._lib.run_network_instance(toml_config.encode('utf-8'))
+        except Exception as e:
+            logger.exception(f"run_network_instance failed: {e}")
+            return -1
 
     def retain_network_instance(self, instance_names: List[str]) -> int:
         """
@@ -142,11 +150,15 @@ class EasyTierFFI:
         """
         if self._lib is None:
             return -1
-        if not instance_names:
-            return self._lib.retain_network_instance(None, 0)
-        encoded = [name.encode('utf-8') for name in instance_names]
-        arr = (c_char_p * len(encoded))(*encoded)
-        return self._lib.retain_network_instance(arr, len(encoded))
+        try:
+            if not instance_names:
+                return self._lib.retain_network_instance(None, 0)
+            encoded = [name.encode('utf-8') for name in instance_names]
+            arr = (c_char_p * len(encoded))(*encoded)
+            return self._lib.retain_network_instance(arr, len(encoded))
+        except Exception as e:
+            logger.exception(f"retain_network_instance failed: {e}")
+            return -1
 
     def stop_all_instances(self) -> int:
         """
@@ -163,11 +175,15 @@ class EasyTierFFI:
         """
         if self._lib is None:
             return -1
-        if not instance_names:
-            return 0
-        encoded = [name.encode('utf-8') for name in instance_names]
-        arr = (c_char_p * len(encoded))(*encoded)
-        return self._lib.delete_network_instance(arr, len(encoded))
+        try:
+            if not instance_names:
+                return 0
+            encoded = [name.encode('utf-8') for name in instance_names]
+            arr = (c_char_p * len(encoded))(*encoded)
+            return self._lib.delete_network_instance(arr, len(encoded))
+        except Exception as e:
+            logger.exception(f"delete_network_instance failed: {e}")
+            return -1
 
     def collect_network_infos(self, max_length: int = 10) -> Dict[str, Any]:
         """
@@ -177,21 +193,25 @@ class EasyTierFFI:
         """
         if self._lib is None:
             return {}
-        infos = (KeyValuePair * max_length)()
-        count = self._lib.collect_network_infos(infos, max_length)
-        if count < 0:
-            raise RuntimeError(f"collect_network_infos failed: {self.get_last_error()}")
-        result = {}
-        for i in range(min(count, max_length)):
-            key = infos[i].key.decode('utf-8') if infos[i].key else ""
-            value = infos[i].value.decode('utf-8') if infos[i].value else ""
-            try:
-                result[key] = json.loads(value)
-            except json.JSONDecodeError:
-                result[key] = value
-            self._lib.free_string(infos[i].key)
-            self._lib.free_string(infos[i].value)
-        return result
+        try:
+            infos = (KeyValuePair * max_length)()
+            count = self._lib.collect_network_infos(infos, max_length)
+            if count < 0:
+                raise RuntimeError(f"collect_network_infos failed: {self.get_last_error()}")
+            result = {}
+            for i in range(min(count, max_length)):
+                key = infos[i].key.decode('utf-8') if infos[i].key else ""
+                value = infos[i].value.decode('utf-8') if infos[i].value else ""
+                try:
+                    result[key] = json.loads(value)
+                except json.JSONDecodeError:
+                    result[key] = value
+                self._lib.free_string(infos[i].key)
+                self._lib.free_string(infos[i].value)
+            return result
+        except Exception as e:
+            logger.exception(f"collect_network_infos failed: {e}")
+            return {}
 
     def list_instance(self, max_length: int = 10) -> Dict[str, str]:
         """
@@ -201,18 +221,22 @@ class EasyTierFFI:
         """
         if self._lib is None:
             return {}
-        infos = (KeyValuePair * max_length)()
-        count = self._lib.list_instance(infos, max_length)
-        if count < 0:
-            raise RuntimeError(f"list_instance failed: {self.get_last_error()}")
-        result = {}
-        for i in range(min(count, max_length)):
-            key = infos[i].key.decode('utf-8') if infos[i].key else ""
-            value = infos[i].value.decode('utf-8') if infos[i].value else ""
-            result[key] = value
-            self._lib.free_string(infos[i].key)
-            self._lib.free_string(infos[i].value)
-        return result
+        try:
+            infos = (KeyValuePair * max_length)()
+            count = self._lib.list_instance(infos, max_length)
+            if count < 0:
+                raise RuntimeError(f"list_instance failed: {self.get_last_error()}")
+            result = {}
+            for i in range(min(count, max_length)):
+                key = infos[i].key.decode('utf-8') if infos[i].key else ""
+                value = infos[i].value.decode('utf-8') if infos[i].value else ""
+                result[key] = value
+                self._lib.free_string(infos[i].key)
+                self._lib.free_string(infos[i].value)
+            return result
+        except Exception as e:
+            logger.exception(f"list_instance failed: {e}")
+            return {}
 
     def collect_network_infos_json(self, max_length: int = 10) -> str:
         info = self.collect_network_infos(max_length)
@@ -227,25 +251,33 @@ class EasyTierFFI:
         """
         if self._lib is None:
             return -1
-        return self._lib.set_tun_fd(instance_name.encode('utf-8'), fd)
+        try:
+            return self._lib.set_tun_fd(instance_name.encode('utf-8'), fd)
+        except Exception as e:
+            logger.exception(f"set_tun_fd failed: {e}")
+            return -1
 
     def call_json_rpc(self, service_name: str, method_name: str,
                       payload_json: str, domain_name: str = None) -> Optional[str]:
         if self._lib is None:
             return None
-        out = c_char_p()
-        ret = self._lib.call_json_rpc(
-            service_name.encode('utf-8'),
-            method_name.encode('utf-8'),
-            (domain_name or "").encode('utf-8'),
-            payload_json.encode('utf-8'),
-            ctypes.byref(out)
-        )
-        if ret != 0:
-            raise RuntimeError(f"call_json_rpc failed: {self.get_last_error()}")
-        result = out.value.decode('utf-8') if out.value else ""
-        self._lib.free_string(out)
-        return result
+        try:
+            out = c_char_p()
+            ret = self._lib.call_json_rpc(
+                service_name.encode('utf-8'),
+                method_name.encode('utf-8'),
+                (domain_name or "").encode('utf-8'),
+                payload_json.encode('utf-8'),
+                ctypes.byref(out)
+            )
+            if ret != 0:
+                raise RuntimeError(f"call_json_rpc failed: {self.get_last_error()}")
+            result = out.value.decode('utf-8') if out.value else ""
+            self._lib.free_string(out)
+            return result
+        except Exception as e:
+            logger.exception(f"call_json_rpc failed: {e}")
+            return None
 
     def _cost_to_string(self, cost: int) -> str:
         if cost == 0:
@@ -289,118 +321,128 @@ class EasyTierFFI:
         return f"{ip}/{network_length}"
 
     def get_version(self) -> str:
-        info = self.collect_network_infos(1)
-        if info:
-            inst = next(iter(info.values()), {})
-            if isinstance(inst, dict):
-                my_node = inst.get('my_node_info', {})
-                return my_node.get('version', 'unknown')
+        try:
+            info = self.collect_network_infos(1)
+            if info:
+                inst = next(iter(info.values()), {})
+                if isinstance(inst, dict):
+                    my_node = inst.get('my_node_info', {})
+                    return my_node.get('version', 'unknown')
+        except Exception as e:
+            logger.exception(f"get_version failed: {e}")
         return 'unknown'
 
     def get_status(self) -> Optional[Dict[str, Any]]:
-        info = self.collect_network_infos(1)
-        if not info:
-            return None
-        inst = next(iter(info.values()), {})
-        if isinstance(inst, dict):
-            pairs = inst.get('peer_route_pairs', [])
-            return {
-                'running': inst.get('running', False),
-                'peers_count': len(pairs),
-                'error_msg': inst.get('error_msg', ''),
-            }
+        try:
+            info = self.collect_network_infos(1)
+            if not info:
+                return None
+            inst = next(iter(info.values()), {})
+            if isinstance(inst, dict):
+                pairs = inst.get('peer_route_pairs', [])
+                return {
+                    'running': inst.get('running', False),
+                    'peers_count': len(pairs),
+                    'error_msg': inst.get('error_msg', ''),
+                }
+        except Exception as e:
+            logger.exception(f"get_status failed: {e}")
         return None
 
     def get_peers(self) -> list:
-        info = self.collect_network_infos(1)
-        if not info:
+        try:
+            info = self.collect_network_infos(1)
+            if not info:
+                return []
+            inst = next(iter(info.values()), {})
+            if not isinstance(inst, dict):
+                return []
+
+            my_node = inst.get('my_node_info', {})
+            my_stun = my_node.get('stun_info', {})
+            my_nat_type = self._nat_type_to_string(my_stun.get('udp_nat_type', 0))
+            my_version = my_node.get('version', '')
+            my_hostname = my_node.get('hostname', '')
+            my_ipv4 = self._ipv4_inet_to_string(my_node.get('virtual_ipv4'))
+
+            peers = []
+            pairs = inst.get('peer_route_pairs', [])
+            for pair in pairs:
+                route = pair.get('route', {})
+                peer = pair.get('peer', {})
+
+                peer_id = route.get('peer_id', 0)
+                hostname = route.get('hostname', '')
+                version = route.get('version', '')
+                cost = self._cost_to_string(route.get('cost', 0))
+                proxy_cidrs = route.get('proxy_cidrs', [])
+                cidr = proxy_cidrs[0] if proxy_cidrs else ''
+                ipv4 = self._ipv4_inet_to_string(route.get('ipv4_addr'))
+
+                conns = peer.get('conns', [])
+                conn = conns[0] if conns else {}
+                stats = conn.get('stats', {})
+                tunnel = conn.get('tunnel', {})
+
+                lat_us = stats.get('latency_us', 0)
+                if isinstance(lat_us, str):
+                    try:
+                        lat_us = int(lat_us)
+                    except ValueError:
+                        lat_us = 0
+                lat_ms = max(1, lat_us // 1000) if lat_us else 0
+
+                rx_bytes = stats.get('rx_bytes', 0)
+                tx_bytes = stats.get('tx_bytes', 0)
+                loss_rate = conn.get('loss_rate', 0)
+                tunnel_proto = tunnel.get('tunnel_type', '')
+
+                stun = route.get('stun_info', {})
+                nat_type = self._nat_type_to_string(stun.get('udp_nat_type', 0))
+
+                node_type = 'server' if hostname.startswith('PublicServer_') else 'normal'
+                if node_type == 'server':
+                    hostname = hostname.replace('PublicServer_', '')
+
+                peers.append({
+                    'id': peer_id,
+                    'peer_id': peer_id,
+                    'ipv4': ipv4,
+                    'hostname': hostname,
+                    'cost': cost,
+                    'lat_ms': lat_ms,
+                    'loss_rate': loss_rate,
+                    'rx_bytes': rx_bytes,
+                    'tx_bytes': tx_bytes,
+                    'nat_type': nat_type,
+                    'tunnel_proto': tunnel_proto,
+                    'cidr': cidr,
+                    'version': version,
+                    'type': node_type,
+                })
+
+            if my_ipv4:
+                peers.append({
+                    'id': my_node.get('peer_id', 0),
+                    'peer_id': my_node.get('peer_id', 0),
+                    'ipv4': my_ipv4,
+                    'hostname': my_hostname,
+                    'cost': 'Local',
+                    'lat_ms': 0,
+                    'loss_rate': 0,
+                    'rx_bytes': '-',
+                    'tx_bytes': '-',
+                    'nat_type': my_nat_type,
+                    'tunnel_proto': '',
+                    'cidr': my_ipv4,
+                    'version': my_version,
+                    'type': 'normal',
+                })
+
+            return peers
+        except Exception as e:
+            logger.exception(f"get_peers failed: {e}")
             return []
-        inst = next(iter(info.values()), {})
-        if not isinstance(inst, dict):
-            return []
-
-        my_node = inst.get('my_node_info', {})
-        my_stun = my_node.get('stun_info', {})
-        my_nat_type = self._nat_type_to_string(my_stun.get('udp_nat_type', 0))
-        my_version = my_node.get('version', '')
-        my_hostname = my_node.get('hostname', '')
-        my_ipv4 = self._ipv4_inet_to_string(my_node.get('virtual_ipv4'))
-
-        peers = []
-        pairs = inst.get('peer_route_pairs', [])
-        for pair in pairs:
-            route = pair.get('route', {})
-            peer = pair.get('peer', {})
-
-            peer_id = route.get('peer_id', 0)
-            hostname = route.get('hostname', '')
-            version = route.get('version', '')
-            cost = self._cost_to_string(route.get('cost', 0))
-            proxy_cidrs = route.get('proxy_cidrs', [])
-            cidr = proxy_cidrs[0] if proxy_cidrs else ''
-            ipv4 = self._ipv4_inet_to_string(route.get('ipv4_addr'))
-
-            conns = peer.get('conns', [])
-            conn = conns[0] if conns else {}
-            stats = conn.get('stats', {})
-            tunnel = conn.get('tunnel', {})
-
-            lat_us = stats.get('latency_us', 0)
-            if isinstance(lat_us, str):
-                try:
-                    lat_us = int(lat_us)
-                except ValueError:
-                    lat_us = 0
-            lat_ms = max(1, lat_us // 1000) if lat_us else 0
-
-            rx_bytes = stats.get('rx_bytes', 0)
-            tx_bytes = stats.get('tx_bytes', 0)
-            loss_rate = conn.get('loss_rate', 0)
-            tunnel_proto = tunnel.get('tunnel_type', '')
-
-            stun = route.get('stun_info', {})
-            nat_type = self._nat_type_to_string(stun.get('udp_nat_type', 0))
-
-            node_type = 'server' if hostname.startswith('PublicServer_') else 'normal'
-            if node_type == 'server':
-                hostname = hostname.replace('PublicServer_', '')
-
-            peers.append({
-                'id': peer_id,
-                'peer_id': peer_id,
-                'ipv4': ipv4,
-                'hostname': hostname,
-                'cost': cost,
-                'lat_ms': lat_ms,
-                'loss_rate': loss_rate,
-                'rx_bytes': rx_bytes,
-                'tx_bytes': tx_bytes,
-                'nat_type': nat_type,
-                'tunnel_proto': tunnel_proto,
-                'cidr': cidr,
-                'version': version,
-                'type': node_type,
-            })
-
-        if my_ipv4:
-            peers.append({
-                'id': my_node.get('peer_id', 0),
-                'peer_id': my_node.get('peer_id', 0),
-                'ipv4': my_ipv4,
-                'hostname': my_hostname,
-                'cost': 'Local',
-                'lat_ms': 0,
-                'loss_rate': 0,
-                'rx_bytes': '-',
-                'tx_bytes': '-',
-                'nat_type': my_nat_type,
-                'tunnel_proto': '',
-                'cidr': my_ipv4,
-                'version': my_version,
-                'type': 'normal',
-            })
-
-        return peers
 
 
 et_bridge = EasyTierFFI()

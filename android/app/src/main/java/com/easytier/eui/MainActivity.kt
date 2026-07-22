@@ -289,6 +289,13 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun finish() {
+        val sw = StringWriter()
+        Thread.currentThread().stackTrace.forEach { sw.write("  $it\r\n") }
+        log("WARN", "finish() called! Stack trace:\r\n${sw}")
+        super.finish()
+    }
+
     override fun onDestroy() {
         log("INFO", "onDestroy: stopping monitoring and cancelling scope")
         try {
