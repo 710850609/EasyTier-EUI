@@ -106,8 +106,9 @@ class MainActivity : AppCompatActivity() {
             settings.allowContentAccess = true
             settings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
 
+            // 关闭 WebView 自带的暗黑渲染，由 JS 注入控制主题
             if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
-                WebSettingsCompat.setAlgorithmicDarkeningAllowed(settings, true)
+                WebSettingsCompat.setAlgorithmicDarkeningAllowed(settings, false)
             }
 
             webChromeClient = WebChromeClient()
@@ -126,14 +127,15 @@ class MainActivity : AppCompatActivity() {
     private fun setupImmersiveMode() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         window.statusBarColor = android.graphics.Color.TRANSPARENT
-        window.navigationBarColor = android.graphics.Color.parseColor("#80000000")
+        window.navigationBarColor = android.graphics.Color.TRANSPARENT
         val isDark = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
         WindowInsetsControllerCompat(window, window.decorView).apply {
             isAppearanceLightStatusBars = !isDark
+            isAppearanceLightNavigationBars = !isDark
         }
         ViewCompat.setOnApplyWindowInsetsListener(webView) { v, insets ->
-            val statusBars = insets.getInsets(WindowInsetsCompat.Type.statusBars())
-            v.setPadding(statusBars.left, statusBars.top, statusBars.right, 0)
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
     }
