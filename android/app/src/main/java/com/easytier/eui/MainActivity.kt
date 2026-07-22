@@ -71,6 +71,19 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         crashLogFile = File(getExternalFilesDir(null), "easytier_crash.log")
         crashLogFile.parentFile?.mkdirs()
+
+        Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+            val ts = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault()).format(Date())
+            val sw = StringWriter()
+            sw.write("$ts [FATAL] Uncaught exception in thread ${thread.name}\n")
+            throwable.printStackTrace(PrintWriter(sw))
+            try {
+                crashLogFile.appendText(sw.toString() + "\n")
+            } catch (_: Exception) {}
+            Log.e(TAG, "Uncaught exception in thread ${thread.name}", throwable)
+            throwable.printStackTrace()
+        }
+
         log("INFO", "=== App started ===")
         log("INFO", "Log file: ${crashLogFile.absolutePath}")
         log("INFO", "FilesDir: ${filesDir.absolutePath}")
@@ -205,7 +218,7 @@ class MainActivity : AppCompatActivity() {
         withContext(Dispatchers.Main) {
             log("INFO", "Loading WebView...")
             loadWebView()
-            easyTierManager = EasyTierManager(this@MainActivity)
+            easyTierManager = EasyTierManager(this@MainActivity, crashLogFile)
             easyTierManager?.startMonitoring()
             log("INFO", "VPN monitoring auto-started")
         }
@@ -276,7 +289,7 @@ class MainActivity : AppCompatActivity() {
         fun startVpn(): String {
             return try {
                 if (easyTierManager == null) {
-                    easyTierManager = EasyTierManager(this@MainActivity)
+                    easyTierManager = EasyTierManager(this@MainActivity, crashLogFile)
                 }
                 easyTierManager?.startMonitoring()
                 log("INFO", "VPN monitoring started via AndroidBridge")
