@@ -10,7 +10,7 @@ import android.os.Build
 import android.os.ParcelFileDescriptor
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import com.easytier.jni.EasyTierJNI
+import com.chaquo.python.Python
 import kotlin.concurrent.thread
 
 class EasyTierVpnService : VpnService() {
@@ -90,7 +90,8 @@ class EasyTierVpnService : VpnService() {
 
             instanceName?.let { name ->
                 val fd = vpnInterface!!.fd
-                val result = EasyTierJNI.setTunFd(name, fd)
+                val bridge = Python.getInstance().getModule("et_bridge").get("et_bridge")
+                val result = bridge.callAttr("set_tun_fd", name, fd).toInt()
                 if (result == 0) {
                     Log.i(TAG, "TUN fd set successfully: $fd")
                 } else {

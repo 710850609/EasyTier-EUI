@@ -92,7 +92,7 @@ jobs:
       - name: Install cargo-ndk
         run: cargo install cargo-ndk
 
-      - name: Build easytier-android-jni (produces both JNI + FFI .so)
+      - name: Build easytier-ffi for Android
         env:
           EASYTIER_REF: ${{ inputs.easytier_ref || 'main' }}
         run: |
@@ -106,16 +106,13 @@ jobs:
           echo "EasyTier commit: $(git rev-parse HEAD)"
           cd easytier-contrib/easytier-ffi
           cargo ndk -t arm64-v8a build --release
-          cd ../easytier-android-jni
-          cargo ndk -t arm64-v8a build --release
 
       - name: Integrate FFI into APK
         run: |
           LIB_DIR="android/app/src/main/jniLibs/arm64-v8a"
           mkdir -p "$LIB_DIR"
           cp easytier-src/target/aarch64-linux-android/release/libeasytier_ffi.so "$LIB_DIR/"
-          cp easytier-src/target/aarch64-linux-android/release/libeasytier_android_jni.so "$LIB_DIR/"
-          echo "FFI libraries integrated:"
+          echo "FFI library integrated:"
           ls -lh "$LIB_DIR/"
 
       - name: Setup Gradle

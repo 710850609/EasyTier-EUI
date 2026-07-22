@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import com.chaquo.python.Python
 import com.easytier.eui.EasyTierVpnService
 import org.json.JSONArray
 import org.json.JSONObject
@@ -58,8 +59,14 @@ class EasyTierManager(
 
     private fun monitorNetworkStatus() {
         try {
-            val infosJson = EasyTierJNI.collectNetworkInfos(10)
-            if (infosJson.isNullOrEmpty()) {
+            val infosJson = try {
+                val bridge = Python.getInstance().getModule("et_bridge").get("et_bridge")
+                bridge.callAttr("collect_network_infos_json", 10).toString()
+            } catch (e: Exception) {
+                Log.w(TAG, "Python FFI call failed", e)
+                null
+            }
+            if (infosJson.isNullOrEmpty() || infosJson == "{}") {
                 if (currentInstanceName != null) {
                     stopVpnService()
                     currentInstanceName = null

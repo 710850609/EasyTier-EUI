@@ -104,6 +104,9 @@ class EasyTierFFI:
         lib.free_string.restype = None
 
     def get_last_error(self) -> str:
+        """
+        获取最后错误信息
+        """
         if self._lib is None:
             return "FFI library not loaded"
         result = self._lib.get_error_msg()
@@ -112,16 +115,31 @@ class EasyTierFFI:
         return ""
 
     def parse_config(self, toml_config: str) -> int:
+        """
+        解析 TOML 配置
+        toml_config: 配置字符串
+        return: 0 成功，-1 失败
+        """
         if self._lib is None:
             return -1
         return self._lib.parse_config(toml_config.encode('utf-8'))
 
     def run_network_instance(self, toml_config: str) -> int:
+        """
+        启动网络实例
+        toml_config: 配置字符串
+        return: 0 成功，-1 失败
+        """
         if self._lib is None:
             return -1
         return self._lib.run_network_instance(toml_config.encode('utf-8'))
 
     def retain_network_instance(self, instance_names: List[str]) -> int:
+        """
+        保留单个实例
+        instance_names: 实例名
+        return: 0 成功，-1 失败
+        """
         if self._lib is None:
             return -1
         if not instance_names:
@@ -131,9 +149,18 @@ class EasyTierFFI:
         return self._lib.retain_network_instance(arr, len(encoded))
 
     def stop_all_instances(self) -> int:
+        """
+        停止所有实例
+        return: 0 成功，-1 失败
+        """
         return self.retain_network_instance([])
 
     def delete_network_instance(self, instance_names: List[str]) -> int:
+        """
+        删除网络实例
+        instance_names: 实例名
+        return: 0 成功，-1 失败
+        """
         if self._lib is None:
             return -1
         if not instance_names:
@@ -143,6 +170,11 @@ class EasyTierFFI:
         return self._lib.delete_network_instance(arr, len(encoded))
 
     def collect_network_infos(self, max_length: int = 10) -> Dict[str, Any]:
+        """
+        收集网络实例信息
+        max_length: 最大返回数量
+        return: 信息字符串数组
+        """
         if self._lib is None:
             return {}
         infos = (KeyValuePair * max_length)()
@@ -162,6 +194,11 @@ class EasyTierFFI:
         return result
 
     def list_instance(self, max_length: int = 10) -> Dict[str, str]:
+        """
+        收集网络信息为 Map
+        max_length: 最大返回数量
+        return: Map<String, String>
+        """
         if self._lib is None:
             return {}
         infos = (KeyValuePair * max_length)()
@@ -177,7 +214,17 @@ class EasyTierFFI:
             self._lib.free_string(infos[i].value)
         return result
 
+    def collect_network_infos_json(self, max_length: int = 10) -> str:
+        info = self.collect_network_infos(max_length)
+        return json.dumps(info)
+
     def set_tun_fd(self, instance_name: str, fd: int) -> int:
+        """
+        设置 TUN 文件描述符
+        instance_name: 实例名
+        fd: TUN 文件描述符
+        return: 0 成功，-1 失败
+        """
         if self._lib is None:
             return -1
         return self._lib.set_tun_fd(instance_name.encode('utf-8'), fd)

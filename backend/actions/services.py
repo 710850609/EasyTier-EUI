@@ -8,6 +8,8 @@ import threading
 from pathlib import Path
 from typing import Union, List, Optional, Set
 
+import tomlkit
+
 from http_dispatcher.dispatcher import HttpException
 from locales import get_message
 from utils import check_peers, common_util
@@ -100,6 +102,16 @@ def start(params=None, *args, **kwargs):
             raise HttpException(get_message('service.config_not_found'))
         with open(config_file, 'r', encoding='utf-8') as f:
             toml_config = f.read()
+        doc = tomlkit.parse(toml_config)
+        # 兼容 compression -> data_compress_algo
+        flags = doc.get('flags', {})
+        compression = flags.get('compression')
+        if compression:
+            del flags['compression']
+            flags['data_compress_algo'] = compression
+            doc['flags'] = flags
+            logging.info(f"兼容处理 compression -> data_compress_algo")
+            toml_config = tomlkit.dumps(doc)
         ret = et_bridge.parse_config(toml_config)
         if ret != 0:
             raise HttpException(f"Config parse failed: {et_bridge.get_last_error()}")

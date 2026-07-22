@@ -123,13 +123,11 @@ jobs:
         run: |
           cargo build --release --target ${{ matrix.target }} --package easytier-ffi
 
-      - name: Build Android JNI + FFI
+      - name: Build Android FFI
         working-directory: ${{ env.EASYTIER_DIR }}
         if: matrix.target == 'aarch64-linux-android'
         run: |
           cd easytier-contrib/easytier-ffi
-          cargo ndk -t arm64-v8a build --release
-          cd ../easytier-android-jni
           cargo ndk -t arm64-v8a build --release
 
       - name: Package artifact
@@ -139,9 +137,6 @@ jobs:
           BUILD_DIR="target/${{ matrix.target }}/release"
           mkdir -p "$OUT_DIR"
           cp "$BUILD_DIR/${{ matrix.ffi_lib }}" "$OUT_DIR/"
-          if [[ "${{ matrix.target }}" == "aarch64-linux-android" ]]; then
-            cp "$BUILD_DIR/libeasytier_android_jni.so" "$OUT_DIR/"
-          fi
           {
             echo "source_repo=$EASYTIER_REPO"
             echo "source_ref=${{ inputs.source_ref }}"

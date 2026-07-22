@@ -10,6 +10,7 @@ import android.util.Log
 import android.webkit.JavascriptInterface
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
+import android.os.Build
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
@@ -75,6 +76,9 @@ class MainActivity : AppCompatActivity() {
         log("INFO", "ExternalFilesDir: ${getExternalFilesDir(null)?.absolutePath}")
 
         try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                WebView.setDataDirectorySuffix(applicationContext.packageName)
+            }
             enableEdgeToEdge(
                 statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT),
                 navigationBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT)
@@ -162,10 +166,10 @@ class MainActivity : AppCompatActivity() {
         log("INFO", "Starting Python backend...")
 
         try {
-            System.loadLibrary("easytier_android_jni")
-            log("INFO", "libeasytier_android_jni.so loaded successfully")
+            System.loadLibrary("easytier_ffi")
+            log("INFO", "libeasytier_ffi.so pre-loaded for Python ctypes")
         } catch (e: UnsatisfiedLinkError) {
-            log("WARN", "libeasytier_android_jni.so not found, running without JNI: ${e.message}")
+            log("WARN", "libeasytier_ffi.so not found: ${e.message}")
         }
 
         log("INFO", "Copying frontend assets...")
