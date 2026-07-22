@@ -107,6 +107,9 @@ class MainActivity : AppCompatActivity() {
     private suspend fun startPythonBackend() {
         log("INFO", "Starting Python backend...")
 
+        log("INFO", "Copying frontend assets...")
+        copyAssetDir("frontend", File(filesDir, "frontend"))
+
         if (!Python.isStarted()) {
             log("INFO", "Python not started, calling Python.start()...")
             Python.start(AndroidPlatform(this))
@@ -142,6 +145,23 @@ class MainActivity : AppCompatActivity() {
         val url = "http://127.0.0.1:$httpServerPort/cgi/ThirdParty/EasyTier-EUI/index.cgi"
         log("INFO", "Loading WebView from $url")
         webView.loadUrl(url)
+    }
+
+    private fun copyAssetDir(assetPath: String, targetDir: File) {
+        val list = try { assets.list(assetPath) } catch (_: Exception) { null }
+        if (list == null || list.isEmpty()) {
+            try {
+                targetDir.parentFile?.mkdirs()
+                assets.open(assetPath).use { input ->
+                    targetDir.outputStream().use { output -> input.copyTo(output) }
+                }
+            } catch (_: Exception) {}
+            return
+        }
+        targetDir.mkdirs()
+        for (name in list) {
+            copyAssetDir("$assetPath/$name", File(targetDir, name))
+        }
     }
 
     override fun onDestroy() {

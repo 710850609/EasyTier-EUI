@@ -74,6 +74,11 @@ def stop_server(handle: ServerHandle, port: int):
 def start_android_server(data_dir: str, external_dir: str = "", host: str = "127.0.0.1", port: int = 0) -> dict:
     """Android 入口：初始化环境 + 启动 HTTP 服务，返回 {'port': int, 'host': str}"""
     import traceback
+    run_configs.setup_env()
+    run_mode = run_configs.get_run_mode()
+    log_util.setup_log(log_file=os.path.join(run_configs.log_dir(), 'app.log'),
+                       log_level=logging.INFO if run_mode > 0 else logging.DEBUG,
+                       enabled_console=run_mode == 0)
     log_file = os.path.join(external_dir or data_dir, 'easytier_py.log')
     def py_log(msg):
         try:
@@ -91,6 +96,12 @@ def start_android_server(data_dir: str, external_dir: str = "", host: str = "127
         py_log("calling setup_env...")
         run_configs.setup_env()
         py_log(f"setup_env done, IS_ANDROID={run_configs.IS_ANDROID}")
+        py_log(f"FRONTEND_PATH={run_configs.FRONTEND_PATH}")
+        if os.path.isdir(run_configs.FRONTEND_PATH):
+            files = os.listdir(run_configs.FRONTEND_PATH)
+            py_log(f"FRONTEND_PATH contents: {files}")
+        else:
+            py_log(f"FRONTEND_PATH does NOT exist or is not a directory")
         host = host or run_configs.EUI_RUN_HOST or '127.0.0.1'
         port = port or run_configs.EUI_RUN_PORT or 0
         py_log(f"calling start_server host={host} port={port}...")
