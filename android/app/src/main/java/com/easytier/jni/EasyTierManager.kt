@@ -70,6 +70,7 @@ class EasyTierManager(
             }
             logToFile("DEBUG", "monitorRunnable: posting to monitorExecutor")
             try {
+                val self = this
                 monitorExecutor.execute {
                     logToFile("DEBUG", "monitorExecutor: task started, calling collectNetworkStatus")
                     try {
@@ -78,6 +79,7 @@ class EasyTierManager(
                         handler.post {
                             if (isMonitoring) {
                                 processNetworkStatus(result)
+                                logToFile("DEBUG", "handler.post: processNetworkStatus returned")
                             }
                         }
                     } catch (e: Exception) {
@@ -87,7 +89,7 @@ class EasyTierManager(
                         Log.e(TAG, "Monitor background error", e)
                     }
                     logToFile("DEBUG", "monitorExecutor: scheduling next run in ${MONITOR_INTERVAL}ms")
-                    handler.postDelayed(this, MONITOR_INTERVAL)
+                    handler.postDelayed(self, MONITOR_INTERVAL)
                 }
             } catch (e: Exception) {
                 val sw = StringWriter()
@@ -163,19 +165,29 @@ class EasyTierManager(
         logToFile("DEBUG", "processNetworkStatus: start")
         try {
             val infosJson = status.infosJson
+            logToFile("DEBUG", "processNetworkStatus: infosJson=${infosJson?.take(200)}")
             if (infosJson.isNullOrEmpty() || infosJson == "{}") {
                 if (currentInstanceName != null) {
                     logToFile("INFO", "processNetworkStatus: no instances, stopping VPN")
                     stopVpnService()
                     currentInstanceName = null
                 }
+                logToFile("DEBUG", "processNetworkStatus: empty result, returning")
                 return
             }
 
+            logToFile("DEBUG", "processNetworkStatus: parsing JSONObject")
             val root = JSONObject(infosJson)
-            val map = root.optJSONObject("map") ?: return
+            logToFile("DEBUG", "processNetworkStatus: getting map")
+            val map = root.optJSONObject("map")
+            if (map == null) {
+                logToFile("DEBUG", "processNetworkStatus: map is null, returning")
+                return
+            }
+            logToFile("DEBUG", "processNetworkStatus: map keys=${map.keys().asSequence().toList()}")
 
             if (currentInstanceName != null) {
+                logToFile("DEBUG", "processNetworkStatus: checking current instance $currentInstanceName")
                 val info = map.optJSONObject(currentInstanceName)
                 if (info == null || !info.optBoolean("running", false)) {
                     logToFile("WARN", "Instance $currentInstanceName stopped, stopping VPN")
@@ -188,6 +200,7 @@ class EasyTierManager(
             }
 
             if (currentInstanceName == null) {
+                logToFile("DEBUG", "processNetworkStatus: looking for running instance")
                 for (key in map.keys()) {
                     val info = map.optJSONObject(key) ?: continue
                     if (info.optBoolean("running", false)) {
@@ -199,8 +212,12 @@ class EasyTierManager(
                 }
             }
 
-            if (currentInstanceName == null) return
+            if (currentInstanceName == null) {
+                logToFile("DEBUG", "processNetworkStatus: no running instance, returning")
+                return
+            }
 
+            logToFile("DEBUG", "processNetworkStatus: getting networkInfo for $currentInstanceName")
             val networkInfo = map.optJSONObject(currentInstanceName) ?: return
             if (!networkInfo.optBoolean("running", false)) return
 
@@ -238,11 +255,12 @@ class EasyTierManager(
                 currentProxyCidrs = newProxyCidrs.toList()
                 restartVpnService(newIpv4, newProxyCidrs)
             }
-        } catch (e: Exception) {
+            logToFile("DEBUG", "processNetworkStatus: done")
+        } catch (t: Throwable) {
             val sw = StringWriter()
-            e.printStackTrace(PrintWriter(sw))
-            logToFile("ERROR", "processNetworkStatus: exception: ${sw}")
-            Log.e(TAG, "Monitor error", e)
+            t.printStackTrace(PrintWriter(sw))
+            logToFile("ERROR", "processNetworkStatus: throwable: ${t.javaClass.name}: ${sw}")
+            Log.e(TAG, "Monitor error", t)
         }
     }
 

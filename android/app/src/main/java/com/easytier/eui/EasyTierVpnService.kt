@@ -50,11 +50,17 @@ class EasyTierVpnService : VpnService() {
 
     override fun onCreate() {
         super.onCreate()
-        createNotificationChannel()
+        try {
+            createNotificationChannel()
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to create notification channel", e)
+        }
+        logToFile("INFO", "VPN Service created")
         Log.d(TAG, "VPN Service created")
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        logToFile("INFO", "onStartCommand: flags=$flags, startId=$startId")
         val ipv4Address = intent?.getStringExtra("ipv4_address")
         val proxyCidrs = intent?.getStringArrayListExtra("proxy_cidrs") ?: arrayListOf()
         instanceName = intent?.getStringExtra("instance_name")
@@ -119,7 +125,9 @@ class EasyTierVpnService : VpnService() {
     }
 
     private fun createVpnInterface(ipv4Address: String, proxyCidrs: List<String>): ParcelFileDescriptor? {
+        logToFile("INFO", "createVpnInterface: ipv4=$ipv4Address, cidrs=${proxyCidrs.size}")
         val (ip, networkLength) = parseIpv4Address(ipv4Address)
+        logToFile("DEBUG", "createVpnInterface: parsed ip=$ip, prefix=$networkLength")
 
         val builder = Builder()
         builder.setSession("EasyTier VPN")
@@ -132,13 +140,22 @@ class EasyTierVpnService : VpnService() {
             try {
                 val (routeIp, routeLength) = parseCidr(cidr)
                 builder.addRoute(routeIp, routeLength)
+                logToFile("DEBUG", "Added route: $routeIp/$routeLength")
                 Log.d(TAG, "Added route: $routeIp/$routeLength")
             } catch (e: Exception) {
+                logToFile("WARN", "Failed to parse CIDR: $cidr - ${e.message}")
                 Log.w(TAG, "Failed to parse CIDR: $cidr", e)
             }
         }
 
-        return builder.establish()
+        logToFile("INFO", "createVpnInterface: calling builder.establish()")
+        val pfd = builder.establish()
+        if (pfd == null) {
+            logToFile("ERROR", "createVpnInterface: builder.establish() returned null")
+        } else {
+            logToFile("INFO", "createVpnInterface: builder.establish() succeeded, fd=${pfd.fd}")
+        }
+        return pfd
     }
 
     private fun setTunFd(instanceName: String, fd: Int) {
@@ -162,31 +179,44 @@ class EasyTierVpnService : VpnService() {
 
     private fun runKeepAliveLoop() {
         isRunning = true
+        logToFile("INFO", "Keep-alive loop started")
         while (isRunning && vpnInterface != null) {
             try {
                 Thread.sleep(1000)
             } catch (e: InterruptedException) {
+                logToFile("INFO", "Keep-alive loop interrupted")
                 break
             }
         }
+        logToFile("INFO", "Keep-alive loop ended (isRunning=$isRunning, vpnInterface=${if (vpnInterface != null) "present" else "null"})")
         Log.i(TAG, "Keep-alive loop ended")
     }
 
     private fun parseIpv4Address(ipv4Address: String): Pair<String, Int> {
-        return if (ipv4Address.contains("/")) {
-            val parts = ipv4Address.split("/")
-            Pair(parts[0], parts[1].toInt())
-        } else {
-            Pair(ipv4Address, 24)
+        return try {
+            if (ipv4Address.contains("/")) {
+                val parts = ipv4Address.split("/")
+                Pair(parts[0], parts[1].toInt())
+            } else {
+                Pair(ipv4Address, 24)
+            }
+        } catch (e: Exception) {
+            logToFile("ERROR", "parseIpv4Address failed for '$ipv4Address': ${e.message}")
+            throw e
         }
     }
 
     private fun parseCidr(cidr: String): Pair<String, Int> {
-        val parts = cidr.split("/")
-        if (parts.size != 2) {
-            throw IllegalArgumentException("Invalid CIDR format: $cidr")
+        return try {
+            val parts = cidr.split("/")
+            if (parts.size != 2) {
+                throw IllegalArgumentException("Invalid CIDR format: $cidr")
+            }
+            Pair(parts[0], parts[1].toInt())
+        } catch (e: Exception) {
+            logToFile("ERROR", "parseCidr failed for '$cidr': ${e.message}")
+            throw e
         }
-        return Pair(parts[0], parts[1].toInt())
     }
 
     private fun cleanup() {
@@ -198,30 +228,48 @@ class EasyTierVpnService : VpnService() {
     }
 
     private fun buildNotification(text: String): Notification {
-        val pendingIntent = PendingIntent.getActivity(
-            this, 0,
-            Intent(this, MainActivity::class.java),
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-        )
-        return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("EasyTier")
-            .setContentText(text)
-            .setSmallIcon(android.R.drawable.ic_menu_share)
-            .setContentIntent(pendingIntent)
-            .setOngoing(true)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
-            .build()
+        return try {
+            val pendingIntent = PendingIntent.getActivity(
+                this, 0,
+                Intent(this, MainActivity::class.java),
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            )
+            NotificationCompat.Builder(this, CHANNEL_ID)
+                .setContentTitle("EasyTier")
+                .setContentText(text)
+                .setSmallIcon(android.R.drawable.ic_menu_share)
+                .setContentIntent(pendingIntent)
+                .setOngoing(true)
+                .setPriority(NotificationCompat.PRIORITY_LOW)
+                .build()
+        } catch (e: Exception) {
+            logToFile("ERROR", "buildNotification failed: ${e.message}")
+            Log.e(TAG, "buildNotification failed", e)
+            NotificationCompat.Builder(this, CHANNEL_ID)
+                .setContentTitle("EasyTier")
+                .setContentText(text)
+                .setSmallIcon(android.R.drawable.ic_menu_share)
+                .setOngoing(true)
+                .setPriority(NotificationCompat.PRIORITY_LOW)
+                .build()
+        }
     }
 
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                CHANNEL_ID, "EasyTier VPN", NotificationManager.IMPORTANCE_LOW
-            ).apply {
-                description = "EasyTier VPN Status"
-                setShowBadge(false)
+            try {
+                val channel = NotificationChannel(
+                    CHANNEL_ID, "EasyTier VPN", NotificationManager.IMPORTANCE_LOW
+                ).apply {
+                    description = "EasyTier VPN Status"
+                    setShowBadge(false)
+                }
+                getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
+                logToFile("INFO", "Notification channel created")
+            } catch (e: Exception) {
+                logToFile("ERROR", "createNotificationChannel failed: ${e.message}")
+                Log.e(TAG, "createNotificationChannel failed", e)
             }
-            getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
         }
     }
 

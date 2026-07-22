@@ -47,13 +47,13 @@ class MainActivity : AppCompatActivity() {
 
     private fun log(level: String, msg: String) {
         val ts = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault()).format(Date())
-        val line = "$ts [$level] $msg"
+        val line = "$ts [$level] [MainActivity] $msg"
         Log.println(
             when (level) { "ERROR" -> Log.ERROR; "WARN" -> Log.WARN; else -> Log.DEBUG },
             TAG, msg
         )
         try {
-            crashLogFile.appendText(line + "\n")
+            crashLogFile.appendText(line + "\r\n")
         } catch (_: Exception) {}
     }
 
@@ -62,7 +62,8 @@ class MainActivity : AppCompatActivity() {
         if (t != null) {
             val sw = StringWriter()
             t.printStackTrace(PrintWriter(sw))
-            try { crashLogFile.appendText(sw.toString() + "\n") } catch (_: Exception) {}
+            val ts = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault()).format(Date())
+            try { crashLogFile.appendText("$ts [ERROR] [MainActivity] ${sw}\r\n") } catch (_: Exception) {}
             Log.e(TAG, msg, t)
         }
     }
@@ -75,10 +76,10 @@ class MainActivity : AppCompatActivity() {
         Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
             val ts = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault()).format(Date())
             val sw = StringWriter()
-            sw.write("$ts [FATAL] Uncaught exception in thread ${thread.name}\n")
+            sw.write("$ts [FATAL] [MainActivity] Uncaught exception in thread ${thread.name}\n")
             throwable.printStackTrace(PrintWriter(sw))
             try {
-                crashLogFile.appendText(sw.toString() + "\n")
+                crashLogFile.appendText(sw.toString() + "\r\n")
             } catch (_: Exception) {}
             Log.e(TAG, "Uncaught exception in thread ${thread.name}", throwable)
             throwable.printStackTrace()
@@ -90,11 +91,13 @@ class MainActivity : AppCompatActivity() {
         log("INFO", "ExternalFilesDir: ${getExternalFilesDir(null)?.absolutePath}")
 
         try {
+            log("INFO", "onCreate: setting up UI")
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 try {
                     WebView.setDataDirectorySuffix(applicationContext.packageName)
+                    log("INFO", "WebView.setDataDirectorySuffix ok")
                 } catch (e: IllegalStateException) {
-                    Log.w(TAG, "WebView.setDataDirectorySuffix failed (already initialized)", e)
+                    log("WARN", "WebView.setDataDirectorySuffix failed (already initialized): ${e.message}")
                 }
             }
             enableEdgeToEdge(
@@ -102,8 +105,11 @@ class MainActivity : AppCompatActivity() {
                 navigationBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT)
             )
             setContentView(R.layout.activity_main)
+            log("INFO", "setContentView done, finding WebView")
             webView = findViewById(R.id.webview)
+            log("INFO", "WebView found, calling setupWebView")
             setupWebView()
+            log("INFO", "setupWebView done, calling setupBackPress")
             setupBackPress()
 
             scope.launch(Dispatchers.IO) {
@@ -119,6 +125,7 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             }
+            log("INFO", "onCreate: done")
         } catch (e: Exception) {
             logError("onCreate failed", e)
         }
@@ -126,35 +133,44 @@ class MainActivity : AppCompatActivity() {
 
     @SuppressLint("SetJavaScriptEnabled")
     private fun setupWebView() {
-        webView.apply {
-            settings.javaScriptEnabled = true
-            settings.domStorageEnabled = true
-            settings.allowFileAccess = true
-            settings.allowContentAccess = true
-            settings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+        try {
+            log("INFO", "setupWebView: configuring WebView")
+            webView.apply {
+                settings.javaScriptEnabled = true
+                settings.domStorageEnabled = true
+                settings.allowFileAccess = true
+                settings.allowContentAccess = true
+                settings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
 
-            // 关闭 WebView 自带的暗黑渲染，由 JS 注入控制主题
-            if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
-                WebSettingsCompat.setAlgorithmicDarkeningAllowed(settings, false)
-            }
-            // 设置 WebView 背景色匹配主题，避免启动闪白
-            setBackgroundColor(getWebViewBackgroundColor())
-            overScrollMode = android.view.View.OVER_SCROLL_NEVER
-
-            webChromeClient = WebChromeClient()
-            webViewClient = object : WebViewClient() {
-                override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean = false
-                override fun onPageFinished(view: WebView?, url: String?) {
-                    super.onPageFinished(view, url)
-                    injectDarkMode()
+                if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
+                    WebSettingsCompat.setAlgorithmicDarkeningAllowed(settings, false)
                 }
-            }
+                setBackgroundColor(getWebViewBackgroundColor())
+                overScrollMode = android.view.View.OVER_SCROLL_NEVER
 
-            addJavascriptInterface(AndroidBridge(), "AndroidBridge")
+                webChromeClient = WebChromeClient()
+                webViewClient = object : WebViewClient() {
+                    override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean = false
+                    override fun onPageFinished(view: WebView?, url: String?) {
+                        super.onPageFinished(view, url)
+                        log("INFO", "WebView page finished: $url")
+                        injectDarkMode()
+                    }
+                    override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: android.webkit.WebResourceError?) {
+                        log("ERROR", "WebView error: ${error?.description} for ${request?.url}")
+                    }
+                }
+
+                addJavascriptInterface(AndroidBridge(), "AndroidBridge")
+            }
+            log("INFO", "setupWebView: done")
+        } catch (e: Exception) {
+            logError("setupWebView failed", e)
         }
     }
 
     private fun setupBackPress() {
+        log("INFO", "setupBackPress: registering callback")
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 if (System.currentTimeMillis() - lastBackPressTime < 2000) {
@@ -168,31 +184,40 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun injectDarkMode() {
-        val isDark = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
-        webView.evaluateJavascript("""
-            (function() {
-                if (${isDark}) {
-                    document.documentElement.classList.add('dark');
-                } else {
-                    document.documentElement.classList.remove('dark');
-                }
-                document.documentElement.style.setProperty('--system-dark', '${if (isDark) "1" else "0"}');
-            })();
-        """.trimIndent(), null)
+        try {
+            val isDark = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+            val js = """
+                (function() {
+                    if (${isDark}) {
+                        document.documentElement.classList.add('dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                    }
+                    document.documentElement.style.setProperty('--system-dark', '${if (isDark) "1" else "0"}');
+                })();
+            """.trimIndent()
+            webView.evaluateJavascript(js, null)
+        } catch (e: Exception) {
+            logError("injectDarkMode failed", e)
+        }
     }
 
     private suspend fun startPythonBackend() {
         log("INFO", "Starting Python backend...")
 
         try {
+            log("INFO", "Pre-loading libeasytier_ffi.so...")
             System.loadLibrary("easytier_ffi")
             log("INFO", "libeasytier_ffi.so pre-loaded for Python ctypes")
         } catch (e: UnsatisfiedLinkError) {
             log("WARN", "libeasytier_ffi.so not found: ${e.message}")
+        } catch (e: Exception) {
+            log("WARN", "libeasytier_ffi.so load failed: ${e.message}")
         }
 
         log("INFO", "Copying frontend assets...")
         copyAssetDir("frontend", File(filesDir, "frontend"))
+        log("INFO", "Frontend assets copied")
 
         if (!Python.isStarted()) {
             log("INFO", "Python not started, calling Python.start()...")
@@ -204,7 +229,7 @@ class MainActivity : AppCompatActivity() {
 
         log("INFO", "Getting Python instance...")
         val python = Python.getInstance()
-        log("INFO", "Python instance obtained")
+        log("INFO", "Python instance obtained, platform=${python.platform}")
 
         log("INFO", "Importing main_noui module...")
         val module = python.getModule("main_noui")
@@ -212,6 +237,7 @@ class MainActivity : AppCompatActivity() {
 
         log("INFO", "Calling start_android_server with data_dir=${filesDir.absolutePath}...")
         val externalDir = getExternalFilesDir(null)?.absolutePath ?: ""
+        log("INFO", "start_android_server: externalDir=$externalDir")
         val result = module.callAttr("start_android_server", filesDir.absolutePath, externalDir)
         log("INFO", "start_android_server returned: $result, type=${result::class.java.simpleName}")
 
@@ -222,44 +248,62 @@ class MainActivity : AppCompatActivity() {
         withContext(Dispatchers.Main) {
             log("INFO", "Loading WebView...")
             loadWebView()
+            log("INFO", "Creating EasyTierManager...")
             easyTierManager = EasyTierManager(this@MainActivity, crashLogFile)
+            log("INFO", "EasyTierManager created, starting monitoring...")
             easyTierManager?.startMonitoring()
             log("INFO", "VPN monitoring auto-started")
         }
     }
 
     private fun loadWebView() {
-        val url = "http://127.0.0.1:$httpServerPort/cgi/ThirdParty/EasyTier-EUI/index.cgi"
-        log("INFO", "Loading WebView from $url")
-        webView.loadUrl(url)
+        try {
+            val url = "http://127.0.0.1:$httpServerPort/cgi/ThirdParty/EasyTier-EUI/index.cgi"
+            log("INFO", "Loading WebView from $url")
+            webView.loadUrl(url)
+        } catch (e: Exception) {
+            logError("loadWebView failed", e)
+        }
     }
 
     private fun copyAssetDir(assetPath: String, targetDir: File) {
-        val list = try { assets.list(assetPath) } catch (_: Exception) { null }
-        if (list == null || list.isEmpty()) {
-            try {
-                targetDir.parentFile?.mkdirs()
-                assets.open(assetPath).use { input ->
-                    targetDir.outputStream().use { output -> input.copyTo(output) }
+        try {
+            val list = try { assets.list(assetPath) } catch (_: Exception) { null }
+            if (list == null || list.isEmpty()) {
+                try {
+                    targetDir.parentFile?.mkdirs()
+                    assets.open(assetPath).use { input ->
+                        targetDir.outputStream().use { output -> input.copyTo(output) }
+                    }
+                } catch (e: Exception) {
+                    log("WARN", "copyAssetDir: failed to copy $assetPath: ${e.message}")
                 }
-            } catch (_: Exception) {}
-            return
-        }
-        targetDir.mkdirs()
-        for (name in list) {
-            copyAssetDir("$assetPath/$name", File(targetDir, name))
+                return
+            }
+            targetDir.mkdirs()
+            for (name in list) {
+                copyAssetDir("$assetPath/$name", File(targetDir, name))
+            }
+        } catch (e: Exception) {
+            log("WARN", "copyAssetDir: failed for $assetPath: ${e.message}")
         }
     }
 
     override fun onDestroy() {
-        log("INFO", "onDestroy")
-        easyTierManager?.stopMonitoring()
+        log("INFO", "onDestroy: stopping monitoring and cancelling scope")
+        try {
+            easyTierManager?.stopMonitoring()
+        } catch (e: Exception) {
+            logError("onDestroy: stopMonitoring failed", e)
+        }
         scope.cancel()
         super.onDestroy()
+        log("INFO", "onDestroy: done")
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
+        log("INFO", "onActivityResult: requestCode=$requestCode, resultCode=$resultCode")
         if (requestCode == EasyTierManager.VPN_REQUEST_CODE) {
             log("INFO", "VPN authorization result: $resultCode")
             easyTierManager?.onVpnAuthorizationResult(resultCode)
@@ -268,13 +312,17 @@ class MainActivity : AppCompatActivity() {
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
-        val isDark = (newConfig.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
-        WindowInsetsControllerCompat(window, window.decorView).apply {
-            isAppearanceLightStatusBars = !isDark
-            isAppearanceLightNavigationBars = !isDark
+        try {
+            val isDark = (newConfig.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+            WindowInsetsControllerCompat(window, window.decorView).apply {
+                isAppearanceLightStatusBars = !isDark
+                isAppearanceLightNavigationBars = !isDark
+            }
+            webView.setBackgroundColor(getWebViewBackgroundColor())
+            injectDarkMode()
+        } catch (e: Exception) {
+            logError("onConfigurationChanged failed", e)
         }
-        webView.setBackgroundColor(getWebViewBackgroundColor())
-        injectDarkMode()
     }
 
     private fun getWebViewBackgroundColor(): Int {
@@ -287,12 +335,18 @@ class MainActivity : AppCompatActivity() {
 
     inner class AndroidBridge {
         @JavascriptInterface
-        fun getApiBaseUrl(): String = "http://127.0.0.1:$httpServerPort"
+        fun getApiBaseUrl(): String {
+            val url = "http://127.0.0.1:$httpServerPort"
+            log("DEBUG", "AndroidBridge.getApiBaseUrl: $url")
+            return url
+        }
 
         @JavascriptInterface
         fun startVpn(): String {
             return try {
+                log("INFO", "AndroidBridge.startVpn called")
                 if (easyTierManager == null) {
+                    log("INFO", "AndroidBridge.startVpn: creating EasyTierManager")
                     easyTierManager = EasyTierManager(this@MainActivity, crashLogFile)
                 }
                 easyTierManager?.startMonitoring()
@@ -307,6 +361,7 @@ class MainActivity : AppCompatActivity() {
         @JavascriptInterface
         fun stopVpn(): String {
             return try {
+                log("INFO", "AndroidBridge.stopVpn called")
                 easyTierManager?.stopMonitoring()
                 log("INFO", "VPN monitoring stopped via AndroidBridge")
                 "{\"code\": 0}"
