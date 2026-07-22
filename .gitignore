@@ -79,3 +79,6 @@ Thnmbn.lb
 __pycache__
 release_notes.txt
 android/release.keystore
+android/app/src/main/jniLibs/
+
+easytier

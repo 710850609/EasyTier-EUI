@@ -18,6 +18,13 @@ from locales import get_message
 from utils import run_configs, et_run_info, log_util
 from utils.validators import Validator
 
+try:
+    from utils.et_bridge import et_bridge
+    _FFI_AVAILABLE = True
+except Exception:
+    et_bridge = None
+    _FFI_AVAILABLE = False
+
 
 def get_log_level(params:dict, *args, **kwargs):
     log_level = et_run_info.get_log_level()
@@ -31,7 +38,7 @@ def set_log_level(params:dict, *args, **kwargs):
 
 def check_core(*args, **kwargs):
     if run_configs.IS_ANDROID:
-        return True  # Android 上 mock 可用
+        return _FFI_AVAILABLE and et_bridge is not None and et_bridge._lib is not None
     core_dir = run_configs.core_dir()
     ext = ".exe" if sys.platform == "win32" else ""
     cli_file = f'{core_dir}/easytier-cli{ext}'
@@ -40,6 +47,12 @@ def check_core(*args, **kwargs):
 
 def version(params=None, *args, **kwargs):
     if run_configs.IS_ANDROID:
+        if _FFI_AVAILABLE and et_bridge is not None and et_bridge._lib is not None:
+            try:
+                ver = et_bridge.get_version()
+                return {'version': ver, 'raw_version': f'easytier-core {ver}'}
+            except Exception:
+                pass
         return {'version': 'v2.0.0-android', 'raw_version': 'easytier-core 2.0.0-android'}
     if not check_core():
         raise HttpException(get_message('download.task_not_found'))

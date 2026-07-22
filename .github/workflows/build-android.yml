@@ -9,6 +9,11 @@ on:
       - 'frontend/**'
       - '.github/workflows/build-android.yml'
   workflow_dispatch:
+    inputs:
+      easytier_ref:
+        description: "EasyTier git ref for FFI"
+        required: false
+        default: "main"
 
 jobs:
   build:
@@ -47,6 +52,11 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
       - name: Decode keystore
         env:
           APK_KEYSTORE_BASE64: ${{ secrets.APK_KEYSTORE_BASE64 }}
@@ -60,21 +70,57 @@ jobs:
             exit 1
           fi
 
-      - name: Setup Android SDK
+      - name: Setup Android SDK + NDK
         uses: android-actions/setup-android@v3
         with:
           packages: 'platforms;android-34 build-tools;34.0.0 ndk;26.1.10909125'
+
+      - name: Setup protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          version: "35.1"
+          repo-token: ${{ github.token }}
+
+      - name: Setup Rust + Android target
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: "1.95"
+          target: aarch64-linux-android
+          cache: false
+          rustflags: ""
+
+      - name: Install cargo-ndk
+        run: cargo install cargo-ndk
+
+      - name: Build easytier-android-jni (produces both JNI + FFI .so)
+        env:
+          EASYTIER_REF: ${{ inputs.easytier_ref || 'main' }}
+        run: |
+          git init easytier-src
+          cd easytier-src
+          git remote add origin https://github.com/easytier/easytier.git
+          git fetch --depth=1 origin "$EASYTIER_REF"
+          git checkout --detach FETCH_HEAD
+          VERSION=$(sed -n 's/^version = "\([^"]*\)"/\1/p' easytier/Cargo.toml | head -n 1)
+          echo "EasyTier version: $VERSION"
+          echo "EasyTier commit: $(git rev-parse HEAD)"
+          cd easytier-contrib/easytier-android-jni
+          cargo ndk -t arm64-v8a build --release
+
+      - name: Integrate FFI into APK
+        run: |
+          LIB_DIR="android/app/src/main/jniLibs/arm64-v8a"
+          mkdir -p "$LIB_DIR"
+          cp easytier-src/target/aarch64-linux-android/release/libeasytier_ffi.so "$LIB_DIR/"
+          cp easytier-src/target/aarch64-linux-android/release/libeasytier_android_jni.so "$LIB_DIR/"
+          echo "FFI libraries integrated:"
+          ls -lh "$LIB_DIR/"
 
       - name: Setup Gradle
         run: |
           curl -L -o /tmp/gradle.zip https://services.gradle.org/distributions/gradle-8.11.1-bin.zip
           unzip -q /tmp/gradle.zip -d /opt
           echo "/opt/gradle-8.11.1/bin" >> $GITHUB_PATH
-
-      - name: Setup Python 3.12
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
 
       - name: Build Debug APK
         working-directory: android

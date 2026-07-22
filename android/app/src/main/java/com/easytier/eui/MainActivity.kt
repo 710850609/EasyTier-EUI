@@ -20,6 +20,7 @@ import androidx.webkit.WebSettingsCompat
 import androidx.webkit.WebViewFeature
 import com.chaquo.python.Python
 import com.chaquo.python.android.AndroidPlatform
+import com.easytier.jni.EasyTierManager
 import kotlinx.coroutines.*
 import java.io.File
 import java.io.PrintWriter
@@ -37,6 +38,7 @@ class MainActivity : AppCompatActivity() {
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private var httpServerPort = 0
     private lateinit var crashLogFile: File
+    private var easyTierManager: EasyTierManager? = null
     private var lastBackPressTime = 0L
 
     private fun log(level: String, msg: String) {
@@ -163,6 +165,13 @@ class MainActivity : AppCompatActivity() {
     private suspend fun startPythonBackend() {
         log("INFO", "Starting Python backend...")
 
+        try {
+            System.loadLibrary("easytier_android_jni")
+            log("INFO", "libeasytier_android_jni.so loaded successfully")
+        } catch (e: UnsatisfiedLinkError) {
+            log("WARN", "libeasytier_android_jni.so not found, running without JNI: ${e.message}")
+        }
+
         log("INFO", "Copying frontend assets...")
         copyAssetDir("frontend", File(filesDir, "frontend"))
 
@@ -194,6 +203,9 @@ class MainActivity : AppCompatActivity() {
         withContext(Dispatchers.Main) {
             log("INFO", "Loading WebView...")
             loadWebView()
+            easyTierManager = EasyTierManager(this@MainActivity)
+            easyTierManager?.startMonitoring()
+            log("INFO", "VPN monitoring auto-started")
         }
     }
 
@@ -222,6 +234,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         log("INFO", "onDestroy")
+        easyTierManager?.stopMonitoring()
         scope.cancel()
         super.onDestroy()
     }
@@ -240,9 +253,30 @@ class MainActivity : AppCompatActivity() {
         fun getApiBaseUrl(): String = "http://127.0.0.1:$httpServerPort"
 
         @JavascriptInterface
-        fun startVpn(): String = "{\"code\": 0}"
+        fun startVpn(): String {
+            return try {
+                if (easyTierManager == null) {
+                    easyTierManager = EasyTierManager(this@MainActivity)
+                }
+                easyTierManager?.startMonitoring()
+                log("INFO", "VPN monitoring started via AndroidBridge")
+                "{\"code\": 0}"
+            } catch (e: Exception) {
+                logError("startVpn failed", e)
+                "{\"code\": -1, \"msg\": \"${e.message}\"}"
+            }
+        }
 
         @JavascriptInterface
-        fun stopVpn(): String = "{\"code\": 0}"
+        fun stopVpn(): String {
+            return try {
+                easyTierManager?.stopMonitoring()
+                log("INFO", "VPN monitoring stopped via AndroidBridge")
+                "{\"code\": 0}"
+            } catch (e: Exception) {
+                logError("stopVpn failed", e)
+                "{\"code\": -1, \"msg\": \"${e.message}\"}"
+            }
+        }
     }
 }

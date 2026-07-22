@@ -1,0 +1,158 @@
+name: Build EasyTier FFI Libraries
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_ref:
+        description: "EasyTier git ref, e.g. main, develop, v2.6.4"
+        required: true
+        default: "main"
+  workflow_call:
+    inputs:
+      source_ref:
+        type: string
+        required: false
+        default: "main"
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+  EASYTIER_REPO: https://github.com/easytier/easytier.git
+  EASYTIER_DIR: easytier-src
+  RUST_TOOLCHAIN: "1.95"
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build-ffi:
+    name: ${{ matrix.artifact_name }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # - artifact_name: windows-amd64
+          #   os: windows-latest
+          #   target: x86_64-pc-windows-msvc
+          #   ffi_lib: easytier_ffi.dll
+
+          # - artifact_name: linux-amd64
+          #   os: ubuntu-22.04
+          #   target: x86_64-unknown-linux-gnu
+          #   ffi_lib: libeasytier_ffi.so
+
+          # - artifact_name: linux-aarch64
+          #   os: ubuntu-22.04-arm
+          #   target: aarch64-unknown-linux-gnu
+          #   ffi_lib: libeasytier_ffi.so
+
+          # - artifact_name: macos-amd64
+          #   os: macos-14
+          #   target: x86_64-apple-darwin
+          #   ffi_lib: libeasytier_ffi.dylib
+
+          # - artifact_name: macos-aarch64
+          #   os: macos-14
+          #   target: aarch64-apple-darwin
+          #   ffi_lib: libeasytier_ffi.dylib
+
+          - artifact_name: android-aarch64
+            os: ubuntu-22.04
+            target: aarch64-linux-android
+            ffi_lib: libeasytier_ffi.so
+
+    steps:
+      - name: Install Linux build dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential pkg-config clang llvm lld mold
+
+      - name: Setup Android NDK
+        if: matrix.target == 'aarch64-linux-android'
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'ndk;26.1.10909125'
+
+      - name: Install cargo-ndk (Android)
+        if: matrix.target == 'aarch64-linux-android'
+        run: cargo install cargo-ndk
+
+      - name: Setup protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          version: "35.1"
+          repo-token: ${{ github.token }}
+
+      - name: Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+          target: ${{ matrix.target }}
+          cache: false
+          rustflags: ""
+
+      - name: Clone EasyTier source
+        run: |
+          git init "$EASYTIER_DIR"
+          cd "$EASYTIER_DIR"
+          git remote add origin "$EASYTIER_REPO"
+          git fetch --depth=1 origin "${{ inputs.source_ref }}"
+          git checkout --detach FETCH_HEAD
+          git rev-parse HEAD
+
+      - name: Read source version
+        id: source-info
+        working-directory: ${{ env.EASYTIER_DIR }}
+        run: |
+          VERSION=$(sed -n 's/^version = "\([^"]*\)"/\1/p' easytier/Cargo.toml | head -n 1)
+          COMMIT=$(git rev-parse HEAD)
+          echo "source_version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "source_commit=$COMMIT" >> "$GITHUB_OUTPUT"
+          echo "EasyTier version: $VERSION"
+          echo "EasyTier commit: $COMMIT"
+
+      - name: Build FFI cdylib
+        working-directory: ${{ env.EASYTIER_DIR }}
+        if: matrix.target != 'aarch64-linux-android'
+        run: |
+          cargo build --release --target ${{ matrix.target }} --package easytier-ffi
+
+      - name: Build Android JNI + FFI
+        working-directory: ${{ env.EASYTIER_DIR }}
+        if: matrix.target == 'aarch64-linux-android'
+        run: |
+          cd easytier-contrib/easytier-android-jni
+          cargo ndk -t arm64-v8a build --release
+
+      - name: Package artifact
+        working-directory: ${{ env.EASYTIER_DIR }}
+        run: |
+          OUT_DIR="../artifacts/easytier-ffi-${{ matrix.artifact_name }}"
+          BUILD_DIR="target/${{ matrix.target }}/release"
+          mkdir -p "$OUT_DIR"
+          cp "$BUILD_DIR/${{ matrix.ffi_lib }}" "$OUT_DIR/"
+          if [[ "${{ matrix.target }}" == "aarch64-linux-android" ]]; then
+            cp "$BUILD_DIR/libeasytier_android_jni.so" "$OUT_DIR/"
+          fi
+          {
+            echo "source_repo=$EASYTIER_REPO"
+            echo "source_ref=${{ inputs.source_ref }}"
+            echo "source_version=${{ steps.source-info.outputs.source_version }}"
+            echo "source_commit=${{ steps.source-info.outputs.source_commit }}"
+            echo "target=${{ matrix.target }}"
+          } > "$OUT_DIR/BUILD_INFO.txt"
+          cd ../artifacts
+          tar -czf "easytier-ffi-${{ matrix.artifact_name }}.tar.gz" "easytier-ffi-${{ matrix.artifact_name }}"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: easytier-ffi-${{ matrix.artifact_name }}
+          path: artifacts/easytier-ffi-${{ matrix.artifact_name }}.tar.gz
+          if-no-files-found: error

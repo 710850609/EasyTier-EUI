@@ -17,6 +17,13 @@ from utils import run_configs
 from utils.process_util import ProcessManager
 from utils.validators import Validator
 
+try:
+    from utils.et_bridge import et_bridge
+    _FFI_AVAILABLE = True
+except Exception:
+    et_bridge = None
+    _FFI_AVAILABLE = False
+
 # 延迟初始化：使用线程安全的单例模式
 _pm = {}
 _pm_lock = threading.Lock()
@@ -44,7 +51,13 @@ def _get_process_manager(profile:str = None) -> Union[ProcessManager]:
 
 def status(params=None, *args, **kwargs) -> bool:
     if run_configs.IS_ANDROID:
-        return False  # Android mock: 服务未运行
+        if not _FFI_AVAILABLE or et_bridge is None or et_bridge._lib is None:
+            return False
+        try:
+            instances = et_bridge.list_instance(10)
+            return len(instances) > 0
+        except Exception:
+            return False
     profile, _ = Validator.not_empty(params, 'profile', 'validate.profile_required')
     info = et_run_info.get(profile)
     if info is not None and info.use_system_service:
@@ -55,7 +68,14 @@ def status(params=None, *args, **kwargs) -> bool:
 
 def stop(params=None, *args, **kwargs):
     if run_configs.IS_ANDROID:
-        return  # Android mock: 无需停止
+        if not _FFI_AVAILABLE or et_bridge is None or et_bridge._lib is None:
+            return
+        try:
+            et_bridge.stop_all_instances()
+            logging.info("Android: Stopped all EasyTier instances via FFI")
+        except Exception as e:
+            logging.warning(f"Android: Failed to stop instances: {e}")
+        return
     profile, _ = Validator.not_empty(params, 'profile', 'validate.profile_required')
     info = et_run_info.get(profile)
     if info is not None and info.use_system_service:
@@ -72,7 +92,22 @@ def stop(params=None, *args, **kwargs):
 
 def start(params=None, *args, **kwargs):
     if run_configs.IS_ANDROID:
-        raise HttpException(get_message('service.not_supported_android'))
+        if not _FFI_AVAILABLE or et_bridge is None or et_bridge._lib is None:
+            raise HttpException(get_message('service.not_supported_android'))
+        profile, _ = Validator.not_empty(params, 'profile', 'validate.profile_required')
+        config_file = run_configs.et_config_file(profile)
+        if not Path(config_file).exists():
+            raise HttpException(get_message('service.config_not_found'))
+        with open(config_file, 'r', encoding='utf-8') as f:
+            toml_config = f.read()
+        ret = et_bridge.parse_config(toml_config)
+        if ret != 0:
+            raise HttpException(f"Config parse failed: {et_bridge.get_last_error()}")
+        ret = et_bridge.run_network_instance(toml_config)
+        if ret != 0:
+            raise HttpException(f"Failed to start instance: {et_bridge.get_last_error()}")
+        logging.info(f"Android: Started EasyTier instance '{profile}' via FFI")
+        return
     profile, _ = Validator.not_empty(params, 'profile', 'validate.profile_required')
     config_file = run_configs.et_config_file(profile)
     if not Path(config_file).exists():
@@ -135,7 +170,16 @@ def start_all(*args, **kwargs):
 
 def stop_all(*args, **kwargs) -> List[str]:
     if run_configs.IS_ANDROID:
-        return []  # Android mock: 无运行中服务
+        if not _FFI_AVAILABLE or et_bridge is None or et_bridge._lib is None:
+            return []
+        try:
+            instances = et_bridge.list_instance(10)
+            et_bridge.stop_all_instances()
+            logging.info("Android: Stopped all instances via FFI")
+            return list(instances.keys())
+        except Exception as e:
+            logging.warning(f"Android: Failed to stop all: {e}")
+            return []
     stop_profiles = []
     infos = et_run_info.get_all()
     system_service_profile = None
