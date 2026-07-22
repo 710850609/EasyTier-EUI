@@ -74,6 +74,9 @@ def stop_server(handle: ServerHandle, port: int):
 def start_android_server(data_dir: str, external_dir: str = "", host: str = "127.0.0.1", port: int = 0) -> dict:
     """Android 入口：初始化环境 + 启动 HTTP 服务，返回 {'port': int, 'host': str}"""
     import traceback
+    import faulthandler
+    import sys
+
     run_configs.setup_env()
     run_mode = run_configs.get_run_mode()
     log_util.setup_log(log_file=os.path.join(external_dir, 'app.log'),
@@ -84,8 +87,26 @@ def start_android_server(data_dir: str, external_dir: str = "", host: str = "127
         try:
             with open(log_file, 'a') as f:
                 f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} [PY] {msg}\n")
+                f.flush()
         except:
             pass
+
+    # 启用 faulthandler：捕获 SIGSEGV/SIGABRT 等致命信号时 dump Python 调用栈
+    crash_log = os.path.join(external_dir or data_dir, 'easytier_py_crash.log')
+    try:
+        faulthandler.enable(file=open(crash_log, 'a', buffering=1), all_threads=True)
+        py_log(f"faulthandler enabled, crash log: {crash_log}")
+    except Exception as fe:
+        py_log(f"faulthandler enable failed: {fe}")
+
+    # 重定向 stderr 到文件，确保 Python 异常输出不丢失
+    stderr_log = os.path.join(external_dir or data_dir, 'easytier_py_stderr.log')
+    try:
+        sys.stderr = open(stderr_log, 'a', buffering=1)
+        py_log(f"stderr redirected to: {stderr_log}")
+    except Exception as se:
+        py_log(f"stderr redirect failed: {se}")
+
     try:
         py_log("start_android_server called")
         py_log(f"data_dir={data_dir}")

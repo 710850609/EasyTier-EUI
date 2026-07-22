@@ -351,6 +351,14 @@ class EasyTierFFI:
 
     def get_peers(self) -> list:
         try:
+            # Android：等待 core 就绪的短暂延迟，防止 race condition 导致 SIGSEGV
+            try:
+                from utils import run_configs
+                if run_configs.IS_ANDROID:
+                    import time as _time
+                    _time.sleep(0.5)
+            except ImportError:
+                pass
             info = self.collect_network_infos(1)
             if not info:
                 return []
