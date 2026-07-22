@@ -229,7 +229,7 @@ class MainActivity : AppCompatActivity() {
 
         log("INFO", "Getting Python instance...")
         val python = Python.getInstance()
-        log("INFO", "Python instance obtained, platform=${python.platform}")
+        log("INFO", "Python instance obtained")
 
         log("INFO", "Importing main_noui module...")
         val module = python.getModule("main_noui")
