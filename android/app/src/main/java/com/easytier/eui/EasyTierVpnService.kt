@@ -90,7 +90,8 @@ class EasyTierVpnService : VpnService() {
 
             instanceName?.let { name ->
                 val fd = vpnInterface!!.fd
-                val bridge = Python.getInstance().getModule("et_bridge").get("et_bridge")
+                // !! 只是对 Kotlin 编译器声明"这个返回值不会是 null"
+                val bridge = Python.getInstance().getModule("utils.et_bridge")!!.get("et_bridge")!!
                 val result = bridge.callAttr("set_tun_fd", name, fd).toInt()
                 if (result == 0) {
                     Log.i(TAG, "TUN fd set successfully: $fd")

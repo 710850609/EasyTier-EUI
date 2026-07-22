@@ -2937,6 +2937,10 @@ html.dark .config-section-panel {
       max-width: 100vw !important;
       max-height: 100vh !important;
       border-radius: 0 !important;
+      padding-top: var(--sat) !important;
+    }
+    .code-editor-content-area {
+      padding-bottom: var(--sab);
     }
 
     :deep(.var-popup__content::before),

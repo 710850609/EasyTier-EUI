@@ -60,7 +60,7 @@ class EasyTierManager(
     private fun monitorNetworkStatus() {
         try {
             val infosJson = try {
-                val bridge = Python.getInstance().getModule("et_bridge").get("et_bridge")
+                val bridge = Python.getInstance().getModule("utils.et_bridge")!!.get("et_bridge")!!
                 bridge.callAttr("collect_network_infos_json", 10).toString()
             } catch (e: Exception) {
                 Log.w(TAG, "Python FFI call failed", e)
