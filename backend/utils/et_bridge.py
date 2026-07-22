@@ -11,6 +11,7 @@ import json
 import logging
 import os
 import platform
+import threading
 import time
 from ctypes import c_char_p, c_int, c_void_p, POINTER, Structure, c_ulonglong
 from pathlib import Path
@@ -22,6 +23,9 @@ logger = logging.getLogger(__name__)
 # 在此期间，collect_network_infos 会自动阻塞等待，防止 Rust 层 SIGABRT
 _last_instance_start_time = 0.0
 MIN_INIT_WAIT_SECONDS = 3.0
+
+# 全局 FFI 调用锁：Rust 层不是线程安全的，必须串行化所有 FFI 调用
+_ffi_lock = threading.Lock()
 
 
 class KeyValuePair(Structure):
@@ -122,33 +126,35 @@ class EasyTierFFI:
 
     def parse_config(self, toml_config: str) -> int:
         """
-        解析 TOML 配置
+        解析 TOML 配置（线程安全）
         toml_config: 配置字符串
         return: 0 成功，-1 失败
         """
         if self._lib is None:
             return -1
         try:
-            return self._lib.parse_config(toml_config.encode('utf-8'))
+            with _ffi_lock:
+                return self._lib.parse_config(toml_config.encode('utf-8'))
         except Exception as e:
             logger.exception(f"parse_config failed: {e}")
             return -1
 
     def run_network_instance(self, toml_config: str) -> int:
         """
-        启动网络实例
+        启动网络实例（线程安全）
         toml_config: 配置字符串
         return: 0 成功，-1 失败
         """
         if self._lib is None:
             return -1
         try:
-            ret = self._lib.run_network_instance(toml_config.encode('utf-8'))
-            if ret == 0:
-                global _last_instance_start_time
-                _last_instance_start_time = time.time()
-                logger.info(f"Instance started at {_last_instance_start_time}, "
-                           f"collect_network_infos will wait {MIN_INIT_WAIT_SECONDS}s before FFI calls")
+            with _ffi_lock:
+                ret = self._lib.run_network_instance(toml_config.encode('utf-8'))
+                if ret == 0:
+                    global _last_instance_start_time
+                    _last_instance_start_time = time.time()
+                    logger.info(f"Instance started at {_last_instance_start_time}, "
+                               f"collect_network_infos will wait {MIN_INIT_WAIT_SECONDS}s before FFI calls")
             return ret
         except Exception as e:
             logger.exception(f"run_network_instance failed: {e}")
@@ -156,68 +162,72 @@ class EasyTierFFI:
 
     def retain_network_instance(self, instance_names: List[str]) -> int:
         """
-        保留单个实例
+        保留单个实例（线程安全）
         instance_names: 实例名
         return: 0 成功，-1 失败
         """
         if self._lib is None:
             return -1
         try:
-            if not instance_names:
-                return self._lib.retain_network_instance(None, 0)
-            encoded = [name.encode('utf-8') for name in instance_names]
-            arr = (c_char_p * len(encoded))(*encoded)
-            return self._lib.retain_network_instance(arr, len(encoded))
+            with _ffi_lock:
+                if not instance_names:
+                    return self._lib.retain_network_instance(None, 0)
+                encoded = [name.encode('utf-8') for name in instance_names]
+                arr = (c_char_p * len(encoded))(*encoded)
+                return self._lib.retain_network_instance(arr, len(encoded))
         except Exception as e:
             logger.exception(f"retain_network_instance failed: {e}")
             return -1
 
     def stop_all_instances(self) -> int:
         """
-        停止所有实例
+        停止所有实例（线程安全）
         return: 0 成功，-1 失败
         """
-        global _last_instance_start_time
-        _last_instance_start_time = 0.0  # 重置，下次启动重新计时
-        return self.retain_network_instance([])
+        with _ffi_lock:
+            global _last_instance_start_time
+            _last_instance_start_time = 0.0  # 重置，下次启动重新计时
+            return self._lib.retain_network_instance(None, 0) if self._lib else -1
 
     def delete_network_instance(self, instance_names: List[str]) -> int:
         """
-        删除网络实例
+        删除网络实例（线程安全）
         instance_names: 实例名
         return: 0 成功，-1 失败
         """
         if self._lib is None:
             return -1
         try:
-            if not instance_names:
-                return 0
-            encoded = [name.encode('utf-8') for name in instance_names]
-            arr = (c_char_p * len(encoded))(*encoded)
-            return self._lib.delete_network_instance(arr, len(encoded))
+            with _ffi_lock:
+                if not instance_names:
+                    return 0
+                encoded = [name.encode('utf-8') for name in instance_names]
+                arr = (c_char_p * len(encoded))(*encoded)
+                return self._lib.delete_network_instance(arr, len(encoded))
         except Exception as e:
             logger.exception(f"delete_network_instance failed: {e}")
             return -1
 
     def collect_network_infos(self, max_length: int = 10) -> Dict[str, Any]:
         """
-        收集网络实例信息
+        收集网络实例信息（线程安全）
         max_length: 最大返回数量
         return: 信息字符串数组
         """
         if self._lib is None:
             return {}
         try:
-            # 全局初始化保护：如果实例刚启动，等待 core 完成初始化
-            global _last_instance_start_time
-            elapsed = time.time() - _last_instance_start_time
-            if elapsed < MIN_INIT_WAIT_SECONDS:
-                wait_time = MIN_INIT_WAIT_SECONDS - elapsed
-                logger.info(f"collect_network_infos: waiting {wait_time:.1f}s for core init "
-                           f"(elapsed={elapsed:.1f}s, min={MIN_INIT_WAIT_SECONDS}s)")
-                time.sleep(wait_time)
-            infos = (KeyValuePair * max_length)()
-            count = self._lib.collect_network_infos(infos, max_length)
+            with _ffi_lock:
+                # 全局初始化保护：如果实例刚启动，等待 core 完成初始化
+                global _last_instance_start_time
+                elapsed = time.time() - _last_instance_start_time
+                if elapsed < MIN_INIT_WAIT_SECONDS:
+                    wait_time = MIN_INIT_WAIT_SECONDS - elapsed
+                    logger.info(f"collect_network_infos: waiting {wait_time:.1f}s for core init "
+                               f"(elapsed={elapsed:.1f}s, min={MIN_INIT_WAIT_SECONDS}s)")
+                    time.sleep(wait_time)
+                infos = (KeyValuePair * max_length)()
+                count = self._lib.collect_network_infos(infos, max_length)
             if count < 0:
                 raise RuntimeError(f"collect_network_infos failed: {self.get_last_error()}")
             result = {}
@@ -237,15 +247,16 @@ class EasyTierFFI:
 
     def list_instance(self, max_length: int = 10) -> Dict[str, str]:
         """
-        收集网络信息为 Map
+        收集网络信息为 Map（线程安全）
         max_length: 最大返回数量
         return: Map<String, String>
         """
         if self._lib is None:
             return {}
         try:
-            infos = (KeyValuePair * max_length)()
-            count = self._lib.list_instance(infos, max_length)
+            with _ffi_lock:
+                infos = (KeyValuePair * max_length)()
+                count = self._lib.list_instance(infos, max_length)
             if count < 0:
                 raise RuntimeError(f"list_instance failed: {self.get_last_error()}")
             result = {}
@@ -266,7 +277,7 @@ class EasyTierFFI:
 
     def set_tun_fd(self, instance_name: str, fd: int) -> int:
         """
-        设置 TUN 文件描述符
+        设置 TUN 文件描述符（线程安全）
         instance_name: 实例名
         fd: TUN 文件描述符
         return: 0 成功，-1 失败
@@ -274,7 +285,8 @@ class EasyTierFFI:
         if self._lib is None:
             return -1
         try:
-            return self._lib.set_tun_fd(instance_name.encode('utf-8'), fd)
+            with _ffi_lock:
+                return self._lib.set_tun_fd(instance_name.encode('utf-8'), fd)
         except Exception as e:
             logger.exception(f"set_tun_fd failed: {e}")
             return -1
@@ -284,19 +296,20 @@ class EasyTierFFI:
         if self._lib is None:
             return None
         try:
-            out = c_char_p()
-            ret = self._lib.call_json_rpc(
-                service_name.encode('utf-8'),
-                method_name.encode('utf-8'),
-                (domain_name or "").encode('utf-8'),
-                payload_json.encode('utf-8'),
-                ctypes.byref(out)
-            )
-            if ret != 0:
-                raise RuntimeError(f"call_json_rpc failed: {self.get_last_error()}")
-            result = out.value.decode('utf-8') if out.value else ""
-            self._lib.free_string(out)
-            return result
+            with _ffi_lock:
+                out = c_char_p()
+                ret = self._lib.call_json_rpc(
+                    service_name.encode('utf-8'),
+                    method_name.encode('utf-8'),
+                    (domain_name or "").encode('utf-8'),
+                    payload_json.encode('utf-8'),
+                    ctypes.byref(out)
+                )
+                if ret != 0:
+                    raise RuntimeError(f"call_json_rpc failed: {self.get_last_error()}")
+                result = out.value.decode('utf-8') if out.value else ""
+                self._lib.free_string(out)
+                return result
         except Exception as e:
             logger.exception(f"call_json_rpc failed: {e}")
             return None
