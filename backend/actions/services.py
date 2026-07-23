@@ -133,7 +133,7 @@ def start(params=None, *args, **kwargs):
             try:
                 from java import jclass
                 MainActivity = jclass("com.easytier.eui.MainActivity")
-                manager = MainActivity.easyTierManager
+                manager = MainActivity.getEasyTierManager()
                 if manager is not None:
                     manager.requestVpnAuthorization()
                     logging.info("Android: VPN authorization requested")

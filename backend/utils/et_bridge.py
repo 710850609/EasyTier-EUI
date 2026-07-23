@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 # 全局初始化保护：run_network_instance 后需要等待 core 初始化完成
 # 在此期间，collect_network_infos 会自动阻塞等待，防止 Rust 层 SIGABRT
 _last_instance_start_time = 0.0
-MIN_INIT_WAIT_SECONDS = 5.0
+MIN_INIT_WAIT_SECONDS = 15.0
 
 # 全局 FFI 调用锁：Rust 层不是线程安全的，必须串行化所有 FFI 调用
 _ffi_lock = threading.Lock()
