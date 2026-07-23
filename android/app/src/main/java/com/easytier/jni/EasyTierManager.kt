@@ -407,6 +407,32 @@ class EasyTierManager(
         }
     }
 
+    fun requestVpnAuthorization() {
+        try {
+            if (activity.isFinishing) {
+                logToFile("ERROR", "requestVpnAuthorization: Activity is finishing")
+                return
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1 && activity.isDestroyed) {
+                logToFile("ERROR", "requestVpnAuthorization: Activity is destroyed")
+                return
+            }
+            logToFile("INFO", "requestVpnAuthorization: calling VpnService.prepare()")
+            val prepareIntent = VpnService.prepare(activity)
+            if (prepareIntent != null) {
+                logToFile("INFO", "requestVpnAuthorization: VPN not authorized, showing dialog")
+                isVpnAuthorizationPending = true
+                activity.startActivityForResult(prepareIntent, VPN_REQUEST_CODE)
+            } else {
+                logToFile("INFO", "requestVpnAuthorization: VPN already authorized")
+            }
+        } catch (e: Exception) {
+            val sw = StringWriter()
+            e.printStackTrace(PrintWriter(sw))
+            logToFile("ERROR", "requestVpnAuthorization error: ${sw}")
+        }
+    }
+
     private fun stopVpnService() {
         try {
             if (vpnServiceIntent != null) {

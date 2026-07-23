@@ -36,13 +36,15 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         private const val TAG = "EasyTier"
+        @JvmStatic
+        var easyTierManager: EasyTierManager? = null
     }
 
     private lateinit var webView: WebView
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private var httpServerPort = 0
     private lateinit var crashLogFile: File
-    private var easyTierManager: EasyTierManager? = null
+    
     private var lastBackPressTime = 0L
 
     private fun log(level: String, msg: String) {

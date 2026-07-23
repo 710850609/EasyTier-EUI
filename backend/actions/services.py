@@ -126,36 +126,21 @@ def start(params=None, *args, **kwargs):
             if ret != 0:
                 raise HttpException(f"Failed to start instance: {et_bridge.get_last_error()}")
             logging.info(f"Android: Started EasyTier instance '{profile}' via FFI")
-            # 用 list_instance 轮询检测实例是否就绪（比 collect_network_infos 更轻量安全）
-            import time as _time
-            inst_name = Path(profile).stem
-            max_retries = 10
-            for attempt in range(max_retries):
-                _time.sleep(0.5)
-                logging.info(f"Android: Waiting for instance '{inst_name}' to appear (attempt {attempt + 1}/{max_retries})...")
-                try:
-                    instances = et_bridge.list_instance(5)
-                    logging.info(f"Android: list_instance returned: {list(instances.keys())}")
-                    if inst_name in instances:
-                        logging.info(f"Android: Instance '{inst_name}' found, core is ready")
-                        break
-                except Exception as check_err:
-                    logging.warning(f"Android: list_instance check failed: {check_err}")
-            else:
-                logging.warning(f"Android: Instance '{inst_name}' not found after {max_retries} retries, may still be initializing")
-            # 现在安全调用 collect_network_infos（内部有锁保护）
+            # 不立即调用任何 FFI 查询方法（list_instance/collect_network_infos 都会 SIGABRT）
+            # Rust core 在后台异步初始化，Kotlin monitor 和前端轮询会通过 collect_network_infos
+            # 内部的 5 秒等待机制安全地获取实例状态
+            # 立即触发 VPN 授权弹窗（不需要 FFI，只调 VpnService.prepare）
             try:
-                infos = et_bridge.collect_network_infos(5)
-                keys = list(infos.keys())
-                logging.info(f"Android: After start, instances found: {keys}")
-                for k, v in infos.items():
-                    if isinstance(v, dict):
-                        running = v.get('running', False)
-                        my_node = v.get('my_node_info', {})
-                        virtual_ipv4 = my_node.get('virtual_ipv4', {})
-                        logging.info(f"Android: Instance '{k}' running={running}, ipv4={virtual_ipv4}")
-            except Exception as check_err:
-                logging.warning(f"Android: Failed to check instance after start: {check_err}")
+                from java import jclass
+                MainActivity = jclass("com.easytier.eui.MainActivity")
+                manager = MainActivity.easyTierManager
+                if manager is not None:
+                    manager.requestVpnAuthorization()
+                    logging.info("Android: VPN authorization requested")
+                else:
+                    logging.warning("Android: EasyTierManager not available for VPN auth")
+            except Exception as vpn_err:
+                logging.warning(f"Android: Failed to request VPN authorization: {vpn_err}")
         except Exception as e:
             logging.exception(f"Android: Failed to start instance: {e}")
             raise
