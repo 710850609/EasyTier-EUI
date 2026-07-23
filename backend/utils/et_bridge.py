@@ -259,10 +259,12 @@ class EasyTierFFI:
             if not inst_name:
                 logger.warning("collect_network_infos_via_rpc: no cached instance name, returning empty")
                 return {}
+            logger.warning(f"collect_network_infos_via_rpc: querying instance '{inst_name}'")
 
             result = {}
             try:
                 selector_json = json.dumps(self._make_instance_selector(inst_name))
+                logger.warning(f"RPC selector: {selector_json}")
                 peer_service = "api.instance.PeerManageRpcService"
                 vpn_service = "api.instance.VpnPortalRpcService"
                 config_service = "api.config.ConfigRpcService"
@@ -275,6 +277,7 @@ class EasyTierFFI:
                 dev_name = ""
 
                 list_peer_resp = self.call_json_rpc(peer_service, "ListPeer", selector_json)
+                logger.warning(f"RPC ListPeer resp: {list_peer_resp[:300] if list_peer_resp else 'None/Empty'}")
                 if list_peer_resp:
                     try:
                         resp_obj = json.loads(list_peer_resp)
@@ -283,6 +286,7 @@ class EasyTierFFI:
                         pass
 
                 show_node_resp = self.call_json_rpc(peer_service, "ShowNodeInfo", selector_json)
+                logger.warning(f"RPC ShowNodeInfo resp (inst={inst_name}): {show_node_resp[:300] if show_node_resp else 'None/Empty'}")
                 if show_node_resp:
                     try:
                         resp_obj = json.loads(show_node_resp)
@@ -428,12 +432,14 @@ class EasyTierFFI:
                     ctypes.byref(out)
                 )
                 if ret != 0:
-                    raise RuntimeError(f"call_json_rpc failed: {self.get_last_error()}")
+                    err_msg = self.get_last_error()
+                    logger.warning(f"call_json_rpc: {service_name}.{method_name} failed: {err_msg}")
+                    raise RuntimeError(f"call_json_rpc failed: {err_msg}")
                 result = out.value.decode('utf-8') if out.value else ""
                 self._lib.free_string(out)
                 return result
         except Exception as e:
-            logger.exception(f"call_json_rpc failed: {e}")
+            logger.exception(f"call_json_rpc: {service_name}.{method_name} exception: {e}")
             return None
 
     def _cost_to_string(self, cost: int) -> str:
