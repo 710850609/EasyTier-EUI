@@ -97,7 +97,7 @@ jobs:
         env:
           EASYTIER_REF: ${{ inputs.easytier_ref || 'main' }}
         run: |
-          COMMIT=$(git ls-remote https://github.com/easytier/easytier.git "$EASYTIER_REF" | cut -f1)
+          COMMIT=$(git ls-remote https://github.com/easytier/easytier.git "$EASYTIER_REF" | head -n1 | cut -f1)
           if [ -z "$COMMIT" ]; then
             echo "Failed to resolve EasyTier ref: $EASYTIER_REF"
             exit 1
