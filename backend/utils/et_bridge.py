@@ -208,42 +208,165 @@ class EasyTierFFI:
             logger.exception(f"delete_network_instance failed: {e}")
             return -1
 
-    def collect_network_infos(self, max_length: int = 10) -> Dict[str, Any]:
+    def _make_instance_selector(self, instance_name: str) -> Dict[str, Any]:
+        return {
+            "instance": {
+                "selector": {
+                    "instance_selector": {
+                        "name": instance_name
+                    }
+                }
+            }
+        }
+
+    def _list_peer_route_pair(self, peers: List[Dict], routes: List[Dict]) -> List[Dict]:
+        pairs = []
+        for route in routes:
+            peer_id = route.get('peer_id', 0)
+            peer = next((p for p in peers if p.get('peer_id') == peer_id), None)
+            pairs.append({
+                "route": route,
+                "peer": peer,
+            })
+
+        def sort_key(pair):
+            route = pair.get('route', {}) or {}
+            feature_flag = route.get('feature_flag') or {}
+            is_public = feature_flag.get('is_public_server', False)
+            ipv4 = (route.get('ipv4_addr') or {}).get('address') or {}
+            addr = ipv4.get('addr', 0)
+            return (0 if is_public else 1, addr)
+
+        pairs.sort(key=sort_key)
+        return pairs
+
+    def collect_network_infos_via_rpc(self, max_length: int = 10) -> Dict[str, Any]:
         """
-        收集网络实例信息（线程安全）
-        max_length: 最大返回数量
-        return: 信息字符串数组
+        通过 RPC 调用收集网络实例信息（线程安全）
+        替代 collect_network_infos FFI 调用，避免多 Tokio Runtime 冲突导致的崩溃
         """
         if self._lib is None:
             return {}
         try:
-            with _ffi_lock:
-                # 全局初始化保护：如果实例刚启动，等待 core 完成初始化
-                global _last_instance_start_time
-                elapsed = time.time() - _last_instance_start_time
-                if elapsed < MIN_INIT_WAIT_SECONDS:
-                    wait_time = MIN_INIT_WAIT_SECONDS - elapsed
-                    logger.info(f"collect_network_infos: waiting {wait_time:.1f}s for core init "
-                               f"(elapsed={elapsed:.1f}s, min={MIN_INIT_WAIT_SECONDS}s)")
-                    time.sleep(wait_time)
-                infos = (KeyValuePair * max_length)()
-                count = self._lib.collect_network_infos(infos, max_length)
-            if count < 0:
-                raise RuntimeError(f"collect_network_infos failed: {self.get_last_error()}")
+            global _last_instance_start_time
+            elapsed = time.time() - _last_instance_start_time
+            if elapsed < MIN_INIT_WAIT_SECONDS:
+                wait_time = MIN_INIT_WAIT_SECONDS - elapsed
+                logger.info(f"collect_network_infos_via_rpc: waiting {wait_time:.1f}s for core init "
+                           f"(elapsed={elapsed:.1f}s, min={MIN_INIT_WAIT_SECONDS}s)")
+                time.sleep(wait_time)
+
+            instances = self.list_instance(max_length)
+            if not instances:
+                return {}
+
             result = {}
-            for i in range(min(count, max_length)):
-                key = infos[i].key.decode('utf-8') if infos[i].key else ""
-                value = infos[i].value.decode('utf-8') if infos[i].value else ""
+            for inst_name, inst_id in instances.items():
                 try:
-                    result[key] = json.loads(value)
-                except json.JSONDecodeError:
-                    result[key] = value
-                self._lib.free_string(infos[i].key)
-                self._lib.free_string(infos[i].value)
+                    selector_json = json.dumps(self._make_instance_selector(inst_name))
+                    peer_service = "api.instance.PeerManageRpcService"
+                    vpn_service = "api.instance.VpnPortalRpcService"
+                    config_service = "api.config.ConfigRpcService"
+
+                    nodes = {}
+                    routes = []
+                    peers = []
+                    foreign_network_summary = []
+                    vpn_portal_cfg = None
+                    dev_name = ""
+
+                    list_peer_resp = self.call_json_rpc(peer_service, "ListPeer", selector_json)
+                    if list_peer_resp:
+                        try:
+                            resp_obj = json.loads(list_peer_resp)
+                            peers = resp_obj.get('peer_infos', [])
+                        except json.JSONDecodeError:
+                            pass
+
+                    show_node_resp = self.call_json_rpc(peer_service, "ShowNodeInfo", selector_json)
+                    if show_node_resp:
+                        try:
+                            resp_obj = json.loads(show_node_resp)
+                            node_info = resp_obj.get('node_info')
+                            if node_info:
+                                nodes = node_info
+                        except json.JSONDecodeError:
+                            pass
+
+                    list_route_resp = self.call_json_rpc(peer_service, "ListRoute", selector_json)
+                    if list_route_resp:
+                        try:
+                            resp_obj = json.loads(list_route_resp)
+                            routes = resp_obj.get('routes', [])
+                        except json.JSONDecodeError:
+                            pass
+
+                    foreign_summary_resp = self.call_json_rpc(
+                        peer_service, "GetForeignNetworkSummary", selector_json
+                    )
+                    if foreign_summary_resp:
+                        try:
+                            resp_obj = json.loads(foreign_summary_resp)
+                            foreign_network_summary = resp_obj.get('summary', [])
+                        except json.JSONDecodeError:
+                            pass
+
+                    vpn_resp = self.call_json_rpc(vpn_service, "GetVpnPortalInfo", selector_json)
+                    if vpn_resp:
+                        try:
+                            resp_obj = json.loads(vpn_resp)
+                            portal_info = resp_obj.get('vpn_portal_info')
+                            if portal_info:
+                                vpn_portal_cfg = portal_info.get('client_config')
+                        except json.JSONDecodeError:
+                            pass
+
+                    config_resp = self.call_json_rpc(config_service, "GetConfig", selector_json)
+                    if config_resp:
+                        try:
+                            resp_obj = json.loads(config_resp)
+                            config = resp_obj.get('config')
+                            if config:
+                                dev_name = config.get('dev_name', '')
+                        except json.JSONDecodeError:
+                            pass
+
+                    if nodes:
+                        nodes['vpn_portal_cfg'] = vpn_portal_cfg
+
+                    peer_route_pairs = self._list_peer_route_pair(peers, routes)
+
+                    running_info = {
+                        "dev_name": dev_name,
+                        "my_node_info": nodes if nodes else None,
+                        "events": [],
+                        "routes": routes,
+                        "peers": peers,
+                        "peer_route_pairs": peer_route_pairs,
+                        "running": True,
+                        "error_msg": None,
+                        "foreign_network_summary": foreign_network_summary,
+                    }
+                    result[inst_name] = running_info
+
+                except Exception as e:
+                    logger.exception(f"collect_network_infos_via_rpc: failed for instance {inst_name}: {e}")
+                    result[inst_name] = {
+                        "running": False,
+                        "error_msg": str(e),
+                    }
+
             return result
         except Exception as e:
-            logger.exception(f"collect_network_infos failed: {e}")
+            logger.exception(f"collect_network_infos_via_rpc failed: {e}")
             return {}
+
+    def collect_network_infos(self, max_length: int = 10) -> Dict[str, Any]:
+        """
+        收集网络实例信息（线程安全）
+        优先使用 RPC 方式，避免 collect_network_infos FFI 的多 Tokio Runtime 冲突
+        """
+        return self.collect_network_infos_via_rpc(max_length)
 
     def list_instance(self, max_length: int = 10) -> Dict[str, str]:
         """
