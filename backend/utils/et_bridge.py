@@ -138,21 +138,24 @@ class EasyTierFFI:
             logger.exception(f"parse_config failed: {e}")
             return -1
 
-    def run_network_instance(self, toml_config: str) -> int:
+    def run_network_instance(self, toml_config: str, instance_name: str = None) -> int:
         """
         启动网络实例（线程安全）
         toml_config: 配置字符串
+        instance_name: 实例名，用于缓存（可选，不传则从 TOML 中提取）
         return: 0 成功，-1 失败
         """
         if self._lib is None:
             return -1
         try:
-            # 从 TOML 配置中提取实例名，缓存到全局变量，避免后续调用 list_instance FFI
             global _current_instance_name
-            import re
-            match = re.search(r'^\s*instance_name\s*=\s*"([^"]+)"', toml_config, re.MULTILINE)
-            if match:
-                _current_instance_name = match.group(1)
+            if instance_name:
+                _current_instance_name = instance_name
+            else:
+                import re
+                match = re.search(r'^\s*instance_name\s*=\s*["\x27]([^"\x27]+)["\x27]', toml_config, re.MULTILINE)
+                if match:
+                    _current_instance_name = match.group(1)
             with _ffi_lock:
                 ret = self._lib.run_network_instance(toml_config.encode('utf-8'))
                 if ret == 0:
@@ -529,10 +532,12 @@ class EasyTierFFI:
             my_ipv4 = self._ipv4_inet_to_string(my_node.get('virtual_ipv4'))
 
             peers = []
-            pairs = inst.get('peer_route_pairs', [])
+            pairs = inst.get('peer_route_pairs', []) or []
             for pair in pairs:
-                route = pair.get('route', {})
-                peer = pair.get('peer', {})
+                if not isinstance(pair, dict):
+                    continue
+                route = pair.get('route', {}) or {}
+                peer = pair.get('peer', {}) or {}
 
                 peer_id = route.get('peer_id', 0)
                 hostname = route.get('hostname', '')

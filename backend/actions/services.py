@@ -124,7 +124,7 @@ def start(params=None, *args, **kwargs):
             if ret != 0:
                 raise HttpException(f"Config parse failed: {et_bridge.get_last_error()}")
             logging.info(f"Android: Config parsed OK, running instance via FFI...")
-            ret = et_bridge.run_network_instance(toml_config)
+            ret = et_bridge.run_network_instance(toml_config, Path(profile).stem)
             if ret != 0:
                 raise HttpException(f"Failed to start instance: {et_bridge.get_last_error()}")
             logging.info(f"Android: Started EasyTier instance '{profile}' via FFI")
