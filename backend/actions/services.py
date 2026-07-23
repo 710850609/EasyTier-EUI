@@ -56,7 +56,10 @@ def status(params=None, *args, **kwargs) -> bool:
         if not _FFI_AVAILABLE or et_bridge is None or et_bridge._lib is None:
             return False
         try:
-            return et_bridge.is_running()
+            from pathlib import Path
+            profile = params.get('profile', '') if isinstance(params, dict) else str(params) if params else ''
+            inst_name = Path(profile).stem if profile else None
+            return et_bridge.is_running(inst_name)
         except Exception:
             return False
     profile, _ = Validator.not_empty(params, 'profile', 'validate.profile_required')

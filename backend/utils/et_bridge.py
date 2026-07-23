@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 _current_instance_name: Optional[str] = None
 
 # 全局 FFI 调用锁：Rust 层不是线程安全的，必须串行化所有 FFI 调用
-_ffi_lock = threading.Lock()
+_ffi_lock = threading.RLock()  # RLock 可重入，get_last_error 在已持锁的 call_json_rpc 内调用时不会死锁
 
 
 class KeyValuePair(Structure):
@@ -113,11 +113,12 @@ class EasyTierFFI:
 
     def get_last_error(self) -> str:
         """
-        获取最后错误信息
+        获取最后错误信息（线程安全）
         """
         if self._lib is None:
             return "FFI library not loaded"
-        result = self._lib.get_error_msg()
+        with _ffi_lock:
+            result = self._lib.get_error_msg()
         if result:
             return result.decode('utf-8', errors='replace')
         return ""
@@ -214,10 +215,8 @@ class EasyTierFFI:
     def _make_instance_selector(self, instance_name: str) -> Dict[str, Any]:
         return {
             "instance": {
-                "selector": {
-                    "instance_selector": {
-                        "name": instance_name
-                    }
+                "instance_selector": {
+                    "name": instance_name
                 }
             }
         }
@@ -475,10 +474,13 @@ class EasyTierFFI:
         network_length = inet_obj.get('network_length', 24)
         return f"{ip}/{network_length}"
 
-    def is_running(self) -> bool:
+    def is_running(self, instance_name: str = None) -> bool:
         """
         检查是否有实例在运行（纯 Python，不调用 FFI，避免 Android 上崩溃）
+        instance_name: 可选，指定实例名则检查该实例是否运行
         """
+        if instance_name is not None:
+            return _current_instance_name == instance_name
         return _current_instance_name is not None
 
     def get_version(self) -> str:
