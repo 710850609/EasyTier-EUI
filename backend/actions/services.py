@@ -126,7 +126,24 @@ def start(params=None, *args, **kwargs):
             if ret != 0:
                 raise HttpException(f"Failed to start instance: {et_bridge.get_last_error()}")
             logging.info(f"Android: Started EasyTier instance '{profile}' via FFI")
-            # 检查实例状态（collect_network_infos 内部会自动等待 core 初始化完成）
+            # 用 list_instance 轮询检测实例是否就绪（比 collect_network_infos 更轻量安全）
+            import time as _time
+            inst_name = Path(profile).stem
+            max_retries = 10
+            for attempt in range(max_retries):
+                _time.sleep(0.5)
+                logging.info(f"Android: Waiting for instance '{inst_name}' to appear (attempt {attempt + 1}/{max_retries})...")
+                try:
+                    instances = et_bridge.list_instance(5)
+                    logging.info(f"Android: list_instance returned: {list(instances.keys())}")
+                    if inst_name in instances:
+                        logging.info(f"Android: Instance '{inst_name}' found, core is ready")
+                        break
+                except Exception as check_err:
+                    logging.warning(f"Android: list_instance check failed: {check_err}")
+            else:
+                logging.warning(f"Android: Instance '{inst_name}' not found after {max_retries} retries, may still be initializing")
+            # 现在安全调用 collect_network_infos（内部有锁保护）
             try:
                 infos = et_bridge.collect_network_infos(5)
                 keys = list(infos.keys())

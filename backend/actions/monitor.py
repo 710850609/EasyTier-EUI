@@ -16,6 +16,7 @@ def list(params, *args, **kwargs):
     获取节点列表
     :param request_data: 请求数据（可选）
     """
+    return []
     if run_configs.IS_ANDROID:
         if et_bridge is None or et_bridge._lib is None:
             return []

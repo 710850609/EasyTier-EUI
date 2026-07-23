@@ -45,6 +45,7 @@ def list_config_files(*args, **kwargs):
     return result
 
 def list_config_status(*args, **kwargs):
+    return []
     config_files = list_config_files()
     result = []
     for profile in config_files:
