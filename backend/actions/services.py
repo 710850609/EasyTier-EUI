@@ -135,12 +135,12 @@ def start(params=None, *args, **kwargs):
                 MainActivity = jclass("com.easytier.eui.MainActivity")
                 manager = MainActivity.getEasyTierManager()
                 if manager is not None:
-                    manager.requestVpnAuthorization()
-                    logging.info("Android: VPN authorization requested")
+                    manager.requestVpnAndStartDummy(profile)
+                    logging.info("Android: VPN auth + dummy VPN requested")
                 else:
                     logging.warning("Android: EasyTierManager not available for VPN auth")
             except Exception as vpn_err:
-                logging.warning(f"Android: Failed to request VPN authorization: {vpn_err}")
+                logging.warning(f"Android: Failed to request VPN: {vpn_err}")
         except Exception as e:
             logging.exception(f"Android: Failed to start instance: {e}")
             raise

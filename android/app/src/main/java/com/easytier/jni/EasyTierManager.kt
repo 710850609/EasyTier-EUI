@@ -50,6 +50,7 @@ class EasyTierManager(
     private var pendingVpnIpv4: String? = null
     private var pendingVpnProxyCidrs: List<String> = emptyList()
     private var isVpnAuthorizationPending = false
+    private var pendingDummyVpnInstanceName: String? = null
 
     private fun logToFile(level: String, msg: String) {
         val ts = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault()).format(Date())
@@ -398,12 +399,17 @@ class EasyTierManager(
                     return
                 }
                 doStartVpnService(ipv4, proxyCidrs)
+            } else if (pendingDummyVpnInstanceName != null) {
+                val name = pendingDummyVpnInstanceName
+                pendingDummyVpnInstanceName = null
+                startDummyVpn(name!!)
             }
         } else {
             logToFile("WARN", "VPN authorization denied by user")
             Log.w(TAG, "VPN authorization denied by user")
             pendingVpnIpv4 = null
             pendingVpnProxyCidrs = emptyList()
+            pendingDummyVpnInstanceName = null
         }
     }
 
@@ -430,6 +436,54 @@ class EasyTierManager(
             val sw = StringWriter()
             e.printStackTrace(PrintWriter(sw))
             logToFile("ERROR", "requestVpnAuthorization error: ${sw}")
+        }
+    }
+
+    fun requestVpnAndStartDummy(instanceName: String) {
+        try {
+            logToFile("INFO", "requestVpnAndStartDummy: instance=$instanceName")
+            pendingDummyVpnInstanceName = instanceName
+            val prepareIntent = VpnService.prepare(activity)
+            if (prepareIntent != null) {
+                logToFile("INFO", "requestVpnAndStartDummy: VPN not authorized, showing dialog")
+                isVpnAuthorizationPending = true
+                activity.startActivityForResult(prepareIntent, VPN_REQUEST_CODE)
+            } else {
+                logToFile("INFO", "requestVpnAndStartDummy: VPN already authorized, starting immediately")
+                pendingDummyVpnInstanceName = null
+                startDummyVpn(instanceName)
+            }
+        } catch (e: Exception) {
+            val sw = StringWriter()
+            e.printStackTrace(PrintWriter(sw))
+            logToFile("ERROR", "requestVpnAndStartDummy error: ${sw}")
+        }
+    }
+
+    fun startDummyVpn(instanceName: String) {
+        try {
+            val recheck = VpnService.prepare(activity)
+            if (recheck != null) {
+                logToFile("WARN", "startDummyVpn: VPN not authorized yet, skipping")
+                return
+            }
+
+            currentInstanceName = instanceName
+            EasyTierVpnService.logFile = logFile
+            val intent = Intent(activity, EasyTierVpnService::class.java)
+            intent.putExtra("ipv4_address", "10.0.0.1/24")
+            intent.putStringArrayListExtra("proxy_cidrs", ArrayList())
+            intent.putExtra("instance_name", instanceName)
+
+            logToFile("INFO", "startDummyVpn: calling startService with dummy IPv4")
+            activity.startService(intent)
+            vpnServiceIntent = intent
+
+            logToFile("INFO", "startDummyVpn: VPN service started with dummy config")
+        } catch (e: Exception) {
+            val sw = StringWriter()
+            e.printStackTrace(PrintWriter(sw))
+            logToFile("ERROR", "startDummyVpn error: ${sw}")
         }
     }
 
