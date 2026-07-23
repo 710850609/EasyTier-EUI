@@ -56,8 +56,7 @@ def status(params=None, *args, **kwargs) -> bool:
         if not _FFI_AVAILABLE or et_bridge is None or et_bridge._lib is None:
             return False
         try:
-            instances = et_bridge.list_instance(10)
-            return len(instances) > 0
+            return et_bridge.is_running()
         except Exception:
             return False
     profile, _ = Validator.not_empty(params, 'profile', 'validate.profile_required')
@@ -210,10 +209,11 @@ def stop_all(*args, **kwargs) -> List[str]:
         if not _FFI_AVAILABLE or et_bridge is None or et_bridge._lib is None:
             return []
         try:
-            instances = et_bridge.list_instance(10)
+            from utils.et_bridge import _current_instance_name
+            stopped = [_current_instance_name] if _current_instance_name else []
             et_bridge.stop_all_instances()
             logging.info("Android: Stopped all instances via FFI")
-            return list(instances.keys())
+            return stopped
         except Exception as e:
             logging.warning(f"Android: Failed to stop all: {e}")
             return []

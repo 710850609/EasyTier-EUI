@@ -11,18 +11,13 @@ import json
 import logging
 import os
 import platform
+import re
 import threading
-import time
 from ctypes import c_char_p, c_int, c_void_p, POINTER, Structure, c_ulonglong
 from pathlib import Path
 from typing import Optional, Dict, Any, List
 
 logger = logging.getLogger(__name__)
-
-# 全局初始化保护：run_network_instance 后需要等待 core 初始化完成
-# 在此期间，collect_network_infos 会自动阻塞等待，防止 Rust 层 SIGABRT
-_last_instance_start_time = 0.0
-MIN_INIT_WAIT_SECONDS = 15.0
 
 # 缓存当前运行的实例名，避免调用 list_instance FFI（该 FFI 在 Android 上不安全）
 _current_instance_name: Optional[str] = None
@@ -152,7 +147,7 @@ class EasyTierFFI:
             return -1
         try:
             # 从 TOML 配置中提取实例名，缓存到全局变量，避免后续调用 list_instance FFI
-            global _current_instance_name, _last_instance_start_time
+            global _current_instance_name
             import re
             match = re.search(r'^\s*instance_name\s*=\s*"([^"]+)"', toml_config, re.MULTILINE)
             if match:
@@ -160,9 +155,7 @@ class EasyTierFFI:
             with _ffi_lock:
                 ret = self._lib.run_network_instance(toml_config.encode('utf-8'))
                 if ret == 0:
-                    _last_instance_start_time = time.time()
-                    logger.info(f"Instance '{_current_instance_name}' started at {_last_instance_start_time}, "
-                               f"collect_network_infos will wait {MIN_INIT_WAIT_SECONDS}s before FFI calls")
+                    logger.info(f"Instance '{_current_instance_name}' started via FFI")
             return ret
         except Exception as e:
             logger.exception(f"run_network_instance failed: {e}")
@@ -193,8 +186,7 @@ class EasyTierFFI:
         return: 0 成功，-1 失败
         """
         with _ffi_lock:
-            global _last_instance_start_time, _current_instance_name
-            _last_instance_start_time = 0.0  # 重置，下次启动重新计时
+            global _current_instance_name
             _current_instance_name = None
             return self._lib.retain_network_instance(None, 0) if self._lib else -1
 
@@ -261,14 +253,6 @@ class EasyTierFFI:
         if self._lib is None:
             return {}
         try:
-            global _last_instance_start_time
-            elapsed = time.time() - _last_instance_start_time
-            if elapsed < MIN_INIT_WAIT_SECONDS:
-                wait_time = MIN_INIT_WAIT_SECONDS - elapsed
-                logger.info(f"collect_network_infos_via_rpc: waiting {wait_time:.1f}s for core init "
-                           f"(elapsed={elapsed:.1f}s, min={MIN_INIT_WAIT_SECONDS}s)")
-                time.sleep(wait_time)
-
             inst_name = _current_instance_name
             if not inst_name:
                 logger.warning("collect_network_infos_via_rpc: no cached instance name, returning empty")
@@ -490,6 +474,12 @@ class EasyTierFFI:
             return ''
         network_length = inet_obj.get('network_length', 24)
         return f"{ip}/{network_length}"
+
+    def is_running(self) -> bool:
+        """
+        检查是否有实例在运行（纯 Python，不调用 FFI，避免 Android 上崩溃）
+        """
+        return _current_instance_name is not None
 
     def get_version(self) -> str:
         try:
