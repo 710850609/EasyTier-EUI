@@ -11,53 +11,78 @@ on:
   workflow_dispatch:
     inputs:
       easytier_ref:
-        description: "EasyTier git ref for FFI"
+        description: "EasyTier git ref (leave empty for latest release)"
         required: false
-        default: "main"
+        default: ""
+      build_version:
+        description: "Build version (leave empty for auto: 0.1-{timestamp})"
+        required: false
+        default: ""
+      build_type:
+        description: "Build type"
+        required: false
+        default: "debug"
+        type: choice
+        options:
+          - debug
+          - release
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      # ==================== 源码 & 前端 ====================
+      - name: Checkout  # 拉取 EasyTier-EUI 源码
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node.js  # 安装 Node.js 24，启用 npm 缓存
         uses: actions/setup-node@v4
         with:
           node-version: '24'
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
 
-      - name: Build Frontend
+      - name: Build Frontend  # npm install + 编译 Vue 前端
         run: |
           cd frontend
           npm install
           npm run build
 
-      - name: Copy Frontend to Android Assets
+      - name: Copy Frontend to Android Assets  # 前端产物 → Android assets 目录
         run: |
           mkdir -p android/app/src/main/assets/frontend
           cp -r frontend/dist/* android/app/src/main/assets/frontend/
 
-      - name: Copy Python Backend
+      - name: Copy Python Backend  # Python 后端 → Android python 目录
         run: |
           mkdir -p android/app/src/main/python
           cp -r backend/* android/app/src/main/python/
 
-      - name: Setup JDK 17
+      - name: Write build version  # 将构建版本号写入 run_configs.py（未指定则自动生成 0.1-{时间戳}）
+        env:
+          BUILD_VER: ${{ inputs.build_version || '' }}
+        run: |
+          if [ -z "$BUILD_VER" ]; then
+            BUILD_VER="0.1-$(date +%Y%m%d%H%M%S)"
+          fi
+          echo "Build version: $BUILD_VER"
+          TARGET_FILE="android/app/src/main/python/utils/run_configs.py"
+          sed -i "s/^BUILD_VERSION = \".*\"/BUILD_VERSION = \"$BUILD_VER\"/" "$TARGET_FILE"
+
+      # ==================== Android 构建环境 ====================
+      - name: Setup JDK 17  # 安装 Java 17（Temurin 发行版）
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Setup Python 3.12
+      - name: Setup Python 3.12  # 安装 Python 3.12（Chaquopy 依赖）
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
-      - name: Decode keystore
+      - name: Decode keystore  # 从 GitHub Secrets 解码签名密钥
         env:
           APK_KEYSTORE_BASE64: ${{ secrets.APK_KEYSTORE_BASE64 }}
         run: |
@@ -70,18 +95,19 @@ jobs:
             exit 1
           fi
 
-      - name: Setup Android SDK + NDK
+      - name: Setup Android SDK + NDK  # 安装 Android SDK 34 + NDK 26
         uses: android-actions/setup-android@v3
         with:
           packages: 'platforms;android-34 build-tools;34.0.0 ndk;26.1.10909125'
 
-      - name: Setup protoc
+      # ==================== Rust / FFI 编译环境 ====================
+      - name: Setup protoc  # 安装 protobuf 编译器（Rust 编译依赖）
         uses: arduino/setup-protoc@v3
         with:
           version: "35.1"
           repo-token: ${{ github.token }}
 
-      - name: Setup Rust + Android target
+      - name: Setup Rust + Android target  # 安装 Rust 1.95 + aarch64-linux-android 目标
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: "1.95"
@@ -89,23 +115,32 @@ jobs:
           cache: false
           rustflags: ""
 
-      - name: Install cargo-ndk
+      - name: Install cargo-ndk  # 安装 cargo-ndk（Rust → Android NDK 编译桥接）
         run: cargo install cargo-ndk
 
-      - name: Get EasyTier commit hash
-        id: easytier-hash
+      # ==================== EasyTier 版本解析 & FFI 编译 ====================
+      - name: Get EasyTier release info  # 获取 EasyTier 最新 release 的 tag/version/commit（或使用手动指定的 ref）
+        id: easytier-info
         env:
-          EASYTIER_REF: ${{ inputs.easytier_ref || 'main' }}
+          EASYTIER_REF: ${{ inputs.easytier_ref || '' }}
         run: |
-          COMMIT=$(git ls-remote https://github.com/easytier/easytier.git "$EASYTIER_REF" | head -n1 | cut -f1)
-          if [ -z "$COMMIT" ]; then
-            echo "Failed to resolve EasyTier ref: $EASYTIER_REF"
-            exit 1
+          if [ -n "$EASYTIER_REF" ]; then
+            TAG="$EASYTIER_REF"
+            echo "Using specified ref: $TAG"
+          else
+            TAG=$(curl -sL https://api.github.com/repos/easytier/easytier/releases/latest | jq -r .tag_name)
+            echo "Using latest release: $TAG"
           fi
+          COMMIT=$(git ls-remote https://github.com/easytier/easytier.git "$TAG" | head -n1 | cut -f1)
+          VERSION="${TAG#v}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "commit=$COMMIT" >> "$GITHUB_OUTPUT"
+          echo "EasyTier tag: $TAG"
+          echo "EasyTier version: $VERSION"
           echo "EasyTier commit: $COMMIT"
 
-      - name: Cache Cargo registry
+      - name: Cache Cargo registry  # 缓存 Cargo 依赖（registry + git），加速后续构建
         uses: actions/cache@v4
         with:
           path: |
@@ -115,30 +150,29 @@ jobs:
           restore-keys: |
             cargo-registry-${{ runner.os }}-
 
-      - name: Cache easytier-ffi build
+      - name: Cache easytier-ffi build  # 缓存已编译的 FFI .so（按 release tag 区分，同一版本不重复编译）
         id: ffi-cache
         uses: actions/cache@v4
         with:
           path: easytier-src
-          key: easytier-ffi-${{ steps.easytier-hash.outputs.commit }}-ndk26
+          key: easytier-ffi-${{ steps.easytier-info.outputs.tag }}-ndk26
 
-      - name: Build easytier-ffi for Android
+      - name: Build easytier-ffi for Android  # 缓存未命中时：用 release tag 拉取源码，cross-compile 出 arm64 .so
         if: steps.ffi-cache.outputs.cache-hit != 'true'
         env:
-          EASYTIER_REF: ${{ inputs.easytier_ref || 'main' }}
+          EASYTIER_TAG: ${{ steps.easytier-info.outputs.tag }}
         run: |
           git init easytier-src
           cd easytier-src
           git remote add origin https://github.com/easytier/easytier.git
-          git fetch --depth=1 origin "$EASYTIER_REF"
-          git checkout --detach FETCH_HEAD
-          VERSION=$(sed -n 's/^version = "\([^"]*\)"/\1/p' easytier/Cargo.toml | head -n 1)
-          echo "EasyTier version: $VERSION"
+          git fetch --depth=1 origin tag "$EASYTIER_TAG"
+          git checkout --detach tags/"$EASYTIER_TAG"
+          echo "EasyTier version: $(sed -n 's/^version = \"\([^\"]*\)\"/\1/p' easytier/Cargo.toml | head -n 1)"
           echo "EasyTier commit: $(git rev-parse HEAD)"
           cd easytier-contrib/easytier-ffi
           cargo ndk -t arm64-v8a build --release
 
-      - name: Integrate FFI into APK
+      - name: Integrate FFI into APK  # 将 libeasytier_ffi.so 复制到 APK jniLibs 目录
         run: |
           LIB_DIR="android/app/src/main/jniLibs/arm64-v8a"
           mkdir -p "$LIB_DIR"
@@ -146,19 +180,24 @@ jobs:
           echo "FFI library integrated:"
           ls -lh "$LIB_DIR/"
 
-      - name: Setup Gradle
+      # ==================== APK 构建 & 上传 ====================
+      - name: Setup Gradle  # 安装 Gradle 8.11.1
         run: |
           curl -L -o /tmp/gradle.zip https://services.gradle.org/distributions/gradle-8.11.1-bin.zip
           unzip -q /tmp/gradle.zip -d /opt
           echo "/opt/gradle-8.11.1/bin" >> $GITHUB_PATH
 
-      - name: Build Debug APK
+      - name: Build APK  # Gradle 编译 Android APK（debug = 可调试/快速，release = 优化/正式）
         working-directory: android
-        run: gradle assembleDebug --no-daemon --stacktrace
+        env:
+          BUILD_TYPE: ${{ inputs.build_type || 'debug' }}
+        run: |
+          CAPITALIZED=$(echo "$BUILD_TYPE" | sed 's/^./\U&/')
+          gradle "assemble${CAPITALIZED}" --no-daemon --stacktrace
 
-      - name: Upload APK
+      - name: Upload APK  # 上传 APK 到 GitHub Actions Artifact（保留 30 天）
         uses: actions/upload-artifact@v4
         with:
-          name: EasyTier-EUI-debug
-          path: android/app/build/outputs/apk/debug/*.apk
+          name: EasyTier-EUI-${{ inputs.build_type || 'debug' }}
+          path: android/app/build/outputs/apk/${{ inputs.build_type || 'debug' }}/*.apk
           retention-days: 30
