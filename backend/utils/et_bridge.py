@@ -483,6 +483,19 @@ class EasyTierFFI:
         network_length = inet_obj.get('network_length', 24)
         return f"{ip}/{network_length}"
 
+    @staticmethod
+    def _format_bytes(b: int) -> str:
+        if isinstance(b, str):
+            return b
+        if b < 1024:
+            return f"{b} B"
+        elif b < 1024 * 1024:
+            return f"{b / 1024:.2f} KB"
+        elif b < 1024 * 1024 * 1024:
+            return f"{b / (1024 * 1024):.2f} MB"
+        else:
+            return f"{b / (1024 * 1024 * 1024):.2f} GB"
+
     def is_running(self, instance_name: str = None) -> bool:
         """
         检查是否有实例在运行（纯 Python，不调用 FFI，避免 Android 上崩溃）
@@ -585,9 +598,9 @@ class EasyTierFFI:
                     'hostname': hostname,
                     'cost': cost,
                     'lat_ms': lat_ms,
-                    'loss_rate': loss_rate,
-                    'rx_bytes': rx_bytes,
-                    'tx_bytes': tx_bytes,
+                    'loss_rate': f"{loss_rate * 100:.1f}%",
+                    'rx_bytes': self._format_bytes(rx_bytes),
+                    'tx_bytes': self._format_bytes(tx_bytes),
                     'nat_type': nat_type,
                     'tunnel_proto': tunnel_proto,
                     'cidr': cidr,
@@ -603,7 +616,7 @@ class EasyTierFFI:
                     'hostname': my_hostname,
                     'cost': 'Local',
                     'lat_ms': 0,
-                    'loss_rate': 0,
+                    'loss_rate': '0.0%',
                     'rx_bytes': '-',
                     'tx_bytes': '-',
                     'nat_type': my_nat_type,
