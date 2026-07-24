@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
     inputs:
       easytier_ref:
-        description: "EasyTier git ref (leave empty for latest release)"
+        description: "EasyTier git ref - supports branch, tag, or commit hash (leave empty for latest release)"
         required: false
         default: ""
       build_version:
@@ -119,25 +119,25 @@ jobs:
         run: cargo install cargo-ndk
 
       # ==================== EasyTier 版本解析 & FFI 编译 ====================
-      - name: Get EasyTier release info  # 获取 EasyTier 最新 release 的 tag/version/commit（或使用手动指定的 ref）
+      - name: Get EasyTier release info  # 获取 EasyTier 的 ref/version/commit（支持 branch/tag/commit，留空则用最新 release）
         id: easytier-info
         env:
           EASYTIER_REF: ${{ inputs.easytier_ref || '' }}
         run: |
           if [ -n "$EASYTIER_REF" ]; then
-            TAG="$EASYTIER_REF"
-            echo "Using specified ref: $TAG"
+            REF="$EASYTIER_REF"
+            echo "Using specified ref: $REF"
           else
-            TAG=$(curl -sL https://api.github.com/repos/easytier/easytier/releases/latest | jq -r .tag_name)
-            echo "Using latest release: $TAG"
+            REF=$(curl -sL https://api.github.com/repos/easytier/easytier/releases/latest | jq -r .tag_name)
+            echo "Using latest release: $REF"
           fi
-          COMMIT=$(git ls-remote https://github.com/easytier/easytier.git "$TAG" | head -n1 | cut -f1)
-          VERSION="${TAG#v}"
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          COMMIT=$(git ls-remote https://github.com/easytier/easytier.git "$REF" | head -n1 | cut -f1)
+          VERSION="${REF#v}"
+          echo "ref=$REF" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "commit=$COMMIT" >> "$GITHUB_OUTPUT"
           echo "commit_short=${COMMIT:0:8}" >> "$GITHUB_OUTPUT"
-          echo "EasyTier tag: $TAG"
+          echo "EasyTier ref: $REF"
           echo "EasyTier version: $VERSION"
           echo "EasyTier commit: $COMMIT"
 
@@ -158,16 +158,16 @@ jobs:
           path: easytier-ffi-cache
           key: easytier-ffi-${{ steps.easytier-info.outputs.version }}-${{ steps.easytier-info.outputs.commit_short }}-ndk26
 
-      - name: Build easytier-ffi for Android  # 缓存未命中时：用 release tag 拉取源码，cross-compile 出 arm64 .so
+      - name: Build easytier-ffi for Android  # 缓存未命中时：拉取 EasyTier 源码，cross-compile 出 arm64 .so
         if: steps.ffi-cache.outputs.cache-hit != 'true'
         env:
-          EASYTIER_TAG: ${{ steps.easytier-info.outputs.tag }}
+          EASYTIER_REF: ${{ steps.easytier-info.outputs.ref }}
         run: |
           git init easytier-src
           cd easytier-src
           git remote add origin https://github.com/easytier/easytier.git
-          git fetch --depth=1 origin tag "$EASYTIER_TAG"
-          git checkout --detach tags/"$EASYTIER_TAG"
+          git fetch --depth=1 origin "$EASYTIER_REF"
+          git checkout FETCH_HEAD
           echo "EasyTier version: $(sed -n 's/^version = \"\([^\"]*\)\"/\1/p' easytier/Cargo.toml | head -n 1)"
           echo "EasyTier commit: $(git rev-parse HEAD)"
           cd easytier-contrib/easytier-ffi
