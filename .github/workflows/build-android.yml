@@ -136,6 +136,7 @@ jobs:
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "commit=$COMMIT" >> "$GITHUB_OUTPUT"
+          echo "commit_short=${COMMIT:0:8}" >> "$GITHUB_OUTPUT"
           echo "EasyTier tag: $TAG"
           echo "EasyTier version: $VERSION"
           echo "EasyTier commit: $COMMIT"
@@ -150,12 +151,12 @@ jobs:
           restore-keys: |
             cargo-registry-${{ runner.os }}-
 
-      - name: Cache easytier-ffi build  # 缓存已编译的 FFI .so（按 release tag 区分，同一版本不重复编译）
+      - name: Cache easytier-ffi build  # 只缓存编译好的 .so 文件（按 ET 版本号 + commit 短哈希区分）
         id: ffi-cache
         uses: actions/cache@v4
         with:
-          path: easytier-src
-          key: easytier-ffi-${{ steps.easytier-info.outputs.tag }}-ndk26
+          path: easytier-ffi-cache
+          key: easytier-ffi-${{ steps.easytier-info.outputs.version }}-${{ steps.easytier-info.outputs.commit_short }}-ndk26
 
       - name: Build easytier-ffi for Android  # 缓存未命中时：用 release tag 拉取源码，cross-compile 出 arm64 .so
         if: steps.ffi-cache.outputs.cache-hit != 'true'
@@ -171,12 +172,15 @@ jobs:
           echo "EasyTier commit: $(git rev-parse HEAD)"
           cd easytier-contrib/easytier-ffi
           cargo ndk -t arm64-v8a build --release
+          mkdir -p "$GITHUB_WORKSPACE/easytier-ffi-cache"
+          cp "$GITHUB_WORKSPACE/easytier-src/target/aarch64-linux-android/release/libeasytier_ffi.so" "$GITHUB_WORKSPACE/easytier-ffi-cache/"
+          echo "FFI .so cached to easytier-ffi-cache/"
 
       - name: Integrate FFI into APK  # 将 libeasytier_ffi.so 复制到 APK jniLibs 目录
         run: |
           LIB_DIR="android/app/src/main/jniLibs/arm64-v8a"
           mkdir -p "$LIB_DIR"
-          cp easytier-src/target/aarch64-linux-android/release/libeasytier_ffi.so "$LIB_DIR/"
+          cp easytier-ffi-cache/libeasytier_ffi.so "$LIB_DIR/"
           echo "FFI library integrated:"
           ls -lh "$LIB_DIR/"
 
