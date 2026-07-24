@@ -56,9 +56,8 @@ def status(params=None, *args, **kwargs) -> bool:
         if not _FFI_AVAILABLE or et_bridge is None or et_bridge._lib is None:
             return False
         try:
-            from pathlib import Path
             profile = params.get('profile', '') if isinstance(params, dict) else str(params) if params else ''
-            inst_name = Path(profile).stem if profile else None
+            inst_name = profile if profile else None
             return et_bridge.is_running(inst_name)
         except Exception:
             return False
@@ -124,7 +123,7 @@ def start(params=None, *args, **kwargs):
             if ret != 0:
                 raise HttpException(f"Config parse failed: {et_bridge.get_last_error()}")
             logging.info(f"Android: Config parsed OK, running instance via FFI...")
-            ret = et_bridge.run_network_instance(toml_config, Path(profile).stem)
+            ret = et_bridge.run_network_instance(toml_config, profile)
             if ret != 0:
                 raise HttpException(f"Failed to start instance: {et_bridge.get_last_error()}")
             logging.info(f"Android: Started EasyTier instance '{profile}' via FFI")
