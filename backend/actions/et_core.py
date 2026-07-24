@@ -67,8 +67,6 @@ def version(params=None, *args, **kwargs):
 
 
 def get_release_info(params: dict, *args, **kwargs) -> dict:
-    if run_configs.IS_ANDROID:
-        return {'update_time': 0, 'total_download': 0, 'versions': []}
     params = params or {}
     refresh = params.get('refresh', 'false').lower() == 'true'
     release_file = Path(run_configs.data_dir()).joinpath('et_release.json')
