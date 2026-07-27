@@ -8,8 +8,6 @@ import threading
 from pathlib import Path
 from typing import Union, List, Optional, Set
 
-import tomlkit
-
 from http_dispatcher.dispatcher import HttpException
 from locales import get_message
 from utils import check_peers, common_util
@@ -20,10 +18,10 @@ from utils.process_util import ProcessManager
 from utils.validators import Validator
 
 try:
-    from utils.et_bridge import et_bridge
+    from et_adapters import get_facade
     _FFI_AVAILABLE = True
 except Exception:
-    et_bridge = None
+    get_facade = None
     _FFI_AVAILABLE = False
 
 # 延迟初始化：使用线程安全的单例模式
@@ -53,12 +51,14 @@ def _get_process_manager(profile:str = None) -> Union[ProcessManager]:
 
 def status(params=None, *args, **kwargs) -> bool:
     if run_configs.IS_ANDROID:
-        if not _FFI_AVAILABLE or et_bridge is None or et_bridge._lib is None:
+        if not _FFI_AVAILABLE:
             return False
         try:
+            facade = get_facade()
+            if not facade.is_available:
+                return False
             profile = params.get('profile', '') if isinstance(params, dict) else str(params) if params else ''
-            inst_name = profile if profile else None
-            return et_bridge.is_running(inst_name)
+            return facade.get_current_instance() == (profile if profile else None)
         except Exception:
             return False
     profile, _ = Validator.not_empty(params, 'profile', 'validate.profile_required')
@@ -71,10 +71,13 @@ def status(params=None, *args, **kwargs) -> bool:
 
 def stop(params=None, *args, **kwargs):
     if run_configs.IS_ANDROID:
-        if not _FFI_AVAILABLE or et_bridge is None or et_bridge._lib is None:
+        if not _FFI_AVAILABLE:
             return
         try:
-            et_bridge.stop_all_instances()
+            facade = get_facade()
+            if not facade.is_available:
+                return
+            facade.stop_network()
             logging.info("Android: Stopped all EasyTier instances via FFI")
         except Exception as e:
             logging.warning(f"Android: Failed to stop instances: {e}")
@@ -95,37 +98,20 @@ def stop(params=None, *args, **kwargs):
 
 def start(params=None, *args, **kwargs):
     if run_configs.IS_ANDROID:
-        if not _FFI_AVAILABLE or et_bridge is None or et_bridge._lib is None:
+        if not _FFI_AVAILABLE:
             raise HttpException(get_message('service.not_supported_android'))
         try:
+            facade = get_facade()
+            if not facade.is_available:
+                raise HttpException(get_message('service.not_supported_android'))
             profile, _ = Validator.not_empty(params, 'profile', 'validate.profile_required')
             logging.info(f"Android: Starting EasyTier instance '{profile}'...")
             config_file = run_configs.et_config_file(profile)
             if not Path(config_file).exists():
                 raise HttpException(get_message('service.config_not_found'))
             logging.info(f"Android: Config file: {config_file}")
-            with open(config_file, 'r', encoding='utf-8') as f:
-                toml_config = f.read()
-            logging.info(f"Android: Config loaded, {len(toml_config)} bytes")
-            doc = tomlkit.parse(toml_config)
-            # 兼容 compression -> data_compress_algo
-            flags = doc.get('flags', {})
-            if 'compression' in flags:
-                compression = flags['compression']
-                if compression:
-                    flags['data_compress_algo'] = compression.capitalize()
-                del flags['compression']
-                doc['flags'] = flags
-                logging.info(f"兼容处理 compression -> data_compress_algo")
-                toml_config = tomlkit.dumps(doc)
-            logging.info(f"Android: Parsing config via FFI...")
-            ret = et_bridge.parse_config(toml_config)
-            if ret != 0:
-                raise HttpException(f"Config parse failed: {et_bridge.get_last_error()}")
-            logging.info(f"Android: Config parsed OK, running instance via FFI...")
-            ret = et_bridge.run_network_instance(toml_config, profile)
-            if ret != 0:
-                raise HttpException(f"Failed to start instance: {et_bridge.get_last_error()}")
+            logging.info(f"Android: Starting instance '{profile}' via FFI...")
+            facade.start_network(config_file, profile)
             logging.info(f"Android: Started EasyTier instance '{profile}' via FFI")
             # 不立即调用任何 FFI 查询方法（list_instance/collect_network_infos 都会 SIGABRT）
             # Rust core 在后台异步初始化，Kotlin monitor 和前端轮询会通过 collect_network_infos
@@ -208,12 +194,14 @@ def start_all(*args, **kwargs):
 
 def stop_all(*args, **kwargs) -> List[str]:
     if run_configs.IS_ANDROID:
-        if not _FFI_AVAILABLE or et_bridge is None or et_bridge._lib is None:
+        if not _FFI_AVAILABLE:
             return []
         try:
-            from utils.et_bridge import _current_instance_name
-            stopped = [_current_instance_name] if _current_instance_name else []
-            et_bridge.stop_all_instances()
+            facade = get_facade()
+            if not facade.is_available:
+                return []
+            stopped = [facade.current_instance_name] if facade.current_instance_name else []
+            facade.stop_network()
             logging.info("Android: Stopped all instances via FFI")
             return stopped
         except Exception as e:

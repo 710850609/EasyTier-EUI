@@ -7,8 +7,14 @@ import sys
 
 from utils import common_util, et_run_info
 from utils import run_configs
-from utils.et_bridge import et_bridge
 from utils.validators import Validator
+
+try:
+    from et_adapters import get_facade
+    _FFI_AVAILABLE = True
+except Exception:
+    get_facade = None
+    _FFI_AVAILABLE = False
 
 
 def list(params, *args, **kwargs):
@@ -17,10 +23,13 @@ def list(params, *args, **kwargs):
     :param request_data: 请求数据（可选）
     """
     if run_configs.IS_ANDROID:
-        if et_bridge is None or et_bridge._lib is None:
+        if not _FFI_AVAILABLE:
             return []
         try:
-            return et_bridge.get_peers()
+            facade = get_facade()
+            if not facade.is_available:
+                return []
+            return facade.get_peers()
         except Exception as e:
             logging.warning(f"Android: Failed to get peers: {e}")
             return []

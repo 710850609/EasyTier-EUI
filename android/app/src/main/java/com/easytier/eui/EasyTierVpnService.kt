@@ -280,10 +280,10 @@ class EasyTierVpnService : VpnService() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             try {
                 val channel = NotificationChannel(
-                    CHANNEL_ID, "EasyTier VPN", NotificationManager.IMPORTANCE_LOW
+                    CHANNEL_ID, "EasyTier-EUI VPN", NotificationManager.IMPORTANCE_LOW
                 ).apply {
-                    description = "EasyTier VPN Status"
-                    setShowBadge(false)
+                    description = "EasyTier-EUI VPN Status"
+                    setShowBadge(true)
                 }
                 getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
                 logToFile("INFO", "Notification channel created")

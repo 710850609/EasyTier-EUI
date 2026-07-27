@@ -19,11 +19,8 @@ from typing import Optional, Dict, Any, List
 
 logger = logging.getLogger(__name__)
 
-# 缓存当前运行的实例名，避免调用 list_instance FFI（该 FFI 在 Android 上不安全）
 _current_instance_name: Optional[str] = None
-
-# 全局 FFI 调用锁：Rust 层不是线程安全的，必须串行化所有 FFI 调用
-_ffi_lock = threading.RLock()  # RLock 可重入，get_last_error 在已持锁的 call_json_rpc 内调用时不会死锁
+_ffi_lock = threading.RLock()
 
 
 class KeyValuePair(Structure):
@@ -50,14 +47,14 @@ class EasyTierFFI:
     def _load_library(self):
         lib_name = "libeasytier_ffi.so"
         lib_paths = [
-            Path(__file__).parent / lib_name,
+            Path(__file__).parent.parent / lib_name,
             Path(os.environ.get('EUI_LIB_DIR', '')) / lib_name,
         ]
         arch = platform.machine()
         if arch == 'aarch64':
-            lib_paths.append(Path(__file__).parent / 'arm64-v8a' / lib_name)
+            lib_paths.append(Path(__file__).parent.parent / 'arm64-v8a' / lib_name)
         elif arch == 'armv7l':
-            lib_paths.append(Path(__file__).parent / 'armeabi-v7a' / lib_name)
+            lib_paths.append(Path(__file__).parent.parent / 'armeabi-v7a' / lib_name)
 
         for lib_path in lib_paths:
             if lib_path.exists():
@@ -112,9 +109,6 @@ class EasyTierFFI:
         lib.free_string.restype = None
 
     def get_last_error(self) -> str:
-        """
-        获取最后错误信息（线程安全）
-        """
         if self._lib is None:
             return "FFI library not loaded"
         with _ffi_lock:
@@ -124,11 +118,6 @@ class EasyTierFFI:
         return ""
 
     def parse_config(self, toml_config: str) -> int:
-        """
-        解析 TOML 配置（线程安全）
-        toml_config: 配置字符串
-        return: 0 成功，-1 失败
-        """
         if self._lib is None:
             return -1
         try:
@@ -139,12 +128,6 @@ class EasyTierFFI:
             return -1
 
     def run_network_instance(self, toml_config: str, instance_name: str = None) -> int:
-        """
-        启动网络实例（线程安全）
-        toml_config: 配置字符串
-        instance_name: 实例名，用于缓存（可选，不传则从 TOML 中提取）
-        return: 0 成功，-1 失败
-        """
         if self._lib is None:
             return -1
         try:
@@ -152,7 +135,6 @@ class EasyTierFFI:
             if instance_name:
                 _current_instance_name = instance_name
             else:
-                import re
                 match = re.search(r'^\s*instance_name\s*=\s*["\x27]([^"\x27]+)["\x27]', toml_config, re.MULTILINE)
                 if match:
                     _current_instance_name = match.group(1)
@@ -166,11 +148,6 @@ class EasyTierFFI:
             return -1
 
     def retain_network_instance(self, instance_names: List[str]) -> int:
-        """
-        保留单个实例（线程安全）
-        instance_names: 实例名
-        return: 0 成功，-1 失败
-        """
         if self._lib is None:
             return -1
         try:
@@ -185,21 +162,12 @@ class EasyTierFFI:
             return -1
 
     def stop_all_instances(self) -> int:
-        """
-        停止所有实例（线程安全）
-        return: 0 成功，-1 失败
-        """
         with _ffi_lock:
             global _current_instance_name
             _current_instance_name = None
             return self._lib.retain_network_instance(None, 0) if self._lib else -1
 
     def delete_network_instance(self, instance_names: List[str]) -> int:
-        """
-        删除网络实例（线程安全）
-        instance_names: 实例名
-        return: 0 成功，-1 失败
-        """
         if self._lib is None:
             return -1
         try:
@@ -246,11 +214,6 @@ class EasyTierFFI:
         return pairs
 
     def collect_network_infos_via_rpc(self, max_length: int = 10) -> Dict[str, Any]:
-        """
-        通过 RPC 调用收集网络实例信息（线程安全）
-        替代 collect_network_infos FFI 调用，避免多 Tokio Runtime 冲突导致的崩溃
-        使用缓存的实例名，避免调用 list_instance FFI（Android 上不安全）
-        """
         global _current_instance_name
         if self._lib is None:
             return {}
@@ -365,18 +328,9 @@ class EasyTierFFI:
             return {}
 
     def collect_network_infos(self, max_length: int = 10) -> Dict[str, Any]:
-        """
-        收集网络实例信息（线程安全）
-        优先使用 RPC 方式，避免 collect_network_infos FFI 的多 Tokio Runtime 冲突
-        """
         return self.collect_network_infos_via_rpc(max_length)
 
     def list_instance(self, max_length: int = 10) -> Dict[str, str]:
-        """
-        收集网络信息为 Map（线程安全）
-        max_length: 最大返回数量
-        return: Map<String, String>
-        """
         if self._lib is None:
             return {}
         try:
@@ -402,12 +356,6 @@ class EasyTierFFI:
         return json.dumps({"map": info})
 
     def set_tun_fd(self, instance_name: str, fd: int) -> int:
-        """
-        设置 TUN 文件描述符（线程安全）
-        instance_name: 实例名
-        fd: TUN 文件描述符
-        return: 0 成功，-1 失败
-        """
         if self._lib is None:
             return -1
         try:
@@ -497,10 +445,6 @@ class EasyTierFFI:
             return f"{b / (1024 * 1024 * 1024):.2f} GB"
 
     def is_running(self, instance_name: str = None) -> bool:
-        """
-        检查是否有实例在运行（纯 Python，不调用 FFI，避免 Android 上崩溃）
-        instance_name: 可选，指定实例名则检查该实例是否运行
-        """
         if instance_name is not None:
             return _current_instance_name == instance_name
         return _current_instance_name is not None
@@ -632,4 +576,4 @@ class EasyTierFFI:
             return []
 
 
-et_bridge = EasyTierFFI()
+ffi_bridge = EasyTierFFI()
