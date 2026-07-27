@@ -1,10 +1,12 @@
-##  
+##  1.6
 - 新增：【配置】-代理与转发，支持网段映射
 - 修复：【配置】-代理与转发，网段映射为空时，保存启动失败问题
 - 新增：支持 musl Linux，支持 x86_64, aarch64, riscv64 架构
 - 新增：支持 docker 部署
 - 新增：【应用】-【Docker】页面增加docker版本使用说明
 - 修复：自定义易组网IP为0.0.0.0时，win、macos版本启动界面加载失败
+- 变更：新增配置默认：延迟优先模式、启用通信的加密
+- 修复：默认生成relay_network_whitelist = ""，导致不支持转发 ([issue #3](https://github.com/710850609/EasyTier-EUI/issues/3))
 
 <br>
 
@@ -16,6 +18,8 @@
 - New: Support for Docker deployment
 - New: [Apps] - [Docker] page added with Docker version usage guide
 - Fix: Windows and macOS versions failed to load the startup interface when the custom EasyTier-EUI IP was set to 0.0.0.0
+- Changed: New default config options: latency-first mode, enable communication encryption
+- Fix: Default relay_network_whitelist = "" caused forwarding to fail ([issue #3](https://github.com/710850609/EasyTier-EUI/issues/3))
 
 
 ##  1.5

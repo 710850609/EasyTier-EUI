@@ -1001,9 +1001,8 @@ const config = ref({
     multi_thread: true, 
     enable_ipv6: true,
     private_mode: true,
-    // latency_first: true,
-    // dev_name: '',
-    // compression: '',
+    enable_encryption: true,
+    latency_first: true,
   },
 })
 
@@ -1234,6 +1233,11 @@ const saveConfig = () => {
     } else {
       delete data.flags.instance_recv_bps_limit
     }
+    ['dev_name', 'encryption_algorithm', 'default_protocol', 'compression', 'relay_network_whitelist'].forEach(key => {
+      if (config.value.flags[key] == null || config.value.flags[key].trim() === '') {
+        delete data.flags[key]
+      }
+    })
     api.configs.save(data).then(async res => {
       toast.success(t('config.saveSuccess'))
       if (fastSettingMode.value) {
@@ -1394,9 +1398,9 @@ const loadConfig = (profile) => {
       }
     }
     // 将 flags 中 undefined 的字符串字段统一设为空字符串，确保 var-input/var-select 的 placeholder 正常显示
-    ;['dev_name', 'encryption_algorithm', 'default_protocol', 'compression', 'relay_network_whitelist'].forEach(key => {
-      if (config.value.flags[key] == null) config.value.flags[key] = ''
-    })
+    // ;['dev_name', 'encryption_algorithm', 'default_protocol', 'compression', 'relay_network_whitelist'].forEach(key => {
+    //   if (config.value.flags[key] == null) config.value.flags[key] = ''
+    // })
   }).finally(() => {
     isLoadingConfig.value = false
   })
