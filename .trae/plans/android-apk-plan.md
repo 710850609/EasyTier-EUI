@@ -19,20 +19,22 @@
 | 里程碑 | 状态 | 说明 |
 |--------|------|------|
 | M0: 环境搭建验证 | ✅ 完成 | 2026-07-21，全部文件已创建 |
-| M1: Rust FFI 编译 | ⏭️ 跳过 | 本地磁盘不足，改用 GitHub Action 构建 Mock APK |
+| M1: Rust FFI 编译 | ✅ 完成 | 2026-07-22，纯 Python FFI 方案，移除 JNI 层 |
 | M2: Backend 适配 | ✅ 完成 | 2026-07-21，含 mock 兼容 |
-| M1.5: GitHub Action 构建 | ✅ 完成 | 2026-07-21，`.github/workflows/build-android.yml` |
-| M3: 联调测试 | ⬜ 待开始 | 需 GitHub Action 产出 APK 后测试 |
-| M4: 发布 | ⬜ 待开始 | 需 M1+M3 完成后 |
+| M1.5: GitHub Action 构建 | ✅ 完成 | 2026-07-22，仅构建 FFI，移除 JNI 构建 |
+| M3: 联调测试 | ⬜ 待开始 | 需 CI 构建产出 APK 后测试 |
+| M4: 发布 | ⬜ 待开始 | 需 M3 完成后 |
 
 ```
-M0: 环境搭建 ──✅──→ M1: Rust FFI(跳过) ──⏭️──→ M1.5: GitHub Action ──✅──→ M2: Backend适配 ──✅──→ M3: 联调测试 ──⬜──→ M4: 发布
-     (已完成)              (跳过)                    (已完成)                 (已完成)               (待开始)            (待开始)
+M0: 环境搭建 ──✅──→ M1.5: GitHub Action ──✅──→ M2: Backend适配 ──✅──→ M1: Rust FFI ──✅──→ M3: 联调测试 ──⬜──→ M4: 发布
+     (已完成)                (已完成)                   (已完成)                (已完成)            (待开始)          (待开始)
 ```
+
+**M1 方案变更（2026-07-22）**：移除 JNI 层，改为纯 Python FFI 方案。Python 通过 `ctypes` 调用 `libeasytier_ffi.so`，Kotlin 通过 Chaquopy 调用 Python，不再需要 `libeasytier_android_jni.so`。APK 体积减少约 15-20 MB。
 
 ---
 
-## 二、架构图
+## 二、架构图（2026-07-22 更新：纯 Python FFI，移除 JNI）
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
@@ -48,33 +50,27 @@ M0: 环境搭建 ──✅──→ M1: Rust FFI(跳过) ──⏭️──→ M
 │  │              Embedded Python (Chaquopy)                       │ │
 │  │  ┌────────────────────────────────────────────────────────┐  │ │
 │  │  │  现有 Backend 代码（90%+ 复用）                          │  │ │
-│  │  │  • http_dispatcher/dispatcher.py（路由分发）              │  │ │
-│  │  │  • actions/services.py（服务管理）                       │  │ │
-│  │  │  • actions/peers.py（节点管理）                          │  │ │
-│  │  │  • actions/configs.py（配置管理）                        │  │ │
-│  │  │  • actions/settings.py（设置管理）                       │  │ │
-│  │  │  • actions/monitor.py（监控）                            │  │ │
-│  │  │  • actions/et_core.py（核心管理）                        │  │ │
-│  │  │  • utils/*（工具函数）                                    │  │ │
-│  │  │  • locales/*（国际化）                                   │  │ │
+│  │  │  • et_bridge.py — FFI 唯一调用方（ctypes → libeasytier_ffi.so）│
+│  │  │  • services.py — 启停 EasyTier 实例                     │  │ │
+│  │  │  • et_core.py — 核心状态查询                            │  │ │
+│  │  │  • ... 其他模块                                          │  │ │
 │  │  └────────────────────────────────────────────────────────┘  │ │
 │  │                          │                                    │ │
-│  │              修改点：subprocess → Rust FFI 调用               │ │
+│  │               ctypes CDLL / libeasytier_ffi.so                │ │
 │  └──────────────────────────┬──────────────────────────────────┘ │
-│                             │ Chaquopy JNI / PyJNIus              │
+│                             │ Chaquopy（Kotlin 调用 Python）      │
 │  ┌──────────────────────────▼──────────────────────────────────┐ │
-│  │                  Kotlin/Java 桥接层                           │ │
-│  │  • VpnService 实现（Android VPN 系统服务）                     │ │
-│  │  • JNI → Rust FFI 封装                                       │ │
-│  │  • 启动/管理 Embedded Python 进程                             │ │
-│  │  • 本地 HTTP Server 启动（替代 CGI 模式）                      │ │
+│  │                  Kotlin 层                                    │ │
+│  │  • MainActivity — 启动 Python + WebView                      │ │
+│  │  • EasyTierManager — 监控 EasyTier 状态（通过 Python FFI）    │ │
+│  │  • EasyTierVpnService — VPN 服务（TUN fd 通过 Python 传入）   │ │
 │  └──────────────────────────┬──────────────────────────────────┘ │
-│                             │ JNI                                 │
+│                             │ System.loadLibrary("easytier_ffi")  │
 │  ┌──────────────────────────▼──────────────────────────────────┐ │
-│  │          Rust FFI 共享库 (libeasytier.so)                    │ │
+│  │          Rust FFI 共享库 (libeasytier_ffi.so)  ← 唯一 .so   │ │
 │  │  • EasyTier 核心逻辑（P2P 组网 / 加密 / 中继）                │ │
 │  │  • TUN 设备 → VpnService FileDescriptor 适配                  │ │
-│  │  • 暴露 C ABI 接口                                            │ │
+│  │  • 暴露 C ABI 接口（Python ctypes 直接调用）                  │ │
 │  └─────────────────────────────────────────────────────────────┘ │
 └──────────────────────────────────────────────────────────────────┘
 ```
@@ -390,46 +386,41 @@ impl TunFd {
 
 ---
 
-### Task 1.4：JNI 桥接层编写（2 天）
+### Task 1.4：Python FFI 统一调用（2 天）✅ 已完成（2026-07-22）
 
 | 项目 | 内容 |
 |------|------|
-| 目标 | Kotlin 层可以调用 Rust FFI 函数 |
-| 输入 | Task 1.3 `libeasytier.so` |
-| 输出 | RustBridge.kt 封装类 |
+| 目标 | Python 作为 FFI 唯一调用方，Kotlin 通过 Chaquopy 调用 Python |
+| 输入 | Task 1.3 `libeasytier_ffi.so` |
+| 输出 | 移除 JNI 层，纯 Python FFI 方案 |
 
-**Kotlin 封装类**：
-```kotlin
-// RustBridge.kt
-object RustBridge {
-    init {
-        System.loadLibrary("easytier")
-    }
-    
-    external fun init(configJson: String): Int
-    external fun start(vpnFd: Int): Int
-    external fun stop(): Int
-    external fun getStatus(): String
-    external fun execCli(cmdJson: String): String
-    external fun getVersion(): String
-    external fun lastError(): String
-}
-```
+**方案变更**：不再使用 JNI（`libeasytier_android_jni.so`），改为 Python 通过 `ctypes` 统一调用 `libeasytier_ffi.so`。Kotlin 层通过 Chaquopy 调用 Python 获取数据和执行操作。
 
-**JNI 函数命名规则**（Rust 侧）：
-```rust
-// 包名 com.easytier.eui.RustBridge → JNI 函数名
-#[no_mangle]
-pub extern "system" fn Java_com_easytier_eui_RustBridge_init(
-    _env: JNIEnv, _class: JClass, config_json: JString
-) -> jint { ... }
-```
+**关键改动**：
+
+| 文件 | 改动 |
+|------|------|
+| `EasyTierJNI.kt` | ❌ 删除 |
+| `EasyTierManager.kt` | `EasyTierJNI.collectNetworkInfos()` → Python `et_bridge.collect_network_infos_json()` |
+| `EasyTierVpnService.kt` | `EasyTierJNI.setTunFd()` → Python `et_bridge.set_tun_fd()` |
+| `MainActivity.kt` | `System.loadLibrary("easytier_android_jni")` → `System.loadLibrary("easytier_ffi")` |
+| `et_bridge.py` | 新增 `collect_network_infos_json()` 方法 |
+| `build-android.yml` | 仅构建 `easytier-ffi`，只复制 `libeasytier_ffi.so` |
+| `build-ffi.yml` | 同上 |
+
+**效果**：
+- 只有 `libeasytier_ffi.so` 一个 `.so` 文件
+- APK 体积减少约 15-20 MB
+- Python 是 FFI 的唯一调用方，避免竞态
+- Kotlin 通过 Chaquopy 调用 Python，架构更清晰
 
 **验证标准**：
-- [ ] `RustBridge.getVersion()` 返回正确版本号
-- [ ] `RustBridge.init(configJson)` 返回 0
-- [ ] `RustBridge.start(vpnFd)` 返回 0
-- [ ] `RustBridge.stop()` 正常关闭
+- [x] `EasyTierJNI.kt` 已删除
+- [x] `EasyTierManager.kt` 通过 Python FFI 获取网络状态
+- [x] `EasyTierVpnService.kt` 通过 Python FFI 设置 TUN fd
+- [x] `MainActivity.kt` 只预加载 `libeasytier_ffi.so`
+- [x] CI 配置只构建和打包 FFI，不含 JNI
+- [ ] 真机验证全流程通（需 CI 构建产出 APK）
 
 ---
 
@@ -952,11 +943,13 @@ build_android.sh                              # 新增（构建脚本）
 | P0.2 | Chaquopy 集成 | 1 ✅ |
 | P0.3 | WebView 前端验证 | 0.5 ✅ |
 | P0.4 | HTTP Server 通信验证 | 1 ✅ |
-| **P1** | **Rust FFI 编译** | **7** |
-| P1.1 | EasyTier 源码分析 | 1 |
-| P1.2 | C ABI 接口设计 | 1 |
-| P1.3 | FFI 库编译 | 3 |
-| P1.4 | JNI 桥接层 | 2 |
+| **P1** | **Rust FFI 编译与集成** | **7** |
+| P1.1 | 官方 easytier-ffi 源码分析 | 1 ✅ |
+| P1.2 | et_bridge.py 重写（匹配官方 C ABI） | 1 ✅ |
+| P1.3 | services.py 适配 FFI 调用 | 0.5 ✅ |
+| P1.4 | CI 构建 easytier-ffi（仅 FFI，不含 JNI） | 1 ✅ |
+| P1.5 | Kotlin 集成（纯 Python FFI，移除 JNI 层） | 1.5 ✅ |
+| P1.6 | 联调验证 | 2 ⬜ |
 | **P2** | **Backend 适配** | **7** |
 | P2.1 | CGI→HTTP Server（复用 main_noui.py） | 1.5 ✅ |
 | P2.2 | psutil 替换 | 1 ✅ |
@@ -970,7 +963,7 @@ build_android.sh                              # 新增（构建脚本）
 | **P4** | **发布** | **3** |
 | P4.1 | 构建脚本+CI | 1.5 |
 | P4.2 | 版本管理 | 0.5 |
-| P4.3 | 文档发布 | 1 |
+| P4.3 | 文档发布 | 
 | | | |
 | **总计** | | **25 人天** |
 | **加缓冲 20%** | | **~30 人天** |
@@ -984,7 +977,7 @@ build_android.sh                              # 新增（构建脚本）
 | 前端复用 | 极高（零改动） | 高（迁移适配） | 零（重写） |
 | 后端复用 | 极高（90%+） | 零（重写） | 零（重写） |
 | 开发工时 | ~30 人天 | ~60-80 人天 | ~80+ 人天 |
-| APK 体积 | 40-60 MB | 15-25 MB | 20-30 MB |
+| APK 体积 | 35-50 MB | 15-25 MB | 20-30 MB |
 | 内存占用 | 150-250 MB | 80-120 MB | 100-150 MB |
 | 启动速度 | 3-5s | 1-2s | 1-2s |
 | 技术风险 | 中 | 低 | 低 |
