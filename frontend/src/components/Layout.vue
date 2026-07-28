@@ -170,6 +170,19 @@ onUnmounted(() => {
   padding-top: var(--sat);
   flex: 1;
   min-height: 0;
+  position: relative;
+}
+
+.layout.is-mobile .content-wrapper::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--sat);
+  background: linear-gradient(to bottom, var(--color-body) 60%, transparent 100%);
+  z-index: 1;
+  pointer-events: none;
 }
 
 /* 媒体查询作为后备 */
