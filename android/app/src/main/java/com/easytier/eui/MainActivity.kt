@@ -2,6 +2,7 @@ package com.easytier.eui
 
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.res.Configuration
 import android.graphics.Color
 import android.os.Bundle
@@ -47,6 +48,7 @@ class MainActivity : AppCompatActivity() {
     
     private var lastBackPressTime = 0L
     private var h5ThemeOverride: Boolean? = null // null = follow system, true = dark, false = light
+    private val prefs: SharedPreferences by lazy { getSharedPreferences("easytier_prefs", MODE_PRIVATE) }
 
     private fun log(level: String, msg: String) {
         val ts = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault()).format(Date())
@@ -112,7 +114,9 @@ class MainActivity : AppCompatActivity() {
             webView = findViewById(R.id.webview)
             log("INFO", "WebView found, calling setupWebView")
             setupWebView()
-            log("INFO", "setupWebView done, calling setupBackPress")
+            log("INFO", "setupWebView done, calling applySavedTheme")
+            applySavedTheme()
+            log("INFO", "applySavedTheme done, calling setupBackPress")
             setupBackPress()
 
             scope.launch(Dispatchers.IO) {
@@ -161,7 +165,6 @@ class MainActivity : AppCompatActivity() {
                     override fun onPageFinished(view: WebView?, url: String?) {
                         super.onPageFinished(view, url)
                         log("INFO", "WebView page finished: $url")
-                        injectDarkMode()
                         injectSafeArea()
                     }
                     override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: android.webkit.WebResourceError?) {
@@ -189,25 +192,6 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         })
-    }
-
-    private fun injectDarkMode() {
-        try {
-            val isDark = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
-            val js = """
-                (function() {
-                    if (${isDark}) {
-                        document.documentElement.classList.add('dark');
-                    } else {
-                        document.documentElement.classList.remove('dark');
-                    }
-                    document.documentElement.style.setProperty('--system-dark', '${if (isDark) "1" else "0"}');
-                })();
-            """.trimIndent()
-            webView.evaluateJavascript(js, null)
-        } catch (e: Exception) {
-            logError("injectDarkMode failed", e)
-        }
     }
 
     private fun injectSafeArea() {
@@ -381,9 +365,8 @@ class MainActivity : AppCompatActivity() {
                     statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT),
                     navigationBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT)
                 )
+                webView.setBackgroundColor(getWebViewBackgroundColor())
             }
-            webView.setBackgroundColor(getWebViewBackgroundColor())
-            injectDarkMode()
             injectSafeArea()
         } catch (e: Exception) {
             logError("onConfigurationChanged failed", e)
@@ -398,6 +381,36 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun applySavedTheme() {
+        val savedMode = prefs.getString("theme_mode", "system") ?: "system"
+        when (savedMode) {
+            "dark" -> {
+                h5ThemeOverride = true
+                webView.setBackgroundColor(Color.parseColor("#121212"))
+                enableEdgeToEdge(
+                    statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
+                    navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT)
+                )
+            }
+            "light" -> {
+                h5ThemeOverride = false
+                webView.setBackgroundColor(Color.parseColor("#FFFFFF"))
+                enableEdgeToEdge(
+                    statusBarStyle = SystemBarStyle.light(Color.TRANSPARENT),
+                    navigationBarStyle = SystemBarStyle.light(Color.TRANSPARENT)
+                )
+            }
+            else -> {
+                h5ThemeOverride = null
+                enableEdgeToEdge(
+                    statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT),
+                    navigationBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT)
+                )
+            }
+        }
+        log("DEBUG", "applySavedTheme: mode=$savedMode, override=$h5ThemeOverride")
+    }
+
     inner class AndroidBridge {
         @JavascriptInterface
         fun getApiBaseUrl(): String {
@@ -410,9 +423,11 @@ class MainActivity : AppCompatActivity() {
         fun setThemeMode(mode: String) {
             log("DEBUG", "AndroidBridge.setThemeMode: $mode")
             runOnUiThread {
+                prefs.edit().putString("theme_mode", mode).apply()
                 when (mode) {
                     "dark" -> {
                         h5ThemeOverride = true
+                        webView.setBackgroundColor(Color.parseColor("#121212"))
                         enableEdgeToEdge(
                             statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
                             navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT)
@@ -420,6 +435,7 @@ class MainActivity : AppCompatActivity() {
                     }
                     "light" -> {
                         h5ThemeOverride = false
+                        webView.setBackgroundColor(Color.parseColor("#FFFFFF"))
                         enableEdgeToEdge(
                             statusBarStyle = SystemBarStyle.light(Color.TRANSPARENT),
                             navigationBarStyle = SystemBarStyle.light(Color.TRANSPARENT)

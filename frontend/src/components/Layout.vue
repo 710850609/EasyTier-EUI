@@ -182,6 +182,7 @@ onUnmounted(() => {
   background: linear-gradient(to bottom, var(--color-body) 0%, transparent 50%);
   z-index: 1000;
   pointer-events: none;
+  transition: background 0.35s ease;
 }
 
 /* 媒体查询作为后备 */
