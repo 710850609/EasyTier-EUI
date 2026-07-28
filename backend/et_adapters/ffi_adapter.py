@@ -33,6 +33,7 @@ class FfiAdapter(IEasyTierAdapter):
     def __init__(self):
         self._lib = None
         self._lock = threading.RLock()
+        self._so_path: Optional[str] = None
         self._load_library()
 
     def _load_library(self):
@@ -47,12 +48,17 @@ class FfiAdapter(IEasyTierAdapter):
         elif arch == 'armv7l':
             lib_paths.append(Path(__file__).parent.parent / 'armeabi-v7a' / lib_name)
 
+        system_path = self._find_system_lib_path(lib_name)
+        if system_path:
+            lib_paths.append(Path(system_path))
+
         for lib_path in lib_paths:
             if lib_path.exists():
                 try:
                     self._lib = ctypes.CDLL(str(lib_path))
                     self._setup_functions()
-                    logger.info(f"Loaded EasyTier FFI: {lib_path}")
+                    self._so_path = str(lib_path)
+                    logger.info(f"Loaded EasyTier FFI: {self._so_path}")
                     return
                 except OSError as e:
                     logger.warning(f"Failed to load {lib_path}: {e}")
@@ -60,9 +66,22 @@ class FfiAdapter(IEasyTierAdapter):
         try:
             self._lib = ctypes.CDLL(lib_name)
             self._setup_functions()
-            logger.info("Loaded EasyTier FFI via system library path")
+            self._so_path = self._find_system_lib_path(lib_name)
+            logger.info(f"Loaded EasyTier FFI via system library path: {self._so_path}")
         except OSError as e:
             logger.warning(f"Failed to load via system path: {e}")
+
+    def _find_system_lib_path(self, lib_name: str) -> Optional[str]:
+        try:
+            with open('/proc/self/maps', 'r') as f:
+                for line in f:
+                    if lib_name in line:
+                        path = line.rsplit(' ', 1)[-1].strip()
+                        if os.path.isfile(path):
+                            return path
+        except Exception:
+            pass
+        return None
 
     def _has_symbol(self, name: str) -> bool:
         if self._lib is None:
@@ -238,14 +257,15 @@ class FfiAdapter(IEasyTierAdapter):
         return {}
 
     def get_version(self) -> str:
-        try:
-            with open(self._lib._name, 'rb') as f:
-                data = f.read()
-            match = re.search(rb'(\d+\.\d+\.\d+-[a-f0-9]{8})', data)
-            if match:
-                return match.group(1).decode()
-        except Exception as e:
-            logger.warning(f"Failed to scan binary for version: {e}")
+        if self._so_path and os.path.isfile(self._so_path):
+            try:
+                with open(self._so_path, 'rb') as f:
+                    data = f.read()
+                match = re.search(rb'(\d+\.\d+\.\d+-[a-f0-9]{8})', data)
+                if match:
+                    return match.group(1).decode()
+            except Exception as e:
+                logger.warning(f"Failed to scan binary for version: {e}")
         try:
             raw = self._collect_via_raw_ffi(1)
             for instance_data in raw.values():
