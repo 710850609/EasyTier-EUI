@@ -3,7 +3,7 @@
 """FfiAdapter — current default FFI adapter for v2.4.5/v2.6.4"""
 
 import ctypes, json, logging, os, platform, re, threading, time
-from ctypes import c_char_p, c_int, POINTER, Structure, c_size_t
+from ctypes import c_char_p, c_int, c_void_p, POINTER, Structure, c_size_t
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 
@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 class KeyValuePair(Structure):
-    _fields_ = [("key", c_char_p), ("value", c_char_p)]
+    _fields_ = [("key", c_void_p), ("value", c_void_p)]
 
 
 class FfiAdapter(IEasyTierAdapter):
@@ -100,7 +100,7 @@ class FfiAdapter(IEasyTierAdapter):
             lib.get_error_msg.argtypes = [POINTER(c_char_p)]
             lib.get_error_msg.restype = None
         if self._has_symbol('free_string'):
-            lib.free_string.argtypes = [c_char_p]
+            lib.free_string.argtypes = [c_void_p]
             lib.free_string.restype = None
 
     def start_network(self, toml_path: str, instance_name: str) -> None:
@@ -194,10 +194,11 @@ class FfiAdapter(IEasyTierAdapter):
             with self._lock:
                 error_ptr = c_char_p()
                 self._lib.get_error_msg(ctypes.byref(error_ptr))
-            if error_ptr.value:
-                msg = error_ptr.value.decode('utf-8', errors='replace')
+            raw_ptr = ctypes.cast(error_ptr, c_void_p).value
+            if raw_ptr:
+                msg = ctypes.string_at(raw_ptr).decode('utf-8', errors='replace')
                 if self._has_symbol('free_string'):
-                    self._lib.free_string(error_ptr.value)
+                    self._lib.free_string(raw_ptr)
                 return msg
             return ""
         except Exception:
@@ -220,8 +221,8 @@ class FfiAdapter(IEasyTierAdapter):
                     for i in range(min(count, max_len)):
                         key_ptr = infos[i].key
                         val_ptr = infos[i].value
-                        key = key_ptr.decode('utf-8') if key_ptr else ""
-                        value = val_ptr.decode('utf-8') if val_ptr else ""
+                        key = ctypes.string_at(key_ptr).decode('utf-8') if key_ptr else ""
+                        value = ctypes.string_at(val_ptr).decode('utf-8') if val_ptr else ""
                         result[key] = json.loads(value) if value else {}
                         if self._has_symbol('free_string'):
                             if key_ptr:
