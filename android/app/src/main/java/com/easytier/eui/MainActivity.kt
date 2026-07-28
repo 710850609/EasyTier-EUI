@@ -16,8 +16,6 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
-import androidx.activity.SystemBarStyle
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.webkit.WebSettingsCompat
@@ -102,10 +100,6 @@ class MainActivity : AppCompatActivity() {
                     log("WARN", "WebView.setDataDirectorySuffix failed (already initialized): ${e.message}")
                 }
             }
-            enableEdgeToEdge(
-                statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT),
-                navigationBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT)
-            )
             setContentView(R.layout.activity_main)
             log("INFO", "setContentView done, finding WebView")
             webView = findViewById(R.id.webview)
@@ -343,6 +337,13 @@ class MainActivity : AppCompatActivity() {
         super.onConfigurationChanged(newConfig)
         try {
             val isDark = (newConfig.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+            val statusBarColor = if (isDark) {
+                Color.parseColor("#121212")
+            } else {
+                Color.parseColor("#FFFFFF")
+            }
+            window.statusBarColor = statusBarColor
+            window.navigationBarColor = statusBarColor
             WindowInsetsControllerCompat(window, window.decorView).apply {
                 isAppearanceLightStatusBars = !isDark
                 isAppearanceLightNavigationBars = !isDark

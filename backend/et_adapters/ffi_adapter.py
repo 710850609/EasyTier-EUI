@@ -242,9 +242,21 @@ class FfiAdapter(IEasyTierAdapter):
             with open(self._lib._name, 'rb') as f:
                 data = f.read()
             match = re.search(rb'(\d+\.\d+\.\d+-[a-f0-9]{8})', data)
-            return match.group(1).decode() if match else "unknown"
-        except Exception:
-            return "unknown"
+            if match:
+                return match.group(1).decode()
+        except Exception as e:
+            logger.warning(f"Failed to scan binary for version: {e}")
+        try:
+            raw = self._collect_via_raw_ffi(1)
+            for instance_data in raw.values():
+                for pair in instance_data.get('peer_route_pairs') or []:
+                    route = pair.get('route') or {}
+                    ver = route.get('version', '')
+                    if ver:
+                        return ver
+        except Exception as e:
+            logger.warning(f"Failed to get version from network data: {e}")
+        return "unknown"
 
     def get_network_infos(self, max_length: int = 10) -> Dict[str, NetworkInstanceInfo]:
         raw = self._collect_via_raw_ffi(max_length)
