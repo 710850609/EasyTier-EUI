@@ -343,7 +343,7 @@ class MainActivity : AppCompatActivity() {
                 Color.parseColor("#FFFFFF")
             }
             window.statusBarColor = statusBarColor
-            window.navigationBarColor = statusBarColor
+            window.navigationBarColor = Color.TRANSPARENT
             WindowInsetsControllerCompat(window, window.decorView).apply {
                 isAppearanceLightStatusBars = !isDark
                 isAppearanceLightNavigationBars = !isDark

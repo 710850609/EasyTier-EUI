@@ -48,10 +48,6 @@ class FfiAdapter(IEasyTierAdapter):
         elif arch == 'armv7l':
             lib_paths.append(Path(__file__).parent.parent / 'armeabi-v7a' / lib_name)
 
-        system_path = self._find_system_lib_path(lib_name)
-        if system_path:
-            lib_paths.append(Path(system_path))
-
         for lib_path in lib_paths:
             if lib_path.exists():
                 try:
@@ -66,7 +62,8 @@ class FfiAdapter(IEasyTierAdapter):
         try:
             self._lib = ctypes.CDLL(lib_name)
             self._setup_functions()
-            logger.info("Loaded EasyTier FFI via system library path")
+            self._so_path = self._find_system_lib_path(lib_name)
+            logger.info(f"Loaded EasyTier FFI via system library path: {self._so_path}")
         except OSError as e:
             logger.warning(f"Failed to load via system path: {e}")
 
