@@ -16,7 +16,7 @@ from .core_cli import CoreCliAdapter
 logger = logging.getLogger(__name__)
 
 
-class EasyTierFacade:
+class EasyTierFacade(IEasyTierAdapter):
 
     ADAPTER_PRIORITY = [FfiMainAdapter, FfiAdapter, CoreCliAdapter]
 
@@ -83,16 +83,6 @@ class EasyTierFacade:
             return "unknown"
         return self._adapter.get_version()
 
-    def get_last_error(self) -> str:
-        if isinstance(self._adapter, (FfiMainAdapter, FfiAdapter)):
-            return self._adapter.get_last_error()
-        return ""
-
-    def parse_config(self, toml_config: str) -> int:
-        if self.is_ffi:
-            return self._adapter.parse_config(toml_config)
-        return 0
-
     def get_peers(self) -> list:
         info = self.get_network_infos(10)
         peers = []
@@ -108,6 +98,11 @@ class EasyTierFacade:
         if self._current_instance_name in info:
             return self._current_instance_name
         return None
+
+    def set_tun_fd(self, instance_name: str, fd: int) -> int:
+        if not self._adapter:
+            raise RuntimeError("No adapter available")
+        return self._adapter.set_tun_fd(instance_name, fd)
 
 
 _facade_instance: Optional[EasyTierFacade] = None

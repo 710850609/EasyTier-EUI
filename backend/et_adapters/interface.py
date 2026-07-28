@@ -28,3 +28,7 @@ class IEasyTierAdapter(ABC):
     @abstractmethod
     def get_version(self) -> str:
         """Get the EasyTier version string."""
+
+    @abstractmethod
+    def set_tun_fd(self, instance_name: str, fd: int) -> int:
+        """Set TUN file descriptor for a network instance. Returns 0 on success, raises on error."""

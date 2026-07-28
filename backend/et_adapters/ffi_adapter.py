@@ -142,6 +142,22 @@ class FfiAdapter(IEasyTierAdapter):
             logger.exception(f"parse_config failed: {e}")
             return -1
 
+    def set_tun_fd(self, instance_name: str, fd: int) -> int:
+        if self._lib is None:
+            raise RuntimeError("FFI library not loaded")
+        if not self._has_symbol('set_tun_fd'):
+            raise RuntimeError("set_tun_fd symbol not available")
+        try:
+            with self._lock:
+                ret = self._lib.set_tun_fd(instance_name.encode('utf-8'), fd)
+                if ret != 0:
+                    raise RuntimeError(f"set_tun_fd failed: {self.get_last_error()}")
+                return 0
+        except RuntimeError:
+            raise
+        except Exception as e:
+            raise RuntimeError(f"set_tun_fd failed: {e}") from e
+
     def stop_network(self, instance_name: str = None) -> None:
         if instance_name is None:
             self._retain_instances([])

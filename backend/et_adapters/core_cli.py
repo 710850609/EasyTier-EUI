@@ -100,3 +100,6 @@ class CoreCliAdapter(IEasyTierAdapter):
             return "unknown"
         except Exception:
             return "unknown"
+
+    def set_tun_fd(self, instance_name: str, fd: int) -> int:
+        raise NotImplementedError("CoreCliAdapter does not support set_tun_fd")
