@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace 'com.easytier.eui'
-    compileSdk 34
+    compileSdk 35
 
     signingConfigs {
         release {
