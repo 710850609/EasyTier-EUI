@@ -396,8 +396,8 @@ class MainActivity : AppCompatActivity() {
                 h5ThemeOverride = false
                 webView.setBackgroundColor(Color.parseColor("#FFFFFF"))
                 enableEdgeToEdge(
-                    statusBarStyle = SystemBarStyle.light(Color.TRANSPARENT),
-                    navigationBarStyle = SystemBarStyle.light(Color.TRANSPARENT)
+                    statusBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
+                    navigationBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
                 )
             }
             else -> {
@@ -437,8 +437,8 @@ class MainActivity : AppCompatActivity() {
                         h5ThemeOverride = false
                         webView.setBackgroundColor(Color.parseColor("#FFFFFF"))
                         enableEdgeToEdge(
-                            statusBarStyle = SystemBarStyle.light(Color.TRANSPARENT),
-                            navigationBarStyle = SystemBarStyle.light(Color.TRANSPARENT)
+                            statusBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
+                            navigationBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
                         )
                     }
                     "system" -> {
