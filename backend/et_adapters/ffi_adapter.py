@@ -211,20 +211,24 @@ class FfiAdapter(IEasyTierAdapter):
                 with self._lock:
                     infos = (KeyValuePair * max_len)()
                     count = self._lib.collect_network_infos(infos, max_len)
-                if count < 0:
-                    if attempt < 2:
-                        time.sleep(0.5)
-                        continue
-                    return {}
-                result = {}
-                for i in range(min(count, max_len)):
-                    key = infos[i].key.decode('utf-8') if infos[i].key else ""
-                    value = infos[i].value.decode('utf-8') if infos[i].value else ""
-                    result[key] = json.loads(value) if value else {}
-                    if self._has_symbol('free_string'):
-                        self._lib.free_string(infos[i].key)
-                        self._lib.free_string(infos[i].value)
-                return result
+                    if count < 0:
+                        if attempt < 2:
+                            time.sleep(0.5)
+                            continue
+                        return {}
+                    result = {}
+                    for i in range(min(count, max_len)):
+                        key_ptr = infos[i].key
+                        val_ptr = infos[i].value
+                        key = key_ptr.decode('utf-8') if key_ptr else ""
+                        value = val_ptr.decode('utf-8') if val_ptr else ""
+                        result[key] = json.loads(value) if value else {}
+                        if self._has_symbol('free_string'):
+                            if key_ptr:
+                                self._lib.free_string(key_ptr)
+                            if val_ptr:
+                                self._lib.free_string(val_ptr)
+                    return result
             except Exception as e:
                 logger.exception(f"_collect_via_raw_ffi attempt {attempt + 1} failed: {e}")
                 if attempt < 2:
