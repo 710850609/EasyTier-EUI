@@ -19,6 +19,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.ViewCompat
 import androidx.webkit.WebSettingsCompat
 import androidx.webkit.WebViewFeature
 import com.chaquo.python.Python
@@ -138,6 +139,16 @@ class MainActivity : AppCompatActivity() {
     private fun setupWebView() {
         try {
             log("INFO", "setupWebView: configuring WebView")
+
+            // 阻止 enableEdgeToEdge() 自动给根布局加内边距
+            // 安全区由 H5 端通过 CSS padding-top: var(--sat) 统一处理
+            ViewCompat.setOnApplyWindowInsetsListener(
+                findViewById<android.view.View>(R.id.container)
+            ) { view, insets ->
+                // 消费掉 insets，不应用为 padding
+                WindowInsetsCompat.CONSUMED
+            }
+
             webView.apply {
                 settings.javaScriptEnabled = true
                 settings.domStorageEnabled = true
