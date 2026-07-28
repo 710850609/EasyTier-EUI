@@ -49,7 +49,7 @@ def setup_env():
         UPGRADE_SCRIPT_PATH = ''
         EUI_CONFIG_FILE = os.path.join(CONFIG_DIR, 'eui.toml')
         EUI_RUN_HOST = '127.0.0.1'
-        EUI_RUN_PORT = 0
+        EUI_RUN_PORT = 15666
         for d in [CONFIG_DIR, DATA_DIR, LOG_DIR, CORE_DIR]:
             os.makedirs(d, exist_ok=True)
         _is_inited_evn = True

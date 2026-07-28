@@ -77,14 +77,53 @@ def start_android_server(data_dir: str, external_dir: str = "", host: str = "127
     import faulthandler
     import sys
 
+    def _rotate_file(filepath, max_size=5*1024*1024, backups=2):
+        try:
+            if os.path.exists(filepath) and os.path.getsize(filepath) >= max_size:
+                for i in range(backups - 1, 0, -1):
+                    src = f"{filepath}.{i}"
+                    dst = f"{filepath}.{i+1}"
+                    if os.path.exists(src):
+                        if os.path.exists(dst):
+                            os.remove(dst)
+                        os.rename(src, dst)
+                bak = f"{filepath}.1"
+                if os.path.exists(bak):
+                    os.remove(bak)
+                os.rename(filepath, bak)
+        except:
+            pass
+
+    class _RotatingFile:
+        def __init__(self, filepath, max_size=5*1024*1024, backups=2):
+            self.filepath = filepath
+            self.max_size = max_size
+            self.backups = backups
+            self._fd = open(filepath, 'a', buffering=1)
+        def write(self, data):
+            if self._fd.tell() >= self.max_size:
+                self._fd.close()
+                _rotate_file(self.filepath, self.max_size, self.backups)
+                self._fd = open(self.filepath, 'a', buffering=1)
+            self._fd.write(data)
+            self._fd.flush()
+        def flush(self):
+            self._fd.flush()
+        def close(self):
+            self._fd.close()
+        def fileno(self):
+            return self._fd.fileno()
+
     run_configs.setup_env()
     run_mode = run_configs.get_run_mode()
     log_util.setup_log(log_file=os.path.join(external_dir, 'app.log'),
                        log_level=logging.INFO if run_mode > 0 else logging.DEBUG,
                        enabled_console=run_mode == 0)
     log_file = os.path.join(external_dir or data_dir, 'easytier_py.log')
+
     def py_log(msg):
         try:
+            _rotate_file(log_file)
             with open(log_file, 'a') as f:
                 f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} [PY] {msg}\n")
                 f.flush()
@@ -93,6 +132,7 @@ def start_android_server(data_dir: str, external_dir: str = "", host: str = "127
 
     # 启用 faulthandler：捕获 SIGSEGV/SIGABRT 等致命信号时 dump Python 调用栈
     crash_log = os.path.join(external_dir or data_dir, 'easytier_py_crash.log')
+    _rotate_file(crash_log)
     try:
         faulthandler.enable(file=open(crash_log, 'a', buffering=1), all_threads=True)
         py_log(f"faulthandler enabled, crash log: {crash_log}")
@@ -102,7 +142,7 @@ def start_android_server(data_dir: str, external_dir: str = "", host: str = "127
     # 重定向 stderr 到文件，确保 Python 异常输出不丢失
     stderr_log = os.path.join(external_dir or data_dir, 'easytier_py_stderr.log')
     try:
-        sys.stderr = open(stderr_log, 'a', buffering=1)
+        sys.stderr = _RotatingFile(stderr_log)
         py_log(f"stderr redirected to: {stderr_log}")
     except Exception as se:
         py_log(f"stderr redirect failed: {se}")
