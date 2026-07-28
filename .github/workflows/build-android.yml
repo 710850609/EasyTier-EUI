@@ -173,6 +173,13 @@ jobs:
           TARGET_FILE="android/app/src/main/python/utils/run_configs.py"
           sed -i "s/^BUILD_VERSION = \".*\"/BUILD_VERSION = \"$BUILD_VER\"/" "$TARGET_FILE"
 
+      - name: Write FFI version  # 将 EasyTier 版本号注入 ffi_adapter.py
+        run: |
+          FFI_VER="v${{ steps.easytier-info.outputs.version }}-${{ steps.easytier-info.outputs.commit_short }}"
+          echo "FFI version: $FFI_VER"
+          TARGET_FILE="android/app/src/main/python/et_adapters/ffi_adapter.py"
+          sed -i "s/^_FFI_LIB_VERSION = \".*\"/_FFI_LIB_VERSION = \"$FFI_VER\"/" "$TARGET_FILE"
+
       # ==================== APK 构建 & 上传 ====================
       - name: Decode keystore  # 从 GitHub Secrets 解码签名密钥
         env:

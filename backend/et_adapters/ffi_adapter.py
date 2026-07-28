@@ -2,9 +2,8 @@
 # -*- coding: utf-8 -*-
 """FfiAdapter — current default FFI adapter for v2.4.5/v2.6.4"""
 
-import ctypes, json, logging, os, platform, re, threading, time
+import ctypes, json, logging, re, threading, time
 from ctypes import c_char_p, c_int, c_void_p, POINTER, Structure, c_size_t
-from pathlib import Path
 from typing import Dict, Any, List, Optional
 
 from .interface import IEasyTierAdapter
@@ -33,25 +32,16 @@ class FfiAdapter(IEasyTierAdapter):
     def __init__(self):
         self._lib = None
         self._lock = threading.RLock()
-        self._so_path: Optional[str] = None
         self._load_library()
 
     def _load_library(self):
         lib_name = "libeasytier_ffi.so"
-        lib_dir = os.environ.get('EUI_LIB_DIR', '')
-        lib_path = Path(lib_dir) / lib_name
-
-        if lib_path.exists():
-            try:
-                self._lib = ctypes.CDLL(str(lib_path))
-                self._setup_functions()
-                self._so_path = str(lib_path)
-                logger.info(f"Loaded EasyTier FFI: {self._so_path}")
-                return
-            except OSError as e:
-                logger.warning(f"Failed to load {lib_path}: {e}")
-        else:
-            logger.warning(f"Library not found: {lib_path}")
+        try:
+            self._lib = ctypes.CDLL(lib_name)
+            self._setup_functions()
+            logger.info(f"Loaded EasyTier FFI: {lib_name}")
+        except OSError as e:
+            logger.warning(f"Failed to load {lib_name}: {e}")
 
     def _has_symbol(self, name: str) -> bool:
         if self._lib is None:
@@ -227,30 +217,7 @@ class FfiAdapter(IEasyTierAdapter):
         return {}
 
     def get_version(self) -> str:
-        if self._so_path and os.path.isfile(self._so_path):
-            try:
-                with open(self._so_path, 'rb') as f:
-                    data = f.read()
-                match = re.search(rb'(\d+\.\d+\.\d+(-[a-f0-9]{7,8})?)', data)
-                if match:
-                    return match.group(1).decode()
-                else:
-                    logger.warning(f"Version pattern not found in binary: {self._so_path}")
-            except Exception as e:
-                logger.warning(f"Failed to scan binary for version: {e}")
-        else:
-            logger.debug(f"No so_path available for version scan: {self._so_path}")
-        try:
-            raw = self._collect_via_raw_ffi(1)
-            for instance_data in raw.values():
-                for pair in instance_data.get('peer_route_pairs') or []:
-                    route = pair.get('route') or {}
-                    ver = route.get('version', '')
-                    if ver:
-                        return ver
-        except Exception as e:
-            logger.warning(f"Failed to get version from network data: {e}")
-        return "unknown"
+        return _FFI_LIB_VERSION
 
     def get_network_infos(self, max_length: int = 10) -> Dict[str, NetworkInstanceInfo]:
         raw = self._collect_via_raw_ffi(max_length)

@@ -71,13 +71,12 @@ def stop_server(handle: ServerHandle, port: int):
                 pass
 
 
-def start_android_server(data_dir: str, external_dir: str = "", lib_dir: str = "", host: str = "127.0.0.1", port: int = 0) -> dict:
+def start_android_server(data_dir: str, external_dir: str = "", host: str = "127.0.0.1", port: int = 0) -> dict:
     """Android 入口：初始化环境 + 启动 HTTP 服务，返回 {'port': int, 'host': str}"""
     import traceback
     import faulthandler
     import sys
 
-    os.environ['EUI_LIB_DIR'] = lib_dir
     run_configs.setup_env()
     run_mode = run_configs.get_run_mode()
     log_util.setup_log(log_file=os.path.join(external_dir, 'app.log'),

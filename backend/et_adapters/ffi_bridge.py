@@ -6,15 +6,8 @@ EasyTier FFI 桥接模块
 API 对应 EasyTier upstream: easytier-contrib/easytier-ffi/src/lib.rs
 """
 
-import ctypes
-import json
-import logging
-import os
-import platform
-import re
-import threading
+import ctypes, json, logging, threading
 from ctypes import c_char_p, c_int, c_void_p, POINTER, Structure, c_ulonglong
-from pathlib import Path
 from typing import Optional, Dict, Any, List
 
 logger = logging.getLogger(__name__)
@@ -46,21 +39,13 @@ class EasyTierFFI:
 
     def _load_library(self):
         lib_name = "libeasytier_ffi.so"
-        lib_dir = os.environ.get('EUI_LIB_DIR', '')
-        lib_path = Path(lib_dir) / lib_name
-
-        if lib_path.exists():
-            try:
-                self._lib = ctypes.CDLL(str(lib_path))
-                self._setup_functions()
-                logger.info(f"Loaded EasyTier FFI: {lib_path}")
-                return
-            except OSError as e:
-                logger.warning(f"Failed to load {lib_path}: {e}")
-        else:
-            logger.warning(f"Library not found: {lib_path}")
-
-        raise RuntimeError(f"Could not load {lib_name}")
+        try:
+            self._lib = ctypes.CDLL(lib_name)
+            self._setup_functions()
+            logger.info(f"Loaded EasyTier FFI: {lib_name}")
+        except OSError as e:
+            logger.warning(f"Failed to load {lib_name}: {e}")
+            raise RuntimeError(f"Could not load {lib_name}")
 
     def _setup_functions(self):
         lib = self._lib

@@ -18,6 +18,7 @@ import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.webkit.WebSettingsCompat
 import androidx.webkit.WebViewFeature
 import com.chaquo.python.Python
@@ -147,10 +148,15 @@ class MainActivity : AppCompatActivity() {
                 webChromeClient = WebChromeClient()
                 webViewClient = object : WebViewClient() {
                     override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean = false
+                    override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
+                        super.onPageStarted(view, url, favicon)
+                        injectSafeArea()
+                    }
                     override fun onPageFinished(view: WebView?, url: String?) {
                         super.onPageFinished(view, url)
                         log("INFO", "WebView page finished: $url")
                         injectDarkMode()
+                        injectSafeArea()
                     }
                     override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: android.webkit.WebResourceError?) {
                         log("ERROR", "WebView error: ${error?.description} for ${request?.url}")
@@ -198,6 +204,33 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun injectSafeArea() {
+        try {
+            val insets = WindowInsetsCompat.toWindowInsetsCompat(window.decorView.rootWindowInsets)
+            val sat = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top
+            val sab = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
+            val sar = insets.getInsets(WindowInsetsCompat.Type.systemBars()).right
+            val sal = insets.getInsets(WindowInsetsCompat.Type.systemBars()).left
+
+            if (sat == 0 && sab == 0) {
+                return
+            }
+
+            val js = """
+                (function() {
+                    document.documentElement.style.setProperty('--sat', '${sat}px');
+                    document.documentElement.style.setProperty('--sab', '${sab}px');
+                    document.documentElement.style.setProperty('--sar', '${sar}px');
+                    document.documentElement.style.setProperty('--sal', '${sal}px');
+                })();
+            """.trimIndent()
+            webView.evaluateJavascript(js, null)
+            log("DEBUG", "injectSafeArea: sat=$sat, sab=$sab, sar=$sar, sal=$sal")
+        } catch (e: Exception) {
+            logError("injectSafeArea failed", e)
+        }
+    }
+
     private suspend fun startPythonBackend() {
         log("INFO", "Starting Python backend...")
 
@@ -233,9 +266,8 @@ class MainActivity : AppCompatActivity() {
 
         log("INFO", "Calling start_android_server with data_dir=${filesDir.absolutePath}...")
         val externalDir = getExternalFilesDir(null)?.absolutePath ?: ""
-        val nativeLibDir = applicationInfo.nativeLibraryDir
-        log("INFO", "start_android_server: externalDir=$externalDir, nativeLibDir=$nativeLibDir")
-        val result = module.callAttr("start_android_server", filesDir.absolutePath, externalDir, nativeLibDir)
+        log("INFO", "start_android_server: externalDir=$externalDir")
+        val result = module.callAttr("start_android_server", filesDir.absolutePath, externalDir)
         log("INFO", "start_android_server returned: $result, type=${result::class.java.simpleName}")
 
         val portPyObj = result.callAttr("get", "port")
@@ -338,19 +370,13 @@ class MainActivity : AppCompatActivity() {
         super.onConfigurationChanged(newConfig)
         try {
             val isDark = (newConfig.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
-            val statusBarColor = if (isDark) {
-                Color.parseColor("#121212")
-            } else {
-                Color.parseColor("#FFFFFF")
-            }
-            window.statusBarColor = statusBarColor
-            window.navigationBarColor = Color.TRANSPARENT
             WindowInsetsControllerCompat(window, window.decorView).apply {
                 isAppearanceLightStatusBars = !isDark
                 isAppearanceLightNavigationBars = !isDark
             }
             webView.setBackgroundColor(getWebViewBackgroundColor())
             injectDarkMode()
+            injectSafeArea()
         } catch (e: Exception) {
             logError("onConfigurationChanged failed", e)
         }
