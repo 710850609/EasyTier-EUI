@@ -17,9 +17,7 @@ import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.ViewCompat
 import androidx.webkit.WebSettingsCompat
 import androidx.webkit.WebViewFeature
 import com.chaquo.python.Python
@@ -48,6 +46,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var crashLogFile: File
     
     private var lastBackPressTime = 0L
+    private var h5ThemeOverride: Boolean? = null // null = follow system, true = dark, false = light
 
     private fun log(level: String, msg: String) {
         val ts = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault()).format(Date())
@@ -377,10 +376,11 @@ class MainActivity : AppCompatActivity() {
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
         try {
-            val isDark = (newConfig.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
-            WindowInsetsControllerCompat(window, window.decorView).apply {
-                isAppearanceLightStatusBars = !isDark
-                isAppearanceLightNavigationBars = !isDark
+            if (h5ThemeOverride == null) {
+                enableEdgeToEdge(
+                    statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT),
+                    navigationBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT)
+                )
             }
             webView.setBackgroundColor(getWebViewBackgroundColor())
             injectDarkMode()
@@ -404,6 +404,36 @@ class MainActivity : AppCompatActivity() {
             val url = "http://127.0.0.1:$httpServerPort"
             log("DEBUG", "AndroidBridge.getApiBaseUrl: $url")
             return url
+        }
+
+        @JavascriptInterface
+        fun setThemeMode(mode: String) {
+            log("DEBUG", "AndroidBridge.setThemeMode: $mode")
+            runOnUiThread {
+                when (mode) {
+                    "dark" -> {
+                        h5ThemeOverride = true
+                        enableEdgeToEdge(
+                            statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
+                            navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT)
+                        )
+                    }
+                    "light" -> {
+                        h5ThemeOverride = false
+                        enableEdgeToEdge(
+                            statusBarStyle = SystemBarStyle.light(Color.TRANSPARENT),
+                            navigationBarStyle = SystemBarStyle.light(Color.TRANSPARENT)
+                        )
+                    }
+                    "system" -> {
+                        h5ThemeOverride = null
+                        enableEdgeToEdge(
+                            statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT),
+                            navigationBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT)
+                        )
+                    }
+                }
+            }
         }
 
         @JavascriptInterface
