@@ -388,16 +388,16 @@ class MainActivity : AppCompatActivity() {
                 h5ThemeOverride = true
                 webView.setBackgroundColor(Color.parseColor("#121212"))
                 enableEdgeToEdge(
-                    statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
-                    navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT)
+                    statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT, Color.TRANSPARENT),
+                    navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT, Color.TRANSPARENT)
                 )
             }
             "light" -> {
                 h5ThemeOverride = false
                 webView.setBackgroundColor(Color.parseColor("#FFFFFF"))
                 enableEdgeToEdge(
-                    statusBarStyle = SystemBarStyle.light(Color.TRANSPARENT),
-                    navigationBarStyle = SystemBarStyle.light(Color.TRANSPARENT)
+                    statusBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
+                    navigationBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
                 )
             }
             else -> {
@@ -429,16 +429,16 @@ class MainActivity : AppCompatActivity() {
                         h5ThemeOverride = true
                         webView.setBackgroundColor(Color.parseColor("#121212"))
                         enableEdgeToEdge(
-                            statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
-                            navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT)
+                            statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT, Color.TRANSPARENT),
+                            navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT, Color.TRANSPARENT)
                         )
                     }
                     "light" -> {
                         h5ThemeOverride = false
                         webView.setBackgroundColor(Color.parseColor("#FFFFFF"))
                         enableEdgeToEdge(
-                            statusBarStyle = SystemBarStyle.light(Color.TRANSPARENT),
-                            navigationBarStyle = SystemBarStyle.light(Color.TRANSPARENT)
+                            statusBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
+                            navigationBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
                         )
                     }
                     "system" -> {
