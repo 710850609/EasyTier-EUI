@@ -58,9 +58,12 @@ def version(params=None, *args, **kwargs):
                 facade = get_facade()
                 if facade.is_available:
                     ver = facade.get_version()
-                    return {'version': ver, 'raw_version': f'easytier-core {ver}'}
-            except Exception:
-                pass
+                    if ver and ver != "unknown":
+                        dash_idx = ver.find('-')
+                        et_version = ver[:dash_idx] if dash_idx > 0 else ver
+                        return {'version': f'v{et_version}', 'raw_version': f'easytier-core {ver}'}
+            except Exception as e:
+                logger.warning(f"Failed to get version from FFI: {e}")
         return {'version': 'unknown', 'raw_version': 'unknown'}
     if not check_core():
         raise HttpException(get_message('download.task_not_found'))

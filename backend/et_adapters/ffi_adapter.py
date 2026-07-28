@@ -66,8 +66,7 @@ class FfiAdapter(IEasyTierAdapter):
         try:
             self._lib = ctypes.CDLL(lib_name)
             self._setup_functions()
-            self._so_path = self._find_system_lib_path(lib_name)
-            logger.info(f"Loaded EasyTier FFI via system library path: {self._so_path}")
+            logger.info("Loaded EasyTier FFI via system library path")
         except OSError as e:
             logger.warning(f"Failed to load via system path: {e}")
 
@@ -77,10 +76,14 @@ class FfiAdapter(IEasyTierAdapter):
                 for line in f:
                     if lib_name in line:
                         path = line.rsplit(' ', 1)[-1].strip()
+                        logger.debug(f"_find_system_lib_path found candidate: {path}")
                         if os.path.isfile(path):
                             return path
-        except Exception:
-            pass
+                        else:
+                            logger.debug(f"_find_system_lib_path isfile=False: {path}")
+            logger.debug(f"_find_system_lib_path: {lib_name} not found in /proc/self/maps")
+        except Exception as e:
+            logger.warning(f"_find_system_lib_path failed: {e}")
         return None
 
     def _has_symbol(self, name: str) -> bool:
@@ -261,11 +264,15 @@ class FfiAdapter(IEasyTierAdapter):
             try:
                 with open(self._so_path, 'rb') as f:
                     data = f.read()
-                match = re.search(rb'(\d+\.\d+\.\d+-[a-f0-9]{8})', data)
+                match = re.search(rb'(\d+\.\d+\.\d+(-[a-f0-9]{7,8})?)', data)
                 if match:
                     return match.group(1).decode()
+                else:
+                    logger.warning(f"Version pattern not found in binary: {self._so_path}")
             except Exception as e:
                 logger.warning(f"Failed to scan binary for version: {e}")
+        else:
+            logger.debug(f"No so_path available for version scan: {self._so_path}")
         try:
             raw = self._collect_via_raw_ffi(1)
             for instance_data in raw.values():
