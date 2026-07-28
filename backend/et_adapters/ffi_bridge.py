@@ -46,33 +46,19 @@ class EasyTierFFI:
 
     def _load_library(self):
         lib_name = "libeasytier_ffi.so"
-        lib_paths = [
-            Path(__file__).parent.parent / lib_name,
-            Path(os.environ.get('EUI_LIB_DIR', '')) / lib_name,
-        ]
-        arch = platform.machine()
-        if arch == 'aarch64':
-            lib_paths.append(Path(__file__).parent.parent / 'arm64-v8a' / lib_name)
-        elif arch == 'armv7l':
-            lib_paths.append(Path(__file__).parent.parent / 'armeabi-v7a' / lib_name)
+        lib_dir = os.environ.get('EUI_LIB_DIR', '')
+        lib_path = Path(lib_dir) / lib_name
 
-        for lib_path in lib_paths:
-            if lib_path.exists():
-                try:
-                    self._lib = ctypes.CDLL(str(lib_path))
-                    self._setup_functions()
-                    logger.info(f"Loaded EasyTier FFI: {lib_path}")
-                    return
-                except OSError as e:
-                    logger.warning(f"Failed to load {lib_path}: {e}")
-
-        try:
-            self._lib = ctypes.CDLL(lib_name)
-            self._setup_functions()
-            logger.info("Loaded EasyTier FFI via system library path")
-            return
-        except OSError as e:
-            logger.warning(f"Failed to load via system path: {e}")
+        if lib_path.exists():
+            try:
+                self._lib = ctypes.CDLL(str(lib_path))
+                self._setup_functions()
+                logger.info(f"Loaded EasyTier FFI: {lib_path}")
+                return
+            except OSError as e:
+                logger.warning(f"Failed to load {lib_path}: {e}")
+        else:
+            logger.warning(f"Library not found: {lib_path}")
 
         raise RuntimeError(f"Could not load {lib_name}")
 

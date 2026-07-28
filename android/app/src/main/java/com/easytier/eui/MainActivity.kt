@@ -233,8 +233,9 @@ class MainActivity : AppCompatActivity() {
 
         log("INFO", "Calling start_android_server with data_dir=${filesDir.absolutePath}...")
         val externalDir = getExternalFilesDir(null)?.absolutePath ?: ""
-        log("INFO", "start_android_server: externalDir=$externalDir")
-        val result = module.callAttr("start_android_server", filesDir.absolutePath, externalDir)
+        val nativeLibDir = applicationInfo.nativeLibraryDir
+        log("INFO", "start_android_server: externalDir=$externalDir, nativeLibDir=$nativeLibDir")
+        val result = module.callAttr("start_android_server", filesDir.absolutePath, externalDir, nativeLibDir)
         log("INFO", "start_android_server returned: $result, type=${result::class.java.simpleName}")
 
         val portPyObj = result.callAttr("get", "port")

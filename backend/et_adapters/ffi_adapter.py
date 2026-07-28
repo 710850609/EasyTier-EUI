@@ -38,50 +38,20 @@ class FfiAdapter(IEasyTierAdapter):
 
     def _load_library(self):
         lib_name = "libeasytier_ffi.so"
-        lib_paths = [
-            Path(__file__).parent.parent / lib_name,
-            Path(os.environ.get('EUI_LIB_DIR', '')) / lib_name,
-        ]
-        arch = platform.machine()
-        if arch == 'aarch64':
-            lib_paths.append(Path(__file__).parent.parent / 'arm64-v8a' / lib_name)
-        elif arch == 'armv7l':
-            lib_paths.append(Path(__file__).parent.parent / 'armeabi-v7a' / lib_name)
+        lib_dir = os.environ.get('EUI_LIB_DIR', '')
+        lib_path = Path(lib_dir) / lib_name
 
-        for lib_path in lib_paths:
-            if lib_path.exists():
-                try:
-                    self._lib = ctypes.CDLL(str(lib_path))
-                    self._setup_functions()
-                    self._so_path = str(lib_path)
-                    logger.info(f"Loaded EasyTier FFI: {self._so_path}")
-                    return
-                except OSError as e:
-                    logger.warning(f"Failed to load {lib_path}: {e}")
-
-        try:
-            self._lib = ctypes.CDLL(lib_name)
-            self._setup_functions()
-            self._so_path = self._find_system_lib_path(lib_name)
-            logger.info(f"Loaded EasyTier FFI via system library path: {self._so_path}")
-        except OSError as e:
-            logger.warning(f"Failed to load via system path: {e}")
-
-    def _find_system_lib_path(self, lib_name: str) -> Optional[str]:
-        try:
-            with open('/proc/self/maps', 'r') as f:
-                for line in f:
-                    if lib_name in line:
-                        path = line.rsplit(' ', 1)[-1].strip()
-                        logger.debug(f"_find_system_lib_path found candidate: {path}")
-                        if os.path.isfile(path):
-                            return path
-                        else:
-                            logger.debug(f"_find_system_lib_path isfile=False: {path}")
-            logger.debug(f"_find_system_lib_path: {lib_name} not found in /proc/self/maps")
-        except Exception as e:
-            logger.warning(f"_find_system_lib_path failed: {e}")
-        return None
+        if lib_path.exists():
+            try:
+                self._lib = ctypes.CDLL(str(lib_path))
+                self._setup_functions()
+                self._so_path = str(lib_path)
+                logger.info(f"Loaded EasyTier FFI: {self._so_path}")
+                return
+            except OSError as e:
+                logger.warning(f"Failed to load {lib_path}: {e}")
+        else:
+            logger.warning(f"Library not found: {lib_path}")
 
     def _has_symbol(self, name: str) -> bool:
         if self._lib is None:
