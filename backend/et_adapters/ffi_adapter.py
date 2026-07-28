@@ -97,8 +97,8 @@ class FfiAdapter(IEasyTierAdapter):
             lib.set_tun_fd.argtypes = [c_char_p, c_int]
             lib.set_tun_fd.restype = c_int
         if self._has_symbol('get_error_msg'):
-            lib.get_error_msg.argtypes = []
-            lib.get_error_msg.restype = c_char_p
+            lib.get_error_msg.argtypes = [POINTER(c_char_p)]
+            lib.get_error_msg.restype = None
         if self._has_symbol('free_string'):
             lib.free_string.argtypes = [c_char_p]
             lib.free_string.restype = None
@@ -176,11 +176,12 @@ class FfiAdapter(IEasyTierAdapter):
             return ""
         try:
             with self._lock:
-                result = self._lib.get_error_msg()
-            if result:
-                msg = result.decode('utf-8', errors='replace')
+                error_ptr = c_char_p()
+                self._lib.get_error_msg(ctypes.byref(error_ptr))
+            if error_ptr.value:
+                msg = error_ptr.value.decode('utf-8', errors='replace')
                 if self._has_symbol('free_string'):
-                    self._lib.free_string(result)
+                    self._lib.free_string(error_ptr.value)
                 return msg
             return ""
         except Exception:
