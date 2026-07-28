@@ -2,7 +2,9 @@
 # -*- coding: utf-8 -*-
 """EasyTierFacade — unified entry point with adapter auto-selection"""
 
+import json
 import logging
+import threading
 from typing import Dict, Optional
 
 from .interface import IEasyTierAdapter
@@ -71,6 +73,11 @@ class EasyTierFacade:
             return {}
         return self._adapter.get_network_infos(max_length)
 
+    def collect_network_infos_json(self, max_length: int = 10) -> str:
+        """Return network infos as JSON string for Kotlin monitor"""
+        infos = self.get_network_infos(max_length)
+        return json.dumps({"map": {k: v.to_json_serializable() for k, v in infos.items()}})
+
     def get_version(self) -> str:
         if not self._adapter:
             return "unknown"
@@ -104,10 +111,13 @@ class EasyTierFacade:
 
 
 _facade_instance: Optional[EasyTierFacade] = None
+_facade_lock = threading.Lock()
 
 
 def get_facade() -> EasyTierFacade:
     global _facade_instance
     if _facade_instance is None:
-        _facade_instance = EasyTierFacade()
+        with _facade_lock:
+            if _facade_instance is None:
+                _facade_instance = EasyTierFacade()
     return _facade_instance

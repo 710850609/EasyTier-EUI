@@ -115,6 +115,9 @@ def start_android_server(data_dir: str, external_dir: str = "", host: str = "127
         if external_dir:
             os.environ['EUI_LOG_DIR'] = os.path.join(external_dir, 'log')
         py_log("calling setup_env...")
+        py_log(f"__file__ = {__file__}")
+        py_log(f"__file__ exists = {os.path.exists(__file__)}")
+        py_log(f"__file__ is .py = {__file__.endswith('.py')}")
         run_configs.setup_env()
         py_log(f"setup_env done, IS_ANDROID={run_configs.IS_ANDROID}")
         py_log(f"FRONTEND_PATH={run_configs.FRONTEND_PATH}")

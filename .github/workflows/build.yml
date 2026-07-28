@@ -744,7 +744,9 @@ jobs:
           REPO="ghcr.io/${{ github.actor }}/easytier-eui"
           VERSION="${{ needs.build-info.outputs.version }}"
           RELEASE_TAG="${{ github.event.inputs.no-draft != 'true' && 'dev' || (needs.build-info.outputs.prerelease == 'true' && 'edge' || 'latest') }}"
-
+          echo "push docker version: $VERSION"
+          echo "push docker tag: $RELEASE_TAG"
+          
           docker buildx imagetools create -t ${REPO}:${VERSION} \
             ${REPO}:amd64-${VERSION} \
             ${REPO}:arm64-${VERSION} \

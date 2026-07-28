@@ -13,7 +13,7 @@ on:
       easytier_ref:
         description: "EasyTier git ref - supports branch, tag, or commit hash (leave empty for latest release)"
         required: false
-        default: ""
+        default: "2.4.5"
       build_version:
         description: "Build version (leave empty for auto: 0.1-{timestamp})"
         required: false
@@ -139,6 +139,7 @@ jobs:
           echo "commit_short=${COMMIT:0:8}" >> "$GITHUB_OUTPUT"
           echo "EasyTier ref: $REF"
           echo "EasyTier version: $VERSION"
+          echo "EasyTier commit_short: ${COMMIT:0:8}"
           echo "EasyTier commit: $COMMIT"
 
       - name: Cache Cargo registry  # 缓存 Cargo 依赖（registry + git），加速后续构建

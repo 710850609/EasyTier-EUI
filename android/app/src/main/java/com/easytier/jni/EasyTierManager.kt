@@ -138,20 +138,19 @@ class EasyTierManager(
         try {
             logToFile("DEBUG", "collectNetworkStatus: Python.getInstance()")
             val python = Python.getInstance()
-            logToFile("DEBUG", "collectNetworkStatus: getModule(utils.et_bridge)")
-            val module = python.getModule("utils.et_bridge")
+            logToFile("DEBUG", "collectNetworkStatus: getModule(et_adapters.facade)")
+            val module = python.getModule("et_adapters.facade")
             if (module == null) {
-                logToFile("ERROR", "collectNetworkStatus: module utils.et_bridge is null")
+                logToFile("ERROR", "collectNetworkStatus: module et_adapters.facade is null")
                 return NetworkStatus(null, null)
             }
-            logToFile("DEBUG", "collectNetworkStatus: get(et_bridge)")
-            val bridge = module.get("et_bridge")
-            if (bridge == null) {
-                logToFile("ERROR", "collectNetworkStatus: et_bridge is null")
+            logToFile("DEBUG", "collectNetworkStatus: getFacade().collect_network_infos_json(10)")
+            val facade = module.callAttr("get_facade")
+            if (facade == null) {
+                logToFile("ERROR", "collectNetworkStatus: facade is null")
                 return NetworkStatus(null, null)
             }
-            logToFile("DEBUG", "collectNetworkStatus: callAttr(collect_network_infos_json, 10)")
-            val json = bridge.callAttr("collect_network_infos_json", 10).toString()
+            val json = facade.callAttr("collect_network_infos_json", 10).toString()
             logToFile("DEBUG", "collectNetworkStatus: done, jsonLen=${json.length}")
             return NetworkStatus(json, null)
         } catch (e: Exception) {

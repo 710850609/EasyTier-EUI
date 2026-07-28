@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """FfiAdapter — current default FFI adapter for v2.4.5/v2.6.4"""
 
-import ctypes, json, logging, os, platform, re, threading
+import ctypes, json, logging, os, platform, re, threading, time
 from ctypes import c_char_p, c_int, POINTER, Structure, c_size_t
 from pathlib import Path
 from typing import Dict, Any, List, Optional
@@ -126,7 +126,8 @@ class FfiAdapter(IEasyTierAdapter):
                 ret = self._lib.run_network_instance(toml_config.encode('utf-8'))
                 if ret != 0:
                     raise RuntimeError(f"run_network_instance failed: {self.get_last_error()}")
-                logger.info(f"Instance '{instance_name}' started via FFI")
+            time.sleep(1.0)
+            logger.info(f"Instance '{instance_name}' started via FFI")
         except Exception as e:
             logger.exception(f"start_network failed: {e}")
             raise
@@ -188,24 +189,30 @@ class FfiAdapter(IEasyTierAdapter):
     def _collect_via_raw_ffi(self, max_len: int) -> Dict[str, Any]:
         if self._lib is None or not self._has_symbol('collect_network_infos'):
             return {}
-        try:
-            with self._lock:
-                infos = (KeyValuePair * max_len)()
-                count = self._lib.collect_network_infos(infos, max_len)
-            if count < 0:
-                return {}
-            result = {}
-            for i in range(min(count, max_len)):
-                key = infos[i].key.decode('utf-8') if infos[i].key else ""
-                value = infos[i].value.decode('utf-8') if infos[i].value else ""
-                result[key] = json.loads(value) if value else {}
-                if self._has_symbol('free_string'):
-                    self._lib.free_string(infos[i].key)
-                    self._lib.free_string(infos[i].value)
-            return result
-        except Exception as e:
-            logger.exception(f"_collect_via_raw_ffi failed: {e}")
-            return {}
+        for attempt in range(3):
+            try:
+                with self._lock:
+                    infos = (KeyValuePair * max_len)()
+                    count = self._lib.collect_network_infos(infos, max_len)
+                if count < 0:
+                    if attempt < 2:
+                        time.sleep(0.5)
+                        continue
+                    return {}
+                result = {}
+                for i in range(min(count, max_len)):
+                    key = infos[i].key.decode('utf-8') if infos[i].key else ""
+                    value = infos[i].value.decode('utf-8') if infos[i].value else ""
+                    result[key] = json.loads(value) if value else {}
+                    if self._has_symbol('free_string'):
+                        self._lib.free_string(infos[i].key)
+                        self._lib.free_string(infos[i].value)
+                return result
+            except Exception as e:
+                logger.exception(f"_collect_via_raw_ffi attempt {attempt + 1} failed: {e}")
+                if attempt < 2:
+                    time.sleep(0.5)
+        return {}
 
     def get_version(self) -> str:
         try:
