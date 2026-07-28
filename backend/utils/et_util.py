@@ -2,10 +2,9 @@
 # -*- coding: utf-8 -*-
 
 import logging
-import time
+import re
 from pathlib import Path
 
-import utils.common_util as common_util
 import utils.github_util as github_util
 
 et_min_version = "2.5.0"
@@ -48,3 +47,16 @@ def download_package(download_dir: str, system: str, arch: str, version: str=Non
     github_util.download_release_file(download_url, download_file, download_file_name, progress_callback=progress_callback)
     logging.debug(f"已下载： {download_file}")
     return download_file
+
+def _get_ffi_version(self, so_path: str) -> str:
+    try:
+        with open(so_path, 'rb') as f:
+            data = f.read()
+        match = re.search(rb'(\d+\.\d+\.\d+(-[a-f0-9]{7,8})?)', data)
+        if match:
+            return match.group(1).decode()
+        else:
+            logging.warning(f"Version pattern not found in binary: {so_path}")
+    except Exception as e:
+        logging.warning(f"Failed to scan binary for version: {e}")
+    return "unknown"

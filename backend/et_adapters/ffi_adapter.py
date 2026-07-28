@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """FfiAdapter — current default FFI adapter for v2.4.5/v2.6.4"""
 
-import ctypes, json, logging, re, threading, time
+import ctypes, json, logging, threading, time
 from ctypes import c_char_p, c_int, c_void_p, POINTER, Structure, c_size_t
 from typing import Dict, Any, List, Optional
 
@@ -187,34 +187,28 @@ class FfiAdapter(IEasyTierAdapter):
     def _collect_via_raw_ffi(self, max_len: int) -> Dict[str, Any]:
         if self._lib is None or not self._has_symbol('collect_network_infos'):
             return {}
-        for attempt in range(3):
-            try:
-                with self._lock:
-                    infos = (KeyValuePair * max_len)()
-                    count = self._lib.collect_network_infos(infos, max_len)
-                    if count < 0:
-                        if attempt < 2:
-                            time.sleep(0.5)
-                            continue
-                        return {}
-                    result = {}
-                    for i in range(min(count, max_len)):
-                        key_ptr = infos[i].key
-                        val_ptr = infos[i].value
-                        key = ctypes.string_at(key_ptr).decode('utf-8') if key_ptr else ""
-                        value = ctypes.string_at(val_ptr).decode('utf-8') if val_ptr else ""
-                        logger.debug(f"collect_network_infos: key={key}, value={value}")
-                        result[key] = json.loads(value) if value else {}
-                        if self._has_symbol('free_string'):
-                            if key_ptr:
-                                self._lib.free_string(key_ptr)
-                            if val_ptr:
-                                self._lib.free_string(val_ptr)
-                    return result
-            except Exception as e:
-                logger.exception(f"_collect_via_raw_ffi attempt {attempt + 1} failed: {e}")
-                if attempt < 2:
-                    time.sleep(0.5)
+        try:
+            with self._lock:
+                infos = (KeyValuePair * max_len)()
+                count = self._lib.collect_network_infos(infos, max_len)
+                if count < 0:
+                    return {}
+                result = {}
+                for i in range(min(count, max_len)):
+                    key_ptr = infos[i].key
+                    val_ptr = infos[i].value
+                    key = ctypes.string_at(key_ptr).decode('utf-8') if key_ptr else ""
+                    value = ctypes.string_at(val_ptr).decode('utf-8') if val_ptr else ""
+                    logger.debug(f"collect_network_infos: key={key}, value={value}")
+                    result[key] = json.loads(value) if value else {}
+                    if self._has_symbol('free_string'):
+                        if key_ptr:
+                            self._lib.free_string(key_ptr)
+                        if val_ptr:
+                            self._lib.free_string(val_ptr)
+                return result
+        except Exception as e:
+            logger.exception(f"_collect_via_raw_ffi failed: {e}")
         return {}
 
     def get_version(self) -> str:
@@ -232,16 +226,3 @@ class FfiAdapter(IEasyTierAdapter):
 
     def get_network_infos_raw(self, max_length: int = 10) -> Dict[str, Any]:
         return self._collect_via_raw_ffi(max_length)
-
-    def _get_ffi_version(self, so_path: str) -> str:
-        try:
-            with open(so_path, 'rb') as f:
-                data = f.read()
-            match = re.search(rb'(\d+\.\d+\.\d+(-[a-f0-9]{7,8})?)', data)
-            if match:
-                return match.group(1).decode()
-            else:
-                logger.warning(f"Version pattern not found in binary: {so_path}")
-        except Exception as e:
-            logger.warning(f"Failed to scan binary for version: {e}")
-        return "unknown"
