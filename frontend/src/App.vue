@@ -27,7 +27,7 @@ html {
 
 body {
   height: 100vh;
-  padding-top: var(--sat);
+  padding-top: calc(var(--sat) * 0.5);
   padding-right: var(--sar);
   padding-bottom: var(--sab);
   padding-left: var(--sal);
@@ -36,7 +36,6 @@ body {
   color: var(--color-text);
   transition: background-color 0.3s, color 0.3s;
   overscroll-behavior: none;
-  overflow: hidden;
 }
 
 /* 全局滚动条样式 */
@@ -291,7 +290,7 @@ html.dark .var-popup__content[var-popup-cover] {
 
 /* 顶部弹出层：高光条移到底部，发光边框渐变反转，视觉聚焦在屏幕中间 */
 .var-popup__content.var-popup--top {
-  padding-top: var(--sat);
+  padding-top: calc(var(--sat) * 0.5);
 }
 
 .var-popup__content.var-popup--top::after {

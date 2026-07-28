@@ -179,7 +179,7 @@ onUnmounted(() => {
   left: 0;
   right: 0;
   height: var(--sat);
-  background: linear-gradient(to bottom, var(--color-body) 60%, transparent 100%);
+  background: linear-gradient(to bottom, var(--color-body) 0%, transparent 50%);
   z-index: 1000;
   pointer-events: none;
 }
