@@ -13,7 +13,7 @@ on:
       easytier_ref:
         description: "EasyTier git ref - supports branch, tag, or commit hash (leave empty for latest release)"
         required: false
-        default: "2.4.5"
+        default: "v2.4.5"
       build_version:
         description: "Build version (leave empty for auto: 0.1-{timestamp})"
         required: false
@@ -132,6 +132,10 @@ jobs:
             echo "Using latest release: $REF"
           fi
           COMMIT=$(git ls-remote https://github.com/easytier/easytier.git "$REF" | head -n1 | cut -f1)
+          if [ -z "$COMMIT" ]; then
+            echo "ERROR: Failed to resolve ref '$REF' to a commit hash"
+            exit 1
+          fi
           VERSION="${REF#v}"
           echo "ref=$REF" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
