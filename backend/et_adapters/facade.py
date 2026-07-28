@@ -5,7 +5,7 @@
 import json
 import logging
 import threading
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 
 from .interface import IEasyTierAdapter
 from .models import NetworkInstanceInfo
@@ -72,6 +72,11 @@ class EasyTierFacade(IEasyTierAdapter):
         if not self._adapter:
             return {}
         return self._adapter.get_network_infos(max_length)
+
+    def get_network_infos_raw(self, max_length: int = 10) -> Dict[str, Any]:
+        if not self._adapter:
+            return {}
+        return self._adapter.get_network_infos_raw(max_length)
 
     def collect_network_infos_json(self, max_length: int = 10) -> str:
         """Return network infos as JSON string for Kotlin monitor"""
