@@ -88,12 +88,55 @@ class EasyTierFacade(IEasyTierAdapter):
             return "unknown"
         return self._adapter.get_version()
 
+    def _addr_to_ipv4(self, addr: int) -> str:
+        if not addr:
+            return ""
+        return ".".join(str((addr >> (i * 8)) & 0xFF) for i in range(3, -1, -1))
+
+    def _latency_to_ms(self, latency_us: int) -> int:
+        if not latency_us or latency_us <= 0:
+            return 0
+        ms = latency_us / 1000
+        return int(ms) if ms >= 1 else 1
+
+    def _format_nat_type(self, nat_type: int) -> str:
+        types = {0: "Unknown", 1: "FullCone", 2: "Restricted", 3: "PortRestricted", 4: "Symmetric"}
+        return types.get(nat_type, "Unknown")
+
+    def _format_cost(self, cost: int) -> str:
+        if cost == 0:
+            return "Local"
+        if cost == 1:
+            return "p2p"
+        return f"relay{cost}"
+
     def get_peers(self) -> list:
         raw = self._adapter.get_network_infos_raw(10) if self._adapter else {}
         peers = []
         for instance_data in raw.values():
-            for peer in instance_data.get('peers') or []:
-                peers.append(peer)
+            for pair in instance_data.get('peer_route_pairs') or []:
+                route = pair.get('route') or {}
+                peer = pair.get('peer') or {}
+                conns = peer.get('conns') or []
+                first_conn = conns[0] if conns else {}
+                tunnel = first_conn.get('tunnel') or {}
+                stats = first_conn.get('stats') or {}
+                stun = route.get('stun_info') or {}
+                ipv4_addr = route.get('ipv4_addr') or {}
+                ipv4 = self._addr_to_ipv4(ipv4_addr.get('address', {}).get('addr', 0))
+                peers.append({
+                    'ipv4': ipv4,
+                    'hostname': route.get('hostname', ''),
+                    'cost': self._format_cost(route.get('cost', 0)),
+                    'tunnel_proto': tunnel.get('tunnel_type', ''),
+                    'lat_ms': self._latency_to_ms(stats.get('latency_us', 0)),
+                    'loss_rate': first_conn.get('loss_rate', 0),
+                    'rx_bytes': stats.get('rx_bytes', 0),
+                    'tx_bytes': stats.get('tx_bytes', 0),
+                    'nat_type': self._format_nat_type(stun.get('udp_nat_type', 0)),
+                    'version': route.get('version', ''),
+                    'cidr': ', '.join(route.get('proxy_cidrs') or []),
+                })
         return peers
 
     def get_current_instance(self) -> Optional[str]:
