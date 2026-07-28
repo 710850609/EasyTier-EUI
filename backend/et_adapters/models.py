@@ -2,8 +2,16 @@
 # -*- coding: utf-8 -*-
 """Data models matching FFI NetworkInstanceRunningInfo structure"""
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
 from typing import Dict, List, Optional, Any
+
+
+def _pick(dataclass_cls, data: Dict) -> Dict:
+    """Filter dict to only keep keys that are valid fields of the dataclass."""
+    if not data:
+        return {}
+    valid = {f.name for f in fields(dataclass_cls)}
+    return {k: v for k, v in data.items() if k in valid}
 
 
 @dataclass
@@ -21,7 +29,7 @@ class Ipv4Inet:
         if not d:
             return None
         return cls(
-            address=Ipv4Addr(**(d.get('address') or {})) if d.get('address') else None,
+            address=Ipv4Addr(**_pick(Ipv4Addr, d.get('address') or {})) if d.get('address') else None,
             network_length=d.get('network_length', 0),
         )
 
@@ -44,6 +52,9 @@ class StunInfo:
     udp_nat_type: int = 0
     tcp_nat_type: int = 0
     last_update_time: int = 0
+    public_ip: List[str] = field(default_factory=list)
+    min_port: int = 0
+    max_port: int = 0
 
 
 @dataclass
@@ -65,8 +76,8 @@ class NodeInfo:
             hostname=d.get('hostname', ''),
             version=d.get('version', ''),
             ips=d.get('ips'),
-            stun_info=StunInfo(**(d.get('stun_info') or {})) if d.get('stun_info') else None,
-            listeners=[Url(**(u or {})) for u in (d.get('listeners') or [])],
+            stun_info=StunInfo(**_pick(StunInfo, d.get('stun_info') or {})) if d.get('stun_info') else None,
+            listeners=[Url(**_pick(Url, u or {})) for u in (d.get('listeners') or [])],
             vpn_portal_cfg=d.get('vpn_portal_cfg'),
         )
 
@@ -110,7 +121,7 @@ class PeerInfo:
             return None
         return cls(
             peer_id=d.get('peer_id', 0),
-            conns=[PeerConnInfo(**(c or {})) for c in (d.get('conns') or [])],
+            conns=[PeerConnInfo(**_pick(PeerConnInfo, c or {})) for c in (d.get('conns') or [])],
         )
 
 
@@ -161,11 +172,11 @@ class NetworkInstanceInfo:
             dev_name=d.get('dev_name', ''),
             my_node_info=NodeInfo.from_dict(d.get('my_node_info')),
             events=d.get('events') or [],
-            routes=[Route(**(r or {})) for r in (d.get('routes') or [])],
+            routes=[Route(**_pick(Route, r or {})) for r in (d.get('routes') or [])],
             peers=[PeerInfo.from_dict(p) for p in (d.get('peers') or []) if p],
             peer_route_pairs=[
                 PeerRoutePair(
-                    route=Route(**(p.get('route') or {})) if p.get('route') else None,
+                    route=Route(**_pick(Route, p.get('route') or {})) if p.get('route') else None,
                     peer=PeerInfo.from_dict(p.get('peer')) if p.get('peer') else None,
                 )
                 for p in (d.get('peer_route_pairs') or [])
@@ -173,7 +184,7 @@ class NetworkInstanceInfo:
             running=d.get('running', False),
             error_msg=d.get('error_msg'),
             foreign_network_summary=RouteForeignNetworkSummary(
-                **(d.get('foreign_network_summary') or {})
+                **_pick(RouteForeignNetworkSummary, d.get('foreign_network_summary') or {})
             ) if d.get('foreign_network_summary') else None,
         )
 

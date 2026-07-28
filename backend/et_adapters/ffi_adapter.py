@@ -223,6 +223,7 @@ class FfiAdapter(IEasyTierAdapter):
                         val_ptr = infos[i].value
                         key = ctypes.string_at(key_ptr).decode('utf-8') if key_ptr else ""
                         value = ctypes.string_at(val_ptr).decode('utf-8') if val_ptr else ""
+                        logger.debug(f"collect_network_infos: key={key}, value={value}")
                         result[key] = json.loads(value) if value else {}
                         if self._has_symbol('free_string'):
                             if key_ptr:

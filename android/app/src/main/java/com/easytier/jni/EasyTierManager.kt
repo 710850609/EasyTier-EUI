@@ -140,10 +140,6 @@ class EasyTierManager(
             val python = Python.getInstance()
             logToFile("DEBUG", "collectNetworkStatus: getModule(et_adapters.facade)")
             val module = python.getModule("et_adapters.facade")
-            if (module == null) {
-                logToFile("ERROR", "collectNetworkStatus: module et_adapters.facade is null")
-                return NetworkStatus(null, null)
-            }
             logToFile("DEBUG", "collectNetworkStatus: getFacade().collect_network_infos_json(10)")
             val facade = module.callAttr("get_facade")
             if (facade == null) {

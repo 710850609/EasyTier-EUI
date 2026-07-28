@@ -182,10 +182,6 @@ class EasyTierVpnService : VpnService() {
     private fun setTunFd(instanceName: String, fd: Int) {
         try {
             val module = Python.getInstance().getModule("et_adapters.facade")
-            if (module == null) {
-                logToFile("ERROR", "TUN fd set: module et_adapters.facade is null")
-                return
-            }
             val facade = module.callAttr("get_facade")
             if (facade == null) {
                 logToFile("ERROR", "TUN fd set: facade is null")
