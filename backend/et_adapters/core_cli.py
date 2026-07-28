@@ -6,7 +6,7 @@ import json
 import logging
 import os
 import subprocess
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 
 from utils import run_configs
 from .interface import IEasyTierAdapter
@@ -85,6 +85,25 @@ class CoreCliAdapter(IEasyTierAdapter):
             return info
         except Exception as e:
             logger.exception(f"get_network_infos failed: {e}")
+            return {}
+
+    def get_network_infos_raw(self, max_length: int = 10) -> Dict[str, Any]:
+        if not self._cli_path:
+            return {}
+        try:
+            cmd = [self._cli_path, 'node', 'list', '--format', 'json']
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+            if result.returncode != 0:
+                return {}
+            data = json.loads(result.stdout)
+            instances = data if isinstance(data, list) else [data]
+            info = {}
+            for instance in instances[:max_length]:
+                name = instance.get('instance_name', 'default')
+                info[name] = instance
+            return info
+        except Exception as e:
+            logger.exception(f"get_network_infos_raw failed: {e}")
             return {}
 
     def get_version(self) -> str:

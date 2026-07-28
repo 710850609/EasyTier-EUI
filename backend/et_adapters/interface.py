@@ -3,7 +3,7 @@
 """EasyTier adapter abstract interface"""
 
 from abc import ABC, abstractmethod
-from typing import Dict
+from typing import Any, Dict
 
 from .models import NetworkInstanceInfo
 
@@ -24,6 +24,10 @@ class IEasyTierAdapter(ABC):
     @abstractmethod
     def get_network_infos(self, max_length: int = 10) -> Dict[str, NetworkInstanceInfo]:
         """Collect network information keyed by instance name."""
+
+    @abstractmethod
+    def get_network_infos_raw(self, max_length: int = 10) -> Dict[str, Any]:
+        """Collect raw network information dicts, bypassing model conversion."""
 
     @abstractmethod
     def get_version(self) -> str:

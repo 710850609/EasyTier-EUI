@@ -255,3 +255,6 @@ class FfiAdapter(IEasyTierAdapter):
         for instance_name, json_data in raw.items():
             result[instance_name] = NetworkInstanceInfo.from_dict(json_data) if json_data else NetworkInstanceInfo()
         return result
+
+    def get_network_infos_raw(self, max_length: int = 10) -> Dict[str, Any]:
+        return self._collect_via_raw_ffi(max_length)

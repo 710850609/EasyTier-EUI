@@ -75,8 +75,8 @@ class EasyTierFacade(IEasyTierAdapter):
 
     def collect_network_infos_json(self, max_length: int = 10) -> str:
         """Return network infos as JSON string for Kotlin monitor"""
-        infos = self.get_network_infos(max_length)
-        return json.dumps({"map": {k: v.to_json_serializable() for k, v in infos.items()}})
+        raw = self._adapter.get_network_infos_raw(max_length) if self._adapter else {}
+        return json.dumps({"map": raw})
 
     def get_version(self) -> str:
         if not self._adapter:
@@ -84,10 +84,10 @@ class EasyTierFacade(IEasyTierAdapter):
         return self._adapter.get_version()
 
     def get_peers(self) -> list:
-        info = self.get_network_infos(10)
+        raw = self._adapter.get_network_infos_raw(10) if self._adapter else {}
         peers = []
-        for instance_data in info.values():
-            for peer in instance_data.peers:
+        for instance_data in raw.values():
+            for peer in instance_data.get('peers') or []:
                 peers.append(peer)
         return peers
 
