@@ -21,19 +21,22 @@ import Layout from './components/Layout.vue'
 }
 
 html {
+  height: 100%;
   overscroll-behavior: none;
 }
 
 body {
+  height: 100%;
+  padding-top: var(--sat);
+  padding-right: var(--sar);
+  padding-bottom: var(--sab);
+  padding-left: var(--sal);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   background: var(--color-body);
   color: var(--color-text);
   transition: background-color 0.3s, color 0.3s;
-  padding-right: var(--sar);
-  padding-bottom: var(--sab);
-  padding-left: var(--sal);
-  min-height: 100vh;
   overscroll-behavior: none;
+  overflow: hidden;
 }
 
 /* 全局滚动条样式 */
@@ -287,6 +290,10 @@ html.dark .var-popup__content[var-popup-cover] {
 }
 
 /* 顶部弹出层：高光条移到底部，发光边框渐变反转，视觉聚焦在屏幕中间 */
+.var-popup__content.var-popup--top {
+  padding-top: var(--sat);
+}
+
 .var-popup__content.var-popup--top::after {
   top: auto;
   bottom: 0;

@@ -116,7 +116,7 @@ onUnmounted(() => {
 <style scoped>
 .layout {
   display: flex;
-  height: 100vh;
+  height: 100%;
   background: var(--color-body);
 }
 
@@ -156,7 +156,7 @@ onUnmounted(() => {
 /* 移动端样式 - 使用类名控制 */
 .layout.is-mobile {
   flex-direction: column;
-  height: 100vh;
+  height: 100%;
 }
 
 .layout.is-mobile .main-content {
@@ -167,7 +167,6 @@ onUnmounted(() => {
 .layout.is-mobile .content-wrapper {
   overflow-y: auto;
   padding: 0;
-  padding-top: var(--sat);
   flex: 1;
   min-height: 0;
   position: relative;
@@ -189,7 +188,7 @@ onUnmounted(() => {
 @media (max-width: 767px) {
   .layout {
     flex-direction: column;
-    height: 100vh;
+    height: 100%;
   }
   
   .side-menu {
@@ -206,7 +205,6 @@ onUnmounted(() => {
   .content-wrapper {
     overflow-y: auto;
     padding: 0;
-    padding-top: var(--sat);
     flex: 1;
     min-height: 0;
   }
