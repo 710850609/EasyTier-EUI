@@ -167,6 +167,7 @@ onUnmounted(() => {
 .layout.is-mobile .content-wrapper {
   overflow-y: auto;
   padding: 0;
+  padding-top: var(--sat);
   flex: 1;
   min-height: 0;
 }
@@ -192,6 +193,7 @@ onUnmounted(() => {
   .content-wrapper {
     overflow-y: auto;
     padding: 0;
+    padding-top: var(--sat);
     flex: 1;
     min-height: 0;
   }

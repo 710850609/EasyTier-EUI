@@ -29,7 +29,6 @@ body {
   background: var(--color-body);
   color: var(--color-text);
   transition: background-color 0.3s, color 0.3s;
-  padding-top: var(--sat);
   padding-right: var(--sar);
   padding-bottom: var(--sab);
   padding-left: var(--sal);

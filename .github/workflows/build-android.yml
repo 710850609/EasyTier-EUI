@@ -175,7 +175,7 @@ jobs:
 
       - name: Write FFI version  # 将 EasyTier 版本号注入 ffi_adapter.py
         run: |
-          FFI_VER="v${{ steps.easytier-info.outputs.version }}-${{ steps.easytier-info.outputs.commit_short }}"
+          FFI_VER="${{ steps.easytier-info.outputs.version }}-${{ steps.easytier-info.outputs.commit_short }}"
           echo "FFI version: $FFI_VER"
           TARGET_FILE="android/app/src/main/python/et_adapters/ffi_adapter.py"
           sed -i "s/^_FFI_LIB_VERSION = \".*\"/_FFI_LIB_VERSION = \"$FFI_VER\"/" "$TARGET_FILE"
