@@ -229,6 +229,7 @@ class MainActivity : AppCompatActivity() {
                     document.documentElement.style.setProperty('--sab', '${sab}px');
                     document.documentElement.style.setProperty('--sar', '${sar}px');
                     document.documentElement.style.setProperty('--sal', '${sal}px');
+                    console.log('[SafeArea] --sat=${sat}px, --sab=${sab}px, --sar=${sar}px, --sal=${sal}px');
                 })();
             """.trimIndent()
             webView.evaluateJavascript(js, null)

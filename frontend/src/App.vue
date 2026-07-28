@@ -21,12 +21,12 @@ import Layout from './components/Layout.vue'
 }
 
 html {
-  height: 100%;
+  height: 100vh;
   overscroll-behavior: none;
 }
 
 body {
-  height: 100%;
+  height: 100vh;
   padding-top: var(--sat);
   padding-right: var(--sar);
   padding-bottom: var(--sab);
