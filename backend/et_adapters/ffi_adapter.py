@@ -10,6 +10,7 @@ from .interface import IEasyTierAdapter
 from .models import NetworkInstanceInfo
 
 logger = logging.getLogger(__name__)
+_FFI_LIB_VERSION = "unknown"
 
 
 class KeyValuePair(Structure):
@@ -231,3 +232,16 @@ class FfiAdapter(IEasyTierAdapter):
 
     def get_network_infos_raw(self, max_length: int = 10) -> Dict[str, Any]:
         return self._collect_via_raw_ffi(max_length)
+
+    def _get_ffi_version(self, so_path: str) -> str:
+        try:
+            with open(so_path, 'rb') as f:
+                data = f.read()
+            match = re.search(rb'(\d+\.\d+\.\d+(-[a-f0-9]{7,8})?)', data)
+            if match:
+                return match.group(1).decode()
+            else:
+                logger.warning(f"Version pattern not found in binary: {so_path}")
+        except Exception as e:
+            logger.warning(f"Failed to scan binary for version: {e}")
+        return "unknown"

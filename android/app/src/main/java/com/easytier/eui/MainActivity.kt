@@ -29,6 +29,8 @@ import java.io.File
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.text.SimpleDateFormat
+import androidx.activity.SystemBarStyle
+import androidx.activity.enableEdgeToEdge
 import java.util.*
 
 class MainActivity : AppCompatActivity() {
@@ -101,6 +103,10 @@ class MainActivity : AppCompatActivity() {
                     log("WARN", "WebView.setDataDirectorySuffix failed (already initialized): ${e.message}")
                 }
             }
+            enableEdgeToEdge(
+                statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT),
+                navigationBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT)
+            )
             setContentView(R.layout.activity_main)
             log("INFO", "setContentView done, finding WebView")
             webView = findViewById(R.id.webview)

@@ -63,7 +63,7 @@ def version(params=None, *args, **kwargs):
                         et_version = ver[:dash_idx] if dash_idx > 0 else ver
                         return {'version': f'v{et_version}', 'raw_version': f'easytier-core {ver}'}
             except Exception as e:
-                logger.warning(f"Failed to get version from FFI: {e}")
+                logging.warning(f"Failed to get version from FFI: {e}")
         return {'version': 'unknown', 'raw_version': 'unknown'}
     if not check_core():
         raise HttpException(get_message('download.task_not_found'))
