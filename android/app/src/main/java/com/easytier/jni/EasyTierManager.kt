@@ -475,6 +475,7 @@ class EasyTierManager(
             vpnServiceIntent = intent
 
             logToFile("INFO", "startDummyVpn: VPN service started with dummy config")
+            startMonitoring()
         } catch (e: Exception) {
             val sw = StringWriter()
             e.printStackTrace(PrintWriter(sw))

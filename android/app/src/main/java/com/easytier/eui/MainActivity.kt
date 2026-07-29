@@ -462,36 +462,4 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
-
-        @JavascriptInterface
-        fun startVpn(): String {
-            return try {
-                log("INFO", "AndroidBridge.startVpn called")
-                if (easyTierManager == null) {
-                    log("INFO", "AndroidBridge.startVpn: creating EasyTierManager")
-                    easyTierManager = EasyTierManager(this@MainActivity, crashLogFile)
-                }
-                easyTierManager?.startMonitoring()
-                log("INFO", "VPN monitoring started via AndroidBridge")
-                "{\"code\": 0}"
-            } catch (e: Exception) {
-                logError("startVpn failed", e)
-                "{\"code\": -1, \"msg\": \"${e.message}\"}"
-            }
-        }
-
-        @JavascriptInterface
-        fun stopVpn(): String {
-            return try {
-                log("INFO", "AndroidBridge.stopVpn called")
-                easyTierManager?.stopMonitoring()
-                easyTierManager = null
-                log("INFO", "VPN monitoring stopped via AndroidBridge")
-                "{\"code\": 0}"
-            } catch (e: Exception) {
-                logError("stopVpn failed", e)
-                "{\"code\": -1, \"msg\": \"${e.message}\"}"
-            }
-        }
-    }
 }

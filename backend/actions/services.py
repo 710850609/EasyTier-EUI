@@ -79,16 +79,6 @@ def stop(params=None, *args, **kwargs):
                 return
             facade.stop_network()
             logging.info("Android: Stopped all EasyTier instances via FFI")
-            # 停止 Android VPN 服务，移除状态栏 VPN 图标
-            try:
-                from java import jclass
-                MainActivity = jclass("com.easytier.eui.MainActivity")
-                manager = MainActivity.getEasyTierManager()
-                if manager is not None:
-                    manager.stopMonitoring()
-                    logging.info("Android: VPN service stopped")
-            except Exception as vpn_err:
-                logging.warning(f"Android: Failed to stop VPN service: {vpn_err}")
         except Exception as e:
             logging.warning(f"Android: Failed to stop instances: {e}")
         return
@@ -123,21 +113,6 @@ def start(params=None, *args, **kwargs):
             logging.info(f"Android: Starting instance '{profile}' via FFI...")
             facade.start_network(config_file, profile)
             logging.info(f"Android: Started EasyTier instance '{profile}' via FFI")
-            # 不立即调用任何 FFI 查询方法（list_instance/collect_network_infos 都会 SIGABRT）
-            # Rust core 在后台异步初始化，Kotlin monitor 和前端轮询会通过 collect_network_infos
-            # 内部的 5 秒等待机制安全地获取实例状态
-            # 立即触发 VPN 授权弹窗（不需要 FFI，只调 VpnService.prepare）
-            try:
-                from java import jclass
-                MainActivity = jclass("com.easytier.eui.MainActivity")
-                manager = MainActivity.getEasyTierManager()
-                if manager is not None:
-                    manager.requestVpnAndStartDummy(profile)
-                    logging.info("Android: VPN auth + dummy VPN requested")
-                else:
-                    logging.warning("Android: EasyTierManager not available for VPN auth")
-            except Exception as vpn_err:
-                logging.warning(f"Android: Failed to request VPN: {vpn_err}")
         except Exception as e:
             logging.exception(f"Android: Failed to start instance: {e}")
             raise

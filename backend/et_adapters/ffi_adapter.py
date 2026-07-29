@@ -108,6 +108,17 @@ class FfiAdapter(IEasyTierAdapter):
                     raise RuntimeError(f"run_network_instance failed: {self.get_last_error()}")
             time.sleep(1.0)
             logger.info(f"Instance '{instance_name}' started via FFI")
+            # 触发 Android VPN 授权弹窗并启动 dummy VPN + 监控
+            try:
+                from utils import run_configs
+                if run_configs.IS_ANDROID:
+                    from java import jclass
+                    MainActivity = jclass("com.easytier.eui.MainActivity")
+                    manager = MainActivity.getEasyTierManager()
+                    if manager is not None:
+                        manager.requestVpnAndStartDummy(instance_name)
+            except Exception:
+                pass
         except Exception as e:
             logger.exception(f"start_network failed: {e}")
             raise
@@ -145,6 +156,18 @@ class FfiAdapter(IEasyTierAdapter):
             all_instances = self._list_all_instance_names()
             keep = [n for n in all_instances if n != instance_name]
             self._retain_instances(keep)
+        # 停止 Android VPN 监控和服务
+        try:
+            from utils import run_configs
+            if run_configs.IS_ANDROID:
+                from java import jclass
+                MainActivity = jclass("com.easytier.eui.MainActivity")
+                manager = MainActivity.getEasyTierManager()
+                if manager is not None:
+                    manager.stopMonitoring()
+        except Exception:
+            logger.exception(f"fail to stop vpn manager monitor: {e}")
+            pass
 
     def _retain_instances(self, names: List[str]) -> None:
         if self._lib is None:
