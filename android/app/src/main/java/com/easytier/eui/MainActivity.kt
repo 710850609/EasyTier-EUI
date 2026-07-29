@@ -46,8 +46,8 @@ class MainActivity : AppCompatActivity() {
     private var httpServerPort = 0
     private lateinit var crashLogFile: File
     
-    private var lastBackPressTime = 0L
     private var h5ThemeOverride: Boolean? = null // null = follow system, true = dark, false = light
+    private var lastBackPressTime = 0L
     private val prefs: SharedPreferences by lazy { getSharedPreferences("easytier_prefs", MODE_PRIVATE) }
 
     private fun log(level: String, msg: String) {
@@ -184,7 +184,10 @@ class MainActivity : AppCompatActivity() {
         log("INFO", "setupBackPress: registering callback")
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                if (System.currentTimeMillis() - lastBackPressTime < 2000) {
+                if (easyTierManager != null) {
+                    moveTaskToBack(true)
+                    Toast.makeText(this@MainActivity, "组网运行中，已切换到后台", Toast.LENGTH_SHORT).show()
+                } else if (System.currentTimeMillis() - lastBackPressTime < 2000) {
                     finish()
                 } else {
                     lastBackPressTime = System.currentTimeMillis()
@@ -317,13 +320,21 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        log("INFO", "onDestroy: stopping monitoring and cancelling scope")
+        log("INFO", "onDestroy: stopping HTTP server, VPN, and cancelling scope")
         try {
             easyTierManager?.stopMonitoring()
         } catch (e: Exception) {
             logError("onDestroy: stopMonitoring failed", e)
         }
         scope.cancel()
+        try {
+            if (Python.isStarted()) {
+                Python.getInstance().getModule("actions.settings").callAttr("shutdown")
+                log("INFO", "onDestroy: Python shutdown signal sent")
+            }
+        } catch (e: Exception) {
+            logError("onDestroy: shutdown failed", e)
+        }
         super.onDestroy()
         log("INFO", "onDestroy: done")
     }
