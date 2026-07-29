@@ -1,5 +1,6 @@
 package com.easytier.eui
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.SharedPreferences
@@ -117,6 +118,7 @@ class MainActivity : AppCompatActivity() {
             applySavedTheme()
             log("INFO", "applySavedTheme done, calling setupBackPress")
             setupBackPress()
+            requestNotificationPermission()
 
             scope.launch(Dispatchers.IO) {
                 try {
@@ -176,6 +178,15 @@ class MainActivity : AppCompatActivity() {
             log("INFO", "setupWebView: done")
         } catch (e: Exception) {
             logError("setupWebView failed", e)
+        }
+    }
+
+    private fun requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) !=
+                android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 0)
+            }
         }
     }
 

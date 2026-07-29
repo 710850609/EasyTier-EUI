@@ -79,6 +79,16 @@ def stop(params=None, *args, **kwargs):
                 return
             facade.stop_network()
             logging.info("Android: Stopped all EasyTier instances via FFI")
+            # 停止 Android VPN 服务，移除状态栏 VPN 图标
+            try:
+                from java import jclass
+                MainActivity = jclass("com.easytier.eui.MainActivity")
+                manager = MainActivity.getEasyTierManager()
+                if manager is not None:
+                    manager.stopMonitoring()
+                    logging.info("Android: VPN service stopped")
+            except Exception as vpn_err:
+                logging.warning(f"Android: Failed to stop VPN service: {vpn_err}")
         except Exception as e:
             logging.warning(f"Android: Failed to stop instances: {e}")
         return
