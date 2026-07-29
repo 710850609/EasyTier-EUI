@@ -18,7 +18,8 @@ except ImportError:
     psutil = None
 
 from http_dispatcher import dispatcher
-from utils import run_configs, log_util
+from utils import run_configs, log_util, process_util
+
 
 class CGIProxyHandler(BaseHTTPRequestHandler):
     """处理 HTTP 请求并转发给 CGI 脚本"""
@@ -148,11 +149,11 @@ class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
 def _acquire_instance_lock() -> bool:
     """获取单实例锁（PID 文件），失败则说明已有实例在运行"""
     pid_file = os.path.join(run_configs.data_dir(), 'server.pid')
-    if psutil is not None and os.path.exists(pid_file):
+    if os.path.exists(pid_file):
         try:
             with open(pid_file, 'r') as f:
                 existing_pid = int(f.read().strip())
-            if psutil.pid_exists(existing_pid):
+            if process_util.pid_exists(existing_pid):
                 logging.warning(f"HTTP 服务已在运行中，{pid_file} 【{existing_pid}】")
                 p = psutil.Process(existing_pid)
                 cmdline = ' '.join(p.cmdline())

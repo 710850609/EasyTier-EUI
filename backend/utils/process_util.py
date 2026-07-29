@@ -13,6 +13,9 @@ import signal
 import subprocess
 import logging
 from pathlib import Path
+
+from utils import run_configs
+
 try:
     import psutil
 except ImportError:
@@ -20,6 +23,26 @@ except ImportError:
 
 
 _ANSI_PATTERN = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+
+
+def pid_exists(pid):
+    """
+    通过检查 /proc/[pid] 目录是否运行
+    """
+    if pid <= 0:
+        return False
+    if psutil is not None:
+        return psutil.pid_exists(pid)
+    if run_configs.IS_ANDROID:
+        try:
+            # 检查进程目录是否存在且可访问
+            return os.path.exists(f"/proc/{pid}")
+        except Exception:
+            # 发生任何异常，都认为进程不存在或无法访问
+            return False
+    else:
+        return False
+
 
 def strip_ansi(text):
     """去除 ANSI 转义序列"""

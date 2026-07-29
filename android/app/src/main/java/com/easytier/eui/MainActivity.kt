@@ -47,8 +47,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var crashLogFile: File
     
     private var h5ThemeOverride: Boolean? = null // null = follow system, true = dark, false = light
-    private var lastBackPressTime = 0L
-    private var vpnRunning = false
     private val prefs: SharedPreferences by lazy { getSharedPreferences("easytier_prefs", MODE_PRIVATE) }
 
     private fun log(level: String, msg: String) {
@@ -185,14 +183,7 @@ class MainActivity : AppCompatActivity() {
         log("INFO", "setupBackPress: registering callback")
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                if (vpnRunning) {
-                    moveTaskToBack(true)
-                } else if (System.currentTimeMillis() - lastBackPressTime < 2000) {
-                    finish()
-                } else {
-                    lastBackPressTime = System.currentTimeMillis()
-                    Toast.makeText(this@MainActivity, "再按一次退出", Toast.LENGTH_SHORT).show()
-                }
+                moveTaskToBack(true)
             }
         })
     }
@@ -273,9 +264,7 @@ class MainActivity : AppCompatActivity() {
             loadWebView()
             log("INFO", "Creating EasyTierManager...")
             easyTierManager = EasyTierManager(this@MainActivity, crashLogFile)
-            log("INFO", "EasyTierManager created, starting monitoring...")
-            easyTierManager?.startMonitoring()
-            log("INFO", "VPN monitoring auto-started")
+            log("INFO", "EasyTierManager created (not auto-starting)")
         }
     }
 
@@ -472,7 +461,6 @@ class MainActivity : AppCompatActivity() {
                     easyTierManager = EasyTierManager(this@MainActivity, crashLogFile)
                 }
                 easyTierManager?.startMonitoring()
-                vpnRunning = true
                 log("INFO", "VPN monitoring started via AndroidBridge")
                 "{\"code\": 0}"
             } catch (e: Exception) {
@@ -487,7 +475,6 @@ class MainActivity : AppCompatActivity() {
                 log("INFO", "AndroidBridge.stopVpn called")
                 easyTierManager?.stopMonitoring()
                 easyTierManager = null
-                vpnRunning = false
                 log("INFO", "VPN monitoring stopped via AndroidBridge")
                 "{\"code\": 0}"
             } catch (e: Exception) {
