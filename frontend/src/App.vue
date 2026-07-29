@@ -27,7 +27,7 @@ html {
 
 body {
   height: 100vh;
-  padding-top: calc(var(--sat) * 0.4);
+  padding-top: calc(var(--sat) * 0.35);
   padding-right: var(--sar);
   padding-bottom: var(--sab);
   padding-left: var(--sal);
@@ -290,7 +290,7 @@ html.dark .var-popup__content[var-popup-cover] {
 
 /* 顶部弹出层：高光条移到底部，发光边框渐变反转，视觉聚焦在屏幕中间 */
 .var-popup__content.var-popup--top {
-  padding-top: calc(var(--sat) * 0.4);
+  padding-top: calc(var(--sat) * 0.35);
 }
 
 .var-popup__content.var-popup--top::after {
