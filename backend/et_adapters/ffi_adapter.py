@@ -165,9 +165,8 @@ class FfiAdapter(IEasyTierAdapter):
                 manager = MainActivity.getEasyTierManager()
                 if manager is not None:
                     manager.stopMonitoring()
-        except Exception:
+        except Exception as e:
             logger.exception(f"fail to stop vpn manager monitor: {e}")
-            pass
 
     def _retain_instances(self, names: List[str]) -> None:
         if self._lib is None:

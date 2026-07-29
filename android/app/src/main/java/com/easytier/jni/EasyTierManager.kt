@@ -116,6 +116,8 @@ class EasyTierManager(
 
     fun stopMonitoring() {
         if (!isMonitoring) {
+            logToFile("INFO", "stopMonitoring: not monitoring, still stopping VPN service")
+            stopVpnService()
             return
         }
         isMonitoring = false
