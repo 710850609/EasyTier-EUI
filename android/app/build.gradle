@@ -35,7 +35,6 @@ android {
                 install 'tomlkit'
                 install 'requests'
                 install 'dnspython'
-                install 'qrcode'
             }
         }
     }
