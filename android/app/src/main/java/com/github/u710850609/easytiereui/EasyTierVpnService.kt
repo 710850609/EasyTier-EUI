@@ -39,19 +39,19 @@ class EasyTierVpnService : VpnService() {
 
         fun requestStop() {
             instance?.let { service ->
-                service.logToFile("INFO", "requestStop: cleaning up and stopping")
+                logToFile("INFO", "requestStop: cleaning up and stopping")
                 service.isRunning = false
                 try {
                     service.vpnInterface?.close()
                 } catch (e: Exception) {
-                    service.logToFile("ERROR", "requestStop: close vpnInterface failed: ${e.message}")
+                    logToFile("ERROR", "requestStop: close vpnInterface failed: ${e.message}")
                 }
                 service.vpnInterface = null
                 try {
                     service.stopForeground(STOP_FOREGROUND_REMOVE)
-                    service.logToFile("INFO", "requestStop: stopForeground succeeded")
+                    logToFile("INFO", "requestStop: stopForeground succeeded")
                 } catch (e: Exception) {
-                    service.logToFile("ERROR", "requestStop: stopForeground failed: ${e.message}")
+                    logToFile("ERROR", "requestStop: stopForeground failed: ${e.message}")
                 }
                 service.stopSelf()
             } ?: logToFile("WARN", "requestStop: no active instance")
