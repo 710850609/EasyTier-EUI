@@ -109,6 +109,14 @@ class EasyTierManager(
     }
 
     fun stop() {
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            doStop()
+        } else {
+            handler.post { doStop() }
+        }
+    }
+
+    private fun doStop() {
         if (!isMonitoring) {
             logToFile("INFO", "stop: not monitoring, still stopping VPN service")
             stopVpnService()
@@ -160,17 +168,7 @@ class EasyTierManager(
             val infosJson = status.infosJson
             logToFile("DEBUG", "processNetworkStatus: infosJson=${infosJson}")
             if (infosJson.isNullOrEmpty() || infosJson == "{}") {
-                if (currentInstanceName != null) {
-                    logToFile("INFO", "processNetworkStatus: no instances, stopping VPN")
-                    stopVpnService()
-                    currentInstanceName = null
-                }
-                if (isMonitoring) {
-                    logToFile("INFO", "processNetworkStatus: no instances, stopping monitoring")
-                    isMonitoring = false
-                    handler.removeCallbacks(monitorRunnable)
-                }
-                logToFile("DEBUG", "processNetworkStatus: empty result, returning")
+                logToFile("DEBUG", "processNetworkStatus: empty result, skipping")
                 return
             }
 
@@ -184,40 +182,15 @@ class EasyTierManager(
             }
             logToFile("DEBUG", "processNetworkStatus: map keys=${map.keys().asSequence().toList()}")
 
-            if (currentInstanceName != null) {
-                logToFile("DEBUG", "processNetworkStatus: checking current instance $currentInstanceName")
-                val info = map.optJSONObject(currentInstanceName)
-                if (info == null || !info.optBoolean("running", false)) {
-                    logToFile("WARN", "Instance $currentInstanceName stopped, stopping VPN")
-                    Log.w(TAG, "Instance $currentInstanceName stopped, stopping VPN")
-                    stopVpnService()
-                    currentInstanceName = null
-                    currentIpv4 = null
-                    currentProxyCidrs = emptyList()
-                }
-            }
-
-            if (currentInstanceName == null) {
-                logToFile("DEBUG", "processNetworkStatus: looking for running instance")
-                for (key in map.keys()) {
-                    val info = map.optJSONObject(key) ?: continue
-                    if (info.optBoolean("running", false)) {
-                        currentInstanceName = key
-                        logToFile("INFO", "Discovered running instance: $key")
-                        Log.i(TAG, "Discovered running instance: $key")
-                        break
-                    }
-                }
-            }
-
-            if (currentInstanceName == null) {
-                logToFile("DEBUG", "processNetworkStatus: no running instance, returning")
+            logToFile("DEBUG", "processNetworkStatus: getting networkInfo for $currentInstanceName")
+            val networkInfo = map.optJSONObject(currentInstanceName) ?: run {
+                logToFile("DEBUG", "processNetworkStatus: instance $currentInstanceName not found, returning")
                 return
             }
-
-            logToFile("DEBUG", "processNetworkStatus: getting networkInfo for $currentInstanceName")
-            val networkInfo = map.optJSONObject(currentInstanceName) ?: return
-            if (!networkInfo.optBoolean("running", false)) return
+            if (!networkInfo.optBoolean("running", false)) {
+                logToFile("DEBUG", "processNetworkStatus: instance $currentInstanceName not running, returning")
+                return
+            }
 
             val myNodeInfo = networkInfo.optJSONObject("my_node_info")
             val virtualIpv4 = myNodeInfo?.optJSONObject("virtual_ipv4")
@@ -360,6 +333,14 @@ class EasyTierManager(
     }
 
     fun start(instanceName: String) {
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            doStart(instanceName)
+        } else {
+            handler.post { doStart(instanceName) }
+        }
+    }
+
+    private fun doStart(instanceName: String) {
         try {
             logToFile("INFO", "start: instance=$instanceName")
             currentInstanceName = instanceName

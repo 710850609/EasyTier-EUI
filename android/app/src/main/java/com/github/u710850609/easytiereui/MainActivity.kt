@@ -74,7 +74,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        crashLogFile = File(File(getExternalFilesDir(null), "logs"), "easytier_crash.log")
+        crashLogFile = File(getExternalFilesDir(null), "logs", "easytier_crash.log")
         crashLogFile.parentFile?.mkdirs()
 
         Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->

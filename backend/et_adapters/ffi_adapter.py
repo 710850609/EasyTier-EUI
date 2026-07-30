@@ -150,24 +150,24 @@ class FfiAdapter(IEasyTierAdapter):
             raise RuntimeError(f"set_tun_fd failed: {e}") from e
 
     def stop_network(self, instance_name: str = None) -> None:
-        # 停止 Android VPN 监控和服务
-        # try:
-        #     from utils import run_configs
-        #     if run_configs.IS_ANDROID:
-        #         from java import jclass
-        #         MainActivity = jclass("com.github.u710850609.easytiereui.MainActivity")
-        #         manager = MainActivity.getEasyTierManager()
-        #         if manager is not None:
-        #             manager.stop()
-        # except Exception as e:
-        #     logger.exception(f"fail to stop vpn manager monitor: {e}")
-
         if instance_name is None:
             self._retain_instances([])
         else:
             all_instances = self._list_all_instance_names()
             keep = [n for n in all_instances if n != instance_name]
             self._retain_instances(keep)
+
+        # 停止 Android VPN 监控和服务
+        try:
+            from utils import run_configs
+            if run_configs.IS_ANDROID:
+                from java import jclass
+                MainActivity = jclass("com.github.u710850609.easytiereui.MainActivity")
+                manager = MainActivity.getEasyTierManager()
+                if manager is not None:
+                    manager.stop()
+        except Exception as e:
+            logger.exception(f"fail to stop vpn manager monitor: {e}")
 
     def _retain_instances(self, names: List[str]) -> None:
         if self._lib is None:
