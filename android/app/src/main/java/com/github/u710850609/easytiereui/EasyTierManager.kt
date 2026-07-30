@@ -1,4 +1,4 @@
-package com.github.710850609.easytiereui
+package com.github.u710850609.easytiereui
 
 import android.app.Activity
 import android.content.Intent
@@ -393,3 +393,4 @@ class EasyTierManager(
             Log.e(TAG, "Stop VPN error", e)
         }
     }
+}

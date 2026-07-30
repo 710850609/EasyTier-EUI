@@ -38,7 +38,7 @@ def setup_env():
     # Android 平台检测
     IS_ANDROID = 'ANDROID_ARGUMENT' in os.environ or 'ANDROID_ROOT' in os.environ
     if IS_ANDROID:
-        data_dir = os.environ.get('EUI_DATA_DIR', '/data/data/com.github.710850609.easytiereui/files')
+        data_dir = os.environ.get('EUI_DATA_DIR', '/data/data/com.github.u710850609.easytiereui/files')
         # 使用外部目录
         data_dir = os.environ.get('EUI_LOG_DIR', data_dir)
         data_dir = '/storage/emulated/0/11EUI'

@@ -113,7 +113,7 @@ class FfiAdapter(IEasyTierAdapter):
                 from utils import run_configs
                 if run_configs.IS_ANDROID:
                     from java import jclass
-                    MainActivity = jclass("com.github.710850609.easytiereui.MainActivity")
+                    MainActivity = jclass("com.github.u710850609.easytiereui.MainActivity")
                     manager = MainActivity.getEasyTierManager()
                     if manager is not None:
                         manager.start(instance_name)
@@ -161,7 +161,7 @@ class FfiAdapter(IEasyTierAdapter):
             from utils import run_configs
             if run_configs.IS_ANDROID:
                 from java import jclass
-                MainActivity = jclass("com.github.710850609.easytiereui.MainActivity")
+                MainActivity = jclass("com.github.u710850609.easytiereui.MainActivity")
                 manager = MainActivity.getEasyTierManager()
                 if manager is not None:
                     manager.stop()
