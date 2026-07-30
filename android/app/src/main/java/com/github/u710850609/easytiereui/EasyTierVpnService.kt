@@ -102,19 +102,17 @@ class EasyTierVpnService : VpnService() {
         Log.i(TAG, "Starting VPN - IPv4: $ipv4Address, Proxy CIDRs: $proxyCidrs, Instance: $instanceName")
 
         try {
-            startForeground(NOTIFICATION_ID, buildNotification("EasyTier VPN Starting..."))
-            logToFile("INFO", "startForeground succeeded")
-
+            // 先创建 VPN 接口，再调用 startForeground
             val pfd = createVpnInterface(ipv4Address, proxyCidrs)
             if (pfd == null) {
                 logToFile("ERROR", "Failed to create VPN interface (pfd is null)")
                 Log.e(TAG, "Failed to create VPN interface")
-                stopForeground(STOP_FOREGROUND_REMOVE)
                 stopSelf()
                 return START_NOT_STICKY
             }
 
             vpnInterface = pfd
+            // 只调用一次 startForeground，直接显示 Connected 状态
             startForeground(NOTIFICATION_ID, buildNotification("EasyTier $instanceName Connected"))
             logToFile("INFO", "VPN interface created, fd=${pfd.fd}")
 
