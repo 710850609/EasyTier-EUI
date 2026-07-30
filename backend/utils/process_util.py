@@ -43,6 +43,23 @@ def pid_exists(pid):
     else:
         return False
 
+def get_cmdline(pid: int) -> list[str]:
+    """
+    获取进程命令行参数列表（Android 兼容）
+    返回: 命令行参数列表，如 ['python', 'main.py', '--port', '8080']
+    """
+    try:
+        if run_configs.IS_ANDROID or psutil is None:
+            # Android 或 psutil 不可用时，直接读取 /proc/[pid]/cmdline
+            with open(f"/proc/{pid}/cmdline", "r") as f:
+                return f.read().split("\x00")
+        else:
+            p = psutil.Process(pid)
+            return p.cmdline()
+    except Exception as e:
+        logging.warning(f"Failed to read cmdline for PID {pid}: {e}")
+        return []
+
 
 def strip_ansi(text):
     """去除 ANSI 转义序列"""
