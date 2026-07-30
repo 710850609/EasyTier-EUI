@@ -114,12 +114,14 @@ def start_android_server(data_dir: str, external_dir: str = "", host: str = "127
         def fileno(self):
             return self._fd.fileno()
 
+    os.environ['ANDROID_DATA_DIR'] = data_dir
+    os.environ['ANDROID_EXTERNAL_DIR'] = external_dir
     run_configs.setup_env()
     run_mode = run_configs.get_run_mode()
-    log_util.setup_log(log_file=os.path.join(external_dir, 'app.log'),
+    log_util.setup_log(log_file=os.path.join(external_dir, 'logs', 'app.log'),
                        log_level=logging.INFO if run_mode > 0 else logging.DEBUG,
                        enabled_console=run_mode == 0)
-    log_file = os.path.join(external_dir or data_dir, 'easytier_py.log')
+    log_file = os.path.join(external_dir, 'logs', 'easytier_py.log')
 
     def py_log(msg):
         try:
@@ -131,7 +133,7 @@ def start_android_server(data_dir: str, external_dir: str = "", host: str = "127
             pass
 
     # 启用 faulthandler：捕获 SIGSEGV/SIGABRT 等致命信号时 dump Python 调用栈
-    crash_log = os.path.join(external_dir or data_dir, 'easytier_py_crash.log')
+    crash_log = os.path.join(external_dir, 'logs', 'easytier_py_crash.log')
     _rotate_file(crash_log)
     try:
         faulthandler.enable(file=open(crash_log, 'a', buffering=1), all_threads=True)
@@ -140,7 +142,7 @@ def start_android_server(data_dir: str, external_dir: str = "", host: str = "127
         py_log(f"faulthandler enable failed: {fe}")
 
     # 重定向 stderr 到文件，确保 Python 异常输出不丢失
-    stderr_log = os.path.join(external_dir or data_dir, 'easytier_py_stderr.log')
+    stderr_log = os.path.join(external_dir, 'logs', 'easytier_py_stderr.log')
     try:
         sys.stderr = _RotatingFile(stderr_log)
         py_log(f"stderr redirected to: {stderr_log}")
@@ -150,15 +152,10 @@ def start_android_server(data_dir: str, external_dir: str = "", host: str = "127
     try:
         py_log("start_android_server called")
         py_log(f"data_dir={data_dir}")
-        os.environ['EUI_DATA_DIR'] = data_dir
-        os.environ['EUI_FRONTEND_DIR'] = os.path.join(data_dir, 'frontend')
-        if external_dir:
-            os.environ['EUI_LOG_DIR'] = os.path.join(external_dir, 'log')
         py_log("calling setup_env...")
         py_log(f"__file__ = {__file__}")
         py_log(f"__file__ exists = {os.path.exists(__file__)}")
         py_log(f"__file__ is .py = {__file__.endswith('.py')}")
-        run_configs.setup_env()
         py_log(f"setup_env done, IS_ANDROID={run_configs.IS_ANDROID}")
         py_log(f"FRONTEND_PATH={run_configs.FRONTEND_PATH}")
         if os.path.isdir(run_configs.FRONTEND_PATH):

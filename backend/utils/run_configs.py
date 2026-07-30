@@ -38,17 +38,20 @@ def setup_env():
     # Android 平台检测
     IS_ANDROID = 'ANDROID_ARGUMENT' in os.environ or 'ANDROID_ROOT' in os.environ
     if IS_ANDROID:
-        data_dir = os.environ.get('EUI_DATA_DIR', '/data/data/com.github.u710850609.easytiereui/files')
+        data_dir = os.environ.get('ANDROID_DATA_DIR')
         # 使用外部目录
-        data_dir = os.environ.get('EUI_LOG_DIR', data_dir)
-        data_dir = '/storage/emulated/0/11EUI'
-        CONFIG_DIR = os.path.join(data_dir, 'config')
+        external_dir = os.environ.get('ANDROID_EXTERNAL_DIR')
+        if not data_dir:
+            raise Exception('environment variable not set: ANDROID_DATA_DIR')
+        if not external_dir:
+            raise Exception('environment variable not set: ANDROID_EXTERNAL_DIR')
+        CONFIG_DIR = os.path.join(external_dir, 'config')
         DATA_DIR = os.path.join(data_dir, 'data')
         CORE_DIR = os.path.join(data_dir, 'core')
-        LOG_DIR = os.environ.get('EUI_LOG_DIR', os.path.join(data_dir, 'log'))
-        FRONTEND_PATH = os.environ.get('EUI_FRONTEND_DIR', os.path.join(data_dir, 'frontend'))
+        LOG_DIR = os.path.join(external_dir, 'log')
+        FRONTEND_PATH = os.path.join(data_dir, 'frontend')
         UPGRADE_SCRIPT_PATH = ''
-        EUI_CONFIG_FILE = os.path.join(CONFIG_DIR, 'eui.toml')
+        EUI_CONFIG_FILE = os.path.join(external_dir, EUI_CONFIG_FILE)
         EUI_RUN_HOST = '127.0.0.1'
         EUI_RUN_PORT = 15666
         for d in [CONFIG_DIR, DATA_DIR, LOG_DIR, CORE_DIR]:
