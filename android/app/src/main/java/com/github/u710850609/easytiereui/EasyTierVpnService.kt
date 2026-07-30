@@ -92,7 +92,7 @@ class EasyTierVpnService : VpnService() {
             }
 
             vpnInterface = pfd
-            startForeground(NOTIFICATION_ID, buildNotification("EasyTier VPN Connected"))
+            startForeground(NOTIFICATION_ID, buildNotification("EasyTier $instanceName Connected"))
             logToFile("INFO", "VPN interface created, fd=${pfd.fd}")
 
             val name = instanceName!!
@@ -235,10 +235,11 @@ class EasyTierVpnService : VpnService() {
     private fun parseCidr(cidr: String): Pair<String, Int> {
         return try {
             val parts = cidr.split("/")
-            if (parts.size != 2) {
-                throw IllegalArgumentException("Invalid CIDR format: $cidr")
+            when (parts.size) {
+                2 -> Pair(parts[0], parts[1].toInt())
+                1 -> Pair(parts[0], 32)
+                else -> throw IllegalArgumentException("Invalid CIDR format: $cidr")
             }
-            Pair(parts[0], parts[1].toInt())
         } catch (e: Exception) {
             logToFile("ERROR", "parseCidr failed for '$cidr': ${e.message}")
             throw e
@@ -265,7 +266,7 @@ class EasyTierVpnService : VpnService() {
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
             )
             NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle("EasyTier")
+                .setContentTitle("EasyTier-EUI")
                 .setContentText(text)
                 .setSmallIcon(android.R.drawable.ic_menu_share)
                 .setContentIntent(pendingIntent)
