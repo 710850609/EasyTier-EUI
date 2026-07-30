@@ -151,16 +151,16 @@ class FfiAdapter(IEasyTierAdapter):
 
     def stop_network(self, instance_name: str = None) -> None:
         # 停止 Android VPN 监控和服务
-        try:
-            from utils import run_configs
-            if run_configs.IS_ANDROID:
-                from java import jclass
-                MainActivity = jclass("com.github.u710850609.easytiereui.MainActivity")
-                manager = MainActivity.getEasyTierManager()
-                if manager is not None:
-                    manager.stop()
-        except Exception as e:
-            logger.exception(f"fail to stop vpn manager monitor: {e}")
+        # try:
+        #     from utils import run_configs
+        #     if run_configs.IS_ANDROID:
+        #         from java import jclass
+        #         MainActivity = jclass("com.github.u710850609.easytiereui.MainActivity")
+        #         manager = MainActivity.getEasyTierManager()
+        #         if manager is not None:
+        #             manager.stop()
+        # except Exception as e:
+        #     logger.exception(f"fail to stop vpn manager monitor: {e}")
 
         if instance_name is None:
             self._retain_instances([])
