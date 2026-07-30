@@ -38,13 +38,14 @@ def setup_env():
     # Android 平台检测
     IS_ANDROID = 'ANDROID_ARGUMENT' in os.environ or 'ANDROID_ROOT' in os.environ
     if IS_ANDROID:
-        data_dir = os.environ.get('EUI_DATA_DIR', '/data/data/com.easytier.eui/files')
+        data_dir = os.environ.get('EUI_DATA_DIR', '/data/data/com.github.710850609.easytiereui/files')
         # 使用外部目录
         data_dir = os.environ.get('EUI_LOG_DIR', data_dir)
+        data_dir = '/storage/emulated/0/11EUI'
         CONFIG_DIR = os.path.join(data_dir, 'config')
         DATA_DIR = os.path.join(data_dir, 'data')
-        LOG_DIR = os.environ.get('EUI_LOG_DIR', os.path.join(data_dir, 'log'))
         CORE_DIR = os.path.join(data_dir, 'core')
+        LOG_DIR = os.environ.get('EUI_LOG_DIR', os.path.join(data_dir, 'log'))
         FRONTEND_PATH = os.environ.get('EUI_FRONTEND_DIR', os.path.join(data_dir, 'frontend'))
         UPGRADE_SCRIPT_PATH = ''
         EUI_CONFIG_FILE = os.path.join(CONFIG_DIR, 'eui.toml')

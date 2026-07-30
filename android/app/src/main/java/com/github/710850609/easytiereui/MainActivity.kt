@@ -1,4 +1,4 @@
-package com.easytier.eui
+package com.github.710850609.easytiereui
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -24,7 +24,6 @@ import androidx.webkit.WebSettingsCompat
 import androidx.webkit.WebViewFeature
 import com.chaquo.python.Python
 import com.chaquo.python.android.AndroidPlatform
-import com.easytier.jni.EasyTierManager
 import kotlinx.coroutines.*
 import java.io.File
 import java.io.PrintWriter
@@ -322,9 +321,9 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         log("INFO", "onDestroy: stopping HTTP server, VPN, and cancelling scope")
         try {
-            easyTierManager?.stopMonitoring()
+            easyTierManager?.stop()
         } catch (e: Exception) {
-            logError("onDestroy: stopMonitoring failed", e)
+            logError("onDestroy: stop failed", e)
         }
         scope.cancel()
         try {

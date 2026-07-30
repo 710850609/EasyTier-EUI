@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace 'com.easytier.eui'
+    namespace 'com.github.710850609.easytiereui'
     compileSdk 35
 
     signingConfigs {
@@ -18,7 +18,7 @@ android {
     }
 
     defaultConfig {
-        applicationId 'com.easytier.eui'
+        applicationId 'com.github.710850609.easytiereui'
         minSdk 26
         targetSdk 34
         versionCode 1

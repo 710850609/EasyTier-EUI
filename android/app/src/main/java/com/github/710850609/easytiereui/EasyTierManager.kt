@@ -1,4 +1,4 @@
-package com.easytier.jni
+package com.github.710850609.easytiereui
 
 import android.app.Activity
 import android.content.Intent
@@ -8,7 +8,6 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import com.chaquo.python.Python
-import com.easytier.eui.EasyTierVpnService
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
@@ -47,11 +46,6 @@ class EasyTierManager(
     private var currentProxyCidrs: List<String> = emptyList()
     private var currentInstanceName: String? = null
     private var vpnServiceIntent: Intent? = null
-    private var pendingVpnIpv4: String? = null
-    private var pendingVpnProxyCidrs: List<String> = emptyList()
-    private var isVpnAuthorizationPending = false
-    private var pendingDummyVpnInstanceName: String? = null
-
     private fun logToFile(level: String, msg: String) {
         val ts = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault()).format(Date())
         val line = "$ts [$level] [EasyTierManager] $msg"
@@ -102,7 +96,7 @@ class EasyTierManager(
         }
     }
 
-    fun startMonitoring() {
+    private fun startMonitoring() {
         if (isMonitoring) {
             logToFile("WARN", "startMonitoring: already monitoring")
             Log.w(TAG, "Already monitoring")
@@ -114,14 +108,14 @@ class EasyTierManager(
         handler.post(monitorRunnable)
     }
 
-    fun stopMonitoring() {
+    fun stop() {
         if (!isMonitoring) {
-            logToFile("INFO", "stopMonitoring: not monitoring, still stopping VPN service")
+            logToFile("INFO", "stop: not monitoring, still stopping VPN service")
             stopVpnService()
             return
         }
         isMonitoring = false
-        logToFile("INFO", "stopMonitoring: removing callbacks and stopping VPN")
+        logToFile("INFO", "stop: removing callbacks and stopping VPN")
         handler.removeCallbacks(monitorRunnable)
         stopVpnService()
         currentIpv4 = null
@@ -296,14 +290,6 @@ class EasyTierManager(
     }
 
     private fun startVpnService(ipv4: String, proxyCidrs: List<String>) {
-        if (isVpnAuthorizationPending) {
-            logToFile("WARN", "VPN authorization already pending, queuing")
-            Log.w(TAG, "VPN authorization already pending, queuing request")
-            pendingVpnIpv4 = ipv4
-            pendingVpnProxyCidrs = proxyCidrs
-            return
-        }
-
         if (activity.isFinishing) {
             logToFile("ERROR", "Activity is finishing, cannot start VPN")
             Log.e(TAG, "Activity is finishing, cannot start VPN")
@@ -317,20 +303,6 @@ class EasyTierManager(
         }
 
         try {
-            logToFile("INFO", "Calling VpnService.prepare()...")
-            val prepareIntent = VpnService.prepare(activity)
-            if (prepareIntent != null) {
-                logToFile("INFO", "VPN not authorized, prepareIntent class=${prepareIntent.component?.className}")
-                Log.i(TAG, "VPN not authorized, requesting user permission")
-                isVpnAuthorizationPending = true
-                pendingVpnIpv4 = ipv4
-                pendingVpnProxyCidrs = proxyCidrs
-                activity.startActivityForResult(prepareIntent, VPN_REQUEST_CODE)
-                logToFile("INFO", "startActivityForResult called, VPN_REQUEST_CODE=$VPN_REQUEST_CODE")
-                return
-            }
-
-            logToFile("INFO", "VPN already authorized, starting service directly")
             doStartVpnService(ipv4, proxyCidrs)
         } catch (e: Exception) {
             val sw = StringWriter()
@@ -348,16 +320,6 @@ class EasyTierManager(
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1 && activity.isDestroyed) {
                 logToFile("ERROR", "Activity is destroyed, cannot doStartVpnService")
-                return
-            }
-
-            val recheck = VpnService.prepare(activity)
-            if (recheck != null) {
-                logToFile("WARN", "VPN authorization lost between check and start, re-requesting")
-                isVpnAuthorizationPending = true
-                pendingVpnIpv4 = ipv4
-                pendingVpnProxyCidrs = proxyCidrs
-                activity.startActivityForResult(recheck, VPN_REQUEST_CODE)
                 return
             }
 
@@ -382,120 +344,46 @@ class EasyTierManager(
     }
 
     fun onVpnAuthorizationResult(resultCode: Int) {
-        isVpnAuthorizationPending = false
         if (resultCode == Activity.RESULT_OK) {
-            logToFile("INFO", "VPN authorization granted")
+            logToFile("INFO", "VPN authorization granted, starting monitoring")
             Log.i(TAG, "VPN authorization granted")
-            val ipv4 = pendingVpnIpv4
-            val proxyCidrs = pendingVpnProxyCidrs
-            pendingVpnIpv4 = null
-            pendingVpnProxyCidrs = emptyList()
-            if (ipv4 != null) {
-                if (activity.isFinishing || (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1 && activity.isDestroyed)) {
-                    logToFile("ERROR", "Activity is finishing/destroyed, cannot start VPN after auth")
-                    return
-                }
-                doStartVpnService(ipv4, proxyCidrs)
-            } else if (pendingDummyVpnInstanceName != null) {
-                val name = pendingDummyVpnInstanceName
-                pendingDummyVpnInstanceName = null
-                startDummyVpn(name!!)
-            }
+            startMonitoring()
         } else {
             logToFile("WARN", "VPN authorization denied by user")
             Log.w(TAG, "VPN authorization denied by user")
-            pendingVpnIpv4 = null
-            pendingVpnProxyCidrs = emptyList()
-            pendingDummyVpnInstanceName = null
         }
     }
 
-    fun requestVpnAuthorization() {
+    fun start(instanceName: String) {
         try {
-            if (activity.isFinishing) {
-                logToFile("ERROR", "requestVpnAuthorization: Activity is finishing")
-                return
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1 && activity.isDestroyed) {
-                logToFile("ERROR", "requestVpnAuthorization: Activity is destroyed")
-                return
-            }
-            logToFile("INFO", "requestVpnAuthorization: calling VpnService.prepare()")
-            val prepareIntent = VpnService.prepare(activity)
-            if (prepareIntent != null) {
-                logToFile("INFO", "requestVpnAuthorization: VPN not authorized, showing dialog")
-                isVpnAuthorizationPending = true
-                activity.startActivityForResult(prepareIntent, VPN_REQUEST_CODE)
-            } else {
-                logToFile("INFO", "requestVpnAuthorization: VPN already authorized")
-            }
-        } catch (e: Exception) {
-            val sw = StringWriter()
-            e.printStackTrace(PrintWriter(sw))
-            logToFile("ERROR", "requestVpnAuthorization error: ${sw}")
-        }
-    }
-
-    fun requestVpnAndStartDummy(instanceName: String) {
-        try {
-            logToFile("INFO", "requestVpnAndStartDummy: instance=$instanceName")
-            pendingDummyVpnInstanceName = instanceName
-            val prepareIntent = VpnService.prepare(activity)
-            if (prepareIntent != null) {
-                logToFile("INFO", "requestVpnAndStartDummy: VPN not authorized, showing dialog")
-                isVpnAuthorizationPending = true
-                activity.startActivityForResult(prepareIntent, VPN_REQUEST_CODE)
-            } else {
-                logToFile("INFO", "requestVpnAndStartDummy: VPN already authorized, starting immediately")
-                pendingDummyVpnInstanceName = null
-                startDummyVpn(instanceName)
-            }
-        } catch (e: Exception) {
-            val sw = StringWriter()
-            e.printStackTrace(PrintWriter(sw))
-            logToFile("ERROR", "requestVpnAndStartDummy error: ${sw}")
-        }
-    }
-
-    fun startDummyVpn(instanceName: String) {
-        try {
-            val recheck = VpnService.prepare(activity)
-            if (recheck != null) {
-                logToFile("WARN", "startDummyVpn: VPN not authorized yet, skipping")
-                return
-            }
-
+            logToFile("INFO", "start: instance=$instanceName")
             currentInstanceName = instanceName
-            EasyTierVpnService.logFile = logFile
-            val intent = Intent(activity, EasyTierVpnService::class.java)
-            intent.putExtra("ipv4_address", "10.0.0.1/24")
-            intent.putStringArrayListExtra("proxy_cidrs", ArrayList())
-            intent.putExtra("instance_name", instanceName)
-
-            logToFile("INFO", "startDummyVpn: calling startService with dummy IPv4")
-            activity.startService(intent)
-            vpnServiceIntent = intent
-
-            logToFile("INFO", "startDummyVpn: VPN service started with dummy config")
-            startMonitoring()
+            val prepareIntent = VpnService.prepare(activity)
+            if (prepareIntent != null) {
+                logToFile("INFO", "start: VPN not authorized, showing dialog")
+                activity.startActivityForResult(prepareIntent, VPN_REQUEST_CODE)
+            } else {
+                logToFile("INFO", "start: VPN already authorized, starting monitoring")
+                startMonitoring()
+            }
         } catch (e: Exception) {
             val sw = StringWriter()
             e.printStackTrace(PrintWriter(sw))
-            logToFile("ERROR", "startDummyVpn error: ${sw}")
+            logToFile("ERROR", "start error: ${sw}")
         }
     }
 
     private fun stopVpnService() {
         try {
             if (vpnServiceIntent != null) {
-                activity.stopService(vpnServiceIntent)
-                logToFile("INFO", "VPN stopped")
-                Log.i(TAG, "VPN stopped")
+                val stopped = activity.stopService(vpnServiceIntent)
+                logToFile("INFO", "stopService result=$stopped, intent=$vpnServiceIntent")
+                Log.i(TAG, "VPN stopService result=$stopped")
             } else {
                 val intent = Intent(activity, EasyTierVpnService::class.java)
-                activity.stopService(intent)
-                logToFile("INFO", "VPN stopped (fallback)")
-                Log.i(TAG, "VPN stopped (fallback intent)")
+                val stopped = activity.stopService(intent)
+                logToFile("INFO", "stopService(fallback) result=$stopped")
+                Log.i(TAG, "VPN stopService(fallback) result=$stopped")
             }
             vpnServiceIntent = null
         } catch (e: Exception) {
@@ -505,6 +393,3 @@ class EasyTierManager(
             Log.e(TAG, "Stop VPN error", e)
         }
     }
-
-    fun isMonitoring(): Boolean = isMonitoring
-}

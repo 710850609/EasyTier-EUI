@@ -1,4 +1,4 @@
-package com.easytier.eui
+package com.github.710850609.easytiereui
 
 import android.app.Notification
 import android.app.NotificationChannel
