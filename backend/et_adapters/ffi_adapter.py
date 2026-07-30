@@ -150,12 +150,6 @@ class FfiAdapter(IEasyTierAdapter):
             raise RuntimeError(f"set_tun_fd failed: {e}") from e
 
     def stop_network(self, instance_name: str = None) -> None:
-        if instance_name is None:
-            self._retain_instances([])
-        else:
-            all_instances = self._list_all_instance_names()
-            keep = [n for n in all_instances if n != instance_name]
-            self._retain_instances(keep)
         # 停止 Android VPN 监控和服务
         try:
             from utils import run_configs
@@ -167,6 +161,13 @@ class FfiAdapter(IEasyTierAdapter):
                     manager.stop()
         except Exception as e:
             logger.exception(f"fail to stop vpn manager monitor: {e}")
+
+        if instance_name is None:
+            self._retain_instances([])
+        else:
+            all_instances = self._list_all_instance_names()
+            keep = [n for n in all_instances if n != instance_name]
+            self._retain_instances(keep)
 
     def _retain_instances(self, names: List[str]) -> None:
         if self._lib is None:
@@ -221,7 +222,7 @@ class FfiAdapter(IEasyTierAdapter):
                     val_ptr = infos[i].value
                     key = ctypes.string_at(key_ptr).decode('utf-8') if key_ptr else ""
                     value = ctypes.string_at(val_ptr).decode('utf-8') if val_ptr else ""
-                    logger.debug(f"collect_network_infos: key={key}, value={value}")
+                    # logger.debug(f"collect_network_infos: key={key}, value={value}")
                     result[key] = json.loads(value) if value else {}
                     if self._has_symbol('free_string'):
                         if key_ptr:

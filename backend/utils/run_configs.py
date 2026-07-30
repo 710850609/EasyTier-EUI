@@ -48,7 +48,7 @@ def setup_env():
         CONFIG_DIR = os.path.join(external_dir, 'config')
         DATA_DIR = os.path.join(data_dir, 'data')
         CORE_DIR = os.path.join(data_dir, 'core')
-        LOG_DIR = os.path.join(external_dir, 'log')
+        LOG_DIR = os.path.join(external_dir, 'logs')
         FRONTEND_PATH = os.path.join(data_dir, 'frontend')
         UPGRADE_SCRIPT_PATH = ''
         EUI_CONFIG_FILE = os.path.join(external_dir, EUI_CONFIG_FILE)

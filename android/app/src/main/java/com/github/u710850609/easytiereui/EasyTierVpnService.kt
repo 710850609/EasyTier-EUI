@@ -247,7 +247,11 @@ class EasyTierVpnService : VpnService() {
 
     private fun cleanup() {
         isRunning = false
-        vpnInterface?.close()
+        try {
+            vpnInterface?.close()
+        } catch (e: Exception) {
+            logToFile("ERROR", "VPN interface close failed: ${e.message}")
+        }
         vpnInterface = null
         logToFile("INFO", "VPN interface cleaned up")
         Log.i(TAG, "VPN interface cleaned up")
@@ -300,11 +304,23 @@ class EasyTierVpnService : VpnService() {
     }
 
     override fun onDestroy() {
-        logToFile("INFO", "onDestroy: cleaning up")
-        cleanup()
-        stopForeground(STOP_FOREGROUND_REMOVE)
-        super.onDestroy()
-        logToFile("INFO", "VPN Service destroyed")
+        logToFile("INFO", "onDestroy: start")
+        try {
+            cleanup()
+        } catch (e: Exception) {
+            logToFile("ERROR", "onDestroy: cleanup failed: ${e.message}")
+        }
+        try {
+            stopForeground(STOP_FOREGROUND_REMOVE)
+        } catch (e: Exception) {
+            logToFile("ERROR", "onDestroy: stopForegroundCompat failed: ${e.message}")
+        }
+        try {
+            super.onDestroy()
+        } catch (e: Exception) {
+            logToFile("ERROR", "onDestroy: super.onDestroy failed: ${e.message}")
+        }
+        logToFile("INFO", "onDestroy: done")
         Log.d(TAG, "VPN Service destroyed")
     }
 }
