@@ -158,12 +158,17 @@ class EasyTierManager(
         logToFile("DEBUG", "processNetworkStatus: start")
         try {
             val infosJson = status.infosJson
-            // logToFile("DEBUG", "processNetworkStatus: infosJson=${infosJson}")
+            logToFile("DEBUG", "processNetworkStatus: infosJson=${infosJson}")
             if (infosJson.isNullOrEmpty() || infosJson == "{}") {
                 if (currentInstanceName != null) {
                     logToFile("INFO", "processNetworkStatus: no instances, stopping VPN")
                     stopVpnService()
                     currentInstanceName = null
+                }
+                if (isMonitoring) {
+                    logToFile("INFO", "processNetworkStatus: no instances, stopping monitoring")
+                    isMonitoring = false
+                    handler.removeCallbacks(monitorRunnable)
                 }
                 logToFile("DEBUG", "processNetworkStatus: empty result, returning")
                 return
