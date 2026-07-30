@@ -34,6 +34,28 @@ class EasyTierVpnService : VpnService() {
         const val NOTIFICATION_ID = 1
 
         var logFile: File? = null
+        var instance: EasyTierVpnService? = null
+            private set
+
+        fun requestStop() {
+            instance?.let { service ->
+                service.logToFile("INFO", "requestStop: cleaning up and stopping")
+                service.isRunning = false
+                try {
+                    service.vpnInterface?.close()
+                } catch (e: Exception) {
+                    service.logToFile("ERROR", "requestStop: close vpnInterface failed: ${e.message}")
+                }
+                service.vpnInterface = null
+                try {
+                    service.stopForeground(STOP_FOREGROUND_REMOVE)
+                    service.logToFile("INFO", "requestStop: stopForeground succeeded")
+                } catch (e: Exception) {
+                    service.logToFile("ERROR", "requestStop: stopForeground failed: ${e.message}")
+                }
+                service.stopSelf()
+            } ?: logToFile("WARN", "requestStop: no active instance")
+        }
 
         fun logToFile(level: String, msg: String) {
             val ts = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault()).format(Date())
@@ -58,6 +80,7 @@ class EasyTierVpnService : VpnService() {
             logToFile("ERROR", "Failed to create notification channel: ${e.message}")
             Log.e(TAG, "Failed to create notification channel", e)
         }
+        instance = this
         logToFile("INFO", "VPN Service created")
         Log.d(TAG, "VPN Service created")
     }
@@ -316,6 +339,7 @@ class EasyTierVpnService : VpnService() {
         } catch (e: Exception) {
             logToFile("ERROR", "onDestroy: stopForegroundCompat failed: ${e.message}")
         }
+        instance = null
         try {
             super.onDestroy()
         } catch (e: Exception) {

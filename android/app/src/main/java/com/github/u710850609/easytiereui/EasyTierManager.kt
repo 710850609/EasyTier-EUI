@@ -361,6 +361,11 @@ class EasyTierManager(
 
     private fun stopVpnService() {
         try {
+            // 直接调用静态方法请求服务停止
+            EasyTierVpnService.requestStop()
+            logToFile("INFO", "Called EasyTierVpnService.requestStop()")
+
+            // 然后调用 stopService 作为备用
             if (vpnServiceIntent != null) {
                 val stopped = activity.stopService(vpnServiceIntent)
                 logToFile("INFO", "stopService result=$stopped, intent=$vpnServiceIntent")
