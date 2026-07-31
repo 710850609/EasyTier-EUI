@@ -13,29 +13,11 @@ import Layout from './components/Layout.vue'
   box-sizing: border-box;
 }
 
-:root {
-  --sat: env(safe-area-inset-top);
-  --sar: env(safe-area-inset-right);
-  --sab: env(safe-area-inset-bottom);
-  --sal: env(safe-area-inset-left);
-}
-
-html {
-  height: 100vh;
-  overscroll-behavior: none;
-}
-
 body {
-  height: 100vh;
-  padding-top: calc(var(--sat) * 0.35);
-  padding-right: var(--sar);
-  padding-bottom: var(--sab);
-  padding-left: var(--sal);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   background: var(--color-body);
   color: var(--color-text);
   transition: background-color 0.3s, color 0.3s;
-  overscroll-behavior: none;
 }
 
 /* 全局滚动条样式 */
@@ -58,7 +40,6 @@ body {
   background: var(--color-on-surface-variant);
 }
 
-/* MD3 主题变量适配 */
 :root {
   --app-primary: var(--color-primary);
   /* RGB 变量用于 rgba() */
@@ -289,10 +270,6 @@ html.dark .var-popup__content[var-popup-cover] {
 }
 
 /* 顶部弹出层：高光条移到底部，发光边框渐变反转，视觉聚焦在屏幕中间 */
-.var-popup__content.var-popup--top {
-  padding-top: calc(var(--sat) * 0.35);
-}
-
 .var-popup__content.var-popup--top::after {
   top: auto;
   bottom: 0;

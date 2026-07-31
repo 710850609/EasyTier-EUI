@@ -152,7 +152,7 @@ class MainActivity : AppCompatActivity() {
                 if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
                     WebSettingsCompat.setAlgorithmicDarkeningAllowed(settings, false)
                 }
-                setBackgroundColor(getWebViewBackgroundColor())
+                setBackgroundColor(Color.TRANSPARENT)
                 overScrollMode = android.view.View.OVER_SCROLL_NEVER
 
                 webChromeClient = WebChromeClient()
@@ -201,7 +201,7 @@ class MainActivity : AppCompatActivity() {
     private fun injectSafeArea() {
         try {
             val insets = WindowInsetsCompat.toWindowInsetsCompat(window.decorView.rootWindowInsets)
-            val sat = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top
+            val sat = insets.getInsetsIgnoringVisibility(WindowInsetsCompat.Type.statusBars()).top
             val sab = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
             val sar = insets.getInsets(WindowInsetsCompat.Type.systemBars()).right
             val sal = insets.getInsets(WindowInsetsCompat.Type.systemBars()).left
@@ -220,7 +220,8 @@ class MainActivity : AppCompatActivity() {
                 })();
             """.trimIndent()
             webView.evaluateJavascript(js, null)
-            log("DEBUG", "injectSafeArea: sat=$sat, sab=$sab, sar=$sar, sal=$sal")
+            val density = resources.displayMetrics.density
+            log("DEBUG", "injectSafeArea: sat=$sat, sab=$sab, sar=$sar, sal=$sal, density=$density, satDp=${sat / density}")
         } catch (e: Exception) {
             logError("injectSafeArea failed", e)
         }
@@ -375,19 +376,11 @@ class MainActivity : AppCompatActivity() {
                     statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT),
                     navigationBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT)
                 )
-                webView.setBackgroundColor(getWebViewBackgroundColor())
+                webView.setBackgroundColor(Color.TRANSPARENT)
             }
             injectSafeArea()
         } catch (e: Exception) {
             logError("onConfigurationChanged failed", e)
-        }
-    }
-
-    private fun getWebViewBackgroundColor(): Int {
-        return if ((resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES) {
-            Color.parseColor("#121212")
-        } else {
-            Color.parseColor("#FFFFFF")
         }
     }
 
@@ -396,7 +389,6 @@ class MainActivity : AppCompatActivity() {
         when (savedMode) {
             "dark" -> {
                 h5ThemeOverride = true
-                webView.setBackgroundColor(Color.parseColor("#121212"))
                 enableEdgeToEdge(
                     statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
                     navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT)
@@ -404,7 +396,6 @@ class MainActivity : AppCompatActivity() {
             }
             "light" -> {
                 h5ThemeOverride = false
-                webView.setBackgroundColor(Color.parseColor("#FFFFFF"))
                 enableEdgeToEdge(
                     statusBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
                     navigationBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
@@ -437,7 +428,6 @@ class MainActivity : AppCompatActivity() {
                 when (mode) {
                     "dark" -> {
                         h5ThemeOverride = true
-                        webView.setBackgroundColor(Color.parseColor("#121212"))
                         enableEdgeToEdge(
                             statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
                             navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT)
@@ -445,7 +435,6 @@ class MainActivity : AppCompatActivity() {
                     }
                     "light" -> {
                         h5ThemeOverride = false
-                        webView.setBackgroundColor(Color.parseColor("#FFFFFF"))
                         enableEdgeToEdge(
                             statusBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
                             navigationBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)

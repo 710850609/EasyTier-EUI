@@ -43,11 +43,6 @@ const applyTheme = (mode) => {
 
   // 设置 dark class 用于自定义样式
   document.documentElement.classList.toggle('dark', shouldBeDark)
-
-  // 通知 Android 更新状态栏外观
-  if (window.AndroidBridge) {
-    window.AndroidBridge.setThemeMode(mode)
-  }
 }
 
 // 保存主题设置到 localStorage

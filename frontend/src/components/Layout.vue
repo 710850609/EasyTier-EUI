@@ -105,6 +105,15 @@ onMounted(() => {
   handleResize()
   // 加载 VConsole（如果之前开启过）
   loadVConsole()
+  // 延迟打印，确保 vConsole 已初始化
+  setTimeout(() => {
+    const style = getComputedStyle(document.documentElement)
+    console.log('[SafeArea] --sat=%s, --sab=%s, --sar=%s, --sal=%s',
+      style.getPropertyValue('--sat').trim(),
+      style.getPropertyValue('--sab').trim(),
+      style.getPropertyValue('--sar').trim(),
+      style.getPropertyValue('--sal').trim())
+  }, 1000)
 })
 
 onUnmounted(() => {
@@ -116,8 +125,20 @@ onUnmounted(() => {
 <style scoped>
 .layout {
   display: flex;
-  height: 100%;
+  height: 100vh;
   background: var(--color-body);
+}
+
+.layout::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: calc(var(--sat, 0px) * 0.95);
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--color-body) 80%, transparent), transparent);
+  pointer-events: none;
+  z-index: 50;
 }
 
 .side-menu {
@@ -144,7 +165,7 @@ onUnmounted(() => {
 }
 
 .main-content.has-bottom-nav {
-  padding-bottom: calc(64px + env(safe-area-inset-bottom));
+  padding-bottom: calc(64px + var(--sab, 0px));
 }
 
 .content-wrapper {
@@ -156,7 +177,8 @@ onUnmounted(() => {
 /* 移动端样式 - 使用类名控制 */
 .layout.is-mobile {
   flex-direction: column;
-  height: 100%;
+  height: 100vh;
+  padding-top: var(--sat, 0px);
 }
 
 .layout.is-mobile .main-content {
@@ -169,27 +191,14 @@ onUnmounted(() => {
   padding: 0;
   flex: 1;
   min-height: 0;
-  position: relative;
-}
-
-.layout.is-mobile .content-wrapper::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: var(--sat);
-  background: linear-gradient(to bottom, var(--color-body) 0%, transparent 50%);
-  z-index: 1000;
-  pointer-events: none;
-  transition: background 0.35s ease;
 }
 
 /* 媒体查询作为后备 */
 @media (max-width: 767px) {
   .layout {
     flex-direction: column;
-    height: 100%;
+    height: 100vh;
+    padding-top: var(--sat, 0px);
   }
   
   .side-menu {
