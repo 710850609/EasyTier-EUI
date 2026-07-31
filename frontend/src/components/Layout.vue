@@ -105,15 +105,6 @@ onMounted(() => {
   handleResize()
   // 加载 VConsole（如果之前开启过）
   loadVConsole()
-  // 延迟打印，确保 vConsole 已初始化
-  setTimeout(() => {
-    const style = getComputedStyle(document.documentElement)
-    console.log('[SafeArea] --sat=%s, --sab=%s, --sar=%s, --sal=%s',
-      style.getPropertyValue('--sat').trim(),
-      style.getPropertyValue('--sab').trim(),
-      style.getPropertyValue('--sar').trim(),
-      style.getPropertyValue('--sal').trim())
-  }, 1000)
 })
 
 onUnmounted(() => {
@@ -135,7 +126,7 @@ onUnmounted(() => {
   top: 0;
   left: 0;
   right: 0;
-  height: calc(var(--sat, 0px) * 0.95);
+  height: calc(var(--sat, 0px) * 1);
   background: linear-gradient(to bottom, color-mix(in srgb, var(--color-body) 80%, transparent), transparent);
   pointer-events: none;
   z-index: 50;

@@ -209,19 +209,24 @@ class MainActivity : AppCompatActivity() {
             if (sat == 0 && sab == 0) {
                 return
             }
+            // 前端需要的是 CSS 像素（逻辑像素）。需要物理像素 除以 DPR
+            val density = resources.displayMetrics.density
+            val satDp = sat / density
+            val sabDp = sab / density
+            val sarDp = sar / density
+            val salDp = sal / density
+            log("DEBUG", "injectSafeArea: sat=$sat, sab=$sab, sar=$sar, sal=$sal, density=$density, satDp=${satDp}px, sabDp=${sabDp}px, sarDp=${sarDp}px, salDp=${salDp}px}")
 
             val js = """
                 (function() {
-                    document.documentElement.style.setProperty('--sat', '${sat}px');
-                    document.documentElement.style.setProperty('--sab', '${sab}px');
-                    document.documentElement.style.setProperty('--sar', '${sar}px');
-                    document.documentElement.style.setProperty('--sal', '${sal}px');
-                    console.log('[SafeArea] --sat=${sat}px, --sab=${sab}px, --sar=${sar}px, --sal=${sal}px');
+                    document.documentElement.style.setProperty('--sat', '${satDp}px');
+                    document.documentElement.style.setProperty('--sab', '${sabDp}px');
+                    document.documentElement.style.setProperty('--sar', '${sarDp}px');
+                    document.documentElement.style.setProperty('--sal', '${salDp}px');
+                    console.log('[SafeArea] --sat=${satDp}px, --sab=${sabDp}px, --sar=${sarDp}px, --sal=${salDp}px');
                 })();
             """.trimIndent()
             webView.evaluateJavascript(js, null)
-            val density = resources.displayMetrics.density
-            log("DEBUG", "injectSafeArea: sat=$sat, sab=$sab, sar=$sar, sal=$sal, density=$density, satDp=${sat / density}")
         } catch (e: Exception) {
             logError("injectSafeArea failed", e)
         }
