@@ -914,6 +914,7 @@
 
 <script setup>
 import { copyToClipboard } from '../utils/clipboard.js'
+import { openDownloadUrl } from '../utils/download.js'
 import { validateIP, validateIPPort } from '../utils/validate.js'
 import { ref, computed, inject, onMounted, nextTick, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -1270,7 +1271,7 @@ const saveConfig = () => {
 
 const downloadConfig = () => {
   const url = api.configs.getShareConfigDownloadUrl(selectedConfig.value)
-  window.open(url, '_blank')
+  openDownloadUrl(url)
 }
 
 const copyConfig = () => {

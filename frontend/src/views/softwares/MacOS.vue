@@ -164,6 +164,7 @@ import toast from '../../components/toast.js'
 import { api } from '../../utils/api.js'
 import { useAsyncDownload } from '../../utils/downloadProgress.js'
 import { getAcceleratedDownloadUrl } from '../../utils/github.js'
+import { openDownloadUrl } from '../../utils/download.js'
 
 const { t } = useI18n()
 
@@ -197,7 +198,7 @@ const { startDownload, progress, downloadingKey } = useAsyncDownload(
 const download = (type, arch, prerelease) => {
   return new Promise((resolve, reject) => {
     api.etApp.getDownloadUrl({type: type, arch: arch, prerelease: prerelease}).then((resp) => {
-      window.open(resp.data, '_blank')
+      openDownloadUrl(resp.data)
     }).finally(() => {
       resolve()
     })
@@ -247,7 +248,7 @@ const downloadSocoldkiller = async () => {
   const url = await getAcceleratedDownloadUrl(
     'https://github.com/socoldkiller/easytier-macos/releases/latest/download/EasyTier-macOS-ARM64.dmg'
   )
-  window.open(url, '_blank')
+  openDownloadUrl(url)
 }
 </script>
 

@@ -187,6 +187,7 @@ import toast from '../../components/toast.js'
 import { api } from '../../utils/api.js'
 import { useAsyncDownload } from '../../utils/downloadProgress.js'
 import { getAcceleratedDownloadUrl } from '../../utils/github.js'
+import { openDownloadUrl } from '../../utils/download.js'
 
 const { t } = useI18n()
 
@@ -263,7 +264,7 @@ const downloadApp = () => {
 const download = async (type, arch, prerelease) => {
   const resp = await api.etApp.getDownloadUrl({type: type, arch: arch, prerelease: prerelease})
   const url = await getAcceleratedDownloadUrl(resp.data)
-  window.open(url, '_blank')
+  openDownloadUrl(url)
 }
 </script>
 

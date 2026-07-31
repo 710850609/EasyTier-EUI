@@ -2,10 +2,13 @@ package com.github.u710850609.easytiereui
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.DownloadManager
+import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.res.Configuration
 import android.graphics.Color
+import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -195,7 +198,11 @@ class MainActivity : AppCompatActivity() {
         log("INFO", "setupBackPress: registering callback")
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                moveTaskToBack(true)
+                if (webView.canGoBack()) {
+                    webView.goBack()
+                } else {
+                    moveTaskToBack(true)
+                }
             }
         })
     }
@@ -231,6 +238,17 @@ class MainActivity : AppCompatActivity() {
             webView.evaluateJavascript(js, null)
         } catch (e: Exception) {
             logError("injectSafeArea failed", e)
+        }
+    }
+
+    private fun downloadUsingSystemManager(url: String) {
+        try {
+            val downloadManager = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+            downloadManager.enqueue(DownloadManager.Request(Uri.parse(url)))
+            log("INFO", "DownloadManager: enqueued $url")
+        } catch (e: Exception) {
+            logError("downloadUsingSystemManager failed", e)
+            Toast.makeText(this, getString(com.github.u710850609.easytiereui.R.string.download_failed), Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -455,6 +473,14 @@ class MainActivity : AppCompatActivity() {
                         )
                     }
                 }
+            }
+        }
+
+        @JavascriptInterface
+        fun downloadFile(url: String) {
+            log("DEBUG", "AndroidBridge.downloadFile: $url")
+            runOnUiThread {
+                downloadUsingSystemManager(url)
             }
         }
     }

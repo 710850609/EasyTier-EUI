@@ -1,6 +1,7 @@
 import toast from "../components/toast.js"
 import { ET_VERSION_LIST_KEY } from "../config/storage-keys.js"
 import api from './api.js'
+import { openDownloadUrl } from './download.js'
 
 // const GITHUB_PROXY = 'https://ghfast.top'
 
@@ -120,7 +121,7 @@ export function downloadFromGithub(repo, matcher, prerelease = false) {
     })
     .then(async url => {
       url = await getAcceleratedDownloadUrl(url)
-      window.open(url, '_blank')
+      openDownloadUrl(url)
       return url
     })
     .catch(error => {

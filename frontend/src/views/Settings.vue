@@ -372,6 +372,7 @@ import { VCONSOLE_ENABLED_KEY } from '../config/storage-keys.js'
 import toast from '../components/toast.js'
 import api from '../utils/api.js'
 import { getAcceleratedDownloadUrl } from '../utils/github.js'
+import { openDownloadUrl } from '../utils/download.js'
 import { setLanguage, getLanguage } from '../locales/index.js'
 import { useI18n } from 'vue-i18n'
 // import { getLatestVersionWithCache } from '../utils/github.js'
@@ -807,7 +808,7 @@ const confirmGithubDownload = async () => {
     }
     const acceleratedUrl = await getAcceleratedDownloadUrl(realUrl)
     showGithubUrlPopup.value = false
-    window.open(acceleratedUrl, '_blank')
+    openDownloadUrl(acceleratedUrl)
   } catch {
     toast.warning(t('settings.githubDownloadEmpty'))
   }
