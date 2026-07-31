@@ -349,6 +349,7 @@ def __get_download_url(is_release: bool) -> tuple[str, str, str]:
         "armv7l": "armv7"
     }
     system = sys.platform
+    system = 'android' if run_configs.IS_ANDROID else system
     machine = os.uname().machine if hasattr(os, 'uname') else platform.machine()
     sys_name = sys_map.get(system, system)
     arch_name = arch_map.get(machine.lower())

@@ -50,7 +50,8 @@
         <span class="block-title">{{ $t('settings.kernel.title') }}</span>
       </div>
       <var-divider />
-      <div class="setting-row">
+      <!-- 安卓ffi模式不支持设置日志 -->
+      <div class="setting-row" v-if="platform !== 'android'">
         <span class="setting-label">{{ $t('settings.logLevel.label') }}</span>
         <var-select 
           class="setting-select" 
@@ -108,8 +109,8 @@
       </div>
       <div class="setting-row" v-if="etVersion.selected_version != ''">
         <div class="setting-actions">
-          <var-chip v-if="hasNewVersion" type="warning" size="mini" plain>{{ $t('common.canUpgrade') }}</var-chip>
-          <var-button type="primary" size="small" @click="installEtCore(true)" auto-loading>
+          <var-chip v-if="hasNewVersion && platform !== 'android'" type="warning" size="mini" plain>{{ $t('common.canUpgrade') }}</var-chip>
+          <var-button type="primary" size="small" @click="installEtCore(true)" auto-loading v-if="platform !== 'android'">
             <!-- <var-icon name="download" /> -->
             {{ $t('common.install') }}
           </var-button>
@@ -217,7 +218,7 @@
           {{ $t('common.delete') }}
         </var-button>
       </div>
-      <div class="setting-row" v-if="platform !== 'trim' && !isDocker">
+      <div class="setting-row" v-if="platform !== 'trim' && platform !== 'android' && !isDocker">
         <span class="setting-label">{{ $t('settings.specifyIpPort') }}</span>
         <var-button type="primary" size="small" @click="releaseConfig" auto-loading>
           {{ $t('settings.releaseConfig') }}

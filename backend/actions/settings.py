@@ -16,7 +16,9 @@ from utils import run_configs, github_util
 
 def eui_info(*args, **kwargs):
     platform = 'trim' if run_configs.is_fn_system() else sys.platform
-    install_path = Path(run_configs.core_dir()).parent
+    platform = 'android' if run_configs.IS_ANDROID else platform
+    platform = 'android'
+    install_path = Path(run_configs.log_dir()).parent
     # 解析符号链接，获取真实路径
     install_path = install_path.resolve()
     is_docker = run_configs.is_docker()

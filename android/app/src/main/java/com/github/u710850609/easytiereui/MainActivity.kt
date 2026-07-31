@@ -160,7 +160,24 @@ class MainActivity : AppCompatActivity() {
                 setBackgroundColor(Color.TRANSPARENT)
                 overScrollMode = android.view.View.OVER_SCROLL_NEVER
 
-                webChromeClient = WebChromeClient()
+                webChromeClient = object : WebChromeClient() {
+                    override fun onCreateWindow(
+                        view: WebView?,
+                        isDialog: Boolean,
+                        isUserGesture: Boolean,
+                        resultMsg: android.os.Message?
+                    ): Boolean {
+                        val url = view?.hitTestResult?.extra
+                        if (!url.isNullOrEmpty()) {
+                            try {
+                                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                            } catch (e: Exception) {
+                                logError("onCreateWindow: failed to open $url", e)
+                            }
+                        }
+                        return true
+                    }
+                }
                 webViewClient = object : WebViewClient() {
                     override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean = false
                     override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
