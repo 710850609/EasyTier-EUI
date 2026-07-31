@@ -118,6 +118,7 @@ onUnmounted(() => {
   display: flex;
   height: 100vh;
   background: var(--color-body);
+  padding: var(--sat, 0px) var(--sar, 0px) var(--sab, 0px) var(--sal, 0px);
 }
 
 .layout::before {
@@ -136,9 +137,9 @@ onUnmounted(() => {
   flex-shrink: 0;
   border-right: 1px solid var(--color-outline);
   position: fixed;
-  left: 0;
-  top: 0;
-  height: 100vh;
+  left: var(--sal, 0px);
+  top: var(--sat, 0px);
+  height: calc(100vh - var(--sat, 0px) - var(--sab, 0px));
   z-index: 100;
 }
 
@@ -169,6 +170,7 @@ onUnmounted(() => {
 .layout.is-mobile {
   flex-direction: column;
   height: 100vh;
+  padding: 0;
 }
 
 .layout.is-mobile .main-content {
@@ -190,6 +192,7 @@ onUnmounted(() => {
   .layout {
     flex-direction: column;
     height: 100vh;
+    padding: 0;
   }
   
   .side-menu {
