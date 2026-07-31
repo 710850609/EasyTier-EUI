@@ -148,6 +148,8 @@ class MainActivity : AppCompatActivity() {
                 settings.allowFileAccess = true
                 settings.allowContentAccess = true
                 settings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+                settings.useWideViewPort = true
+                settings.loadWithOverviewMode = true
 
                 if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
                     WebSettingsCompat.setAlgorithmicDarkeningAllowed(settings, false)

@@ -126,10 +126,10 @@ onUnmounted(() => {
   top: 0;
   left: 0;
   right: 0;
-  height: calc(var(--sat, 0px) * 1);
-  background: linear-gradient(to bottom, color-mix(in srgb, var(--color-body) 80%, transparent), transparent);
+  height: calc(var(--sat, 0px) * 1.1);
+  background: linear-gradient(to bottom, var(--color-body) 60%, transparent 100%);
   pointer-events: none;
-  z-index: 50;
+  z-index: 9999999;
 }
 
 .side-menu {
