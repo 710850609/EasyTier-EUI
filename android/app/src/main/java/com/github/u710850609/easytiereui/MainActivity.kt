@@ -169,17 +169,26 @@ class MainActivity : AppCompatActivity() {
                     ): Boolean {
                         val url = view?.hitTestResult?.extra
                         if (!url.isNullOrEmpty()) {
-                            try {
-                                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
-                            } catch (e: Exception) {
-                                logError("onCreateWindow: failed to open $url", e)
+                            val host = Uri.parse(url).host ?: ""
+                            if (host != "127.0.0.1" && host != "localhost") {
+                                openInSystemBrowser(url)
+                            } else {
+                                view?.loadUrl(url)
                             }
                         }
                         return true
                     }
                 }
                 webViewClient = object : WebViewClient() {
-                    override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean = false
+                    override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
+                        val url = request?.url?.toString() ?: return false
+                        val host = request.url?.host ?: return false
+                        if (host != "127.0.0.1" && host != "localhost") {
+                            openInSystemBrowser(url)
+                            return true
+                        }
+                        return false
+                    }
                     override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
                         super.onPageStarted(view, url, favicon)
                         injectSafeArea()
@@ -255,6 +264,14 @@ class MainActivity : AppCompatActivity() {
             webView.evaluateJavascript(js, null)
         } catch (e: Exception) {
             logError("injectSafeArea failed", e)
+        }
+    }
+
+    private fun openInSystemBrowser(url: String) {
+        try {
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+        } catch (e: Exception) {
+            logError("openInSystemBrowser failed", e)
         }
     }
 

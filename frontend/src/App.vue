@@ -237,6 +237,7 @@ html.dark body .var-checkbox-group--vertical .var-checkbox__wrap:not(:last-child
 .var-popup__content,
 .var-popup__content[var-popup-cover] {
   overflow: hidden;
+  padding-top: var(--sat, 0px) !important;
   background: rgba(var(--color-surface-container-rgb, 212, 223, 250), 0.06) !important;
   backdrop-filter: blur(16px) saturate(110%) !important;
   -webkit-backdrop-filter: blur(16px) saturate(110%) !important;
