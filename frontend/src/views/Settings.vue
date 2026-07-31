@@ -324,7 +324,7 @@
   </div>
 
   <!-- GitHub辅助下载 -->
-  <var-dialog v-model:show="showGithubUrlPopup" :title="$t('settings.githubDownload')" :confirm-button-text="$t('settings.githubDownloadReadClipboard')" @confirm="confirmGithubDownload" @cancel="showGithubUrlPopup = false">
+  <var-dialog v-model:show="showGithubUrlPopup" :title="$t('settings.githubDownload')" :confirm-button-text="$t('settings.githubDownloadReadClipboard')" safe-area="false" @confirm="confirmGithubDownload" @cancel="showGithubUrlPopup = false">
     <p>{{ $t('settings.githubDownloadDesc') }}</p>
   </var-dialog>
 

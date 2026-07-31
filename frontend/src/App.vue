@@ -237,7 +237,6 @@ html.dark body .var-checkbox-group--vertical .var-checkbox__wrap:not(:last-child
 .var-popup__content,
 .var-popup__content[var-popup-cover] {
   overflow: hidden;
-  padding-top: var(--sat, 0px) !important;
   background: rgba(var(--color-surface-container-rgb, 212, 223, 250), 0.06) !important;
   backdrop-filter: blur(16px) saturate(110%) !important;
   -webkit-backdrop-filter: blur(16px) saturate(110%) !important;
@@ -350,6 +349,10 @@ html.dark .var-popup__content.var-popup--top::before {
 /* 顶部弹出层圆角 */
 .var-popup--top {
   border-radius: 0 0 16px 16px !important;
+}
+
+.var-popup--top .var-popup__content {
+  padding-top: var(--sat, 0px) !important;
 }
 
 /* 居中弹出层圆角 */
