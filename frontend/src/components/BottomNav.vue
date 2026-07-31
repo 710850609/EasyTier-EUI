@@ -27,6 +27,7 @@
   <var-popup 
     v-model:show="showSubMenu" 
     position="bottom"
+    :safe-area="false"
   >
     <div class="submenu-popup">
       <div class="popup-title">{{ $t(currentSubMenuTitle) }}</div>
