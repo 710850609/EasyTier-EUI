@@ -113,7 +113,7 @@ class EasyTierVpnService : VpnService() {
 
             vpnInterface = pfd
             // 只调用一次 startForeground，直接显示 Connected 状态
-            startForeground(NOTIFICATION_ID, buildNotification("EasyTier $instanceName Connected"))
+            startForeground(NOTIFICATION_ID, buildNotification("$instanceName 配置运行中"))
             logToFile("INFO", "VPN interface created, fd=${pfd.fd}")
 
             val name = instanceName!!
@@ -164,7 +164,7 @@ class EasyTierVpnService : VpnService() {
         logToFile("DEBUG", "createVpnInterface: parsed ip=$ip, prefix=$networkLength")
 
         val builder = Builder()
-        builder.setSession("EasyTier VPN")
+        builder.setSession("EasyTier-EUI VPN")
             .addAddress(ip, networkLength)
             .addDnsServer("223.5.5.5")
             .addDnsServer("114.114.114.114")
@@ -287,7 +287,7 @@ class EasyTierVpnService : VpnService() {
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
             )
             NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle("EasyTier-EUI")
+                .setContentTitle("易组网")
                 .setContentText(text)
                 .setSmallIcon(android.R.drawable.ic_menu_share)
                 .setContentIntent(pendingIntent)
@@ -311,9 +311,9 @@ class EasyTierVpnService : VpnService() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             try {
                 val channel = NotificationChannel(
-                    CHANNEL_ID, "EasyTier VPN", NotificationManager.IMPORTANCE_LOW
+                    CHANNEL_ID, "组网服务", NotificationManager.IMPORTANCE_LOW
                 ).apply {
-                    description = "EasyTier VPN Status"
+                    description = "组网运行通知"
                     setShowBadge(true)
                 }
                 getSystemService(NotificationManager::class.java).createNotificationChannel(channel)

@@ -156,7 +156,7 @@ onUnmounted(() => {
 }
 
 .main-content.has-bottom-nav {
-  padding-bottom: calc(64px + var(--sab, 0px));
+  /* padding-bottom 移到 .content-wrapper 内部，让内容能滚到导航栏后面 */
 }
 
 .content-wrapper {
@@ -180,6 +180,7 @@ onUnmounted(() => {
   overflow-y: auto;
   padding: 0;
   padding-top: var(--sat, 0px);
+  padding-bottom: calc(64px + var(--sab, 0px));
   flex: 1;
   min-height: 0;
 }
