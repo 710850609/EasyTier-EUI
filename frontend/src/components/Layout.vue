@@ -126,7 +126,7 @@ onUnmounted(() => {
   top: 0;
   left: 0;
   right: 0;
-  height: calc(var(--sat, 0px) * 1.1);
+  height: var(--sat, 0px);
   background: linear-gradient(to bottom, var(--color-body) 60%, transparent 100%);
   pointer-events: none;
   z-index: 9999999;
@@ -169,7 +169,6 @@ onUnmounted(() => {
 .layout.is-mobile {
   flex-direction: column;
   height: 100vh;
-  padding-top: var(--sat, 0px);
 }
 
 .layout.is-mobile .main-content {
@@ -180,6 +179,7 @@ onUnmounted(() => {
 .layout.is-mobile .content-wrapper {
   overflow-y: auto;
   padding: 0;
+  padding-top: var(--sat, 0px);
   flex: 1;
   min-height: 0;
 }
@@ -189,7 +189,6 @@ onUnmounted(() => {
   .layout {
     flex-direction: column;
     height: 100vh;
-    padding-top: var(--sat, 0px);
   }
   
   .side-menu {
@@ -206,6 +205,7 @@ onUnmounted(() => {
   .content-wrapper {
     overflow-y: auto;
     padding: 0;
+    padding-top: var(--sat, 0px);
     flex: 1;
     min-height: 0;
   }
