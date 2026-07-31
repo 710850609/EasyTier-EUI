@@ -16,3 +16,11 @@
 
 # TODO: https://github.com/chaquo/chaquopy/issues/842
 -dontwarn org.jetbrains.annotations.NotNull
+
+# VPN Service — keep foreground notification working
+-keep class com.github.u710850609.easytiereui.EasyTierVpnService { *; }
+-keep class com.github.u710850609.easytiereui.EasyTierVpnService$Companion { *; }
+
+# NotificationCompat — keep builder methods (may be accessed via reflection)
+-keep class androidx.core.app.NotificationCompat { *; }
+-keep class androidx.core.app.NotificationCompat$Builder { public *; }
