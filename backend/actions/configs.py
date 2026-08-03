@@ -6,10 +6,8 @@ import os
 import shutil
 from datetime import datetime
 from pathlib import Path
-
 import tomlkit
 from tomlkit import document, comment
-
 from actions import services
 from http_dispatcher.dispatcher import HttpException
 from http_dispatcher.dispatcher import HttpResponse
@@ -18,6 +16,8 @@ from utils import et_run_info, ip_util
 from utils import run_configs
 from utils import security
 from utils.validators import Validator
+
+logger = logging.getLogger(__name__)
 
 
 def list_lan_ips(*args, **kwargs):
@@ -52,7 +52,7 @@ def list_config_status(*args, **kwargs):
             running = services.status(profile)
             profile['running'] = running
         except Exception as e:
-            logging.warning(f'[list_config_status] status check failed for {profile}: {e}')
+            logger.warning(f'[list_config_status] status check failed for {profile}: {e}')
             profile['running'] = False
         result.append(profile)
     return result
@@ -61,7 +61,7 @@ def delete(params, *args, **kwargs):
     profile, _ = Validator.not_empty(params, 'profile', 'validate.profile_required')
     profile = Validator.check_profile(profile)
     if services.status(params):
-        logging.info(f"{profile} 配置运行中，停止服务...")
+        logger.info(f"{profile} 配置运行中，停止服务...")
         services.stop(params)
     info = et_run_info.get(profile)
     if info and info.autostart:
@@ -77,7 +77,7 @@ def rename(params, *args, **kwargs):
     old_profile = Validator.check_profile(old_profile)
     new_profile = Validator.check_profile(new_profile, check_exists=False)
     if old_profile == new_profile:
-        logging.warning(f"新旧名称一致，跳过重命名: {old_profile}")
+        logger.warning(f"新旧名称一致，跳过重命名: {old_profile}")
         return {'name': new_profile.replace('.toml', ''), 'profile': new_profile}
     old_config = run_configs.et_config_file(old_profile)
     new_config = run_configs.et_config_file(new_profile)
@@ -123,7 +123,7 @@ def save_toml(data: str, *args, **kwargs):
             # 安全验证
             safe_profile = security.validate_profile(profile)
             if not safe_profile:
-                logging.warning(get_message('config.invalid_name', profile=profile))
+                logger.warning(get_message('config.invalid_name', profile=profile))
                 raise HttpException(get_message('config.invalid_name', profile=profile))
             profile = safe_profile
         doc = tomlkit.parse(data['toml'])
@@ -134,7 +134,7 @@ def save_toml(data: str, *args, **kwargs):
             f.write(tomlkit.dumps(doc))
         et_run_info.save(safe_profile, None, None, None)
     except Exception as e:
-        logging.error(f"解析配置字符串失败: {e}")
+        logger.error(f"解析配置字符串失败: {e}")
         raise e
 
 def get(params, *args, **kwargs):
@@ -159,7 +159,7 @@ def download_share_config(params=None, *args, **kwargs):
     profile, _ = Validator.not_empty(params, 'profile', 'validate.profile_required')
     profile = Validator.check_profile(profile)
     tmp_file = copy(profile)
-    logging.info(f"{tmp_file}")
+    logger.info(f"{tmp_file}")
     return HttpResponse(file=tmp_file, download_name="config.toml")
 
 def get_share_config_str(params=None, *args, **kwargs):

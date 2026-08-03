@@ -17,14 +17,16 @@ from http_dispatcher.dispatcher import HttpException
 from locales import get_message
 from utils import run_configs, et_run_info, log_util
 from utils.validators import Validator
+from et_adapters import get_facade
 
-try:
-    from et_adapters import get_facade
-    _FFI_AVAILABLE = True
-except Exception:
-    get_facade = None
-    _FFI_AVAILABLE = False
+# try:
+#     from et_adapters import get_facade
+#     _FFI_AVAILABLE = True
+# except Exception:
+#     get_facade = None
+#     _FFI_AVAILABLE = False
 
+logger = logging.getLogger(__name__)
 
 def get_log_level(params:dict, *args, **kwargs):
     log_level = et_run_info.get_log_level()
@@ -35,46 +37,52 @@ def set_log_level(params:dict, *args, **kwargs):
     log_level = params.get("level", 'error')
     et_run_info.set_log_level(log_level)
     services.change_log_level(log_level)
-
-def check_core(*args, **kwargs):
-    if run_configs.IS_ANDROID:
-        if not _FFI_AVAILABLE:
-            return False
-        try:
-            facade = get_facade()
-            return facade.is_available
-        except Exception:
-            return False
-    core_dir = run_configs.core_dir()
-    ext = ".exe" if sys.platform == "win32" else ""
-    cli_file = f'{core_dir}/easytier-cli{ext}'
-    core_file = f'{core_dir}/easytier-core{ext}'
-    return os.path.exists(cli_file) and os.path.exists(core_file)
+#
+# def check_core(*args, **kwargs):
+#
+#     if run_configs.IS_ANDROID:
+#         if not _FFI_AVAILABLE:
+#             return False
+#         try:
+#             facade = get_facade()
+#             return facade.is_available
+#         except Exception:
+#             return False
+#     core_dir = run_configs.core_dir()
+#     ext = ".exe" if sys.platform == "win32" else ""
+#     cli_file = f'{core_dir}/easytier-cli{ext}'
+#     core_file = f'{core_dir}/easytier-core{ext}'
+#     return os.path.exists(cli_file) and os.path.exists(core_file)
 
 def version(params=None, *args, **kwargs):
-    if run_configs.IS_ANDROID:
-        if _FFI_AVAILABLE:
-            try:
-                facade = get_facade()
-                if facade.is_available:
-                    ver = facade.get_version()
-                    if ver and ver != "unknown":
-                        dash_idx = ver.find('-')
-                        et_version = ver[:dash_idx] if dash_idx > 0 else ver
-                        return {'version': f'v{et_version}', 'raw_version': f'easytier-core {ver}'}
-            except Exception as e:
-                logging.warning(f"Failed to get version from FFI: {e}")
-        return {'version': 'unknown', 'raw_version': 'unknown'}
-    if not check_core():
-        raise HttpException(get_message('download.task_not_found'))
-        
-    core_dir = run_configs.core_dir()
-    ext = ".exe" if sys.platform == "win32" else ""
-    cmd = f'{core_dir}/easytier-core{ext} --version'
-    raw_version = common_util.run_cmd(cmd)
-    raw_version = raw_version.replace('easytier-core ', '')
-    et_version = raw_version[:raw_version.index('-')]
-    return { 'version': f'v{et_version}', 'raw_version': raw_version }
+    ver = get_facade().get_version()
+    dash_idx = ver.find('-')
+    et_version = ver[:dash_idx] if dash_idx > 0 else ver
+    return {'version': f'v{et_version}', 'raw_version': f'easytier-core {ver}'}
+
+    # if run_configs.IS_ANDROID:
+    #     if _FFI_AVAILABLE:
+    #         try:
+    #             facade = get_facade()
+    #             if facade.is_available:
+    #                 ver = facade.get_version()
+    #                 if ver and ver != "unknown":
+    #                     dash_idx = ver.find('-')
+    #                     et_version = ver[:dash_idx] if dash_idx > 0 else ver
+    #                     return {'version': f'v{et_version}', 'raw_version': f'easytier-core {ver}'}
+    #         except Exception as e:
+    #             logger.warning(f"Failed to get version from FFI: {e}")
+    #     return {'version': 'unknown', 'raw_version': 'unknown'}
+    # if not check_core():
+    #     raise HttpException(get_message('download.task_not_found'))
+    #
+    # core_dir = run_configs.core_dir()
+    # ext = ".exe" if sys.platform == "win32" else ""
+    # cmd = f'{core_dir}/easytier-core{ext} --version'
+    # raw_version = common_util.run_cmd(cmd)
+    # raw_version = raw_version.replace('easytier-core ', '')
+    # et_version = raw_version[:raw_version.index('-')]
+    # return { 'version': f'v{et_version}', 'raw_version': raw_version }
 
 
 def get_release_info(params: dict, *args, **kwargs) -> dict:
@@ -91,7 +99,7 @@ def get_release_info(params: dict, *args, **kwargs) -> dict:
     cache_time = 1000 * 60
     if refresh or release_info is None:
         if cur_diff_time < cache_time and release_info is not None:
-            logging.info(f'上次刷新时间距离当前时间仅隔 {cur_diff_time} ms, 直接返回上次刷新结果')
+            logger.info(f'上次刷新时间距离当前时间仅隔 {cur_diff_time} ms, 直接返回上次刷新结果')
             return release_info or {}
         total_download = 0
         versions = []
@@ -164,7 +172,7 @@ def install(data, *args, **kwargs):
     arch = __get_arch()
     platform = 'linux' if sys.platform == 'linux' else ('windows' if sys.platform == 'win32' else 'macos')
     url = f"https://github.com/easyTier/easytier/releases/download/{et_version}/easytier-{platform}-{arch}-{et_version}.zip"
-    logging.info(f"内核下载地址: {url}")
+    logger.info(f"内核下载地址: {url}")
     core_dir = run_configs.core_dir()
     run_configs.data_dir()
     output_dir = os.path.join(run_configs.data_dir(), 'download')
@@ -180,12 +188,12 @@ def install(data, *args, **kwargs):
             # unzip 出来是 rw-r--r-- ，需要添加执行权限
             import stat
             os.chmod(dst, os.stat(dst).st_mode | stat.S_IEXEC)
-        logging.info(f"移动: {item.name}")
+        logger.info(f"移动: {item.name}")
     Path(zip_file).unlink()
     shutil.rmtree(unzip_temp_dir)
-    logging.info(f'安装{et_version}版本成功')
+    logger.info(f'安装{et_version}版本成功')
     for profile in stop_profiles:
-        logging.info(f'启动配置：{profile}')
+        logger.info(f'启动配置：{profile}')
         services.start({'profile': profile})
 
 def __get_arch():
@@ -204,7 +212,7 @@ def __get_arch():
 
 def __unzip(zip_file, unzip_dir):    
     unzip_temp_dir = f"{unzip_dir}/{int(time.time())}"
-    logging.info(f"解压: {zip_file} -> {unzip_temp_dir}")
+    logger.info(f"解压: {zip_file} -> {unzip_temp_dir}")
     with zipfile.ZipFile(zip_file, 'r') as zf:
         # zf.extractall(unzip_temp_dir)
         for info in zf.infolist():
@@ -219,11 +227,11 @@ def __unzip(zip_file, unzip_dir):
                 os.makedirs(os.path.dirname(local_path), exist_ok=True)
                 with zf.open(info) as src, open(local_path, 'wb') as dst:
                     dst.write(src.read())
-    logging.info(f"解压完成: {zip_file} -> {unzip_temp_dir}")
+    logger.info(f"解压完成: {zip_file} -> {unzip_temp_dir}")
     return unzip_temp_dir
 
 if __name__ == '__main__':
     run_configs.setup_env()
-    log_util.setup_log(log_level="DEBUG")
-    get_release_info({'refresh': 'true'})
+    # log_util.setup_log(log_level="DEBUG")
+    # get_release_info({'refresh': 'true'})
     # print(version_list({}))

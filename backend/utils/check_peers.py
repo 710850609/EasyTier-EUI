@@ -16,7 +16,6 @@ import subprocess
 import sys
 import time
 
-from actions import peers
 from utils import run_configs, log_util
 
 
@@ -317,6 +316,8 @@ def check_peers_available_use_connector(bin_path, rpc_port):
 
 
 if __name__ == "__main__":
+    from actions import peers
+
     run_configs.setup_env()
     log_util.setup_log(enabled_console=True)
     peer_list = peers.public_peers({})

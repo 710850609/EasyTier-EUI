@@ -3,36 +3,26 @@
 """EasyTier adapter abstract interface"""
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict
-
-from .models import NetworkInstanceInfo
 
 
 class IEasyTierAdapter(ABC):
-
-    @abstractmethod
-    def start_network(self, toml_path: str, instance_name: str) -> None:
-        """Start a network instance from a TOML config file path. Raises on error."""
-
-    @abstractmethod
-    def stop_network(self, instance_name: str = None) -> None:
-        """
-        Stop network instance(s). Raises on error.
-        If instance_name is None, stops all instances.
-        """
-
-    @abstractmethod
-    def get_network_infos(self, max_length: int = 10) -> Dict[str, NetworkInstanceInfo]:
-        """Collect network information keyed by instance name."""
-
-    @abstractmethod
-    def get_network_infos_raw(self, max_length: int = 10) -> Dict[str, Any]:
-        """Collect raw network information dicts, bypassing model conversion."""
 
     @abstractmethod
     def get_version(self) -> str:
         """Get the EasyTier version string."""
 
     @abstractmethod
-    def set_tun_fd(self, instance_name: str, fd: int) -> int:
-        """Set TUN file descriptor for a network instance. Returns 0 on success, raises on error."""
+    def start_network(self, toml_path: str, instance_name: str) -> None:
+        """Start a network instance from a TOML config file path. Raises on error."""
+
+    @abstractmethod
+    def stop_network(self, instance_name: str) -> None:
+        """ Stop network instance(s). Raises on error. """
+
+    @abstractmethod
+    def status(self, instance_name: str) -> bool:
+        """Check if a network instance is running."""
+
+    @abstractmethod
+    def get_peers(self, instance_name: str) -> list[dict]:
+        """Collect network information for a specific instance."""

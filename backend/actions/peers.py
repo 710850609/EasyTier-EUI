@@ -6,15 +6,15 @@ import logging
 import os.path
 import time
 from pathlib import Path
-
 import tomlkit
-
 from http_dispatcher.dispatcher import HttpException
 from locales import get_message
 from models.peers import PeersCheckResult
 from utils import check_peers as check_util, run_configs
 from utils import github_util
+from et_adapters import get_facade
 
+logger = logging.getLogger(__name__)
 
 def check_peers(params: dict, *args, **kwargs):
     """
@@ -26,6 +26,9 @@ def check_peers(params: dict, *args, **kwargs):
     peer_list = public_peers(data = {'profile': profile, 'refresh': 'false'})
     if len(peer_list) == 0:
         peer_list = public_peers(data = {'profile': profile, 'refresh': 'true'})
+    if get_facade().get_service_dapter() is None:
+        # ffi 模式暂不支持检查节点
+        return peer_list
     # 提取 URI 列表
     peer_uris = [peer['uri'] for peer in peer_list]
     core_dir = run_configs.core_dir()
@@ -67,7 +70,7 @@ def public_peers(data:dict, *args, **kwargs):
                         uri_set.add(uri)
                         peers.insert(0, {'uri': uri, 'src_uri': uri, 'relay': -1, 'latency': -1, 'status': -1, 'owner': '' })
         except Exception as e:
-            logging.error(f"解析配置文件失败: {e}")
+            logger.error(f"解析配置文件失败: {e}")
             # 配置文件解析失败时，返回空列表，不影响获取公共节点
             pass
     return peers
@@ -78,10 +81,10 @@ def set_peer_source(params: dict, *args, **kwargs):
     test_peer_mark_file = Path(run_configs.data_dir(), 'test-peer-source')
     if source.lower() == 'test':
         test_peer_mark_file.touch(exist_ok=True)
-        logging.info(f"启用测试节点源")
+        logger.info(f"启用测试节点源")
     else:
         test_peer_mark_file.unlink(missing_ok=True)
-        logging.info(f"禁用测试节点源")
+        logger.info(f"禁用测试节点源")
     Path(run_configs.et_peer_check_result_file()).unlink(missing_ok=True)
     Path(run_configs.et_peer_meta_file()).unlink(missing_ok=True)
     __get_public_peers(refresh=True)
@@ -107,7 +110,7 @@ def __get_public_peers(refresh=False) -> list[dict]:
                 for item in json_list:
                     result.append(PeersCheckResult(**item))
         except Exception as e:
-            logging.error(f"解析节点检查结果失败: {str(e)}")
+            logger.error(f"解析节点检查结果失败: {str(e)}")
             result = []
             # 节点检查结果解析失败时，返回空字典，不影响获取公共节点
             pass
@@ -152,7 +155,7 @@ def __download_peers() ->dict:
         cache_time = 1000 * 60
         download_diff_time = int(time.time() * 1000) - data.get('downloadTime', 0)
         if download_diff_time < cache_time:
-            logging.info(f"节点元数据 { download_diff_time } ms前下载，未超过缓存时间 { cache_time } ms，直接使用")
+            logger.info(f"节点元数据 { download_diff_time } ms前下载，未超过缓存时间 { cache_time } ms，直接使用")
             return data
     try:
         data = github_util.download_raw_file(peer_meta_url, timeout=10)
@@ -161,7 +164,7 @@ def __download_peers() ->dict:
             f.write(json.dumps(data, ensure_ascii=False, indent=2))
         return data
     except Exception as e:
-        logging.exception(f"获取节点元数据失败")
+        logger.exception(f"获取节点元数据失败")
         raise HttpException(get_message('peers.fetch_failed', error=str(e)))
 
 def __sort_peers(peers: list[dict]):

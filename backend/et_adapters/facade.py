@@ -2,115 +2,74 @@
 # -*- coding: utf-8 -*-
 """EasyTierFacade — unified entry point with adapter auto-selection"""
 
-import json
 import logging
 import threading
-from typing import Any, Dict, Optional
+from typing import Optional
 
-from .interface import IEasyTierAdapter
-from .models import NetworkInstanceInfo
-from .ffi_main import FfiMainAdapter
+from et_adapters.core_background_adapter import CoreBackgroundAdapter
+from utils import run_configs
+from .core_adapter import CoreAdapter
 from .ffi_adapter import FfiAdapter
-from .core_cli import CoreCliAdapter
+from .interface import IEasyTierAdapter
 
 logger = logging.getLogger(__name__)
 
 
 class EasyTierFacade(IEasyTierAdapter):
 
-    ADAPTER_PRIORITY = [FfiMainAdapter, FfiAdapter, CoreCliAdapter]
-
     def __init__(self):
-        self._adapter: Optional[IEasyTierAdapter] = None
-        self._adapter_name: str = "none"
-        self._current_instance_name: Optional[str] = None
-        self._auto_select()
-
-    def _auto_select(self):
-        for cls in self.ADAPTER_PRIORITY:
-            try:
-                adapter = cls()
-                if adapter.is_available():
-                    self._adapter = adapter
-                    self._adapter_name = cls.__name__
-                    logger.info(f"Selected adapter: {self._adapter_name}")
-                    return
-            except Exception as e:
-                logger.warning(f"Failed to init {cls.__name__}: {e}")
-        logger.error("No adapter available")
-
-    @property
-    def adapter_name(self) -> str:
-        return self._adapter_name
-
-    @property
-    def current_instance_name(self) -> Optional[str]:
-        return self._current_instance_name
-
-    @property
-    def is_ffi(self) -> bool:
-        return isinstance(self._adapter, (FfiMainAdapter, FfiAdapter))
-
-    @property
-    def is_available(self) -> bool:
-        return self._adapter is not None
-
-    def start_network(self, toml_path: str, instance_name: str) -> None:
-        if not self._adapter:
-            raise RuntimeError("No adapter available")
-        self._current_instance_name = instance_name
-        self._adapter.start_network(toml_path, instance_name)
-
-    def stop_network(self, instance_name: str = None) -> None:
-        if not self._adapter:
-            raise RuntimeError("No adapter available")
-        self._adapter.stop_network(instance_name)
-        if instance_name is None or instance_name == self._current_instance_name:
-            self._current_instance_name = None
-
-    def get_network_infos(self, max_length: int = 10) -> Dict[str, NetworkInstanceInfo]:
-        if not self._adapter:
-            return {}
-        return self._adapter.get_network_infos(max_length)
-
-    def get_network_infos_raw(self, max_length: int = 10) -> Dict[str, Any]:
-        if not self._adapter:
-            return {}
-        return self._adapter.get_network_infos_raw(max_length)
-
-    def collect_network_infos_json(self, max_length: int = 10) -> str:
-        """Return network infos as JSON string for Kotlin monitor"""
-        raw = self._adapter.get_network_infos_raw(max_length) if self._adapter else {}
-        return json.dumps({"map": raw})
+        if run_configs.IS_ANDROID:
+        # if run_configs.IS_ANDROID or sys.platform == "win32":
+            self._adapter = FfiAdapter()
+        else:
+            self._adapter = CoreAdapter()
+        logger.info(f"use adapter: {self._adapter}")
 
     def get_version(self) -> str:
-        if not self._adapter:
-            return "unknown"
         return self._adapter.get_version()
 
-    def _addr_to_ipv4(self, addr: int) -> str:
-        if not addr:
-            return ""
-        return ".".join(str((addr >> (i * 8)) & 0xFF) for i in range(3, -1, -1))
+    def start_network(self, toml_path: str, instance_name: str) -> None:
+        self._adapter.start_network(toml_path, instance_name)
 
-    def _latency_to_ms(self, latency_us: int) -> int:
-        if not latency_us or latency_us <= 0:
-            return 0
-        ms = latency_us / 1000
-        return int(ms) if ms >= 1 else 1
+    def stop_network(self, instance_name: str) -> None:
+        self._adapter.stop_network(instance_name)
 
-    def _format_nat_type(self, nat_type: int) -> str:
-        types = {0: "Unknown", 1: "FullCone", 2: "Restricted", 3: "PortRestricted", 4: "Symmetric"}
-        return types.get(nat_type, "Unknown")
+    def status(self, instance_name: str) -> bool:
+        return self._adapter.status(instance_name)
 
-    def _format_cost(self, cost: int) -> str:
-        if cost == 0:
-            return "Local"
-        if cost == 1:
-            return "p2p"
-        return f"relay{cost}"
+    def get_peers(self, instance_name: str) -> list[dict]:
+        return self._adapter.get_peers(instance_name)
 
-    def get_peers(self) -> list:
+    def get_service_dapter(self) -> Optional[CoreBackgroundAdapter]:
+        if isinstance(self._adapter, CoreAdapter):
+            return self._adapter.get_service_adapter()
+        return None
+
+    def set_tun_fd(self, instance_name: str, fd: int) -> int:
+        if isinstance(self._adapter, FfiAdapter):
+            return self._adapter.set_tun_fd(instance_name, fd)
+        else:
+            logger.warning(f"current adapter is not FfiAdapter, cannot set_tun_fd")
+            return -1
+
+
+
+    # def get_network_infos(self, max_length: int = 10) -> Dict[str, NetworkInstanceInfo]:
+    #     if not self._adapter:
+    #         return {}
+    #     return self._adapter.get_network_infos(max_length)
+    #
+    # def get_network_infos_raw(self, max_length: int = 10) -> Dict[str, Any]:
+    #     if not self._adapter:
+    #         return {}
+    #     return self._adapter.get_network_infos_raw(max_length)
+
+    # def collect_network_infos_json(self, max_length: int = 10) -> str:
+    #     """Return network infos as JSON string for Kotlin monitor"""
+    #     raw = self._adapter.get_network_infos_raw(max_length) if self._adapter else {}
+    #     return json.dumps({"map": raw})
+
+    def get_peers1(self) -> list:
         raw = self._adapter.get_network_infos_raw(10) if self._adapter else {}
         peers = []
         for instance_data in raw.values():
@@ -139,23 +98,18 @@ class EasyTierFacade(IEasyTierAdapter):
                 })
         return peers
 
-    def get_current_instance(self) -> Optional[str]:
-        if not self._current_instance_name:
-            return None
-        info = self.get_network_infos(10)
-        if self._current_instance_name in info:
-            return self._current_instance_name
-        return None
+    # def get_current_instance(self) -> Optional[str]:
+    #     if not self._current_instance_name:
+    #         return None
+    #     info = self.get_network_infos(10)
+    #     if self._current_instance_name in info:
+    #         return self._current_instance_name
+    #     return None
 
-    def set_tun_fd(self, instance_name: str, fd: int) -> int:
-        if not self._adapter:
-            raise RuntimeError("No adapter available")
-        return self._adapter.set_tun_fd(instance_name, fd)
 
 
 _facade_instance: Optional[EasyTierFacade] = None
 _facade_lock = threading.Lock()
-
 
 def get_facade() -> EasyTierFacade:
     global _facade_instance
