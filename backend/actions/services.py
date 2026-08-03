@@ -17,38 +17,6 @@ from utils.validators import Validator
 
 logger = logging.getLogger(__name__)
 
-# try:
-#     from et_adapters import get_facade
-#     _FFI_AVAILABLE = True
-# except Exception:
-#     get_facade = None
-#     _FFI_AVAILABLE = False
-
-# 延迟初始化：使用线程安全的单例模式
-# _pm = {}
-# _pm_lock = threading.Lock()
-_ext = ".exe" if sys.platform == "win32" else ""
-
-# def _get_process_manager(profile:str = None) -> Union[ProcessManager]:
-#     """获取 ProcessManager 实例（延迟初始化，线程安全）"""
-#     if not profile:
-#         raise HttpException('validate.profile_required')
-#     pm_key = profile
-#
-#     # 双重检查锁定模式，保证线程安全的同时提高性能
-#     cur_pm = _pm.get(pm_key)
-#     if cur_pm is not None:
-#         return cur_pm
-#
-#     with _pm_lock:
-#         # 再次检查，防止在获取锁期间已被其他线程创建
-#         cur_pm = _pm.get(pm_key)
-#         if cur_pm is None:
-#             pid_file = run_configs.et_pid_file(profile)
-#             cur_pm = process_util.ProcessManager(pid_file.replace('.toml', ''))
-#             _pm[pm_key] = cur_pm
-#     return cur_pm
-
 def status(params=None, *args, **kwargs) -> bool:
     profile, _ = Validator.not_empty(params, 'profile', 'validate.profile_required')
     try:
@@ -56,43 +24,10 @@ def status(params=None, *args, **kwargs) -> bool:
         # return facade.get_current_instance() == (profile if profile else None)
     except Exception:
         return False
-    profile, _ = Validator.not_empty(params, 'profile', 'validate.profile_required')
-    info = et_run_info.get(profile)
-    if info is not None and info.use_system_service:
-        return _system_service_status() == 1
-    else:
-        pm = _get_process_manager(profile)
-        return pm.status()
 
 def stop(params=None, *args, **kwargs):
     profile, _ = Validator.not_empty(params, 'profile', 'validate.profile_required')
     get_facade().stop_network(profile)
-
-    # if run_configs.IS_ANDROID:
-    #     if not _FFI_AVAILABLE:
-    #         return
-    #     try:
-    #         facade = get_facade()
-    #         if not facade.is_available:
-    #             return
-    #         facade.stop_network()
-    #         logging.info("Android: Stopped all EasyTier instances via FFI")
-    #     except Exception as e:
-    #         logging.warning(f"Android: Failed to stop instances: {e}")
-    #     return
-    # profile, _ = Validator.not_empty(params, 'profile', 'validate.profile_required')
-    # info = et_run_info.get(profile)
-    # if info is not None and info.use_system_service:
-    #     if _system_service_status() == -1:
-    #         logging.warning(f"未注册ET系统服务，跳过停止服务")
-    #         return
-    #     cmd = f"{os.path.join(run_configs.core_dir(), 'easytier-cli')}{_ext} service stop"
-    #     logging.info(f"停止ET服务: {cmd}")
-    #     common_util.run_cmd(cmd)
-    # else:
-    #     logging.info(f"停止ET配置: {profile}")
-    #     pm = _get_process_manager(profile)
-    #     pm.stop()
 
 def start(params=None, *args, **kwargs):
     profile, _ = Validator.not_empty(params, 'profile', 'validate.profile_required')
@@ -100,60 +35,6 @@ def start(params=None, *args, **kwargs):
     if not Path(config_file).exists():
         raise HttpException(get_message('service.config_not_found'))
     get_facade().start_network(config_file, profile)
-
-    # if run_configs.IS_ANDROID:
-    #     if not _FFI_AVAILABLE:
-    #         raise HttpException(get_message('service.not_supported_android'))
-    #     try:
-    #         facade = get_facade()
-    #         if not facade.is_available:
-    #             raise HttpException(get_message('service.not_supported_android'))
-    #         profile, _ = Validator.not_empty(params, 'profile', 'validate.profile_required')
-    #         logging.info(f"Android: Starting EasyTier instance '{profile}'...")
-    #         config_file = run_configs.et_config_file(profile)
-    #         if not Path(config_file).exists():
-    #             raise HttpException(get_message('service.config_not_found'))
-    #         logging.info(f"Android: Config file: {config_file}")
-    #         logging.info(f"Android: Starting instance '{profile}' via FFI...")
-    #         facade.start_network(config_file, profile)
-    #         logging.info(f"Android: Started EasyTier instance '{profile}' via FFI")
-    #     except Exception as e:
-    #         logging.exception(f"Android: Failed to start instance: {e}")
-    #         raise
-    #     return
-    # profile, _ = Validator.not_empty(params, 'profile', 'validate.profile_required')
-    # config_file = run_configs.et_config_file(profile)
-    # if not Path(config_file).exists():
-    #     raise HttpException(get_message('service.config_not_found'))
-    #
-    # info = et_run_info.get(profile)
-    # if info is not None and info.use_system_service:
-    #     if _system_service_status() == -1:
-    #         raise HttpException(get_message('service.not_registered'))
-    #     cmd = f"{os.path.join(run_configs.core_dir(), 'easytier-cli')}{_ext} service start"
-    #     logging.info(f"启动ET服务: {cmd}")
-    #     result = common_util.run_cmd(cmd)
-    #     logging.info(f"启动系统注册服务结果：{result}")
-    #     et_run_info.save(profile, info.rpc_portal, info.autostart, True)
-    # else:
-    #     rpc_port = check_peers.get_available_port(start_port=16888)
-    #     rpc_portal = f"127.0.0.1:{rpc_port}"
-    #     # 使用用列表传参，避免执行文件路径含空格，导致报错找不到文件
-    #     cmd = [
-    #         f"{os.path.join(run_configs.core_dir(), 'easytier-core')}{_ext}",
-    #         "-c",
-    #         config_file,
-    #         "-r",
-    #         rpc_portal,
-    #         f"--file-log-dir", f"{run_configs.log_dir()}",
-    #         f"--file-log-level", f"{info.log_level or 'error'}",
-    #         f"--file-log-size", f"50"  # 单个文件日志大小，单位 MB，默认值为 100MB
-    #     ]
-    #     logging.info(f"启动ET命令: {cmd}")
-    #     pm = _get_process_manager(profile)
-    #     pm.start(cmd)
-    #     autostart = False if info is None else info.autostart
-    #     et_run_info.save(profile, rpc_portal, autostart, False)
 
 def restart(params=None, *args, **kwargs):
     logger.info(f"重启ET服务...")
@@ -182,20 +63,6 @@ def start_all(*args, **kwargs):
         start({'profile': system_service_profiles[0]})
 
 def stop_all(*args, **kwargs) -> List[str]:
-    # if run_configs.IS_ANDROID:
-    #     if not _FFI_AVAILABLE:
-    #         return []
-    #     try:
-    #         facade = get_facade()
-    #         if not facade.is_available:
-    #             return []
-    #         stopped = [facade.current_instance_name] if facade.current_instance_name else []
-    #         facade.stop_network()
-    #         logging.info("Android: Stopped all instances via FFI")
-    #         return stopped
-    #     except Exception as e:
-    #         logging.warning(f"Android: Failed to stop all: {e}")
-    #         return []
     stop_profiles = []
     infos = et_run_info.get_all()
     system_service_profile = None
@@ -320,6 +187,7 @@ def change_log_level(log_level):
         info = et_run_info.get(profile)
         log_level = 'disabled' if log_level == 'off' else log_level
         log_level = 'warning' if log_level == 'warn' else log_level
+        _ext = ".exe" if sys.platform == "win32" else ""
         cmd = [
             f"{os.path.join(run_configs.core_dir(), 'easytier-cli')}{_ext}",
             "--rpc-portal",
@@ -342,71 +210,3 @@ def __get_system_service_profiles() -> Set[str]:
                 logger.warning(f"跳过并移除不存在的配置: {config_file}")
                 et_run_info.remove(config_file)
     return auto_start_set
-#
-# def _system_service_install(profiles: List[str], log_level:str = 'error') -> str:
-#     if len(profiles or []) == 0:
-#         raise AssertionError(get_message('service.no_config_for_system_service'))
-#     cmd_config_file_parts = ''
-#     for profile in profiles:
-#         cfg_path = run_configs.et_config_file(profile)
-#         if Path(cfg_path).exists():
-#             cmd_config_file_parts += f" -c {cfg_path}"
-#         else:
-#             logging.warning(f"跳过配置不存在: {profile}")
-#     desc = get_message('service.start_config_desc') + f":{','.join(profiles)}"
-#     display_name = "EasyTier-EUI"
-#     rpc_port = check_peers.get_available_port(start_port=16999)
-#     rpc_portal = f"127.0.0.1:{rpc_port}"
-#     cmd = (f"{os.path.join(run_configs.core_dir(), 'easytier-cli')}{_ext} service install "
-#            f' --display-name {display_name}'
-#            f' --description {desc}'
-#            f" --core-path {os.path.join(run_configs.core_dir(), 'easytier-core')}{_ext}"
-#            f" --service-work-dir {run_configs.data_dir()}"
-#            f" --rpc-portal {rpc_portal}"
-#            f" {cmd_config_file_parts}"
-#            f" --file-log-dir {run_configs.log_dir()}"
-#            f" --file-log-level {log_level or 'error'}"
-#            f" --file-log-size 50" # 单个文件日志大小，单位 MB，默认值为 100MB
-#            )
-#     logging.info(f"注册服务命令： {cmd}")
-#     result = common_util.run_cmd(cmd)
-#     logging.info(f"ET系统服务注册结果：{result}")
-#     for profile in profiles:
-#         p = et_run_info.get(profile)
-#         p.rpc_portal = rpc_portal
-#         p.autostart = True
-#         p.use_system_service = True
-#         et_run_info.save(*p.__dict__.values())
-#     return rpc_portal
-#
-# def _system_service_uninstall():
-#     cmd = f"{os.path.join(run_configs.core_dir(), 'easytier-cli')}{_ext} service uninstall"
-#     common_util.run_cmd(cmd)
-#
-# def _system_service_start():
-#     cmd = f"{os.path.join(run_configs.core_dir(), 'easytier-cli')}{_ext} service start"
-#     result = common_util.run_cmd(cmd)
-#     logging.info(f"ET系统服务启动结果：{result}")
-#
-# def _system_service_stop():
-#     cmd = f"{os.path.join(run_configs.core_dir(), 'easytier-cli')}{_ext} service stop"
-#     result = common_util.run_cmd(cmd)
-#     logging.info(f"ET系统服务停止结果：{result}")
-#
-# def _system_service_status() -> int:
-#     """
-#     -1: 未注册
-#     0：未运行
-#     1：运行中
-#     """
-#     cmd = f"{os.path.join(run_configs.core_dir(), 'easytier-cli')}{_ext} service status"
-#     result = common_util.run_cmd(cmd)
-#     logging.info(f"ET系统服务运行状态：{result}")
-#     if result.find('stopped') > 0:
-#         return 0
-#     elif result.find('running') > 0:
-#         return 1
-#     elif result.find('not installed') > 0:
-#         return -1
-#     else:
-#         raise HttpException(get_message('service.unknown_status', status=result))

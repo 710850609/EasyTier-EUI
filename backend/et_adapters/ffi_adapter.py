@@ -1,17 +1,20 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """FfiAdapter — current default FFI adapter for v2.4.5/v2.6.4"""
+import ctypes
+import json
+import logging
 import os
 import sys
+import threading
+import time
+from ctypes import c_char_p, c_int, c_void_p, POINTER, Structure, c_size_t
+from typing import Dict, Any, List, Set
 
 import tomlkit
-import ctypes, json, logging, threading, time
-from ctypes import c_char_p, c_int, c_void_p, POINTER, Structure, c_size_t
-from typing import Dict, Any, List, Optional, Set
 
 from utils import run_configs
 from .interface import IEasyTierAdapter
-from .models import NetworkInstanceInfo
 
 logger = logging.getLogger(__name__)
 _FFI_LIB_VERSION = "unknown"
@@ -124,6 +127,7 @@ class FfiAdapter(IEasyTierAdapter):
             all_instances = self._list_all_instance_names()
             keep = [n for n in all_instances if n != instance_name]
             self._retain_instances(keep)
+        self._instance_set.remove(instance_name)
 
         # 停止 Android VPN 监控和服务
         try:
@@ -134,7 +138,6 @@ class FfiAdapter(IEasyTierAdapter):
                 manager = MainActivity.getEasyTierManager()
                 if manager is not None:
                     manager.stop()
-                    self._instance_set.remove(instance_name)
         except Exception as e:
             logger.exception(f"fail to stop vpn manager monitor: {e}")
 

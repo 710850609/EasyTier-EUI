@@ -450,7 +450,7 @@ const allColumns = computed(() => [
   { key: "tx_bytes", label: t('nodes.columns.tx_bytes') },
   { key: "nat_type", label: t('nodes.columns.nat_type') },
   { key: "version", label: t('nodes.columns.version') },
-  { key: "id", label: "id" },
+  // { key: "id", label: "id" },
 ])
 
 // 可见列

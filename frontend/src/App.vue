@@ -684,4 +684,22 @@ html.no-glass.dark .submenu-popup-content {
   background: var(--color-surface-container) !important;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
 }
+
+/* 关闭毛玻璃后，底部导航栏使用实色背景 */
+html.no-glass .bottom-nav {
+  background: var(--color-surface) !important;
+}
+
+html.no-glass.dark .bottom-nav {
+  background: var(--color-surface) !important;
+}
+
+/* 关闭毛玻璃后，底部导航子菜单使用实色背景 */
+html.no-glass .submenu-popup {
+  background: var(--color-surface-container) !important;
+}
+
+html.no-glass.dark .submenu-popup {
+  background: var(--color-surface-container) !important;
+}
 </style>

@@ -9,22 +9,13 @@ import sys
 import time
 import zipfile
 from pathlib import Path
-
-import utils.common_util as common_util
 import utils.github_util as github_util
 from actions import services
+from et_adapters import get_facade
 from http_dispatcher.dispatcher import HttpException
 from locales import get_message
-from utils import run_configs, et_run_info, log_util
+from utils import run_configs, et_run_info
 from utils.validators import Validator
-from et_adapters import get_facade
-
-# try:
-#     from et_adapters import get_facade
-#     _FFI_AVAILABLE = True
-# except Exception:
-#     get_facade = None
-#     _FFI_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -37,53 +28,12 @@ def set_log_level(params:dict, *args, **kwargs):
     log_level = params.get("level", 'error')
     et_run_info.set_log_level(log_level)
     services.change_log_level(log_level)
-#
-# def check_core(*args, **kwargs):
-#
-#     if run_configs.IS_ANDROID:
-#         if not _FFI_AVAILABLE:
-#             return False
-#         try:
-#             facade = get_facade()
-#             return facade.is_available
-#         except Exception:
-#             return False
-#     core_dir = run_configs.core_dir()
-#     ext = ".exe" if sys.platform == "win32" else ""
-#     cli_file = f'{core_dir}/easytier-cli{ext}'
-#     core_file = f'{core_dir}/easytier-core{ext}'
-#     return os.path.exists(cli_file) and os.path.exists(core_file)
 
 def version(params=None, *args, **kwargs):
     ver = get_facade().get_version()
     dash_idx = ver.find('-')
     et_version = ver[:dash_idx] if dash_idx > 0 else ver
     return {'version': f'v{et_version}', 'raw_version': f'easytier-core {ver}'}
-
-    # if run_configs.IS_ANDROID:
-    #     if _FFI_AVAILABLE:
-    #         try:
-    #             facade = get_facade()
-    #             if facade.is_available:
-    #                 ver = facade.get_version()
-    #                 if ver and ver != "unknown":
-    #                     dash_idx = ver.find('-')
-    #                     et_version = ver[:dash_idx] if dash_idx > 0 else ver
-    #                     return {'version': f'v{et_version}', 'raw_version': f'easytier-core {ver}'}
-    #         except Exception as e:
-    #             logger.warning(f"Failed to get version from FFI: {e}")
-    #     return {'version': 'unknown', 'raw_version': 'unknown'}
-    # if not check_core():
-    #     raise HttpException(get_message('download.task_not_found'))
-    #
-    # core_dir = run_configs.core_dir()
-    # ext = ".exe" if sys.platform == "win32" else ""
-    # cmd = f'{core_dir}/easytier-core{ext} --version'
-    # raw_version = common_util.run_cmd(cmd)
-    # raw_version = raw_version.replace('easytier-core ', '')
-    # et_version = raw_version[:raw_version.index('-')]
-    # return { 'version': f'v{et_version}', 'raw_version': raw_version }
-
 
 def get_release_info(params: dict, *args, **kwargs) -> dict:
     params = params or {}
