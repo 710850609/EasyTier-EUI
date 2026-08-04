@@ -262,7 +262,7 @@ class EasyTierVpnService : VpnService() {
             NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle("易组网")
                 .setContentText(text)
-                .setSmallIcon(R.drawable.ic_vpn_notification)
+                .setSmallIcon(R.drawable.ic_notification)
                 .setContentIntent(pendingIntent)
                 .setOngoing(true)
                 .setPriority(NotificationCompat.PRIORITY_LOW)
