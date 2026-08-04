@@ -12,6 +12,9 @@ on:
       build_type:
         type: string
         default: "release"
+      reuse_frontend:
+        type: string
+        default: "false"
   push:
     branches: [main, master, feature/apk]
     paths:
@@ -162,6 +165,7 @@ jobs:
 
       # ==================== 前端编译 ====================
       - name: Setup Node.js  # 安装 Node.js 24，启用 npm 缓存
+        if: ${{ inputs.reuse_frontend != 'true' }}
         uses: actions/setup-node@v4
         with:
           node-version: '24'
@@ -169,10 +173,18 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Build Frontend  # npm install + 编译 Vue 前端
+        if: ${{ inputs.reuse_frontend != 'true' }}
         run: |
           cd frontend
           npm install
           npm run build
+
+      - name: Download Frontend  # 复用主流程已构建的前端产物
+        if: ${{ inputs.reuse_frontend == 'true' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
 
       - name: Copy Frontend to Android Assets  # 前端产物 → Android assets 目录
         run: |

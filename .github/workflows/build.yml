@@ -99,12 +99,14 @@ jobs:
 
   build-android:
     if: ${{ github.event.inputs.build_android == 'true' }}
-    needs: [ build-info ]
+    needs: [ build-info, build-frontend ]
     uses: ./.github/workflows/build-android.yml
     with:
       easytier_ref: v${{ needs.build-info.outputs.et_ver }}
       build_version: ${{ needs.build-info.outputs.version }}
       build_type: release
+      reuse_frontend: "true"
+    secrets: inherit
 
   build-frontend:
     runs-on: ubuntu-latest
