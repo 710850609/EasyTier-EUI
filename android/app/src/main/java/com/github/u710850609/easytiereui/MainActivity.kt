@@ -91,7 +91,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         AppLogger.info(TAG, "=== App started ===")
-        AppLogger.info(TAG, "Log file: ${AppLogger.logFile.absolutePath}")
+        AppLogger.info(TAG, "Log file: ${AppLogger.logFile?.absolutePath}")
         AppLogger.info(TAG, "FilesDir: ${filesDir.absolutePath}")
         AppLogger.info(TAG, "ExternalFilesDir: ${getExternalFilesDir(null)?.absolutePath}")
 
