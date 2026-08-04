@@ -102,7 +102,8 @@ class FfiAdapter(IEasyTierAdapter):
             if ret != 0:
                 raise RuntimeError(f"Config parse failed: {self._get_last_error()}")
             with self._lock:
-                ret = self._lib.run_network_instance(toml_config.encode('utf-8'))
+                c_config = ctypes.create_string_buffer(toml_config.encode('utf-8'))
+                ret = self._lib.run_network_instance(c_config)
                 if ret != 0:
                     raise RuntimeError(f"run_network_instance failed: {self._get_last_error()}")
             self._instance_set.add(instance_name)
@@ -202,7 +203,8 @@ class FfiAdapter(IEasyTierAdapter):
             raise RuntimeError("set_tun_fd symbol not available")
         try:
             with self._lock:
-                ret = self._lib.set_tun_fd(instance_name.encode('utf-8'), fd)
+                c_name = ctypes.create_string_buffer(instance_name.encode('utf-8'))
+                ret = self._lib.set_tun_fd(c_name, fd)
                 if ret != 0:
                     raise RuntimeError(f"set_tun_fd failed: {self._get_last_error()}")
                 return 0
@@ -240,7 +242,8 @@ class FfiAdapter(IEasyTierAdapter):
     def _parse_config(self, toml_config: str) -> int:
         try:
             with self._lock:
-                return self._lib.parse_config(toml_config.encode('utf-8'))
+                c_config = ctypes.create_string_buffer(toml_config.encode('utf-8'))
+                return self._lib.parse_config(c_config)
         except Exception as e:
             logger.exception(f"parse_config failed: {e}")
             return -1
