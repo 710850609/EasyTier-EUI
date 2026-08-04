@@ -91,7 +91,6 @@ def set_log_level(level: Union[int, str], logger_name: Optional[str] = None, exc
 
     # 如果修改的是 root，还要处理那些 propagate=True 的子 logger
     # （子 logger 本身没 handler，日志会冒泡到 root，所以改 root 就够了）
-
     target.info(
         "日志级别已切换为 %s [%s]",
         logging.getLevelName(level),

@@ -16,6 +16,8 @@ MESSAGES = {
     "settings": {
         "cache_cleared": "Cache entièrement vidé",
         "cache_deleted": "Cache supprimé ({size})",
+        "logDeleted": "Logs supprimés",
+        "log_deleted": "Logs supprimés, {size} libérés",
         "shutting_down": "Arrêt du service en cours",
         "proxy_config_failed": "Échec de la lecture de la configuration proxy",
         "current_system_not_support": "Le système actuel ne prend pas en charge la configuration",

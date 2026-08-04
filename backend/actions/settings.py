@@ -91,12 +91,36 @@ def _delete_dir(delete_path: Path):
     shutil.rmtree(delete_path, ignore_errors=True)
     return total_bytes
 
+def delete_log(params=None, *args, **kwargs):
+    log_path = Path(run_configs.log_dir())
+    total_bytes = 0
+    if log_path.exists():
+        for entry in log_path.iterdir():
+            if entry.is_file():
+                try:
+                    total_bytes += entry.stat().st_size
+                    entry.write_text('', encoding='utf-8')
+                except (OSError, PermissionError):
+                    pass
+    if total_bytes == 0:
+        return get_message('settings.logDeleted')
+    units = ["B", "KB", "MB", "GB", "TB"]
+    i = 0
+    size = total_bytes
+    while size >= 1024 and i < len(units) - 1:
+        size /= 1024
+        i += 1
+    size_str = f"{size:.2f} {units[i]}"
+    logging.info(f"清空日志目录: {log_path}, 累计释放 {size_str}")
+    return get_message('settings.log_deleted', size=size_str)
+
 def get_log_level(params=None, *args, **kwargs):
+    log_level = 'warn'
     if os.path.exists(run_configs.setting_file()):
         with open(run_configs.setting_file(), "r", encoding="utf-8") as f:
             setting = json.load(f)
-            log_level = setting.get('log_level', logging.INFO)
-    return log_level or 'warn'
+            log_level = setting.get('log_level', 'warn')
+    return log_level
 
 
 def set_log_level(params=None, *args, **kwargs):
@@ -114,9 +138,13 @@ def set_log_level(params=None, *args, **kwargs):
     excluded_console = run_configs.is_docker()
     # docker 环境下，不修改 console 日志输出，方便控制台定位问题
     log_util.set_log_level(log_level, None, excluded_console)
+    setting = {}
+    if os.path.exists(run_configs.setting_file()):
+        with open(run_configs.setting_file(), "r", encoding="utf-8") as f:
+            setting = json.load(f)
+    setting['log_level'] = log_level.lower()
     with open(run_configs.setting_file(), "w", encoding="utf-8") as f:
-        data = {'log_level': log_level}
-        json.dump(data, f, ensure_ascii=False, indent=4)
+        json.dump(setting, f, ensure_ascii=False, indent=4)
 
 def shutdown(params=None, *args, **kwargs):
     import os

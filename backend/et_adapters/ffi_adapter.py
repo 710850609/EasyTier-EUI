@@ -116,8 +116,8 @@ class FfiAdapter(IEasyTierAdapter):
                     manager = MainActivity.getEasyTierManager()
                     if manager is not None:
                         manager.start(instance_name)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.exception(f"fail to start vpn manager for instance '{instance_name}': {e}")
         except Exception as e:
             logger.exception(f"start_network failed: {e}")
             raise

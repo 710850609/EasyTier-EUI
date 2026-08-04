@@ -286,6 +286,9 @@ export const api = {
     getGithubMirrors: (params = {}) => get('/settings/github_mirrors', params),
     deleteCache: () => post('/settings/delete_cache'),
     releaseConfig: () => post('/settings/release_eui_config'),
+    getLogLevel: () => get('/settings/get_log_level', {}, { toastError: false }),
+    setLogLevel: (params = {}) => post('/settings/set_log_level', params),
+    deleteLog: () => post('/settings/delete_log'),
   },
   // et app
   etApp: {

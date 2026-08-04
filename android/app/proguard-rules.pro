@@ -21,6 +21,16 @@
 -keep class com.github.u710850609.easytiereui.EasyTierVpnService { *; }
 -keep class com.github.u710850609.easytiereui.EasyTierVpnService$Companion { *; }
 
+# Keep classes/methods called from Python via jclass reflection
+-keep class com.github.u710850609.easytiereui.MainActivity {
+    public *** getEasyTierManager();
+}
+-keep class com.github.u710850609.easytiereui.EasyTierManager {
+    public *** start(...);
+    public *** stop(...);
+    public *** setLogLevel(...);
+}
+
 # NotificationCompat — keep builder methods (may be accessed via reflection)
 -keep class androidx.core.app.NotificationCompat { *; }
 -keep class androidx.core.app.NotificationCompat$Builder { public *; }

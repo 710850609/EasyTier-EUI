@@ -211,6 +211,32 @@
       </div>
       <div class="setting-row">
         <span class="setting-label">
+          {{ $t('settings.logLevel.label') }}
+        </span>
+        <var-select 
+          class="setting-select" 
+          v-model="logLevel"
+          variant="outlined"
+          size="small"
+          :line="true"
+          :options="logLevelOptions"
+          label-key="label"
+          value-key="value"
+          @change="changeLogLevel"
+        >
+        </var-select>
+      </div>
+      <div class="setting-row">
+        <span class="setting-label">
+          {{ $t('common.deleteLog') }}
+        </span>
+        <var-button type="primary" size="small" @click="deleteLog" auto-loading >
+          <var-icon name="delete" size="18" />
+          {{ $t('common.delete') }}
+        </var-button>
+      </div>
+      <div class="setting-row">
+        <span class="setting-label">
           {{ $t('common.deleteCache') }}
         </span>
         <var-button type="primary" size="small" @click="deleteCache" auto-loading >
@@ -402,6 +428,7 @@ const showRewardCdoe = ref(false)
 const showGithubUrlPopup = ref(false)
 const platform = ref('')
 const isDocker = ref(false)
+const logLevel = ref('warn')
 const etLogLevel = ref('error')
 const euiReleaseInfo = ref({})
 const euiRelease = ref({})
@@ -416,7 +443,6 @@ const logLevelOptions = computed(() => [
   { value: 'warn', label: t('settings.logLevel.warn') },
   { value: 'info', label: t('settings.logLevel.info') },
   { value: 'debug', label: t('settings.logLevel.debug') },
-  { value: 'trace', label: t('settings.logLevel.trace') },
 ])
 
 const languageOptions = [
@@ -714,6 +740,38 @@ const setEtLogLevel = async (level) => {
   }
 }
 
+const fetchLogLevel = async () => {
+  try {
+    const { data } = await api.settings.getLogLevel()
+    if (data) {
+      logLevel.value = data
+    }
+  } catch (e) {
+    console.error('获取日志级别失败:', e)
+  }
+}
+
+const changeLogLevel = async (level) => {
+  const loadingToast = toast.loading(t('settings.settingLogLevel'))
+  try {
+    await api.settings.setLogLevel({ log_level: level })
+    const selectedLabel = logLevelOptions.value.find(item => item.value === level)?.label || level
+    toast.success(t('settings.logLevelSet', { label: selectedLabel }))
+  } finally {
+    loadingToast.clear()
+  }
+}
+
+const deleteLog = async () => {
+  return new Promise((resolve) => {
+    api.settings.deleteLog().then(data => {
+      toast.success(data.data || t('settings.logDeleted'))
+    }).finally(() => {
+      resolve()
+    })
+  })
+}
+
 const getEuiReleaseInfo = (refresh=false, showTip = true) => {
   return new Promise((resolve, reject) => {
     api.etEui.getReleaseInfo({'refresh': refresh}).then((data) => {
@@ -845,6 +903,7 @@ onMounted(() => {
   getEuiReleaseInfo(true, false)
   getEtVersion()
   getEtLogLevel()
+  fetchLogLevel()
   getEuiInfo()
 })
 </script>

@@ -16,6 +16,8 @@ MESSAGES = {
     "settings": {
         "cache_cleared": "缓存已删除干净",
         "cache_deleted": "缓存已删除 ({size})",
+        "logDeleted": "日志已删除",
+        "log_deleted": "日志已删除，释放 {size}",
         "shutting_down": "正在关闭服务",
         "proxy_config_failed": "读取代理配置失败",
         "current_system_not_support": "当前系统不支持配置",
