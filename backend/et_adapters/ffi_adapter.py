@@ -7,6 +7,7 @@ import logging
 import os
 import sys
 import threading
+import time
 from ctypes import c_char_p, c_int, c_void_p, POINTER, Structure, c_size_t
 from typing import Dict, Any, List, Set, Optional
 
@@ -105,7 +106,7 @@ class FfiAdapter(IEasyTierAdapter):
                 if ret != 0:
                     raise RuntimeError(f"run_network_instance failed: {self._get_last_error()}")
             self._instance_set.add(instance_name)
-            # time.sleep(1.0)
+            time.sleep(1.0)
             logger.info(f"Instance '{instance_name}' started via FFI")
             # 触发 Android VPN 授权弹窗并启动 dummy VPN + 监控
             try:
