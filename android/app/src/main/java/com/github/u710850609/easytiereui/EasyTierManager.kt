@@ -6,21 +6,14 @@ import android.net.VpnService
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import com.chaquo.python.Python
-import org.json.JSONArray
 import org.json.JSONObject
-import java.io.File
 import java.io.PrintWriter
 import java.io.StringWriter
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 import java.util.concurrent.Executors
 
 class EasyTierManager(
     private val activity: Activity,
-    private val logFile: File? = null,
 ) {
     companion object {
         private const val TAG = "EasyTierManager"
@@ -35,76 +28,59 @@ class EasyTierManager(
             setUncaughtExceptionHandler { t, e ->
                 val sw = StringWriter()
                 e.printStackTrace(PrintWriter(sw))
-                val line = "FATAL: Uncaught in monitor thread ${t.name}: ${sw}"
-                Log.e(TAG, line, e)
-                logToFile("FATAL", line)
+                AppLogger.fatal(TAG, "Uncaught in monitor thread ${t.name}: ${sw}")
             }
         }
     }
     private var isMonitoring = false
     private var currentIpv4: String? = null
     private var currentProxyCidrs: List<String> = emptyList()
+    private var currentDnsServers: List<String> = emptyList()
     private var currentInstanceName: String? = null
     private var vpnServiceIntent: Intent? = null
-    private fun logToFile(level: String, msg: String) {
-        val ts = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault()).format(Date())
-        val line = "$ts [$level] [EasyTierManager] $msg"
-        Log.println(
-            when (level) { "ERROR" -> Log.ERROR; "WARN" -> Log.WARN; "FATAL" -> Log.ERROR; else -> Log.DEBUG },
-            TAG, msg
-        )
-        try {
-            logFile?.appendText(line + "\r\n")
-        } catch (_: Exception) {}
-    }
-
     private val monitorRunnable = object : Runnable {
         override fun run() {
             if (!isMonitoring) {
-                logToFile("DEBUG", "monitorRunnable: isMonitoring=false, aborting")
+                AppLogger.debug(TAG, "monitorRunnable: isMonitoring=false, aborting")
                 return
             }
-            logToFile("DEBUG", "monitorRunnable: posting to monitorExecutor")
+            AppLogger.debug(TAG, "monitorRunnable: posting to monitorExecutor")
             try {
                 val self = this
                 monitorExecutor.execute {
-                    logToFile("DEBUG", "monitorExecutor: task started, calling collectNetworkStatus")
+                    AppLogger.debug(TAG, "monitorExecutor: task started, calling collectNetworkStatus")
                     try {
-                        val result = collectNetworkStatus()
-                        logToFile("DEBUG", "monitorExecutor: collectNetworkStatus returned, jsonLen=${result.infosJson?.length ?: 0}")
+                        val json = collectNetworkStatus()
+                        AppLogger.debug(TAG, "monitorExecutor: collectNetworkStatus returned, jsonLen=${json?.length ?: 0}")
                         handler.post {
                             if (isMonitoring) {
-                                processNetworkStatus(result)
-                                logToFile("DEBUG", "handler.post: processNetworkStatus returned")
+                                processNetworkStatus(json)
+                                AppLogger.debug(TAG, "handler.post: processNetworkStatus returned")
                             }
                         }
                     } catch (e: Exception) {
                         val sw = StringWriter()
                         e.printStackTrace(PrintWriter(sw))
-                        logToFile("ERROR", "monitorExecutor: collectNetworkStatus exception: ${sw}")
-                        Log.e(TAG, "Monitor background error", e)
+                        AppLogger.error(TAG, "monitorExecutor: collectNetworkStatus exception: ${sw}")
                     }
-                    logToFile("DEBUG", "monitorExecutor: scheduling next run in ${MONITOR_INTERVAL}ms")
+                    AppLogger.debug(TAG, "monitorExecutor: scheduling next run in ${MONITOR_INTERVAL}ms")
                     handler.postDelayed(self, MONITOR_INTERVAL)
                 }
             } catch (e: Exception) {
                 val sw = StringWriter()
                 e.printStackTrace(PrintWriter(sw))
-                logToFile("ERROR", "monitorRunnable: execute() failed: ${sw}")
-                Log.e(TAG, "monitorRunnable execute failed", e)
+                AppLogger.error(TAG, "monitorRunnable: execute() failed: ${sw}")
             }
         }
     }
 
     private fun startMonitoring() {
         if (isMonitoring) {
-            logToFile("WARN", "startMonitoring: already monitoring")
-            Log.w(TAG, "Already monitoring")
+            AppLogger.warn(TAG, "startMonitoring: already monitoring")
             return
         }
         isMonitoring = true
-        logToFile("INFO", "startMonitoring: posting monitorRunnable to handler")
-        Log.i(TAG, "Monitoring started")
+        AppLogger.info(TAG, "startMonitoring: posting monitorRunnable to handler")
         handler.post(monitorRunnable)
     }
 
@@ -118,217 +94,145 @@ class EasyTierManager(
 
     private fun doStop() {
         if (!isMonitoring) {
-            logToFile("INFO", "stop: not monitoring, still stopping VPN service")
+            AppLogger.info(TAG, "stop: not monitoring, still stopping VPN service")
             stopVpnService()
             return
         }
         isMonitoring = false
-        logToFile("INFO", "stop: removing callbacks and stopping VPN")
+        AppLogger.info(TAG, "stop: removing callbacks and stopping VPN")
         handler.removeCallbacks(monitorRunnable)
         stopVpnService()
         currentIpv4 = null
         currentProxyCidrs = emptyList()
+        currentDnsServers = emptyList()
         currentInstanceName = null
-        Log.i(TAG, "Monitoring stopped")
     }
 
-    private data class NetworkStatus(
-        val infosJson: String?,
-        val error: String?
-    )
-
-    private fun collectNetworkStatus(): NetworkStatus {
-        logToFile("DEBUG", "collectNetworkStatus: start")
+    private fun collectNetworkStatus(): String? {
+        val instanceName = currentInstanceName ?: return null
+        AppLogger.debug(TAG, "collectNetworkStatus: start, instance=$instanceName")
         try {
-            logToFile("DEBUG", "collectNetworkStatus: Python.getInstance()")
             val python = Python.getInstance()
-            logToFile("DEBUG", "collectNetworkStatus: getModule(et_adapters.facade)")
             val module = python.getModule("et_adapters.facade")
-            logToFile("DEBUG", "collectNetworkStatus: getFacade().collect_network_infos_json(10)")
             val facade = module.callAttr("get_facade")
             if (facade == null) {
-                logToFile("ERROR", "collectNetworkStatus: facade is null")
-                return NetworkStatus(null, null)
+                AppLogger.error(TAG, "collectNetworkStatus: facade is null")
+                return null
             }
-            val json = facade.callAttr("collect_network_infos_json", 10).toString()
-            logToFile("DEBUG", "collectNetworkStatus: done, jsonLen=${json.length}")
-            return NetworkStatus(json, null)
+            val json = facade.callAttr("get_route_info", instanceName).toString()
+            AppLogger.debug(TAG, "collectNetworkStatus: done, jsonLen=${json.length}")
+            return json
         } catch (e: Exception) {
             val sw = StringWriter()
             e.printStackTrace(PrintWriter(sw))
-            logToFile("ERROR", "collectNetworkStatus: exception: ${sw}")
-            Log.w(TAG, "Python FFI call failed", e)
-            return NetworkStatus(null, null)
+            AppLogger.error(TAG, "collectNetworkStatus: exception: ${sw}")
+            return null
         }
     }
 
-    private fun processNetworkStatus(status: NetworkStatus) {
-        logToFile("DEBUG", "processNetworkStatus: start")
+    private fun processNetworkStatus(infosJson: String?) {
+        AppLogger.debug(TAG, "processNetworkStatus: start")
         try {
-            val infosJson = status.infosJson
-            logToFile("DEBUG", "processNetworkStatus: infosJson=${infosJson}")
             if (infosJson.isNullOrEmpty() || infosJson == "{}") {
-                logToFile("DEBUG", "processNetworkStatus: empty result, skipping")
+                AppLogger.debug(TAG, "processNetworkStatus: empty result, skipping")
                 return
             }
 
-            logToFile("DEBUG", "processNetworkStatus: parsing JSONObject")
             val root = JSONObject(infosJson)
-            logToFile("DEBUG", "processNetworkStatus: getting map")
-            val map = root.optJSONObject("map")
-            if (map == null) {
-                logToFile("DEBUG", "processNetworkStatus: map is null, returning")
-                return
-            }
-            logToFile("DEBUG", "processNetworkStatus: map keys=${map.keys().asSequence().toList()}")
-
-            logToFile("DEBUG", "processNetworkStatus: getting networkInfo for $currentInstanceName")
-            val networkInfo = map.optJSONObject(currentInstanceName) ?: run {
-                logToFile("DEBUG", "processNetworkStatus: instance $currentInstanceName not found, returning")
-                return
-            }
-            if (!networkInfo.optBoolean("running", false)) {
-                logToFile("DEBUG", "processNetworkStatus: instance $currentInstanceName not running, returning")
-                return
-            }
-
-            val myNodeInfo = networkInfo.optJSONObject("my_node_info")
-            val virtualIpv4 = myNodeInfo?.optJSONObject("virtual_ipv4")
-            val newIpv4 = parseIpv4Inet(virtualIpv4)
-
-            if (newIpv4 == null) {
-                logToFile("DEBUG", "No IPv4 yet")
-                Log.d(TAG, "No IPv4 yet")
+            val newIpv4 = root.optString("virtual_ipv4", "")
+            if (newIpv4.isEmpty()) {
+                AppLogger.debug(TAG, "processNetworkStatus: no IPv4 address yet")
                 return
             }
 
             val newProxyCidrs = mutableListOf<String>()
-            val routes = networkInfo.optJSONArray("routes")
-            if (routes != null) {
-                for (i in 0 until routes.length()) {
-                    val route = routes.getJSONObject(i)
-                    val cidrs = route.optJSONArray("proxy_cidrs")
-                    if (cidrs != null) {
-                        for (j in 0 until cidrs.length()) {
-                            newProxyCidrs.add(cidrs.getString(j))
-                        }
+            val routesArr = root.optJSONArray("routes")
+            if (routesArr != null) {
+                for (i in 0 until routesArr.length()) {
+                    val cidr = routesArr.optString(i, null)
+                    if (!cidr.isNullOrEmpty()) {
+                        newProxyCidrs.add(cidr)
+                    }
+                }
+            }
+
+            val newDnsServers = mutableListOf<String>()
+            val dnsArr = root.optJSONArray("dns_servers")
+            if (dnsArr != null) {
+                for (i in 0 until dnsArr.length()) {
+                    val dns = dnsArr.optString(i, null)
+                    if (!dns.isNullOrEmpty()) {
+                        newDnsServers.add(dns)
                     }
                 }
             }
 
             val ipv4Changed = newIpv4 != currentIpv4
             val cidrsChanged = newProxyCidrs != currentProxyCidrs
+            val dnsChanged = newDnsServers != currentDnsServers
 
-            if (ipv4Changed || cidrsChanged) {
-                logToFile("INFO", "Network changed: IPv4=$currentIpv4->$newIpv4, CIDRs=${currentProxyCidrs.size}->${newProxyCidrs.size}")
-                Log.i(TAG, "Network changed: IPv4=$currentIpv4->$newIpv4, CIDRs=${currentProxyCidrs.size}->${newProxyCidrs.size}")
+            if (ipv4Changed || cidrsChanged || dnsChanged) {
+                AppLogger.info(TAG, "Network changed: IPv4=$currentIpv4->$newIpv4, CIDRs=${currentProxyCidrs.size}->${newProxyCidrs.size}, DNS=${currentDnsServers.size}->${newDnsServers.size}")
                 currentIpv4 = newIpv4
                 currentProxyCidrs = newProxyCidrs.toList()
-                restartVpnService(newIpv4, newProxyCidrs)
+                currentDnsServers = newDnsServers.toList()
+                restartVpnService(newIpv4, newProxyCidrs, newDnsServers)
             }
-            logToFile("DEBUG", "processNetworkStatus: done")
+            AppLogger.debug(TAG, "processNetworkStatus: done")
         } catch (t: Throwable) {
             val sw = StringWriter()
             t.printStackTrace(PrintWriter(sw))
-            logToFile("ERROR", "processNetworkStatus: throwable: ${t.javaClass.name}: ${sw}")
-            Log.e(TAG, "Monitor error", t)
+            AppLogger.error(TAG, "processNetworkStatus: throwable: ${t.javaClass.name}: ${sw}")
         }
     }
 
-    private fun parseIpv4Inet(inet: JSONObject?): String? {
-        if (inet == null) return null
-        val address = inet.optJSONObject("address") ?: return null
-        val addr = address.optInt("addr", -1)
-        if (addr < 0) return null
-        val networkLength = inet.optInt("network_length", 24)
-
-        val ip = "${(addr shr 24) and 0xFF}.${(addr shr 16) and 0xFF}.${(addr shr 8) and 0xFF}.${addr and 0xFF}"
-        return "$ip/$networkLength"
-    }
-
-    private fun restartVpnService(ipv4: String, proxyCidrs: List<String>) {
+    private fun restartVpnService(ipv4: String, proxyCidrs: List<String>, dnsServers: List<String>) {
         try {
-            if (activity.isFinishing) {
-                logToFile("ERROR", "Activity is finishing, cannot restart VPN")
-                return
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1 && activity.isDestroyed) {
-                logToFile("ERROR", "Activity is destroyed, cannot restart VPN")
-                return
-            }
-            logToFile("INFO", "Restarting VPN: $ipv4")
+            AppLogger.info(TAG, "Restarting VPN: $ipv4")
             stopVpnService()
-            startVpnService(ipv4, proxyCidrs)
+            startVpnService(ipv4, proxyCidrs, dnsServers)
         } catch (e: Exception) {
             val sw = StringWriter()
             e.printStackTrace(PrintWriter(sw))
-            logToFile("ERROR", "Restart VPN error: ${sw}")
-            Log.e(TAG, "Restart VPN error", e)
+            AppLogger.error(TAG, "Restart VPN error: ${sw}")
         }
     }
 
-    private fun startVpnService(ipv4: String, proxyCidrs: List<String>) {
-        if (activity.isFinishing) {
-            logToFile("ERROR", "Activity is finishing, cannot start VPN")
-            Log.e(TAG, "Activity is finishing, cannot start VPN")
-            return
-        }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1 && activity.isDestroyed) {
-            logToFile("ERROR", "Activity is destroyed, cannot start VPN")
-            Log.e(TAG, "Activity is destroyed, cannot start VPN")
-            return
-        }
-
-        try {
-            doStartVpnService(ipv4, proxyCidrs)
-        } catch (e: Exception) {
-            val sw = StringWriter()
-            e.printStackTrace(PrintWriter(sw))
-            logToFile("ERROR", "Start VPN error: ${sw}")
-            Log.e(TAG, "Start VPN error", e)
-        }
-    }
-
-    private fun doStartVpnService(ipv4: String, proxyCidrs: List<String>) {
+    private fun startVpnService(ipv4: String, proxyCidrs: List<String>, dnsServers: List<String>) {
         try {
             if (activity.isFinishing) {
-                logToFile("ERROR", "Activity is finishing, cannot doStartVpnService")
+                AppLogger.error(TAG, "Activity is finishing, cannot start VPN")
                 return
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1 && activity.isDestroyed) {
-                logToFile("ERROR", "Activity is destroyed, cannot doStartVpnService")
+                AppLogger.error(TAG, "Activity is destroyed, cannot start VPN")
                 return
             }
 
-            EasyTierVpnService.logFile = logFile
             val intent = Intent(activity, EasyTierVpnService::class.java)
             intent.putExtra("ipv4_address", ipv4)
             intent.putStringArrayListExtra("proxy_cidrs", ArrayList(proxyCidrs))
+            intent.putStringArrayListExtra("dns_servers", ArrayList(dnsServers))
             intent.putExtra("instance_name", currentInstanceName ?: "unknown")
 
-            logToFile("INFO", "doStartVpnService: calling startService")
+            AppLogger.info(TAG, "startVpnService: calling startService")
             activity.startService(intent)
             vpnServiceIntent = intent
 
-            logToFile("INFO", "VPN started: $ipv4, CIDRs=${proxyCidrs.size}")
-            Log.i(TAG, "VPN started: $ipv4, CIDRs=${proxyCidrs.size}")
+            AppLogger.info(TAG, "VPN started: $ipv4, CIDRs=${proxyCidrs.size}, DNS=${dnsServers.size}")
         } catch (e: Exception) {
             val sw = StringWriter()
             e.printStackTrace(PrintWriter(sw))
-            logToFile("ERROR", "Start VPN error: ${sw}")
-            Log.e(TAG, "Start VPN error", e)
+            AppLogger.error(TAG, "Start VPN error: ${sw}")
         }
     }
 
     fun onVpnAuthorizationResult(resultCode: Int) {
         if (resultCode == Activity.RESULT_OK) {
-            logToFile("INFO", "VPN authorization granted, starting monitoring")
-            Log.i(TAG, "VPN authorization granted")
+            AppLogger.info(TAG, "VPN authorization granted, starting monitoring")
             startMonitoring()
         } else {
-            logToFile("WARN", "VPN authorization denied by user")
-            Log.w(TAG, "VPN authorization denied by user")
+            AppLogger.warn(TAG, "VPN authorization denied by user")
         }
     }
 
@@ -342,46 +246,57 @@ class EasyTierManager(
 
     private fun doStart(instanceName: String) {
         try {
-            logToFile("INFO", "start: instance=$instanceName")
+            AppLogger.info(TAG, "start: instance=$instanceName")
             currentInstanceName = instanceName
             val prepareIntent = VpnService.prepare(activity)
             if (prepareIntent != null) {
-                logToFile("INFO", "start: VPN not authorized, showing dialog")
+                AppLogger.info(TAG, "start: VPN not authorized, showing dialog")
                 activity.startActivityForResult(prepareIntent, VPN_REQUEST_CODE)
             } else {
-                logToFile("INFO", "start: VPN already authorized, starting monitoring")
+                AppLogger.info(TAG, "start: VPN already authorized, starting monitoring")
                 startMonitoring()
             }
         } catch (e: Exception) {
             val sw = StringWriter()
             e.printStackTrace(PrintWriter(sw))
-            logToFile("ERROR", "start error: ${sw}")
+            AppLogger.error(TAG, "start error: ${sw}")
         }
     }
 
     private fun stopVpnService() {
         try {
-            // 直接调用静态方法请求服务停止
             EasyTierVpnService.requestStop()
-            logToFile("INFO", "Called EasyTierVpnService.requestStop()")
+            AppLogger.info(TAG, "Called EasyTierVpnService.requestStop()")
 
-            // 然后调用 stopService 作为备用
             if (vpnServiceIntent != null) {
                 val stopped = activity.stopService(vpnServiceIntent)
-                logToFile("INFO", "stopService result=$stopped, intent=$vpnServiceIntent")
-                Log.i(TAG, "VPN stopService result=$stopped")
+                AppLogger.info(TAG, "stopService result=$stopped, intent=$vpnServiceIntent")
             } else {
                 val intent = Intent(activity, EasyTierVpnService::class.java)
                 val stopped = activity.stopService(intent)
-                logToFile("INFO", "stopService(fallback) result=$stopped")
-                Log.i(TAG, "VPN stopService(fallback) result=$stopped")
+                AppLogger.info(TAG, "stopService(fallback) result=$stopped")
             }
             vpnServiceIntent = null
         } catch (e: Exception) {
             val sw = StringWriter()
             e.printStackTrace(PrintWriter(sw))
-            logToFile("ERROR", "Stop VPN error: ${sw}")
-            Log.e(TAG, "Stop VPN error", e)
+            AppLogger.error(TAG, "Stop VPN error: ${sw}")
         }
+    }
+
+    fun setLogLevel(level: String) {
+        AppLogger.minLevel = when (level.lowercase()) {
+            "debug" -> AppLogger.Level.DEBUG
+            "info" -> AppLogger.Level.INFO
+            "warn" -> AppLogger.Level.WARN
+            "error" -> AppLogger.Level.ERROR
+            "fatal" -> AppLogger.Level.FATAL
+            "off" -> AppLogger.Level.OFF
+            else -> {
+                AppLogger.warn(TAG, "setLogLevel: unknown level '$level'")
+                return
+            }
+        }
+        AppLogger.info(TAG, "setLogLevel: changed to ${AppLogger.minLevel}")
     }
 }

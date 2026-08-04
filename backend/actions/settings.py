@@ -11,8 +11,9 @@ import tomlkit
 
 from http_dispatcher.dispatcher import HttpException
 from locales import get_message
-from utils import run_configs, github_util
+from utils import run_configs, github_util, log_util
 
+logger = logging.getLogger(__name__)
 
 def eui_info(*args, **kwargs):
     platform = 'trim' if run_configs.is_fn_system() else sys.platform
@@ -88,6 +89,31 @@ def _delete_dir(delete_path: Path):
                 pass
     shutil.rmtree(delete_path, ignore_errors=True)
     return total_bytes
+
+def get_log_level(params=None, *args, **kwargs):
+    params = params or {}
+    log_level = params.get('log_level', 'info').upper()
+    excluded_console = run_configs.is_docker()
+    # docker 环境下，不修改 console 日志输出，方便控制台定位问题
+    log_util.set_log_level(log_level, None, excluded_console)
+
+
+def set_log_level(params=None, *args, **kwargs):
+    params = params or {}
+    log_level = params.get('log_level', 'info').upper()
+    try:
+        if run_configs.IS_ANDROID:
+            from java import jclass
+            MainActivity = jclass(run_configs.ANDROID_MAIN_ACTIVITY)
+            manager = MainActivity.getEasyTierManager()
+            if manager is not None:
+                manager.setLogLevel(log_level)
+    except Exception as e:
+        logger.exception(f"fail to set android log level: {e}")
+    excluded_console = run_configs.is_docker()
+    # docker 环境下，不修改 console 日志输出，方便控制台定位问题
+    log_util.set_log_level(log_level, None, excluded_console)
+
 
 def shutdown(params=None, *args, **kwargs):
     import os

@@ -317,7 +317,7 @@
           </var-paper>
 
           <!-- 本机信息 -->
-          <var-paper v-if="!fastSettingMode" :elevation="2" class="config-section-panel">
+          <var-paper v-if="!fastSettingMode" :elevation="1" class="config-section-panel">
             <var-collapse v-model="advancedOpen" class="panel-section-inner">
               <var-collapse-item name="hostInfo">
               <template #title>
@@ -400,7 +400,7 @@
           </var-paper>
 
           <!-- 连接方式 -->
-          <var-paper v-if="!fastSettingMode" :elevation="2" class="config-section-panel">
+          <var-paper v-if="!fastSettingMode" :elevation="1" class="config-section-panel">
             <var-collapse v-model="advancedOpen" class="panel-section-inner">
               <var-collapse-item name="connection">
               <template #title>
@@ -485,7 +485,7 @@
           </var-paper>
 
           <!-- 性能安全 -->
-          <var-paper v-if="!fastSettingMode" :elevation="2" class="config-section-panel">
+          <var-paper v-if="!fastSettingMode" :elevation="1" class="config-section-panel">
             <var-collapse v-model="advancedOpen" class="panel-section-inner">
               <var-collapse-item name="performance">
               <template #title>
@@ -583,7 +583,7 @@
           </var-paper>
 
           <!-- 代理与转发 -->
-          <var-paper v-if="!fastSettingMode" :elevation="2" class="config-section-panel">
+          <var-paper v-if="!fastSettingMode" :elevation="1" class="config-section-panel">
             <var-collapse v-model="forwardOpen" class="panel-section-inner">
               <var-collapse-item name="forward">
                 <template #title>
@@ -2987,7 +2987,7 @@ html.dark .config-section-panel {
   }
 
   .config-section-panel {
-    margin-top: 8px;
+    margin-top: 12px;
   }
 
   .port-forward-row {

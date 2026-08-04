@@ -25,6 +25,7 @@ DEFAULT_TRIM_APPNAME:str = 'EasyTier-EUI'
 EUI_RUN_HOST:str = None
 EUI_RUN_PORT:int = None
 EUI_CONFIG_FILE:str = 'eui.toml'
+ANDROID_MAIN_ACTIVITY:str = 'com.github.u710850609.easytiereui.MainActivity'
 
 _is_inited_evn = False
 _run_mode = 0
@@ -201,6 +202,9 @@ def fn_check_file() -> str:
     检查文件, 记录应用启动时的开机时间，用于检查是否已经启动过应用
     """
     return os.path.join(data_dir(), 'fn_check.txt')
+
+def setting_file() -> str:
+    return os.path.join(data_dir(), 'setting.json')
 
 def get_run_mode() -> int:
     """

@@ -10,16 +10,11 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.ParcelFileDescriptor
-import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.chaquo.python.Python
 import kotlin.concurrent.thread
-import java.io.File
 import java.io.PrintWriter
 import java.io.StringWriter
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 class EasyTierVpnService : VpnService() {
 
@@ -33,109 +28,89 @@ class EasyTierVpnService : VpnService() {
         const val CHANNEL_ID = "easytier_vpn_channel"
         const val NOTIFICATION_ID = 1
 
-        var logFile: File? = null
         var instance: EasyTierVpnService? = null
             private set
 
         fun requestStop() {
             instance?.let { service ->
-                logToFile("INFO", "requestStop: cleaning up and stopping")
+                AppLogger.info(TAG, "requestStop: cleaning up and stopping")
                 service.isRunning = false
                 try {
                     service.vpnInterface?.close()
                 } catch (e: Exception) {
-                    logToFile("ERROR", "requestStop: close vpnInterface failed: ${e.message}")
+                    AppLogger.error(TAG, "requestStop: close vpnInterface failed: ${e.message}")
                 }
                 service.vpnInterface = null
                 try {
                     service.stopForeground(STOP_FOREGROUND_REMOVE)
-                    logToFile("INFO", "requestStop: stopForeground succeeded")
+                    AppLogger.info(TAG, "requestStop: stopForeground succeeded")
                 } catch (e: Exception) {
-                    logToFile("ERROR", "requestStop: stopForeground failed: ${e.message}")
+                    AppLogger.error(TAG, "requestStop: stopForeground failed: ${e.message}")
                 }
                 service.stopSelf()
-            } ?: logToFile("WARN", "requestStop: no active instance")
-        }
-
-        fun logToFile(level: String, msg: String) {
-            val ts = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault()).format(Date())
-            val line = "$ts [$level] [EasyTierVpnService] $msg"
-            Log.println(
-                when (level) { "ERROR" -> Log.ERROR; "WARN" -> Log.WARN; "FATAL" -> Log.ERROR; else -> Log.DEBUG },
-                TAG, msg
-            )
-            try {
-                logFile?.appendText(line + "\r\n")
-            } catch (_: Exception) {}
+            } ?: AppLogger.warn(TAG, "requestStop: no active instance")
         }
     }
 
     override fun onCreate() {
         super.onCreate()
-        logToFile("INFO", "VPN Service onCreate: start")
+        AppLogger.info(TAG, "VPN Service onCreate: start")
         try {
             createNotificationChannel()
-            logToFile("INFO", "VPN Service notification channel created")
+            AppLogger.info(TAG, "VPN Service notification channel created")
         } catch (e: Exception) {
-            logToFile("ERROR", "Failed to create notification channel: ${e.message}")
-            Log.e(TAG, "Failed to create notification channel", e)
+            AppLogger.error(TAG, "Failed to create notification channel: ${e.message}")
         }
         instance = this
-        logToFile("INFO", "VPN Service created")
-        Log.d(TAG, "VPN Service created")
+        AppLogger.info(TAG, "VPN Service created")
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        logToFile("INFO", "onStartCommand: flags=$flags, startId=$startId")
+        AppLogger.info(TAG, "onStartCommand: flags=$flags, startId=$startId")
         val ipv4Address = intent?.getStringExtra("ipv4_address")
         val proxyCidrs = intent?.getStringArrayListExtra("proxy_cidrs") ?: arrayListOf()
+        val dnsServers = intent?.getStringArrayListExtra("dns_servers") ?: arrayListOf()
         instanceName = intent?.getStringExtra("instance_name")
 
         if (ipv4Address == null || instanceName == null) {
-            logToFile("ERROR", "Missing parameters: ipv4Address=$ipv4Address, instanceName=$instanceName")
-            Log.e(TAG, "Missing parameters: ipv4Address=$ipv4Address, instanceName=$instanceName")
+            AppLogger.error(TAG, "Missing parameters: ipv4Address=$ipv4Address, instanceName=$instanceName")
             stopSelf()
             return START_NOT_STICKY
         }
 
-        logToFile("INFO", "Starting VPN - IPv4: $ipv4Address, Proxy CIDRs: $proxyCidrs, Instance: $instanceName")
-        Log.i(TAG, "Starting VPN - IPv4: $ipv4Address, Proxy CIDRs: $proxyCidrs, Instance: $instanceName")
+        AppLogger.info(TAG, "Starting VPN - IPv4: $ipv4Address, Proxy CIDRs: $proxyCidrs, DNS: $dnsServers, Instance: $instanceName")
 
         try {
-            // 先创建 VPN 接口，再调用 startForeground
-            val pfd = createVpnInterface(ipv4Address, proxyCidrs)
+            val pfd = createVpnInterface(ipv4Address, proxyCidrs, dnsServers)
             if (pfd == null) {
-                logToFile("ERROR", "Failed to create VPN interface (pfd is null)")
-                Log.e(TAG, "Failed to create VPN interface")
+                AppLogger.error(TAG, "Failed to create VPN interface (pfd is null)")
                 stopSelf()
                 return START_NOT_STICKY
             }
 
             vpnInterface = pfd
-            // 只调用一次 startForeground，直接显示 Connected 状态
             startForeground(NOTIFICATION_ID, buildNotification("$instanceName 配置运行中"))
-            logToFile("INFO", "VPN interface created, fd=${pfd.fd}")
+            AppLogger.info(TAG, "VPN interface created, fd=${pfd.fd}")
 
             val name = instanceName!!
             val fd = pfd.fd
             thread {
                 try {
-                    logToFile("INFO", "Background thread: setting TUN fd=$fd for instance=$name")
+                    AppLogger.info(TAG, "Background thread: setting TUN fd=$fd for instance=$name")
                     setTunFd(name, fd)
-                    logToFile("INFO", "Background thread: entering keepalive loop")
+                    AppLogger.info(TAG, "Background thread: entering keepalive loop")
                     runKeepAliveLoop()
                 } catch (t: Throwable) {
                     val sw = StringWriter()
                     t.printStackTrace(PrintWriter(sw))
-                    logToFile("ERROR", "VPN background error: ${sw}")
-                    Log.e(TAG, "VPN background error", t)
+                    AppLogger.error(TAG, "VPN background error: ${sw}")
                 } finally {
-                    logToFile("INFO", "VPN background thread ending, cleaning up")
+                    AppLogger.info(TAG, "VPN background thread ending, cleaning up")
                     handler.post {
                         try {
                             stopForeground(STOP_FOREGROUND_REMOVE)
                         } catch (e: Exception) {
-                            logToFile("ERROR", "stopForeground in finally failed: ${e.message}")
+                            AppLogger.error(TAG, "stopForeground in finally failed: ${e.message}")
                         }
                         stopSelf()
                     }
@@ -144,12 +119,11 @@ class EasyTierVpnService : VpnService() {
         } catch (t: Throwable) {
             val sw = StringWriter()
             t.printStackTrace(PrintWriter(sw))
-            logToFile("ERROR", "VPN setup failed: ${sw}")
-            Log.e(TAG, "VPN setup failed", t)
+            AppLogger.error(TAG, "VPN setup failed: ${sw}")
             try {
                 stopForeground(STOP_FOREGROUND_REMOVE)
             } catch (e: Exception) {
-                logToFile("ERROR", "stopForeground in catch failed: ${e.message}")
+                AppLogger.error(TAG, "stopForeground in catch failed: ${e.message}")
             }
             stopSelf()
             return START_NOT_STICKY
@@ -158,44 +132,48 @@ class EasyTierVpnService : VpnService() {
         return START_STICKY
     }
 
-    private fun createVpnInterface(ipv4Address: String, proxyCidrs: List<String>): ParcelFileDescriptor? {
-        logToFile("INFO", "createVpnInterface: ipv4=$ipv4Address, cidrs=${proxyCidrs.size}")
+    private fun createVpnInterface(ipv4Address: String, proxyCidrs: List<String>, dnsServers: List<String>): ParcelFileDescriptor? {
+        AppLogger.info(TAG, "createVpnInterface: ipv4=$ipv4Address, cidrs=${proxyCidrs.size}, dns=${dnsServers.size}")
         val (ip, networkLength) = parseIpv4Address(ipv4Address)
-        logToFile("DEBUG", "createVpnInterface: parsed ip=$ip, prefix=$networkLength")
+        AppLogger.debug(TAG, "createVpnInterface: parsed ip=$ip, prefix=$networkLength")
 
         val builder = Builder()
         builder.setSession("EasyTier-EUI VPN")
             .addAddress(ip, networkLength)
-            .addDnsServer("223.5.5.5")
-            .addDnsServer("114.114.114.114")
             .addDisallowedApplication(packageName)
+
+        if (dnsServers.isEmpty()) {
+            builder.addDnsServer("223.5.5.5")
+                .addDnsServer("119.29.29.29")
+                .addDnsServer("114.114.114.114")
+                .addDnsServer("8.8.8.8")
+        } else {
+            dnsServers.forEach { dns -> builder.addDnsServer(dns) }
+        }
 
         proxyCidrs.forEach { cidr ->
             try {
                 val (routeIp, routeLength) = parseCidr(cidr)
                 builder.addRoute(routeIp, routeLength)
-                logToFile("DEBUG", "Added route: $routeIp/$routeLength")
-                Log.d(TAG, "Added route: $routeIp/$routeLength")
+                AppLogger.debug(TAG, "Added route: $routeIp/$routeLength")
             } catch (e: Exception) {
-                logToFile("WARN", "Failed to parse CIDR: $cidr - ${e.message}")
-                Log.w(TAG, "Failed to parse CIDR: $cidr", e)
+                AppLogger.warn(TAG, "Failed to parse CIDR: $cidr - ${e.message}")
             }
         }
 
-        logToFile("INFO", "createVpnInterface: calling builder.establish()")
+        AppLogger.info(TAG, "createVpnInterface: calling builder.establish()")
         try {
             val pfd = builder.establish()
             if (pfd == null) {
-                logToFile("ERROR", "createVpnInterface: builder.establish() returned null")
+                AppLogger.error(TAG, "createVpnInterface: builder.establish() returned null")
             } else {
-                logToFile("INFO", "createVpnInterface: builder.establish() succeeded, fd=${pfd.fd}")
+                AppLogger.info(TAG, "createVpnInterface: builder.establish() succeeded, fd=${pfd.fd}")
             }
             return pfd
         } catch (t: Throwable) {
             val sw = StringWriter()
             t.printStackTrace(PrintWriter(sw))
-            logToFile("ERROR", "createVpnInterface: builder.establish() threw: ${sw}")
-            Log.e(TAG, "builder.establish() threw", t)
+            AppLogger.error(TAG, "createVpnInterface: builder.establish() threw: ${sw}")
             return null
         }
     }
@@ -205,38 +183,34 @@ class EasyTierVpnService : VpnService() {
             val module = Python.getInstance().getModule("et_adapters.facade")
             val facade = module.callAttr("get_facade")
             if (facade == null) {
-                logToFile("ERROR", "TUN fd set: facade is null")
+                AppLogger.error(TAG, "TUN fd set: facade is null")
                 return
             }
             val result = facade.callAttr("set_tun_fd", instanceName, fd).toInt()
             if (result == 0) {
-                logToFile("INFO", "TUN fd set successfully: $fd")
-                Log.i(TAG, "TUN fd set successfully: $fd")
+                AppLogger.info(TAG, "TUN fd set successfully: $fd")
             } else {
-                logToFile("ERROR", "TUN fd set failed: $result")
-                Log.e(TAG, "TUN fd set failed: $result")
+                AppLogger.error(TAG, "TUN fd set failed: $result")
             }
         } catch (t: Throwable) {
             val sw = StringWriter()
             t.printStackTrace(PrintWriter(sw))
-            logToFile("ERROR", "TUN fd set error: ${sw}")
-            Log.e(TAG, "TUN fd set error", t)
+            AppLogger.error(TAG, "TUN fd set error: ${sw}")
         }
     }
 
     private fun runKeepAliveLoop() {
         isRunning = true
-        logToFile("INFO", "Keep-alive loop started")
+        AppLogger.info(TAG, "Keep-alive loop started")
         while (isRunning && vpnInterface != null) {
             try {
                 Thread.sleep(1000)
             } catch (e: InterruptedException) {
-                logToFile("INFO", "Keep-alive loop interrupted")
+                AppLogger.info(TAG, "Keep-alive loop interrupted")
                 break
             }
         }
-        logToFile("INFO", "Keep-alive loop ended (isRunning=$isRunning, vpnInterface=${if (vpnInterface != null) "present" else "null"})")
-        Log.i(TAG, "Keep-alive loop ended")
+        AppLogger.info(TAG, "Keep-alive loop ended (isRunning=$isRunning, vpnInterface=${if (vpnInterface != null) "present" else "null"})")
     }
 
     private fun parseIpv4Address(ipv4Address: String): Pair<String, Int> {
@@ -248,7 +222,7 @@ class EasyTierVpnService : VpnService() {
                 Pair(ipv4Address, 24)
             }
         } catch (e: Exception) {
-            logToFile("ERROR", "parseIpv4Address failed for '$ipv4Address': ${e.message}")
+            AppLogger.error(TAG, "parseIpv4Address failed for '$ipv4Address': ${e.message}")
             throw e
         }
     }
@@ -262,7 +236,7 @@ class EasyTierVpnService : VpnService() {
                 else -> throw IllegalArgumentException("Invalid CIDR format: $cidr")
             }
         } catch (e: Exception) {
-            logToFile("ERROR", "parseCidr failed for '$cidr': ${e.message}")
+            AppLogger.error(TAG, "parseCidr failed for '$cidr': ${e.message}")
             throw e
         }
     }
@@ -272,11 +246,10 @@ class EasyTierVpnService : VpnService() {
         try {
             vpnInterface?.close()
         } catch (e: Exception) {
-            logToFile("ERROR", "VPN interface close failed: ${e.message}")
+            AppLogger.error(TAG, "VPN interface close failed: ${e.message}")
         }
         vpnInterface = null
-        logToFile("INFO", "VPN interface cleaned up")
-        Log.i(TAG, "VPN interface cleaned up")
+        AppLogger.info(TAG, "VPN interface cleaned up")
     }
 
     private fun buildNotification(text: String): Notification {
@@ -295,8 +268,7 @@ class EasyTierVpnService : VpnService() {
                 .setPriority(NotificationCompat.PRIORITY_LOW)
                 .build()
         } catch (e: Exception) {
-            logToFile("ERROR", "buildNotification failed: ${e.message}")
-            Log.e(TAG, "buildNotification failed", e)
+            AppLogger.error(TAG, "buildNotification failed: ${e.message}")
             NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle("EasyTier")
                 .setContentText(text)
@@ -317,33 +289,31 @@ class EasyTierVpnService : VpnService() {
                     setShowBadge(true)
                 }
                 getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
-                logToFile("INFO", "Notification channel created")
+                AppLogger.info(TAG, "Notification channel created")
             } catch (e: Exception) {
-                logToFile("ERROR", "createNotificationChannel failed: ${e.message}")
-                Log.e(TAG, "createNotificationChannel failed", e)
+                AppLogger.error(TAG, "createNotificationChannel failed: ${e.message}")
             }
         }
     }
 
     override fun onDestroy() {
-        logToFile("INFO", "onDestroy: start")
+        AppLogger.info(TAG, "onDestroy: start")
         try {
             cleanup()
         } catch (e: Exception) {
-            logToFile("ERROR", "onDestroy: cleanup failed: ${e.message}")
+            AppLogger.error(TAG, "onDestroy: cleanup failed: ${e.message}")
         }
         try {
             stopForeground(STOP_FOREGROUND_REMOVE)
         } catch (e: Exception) {
-            logToFile("ERROR", "onDestroy: stopForegroundCompat failed: ${e.message}")
+            AppLogger.error(TAG, "onDestroy: stopForegroundCompat failed: ${e.message}")
         }
         instance = null
         try {
             super.onDestroy()
         } catch (e: Exception) {
-            logToFile("ERROR", "onDestroy: super.onDestroy failed: ${e.message}")
+            AppLogger.error(TAG, "onDestroy: super.onDestroy failed: ${e.message}")
         }
-        logToFile("INFO", "onDestroy: done")
-        Log.d(TAG, "VPN Service destroyed")
+        AppLogger.info(TAG, "onDestroy: done")
     }
 }

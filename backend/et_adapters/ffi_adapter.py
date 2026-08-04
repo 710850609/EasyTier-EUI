@@ -7,18 +7,17 @@ import logging
 import os
 import sys
 import threading
-import time
 from ctypes import c_char_p, c_int, c_void_p, POINTER, Structure, c_size_t
-from typing import Dict, Any, List, Set
+from typing import Dict, Any, List, Set, Optional
 
 import tomlkit
 
 from utils import run_configs
-from .interface import IEasyTierAdapter
+from et_adapters.interface import IEasyTierAdapter
 
 logger = logging.getLogger(__name__)
 _FFI_LIB_VERSION = "unknown"
-
+_MAX_INSTANCE_COUNT = 20
 
 class KeyValuePair(Structure):
     _fields_ = [("key", c_void_p), ("value", c_void_p)]
@@ -55,6 +54,9 @@ class FfiAdapter(IEasyTierAdapter):
             return False
 
     def _setup_functions(self):
+        for symbol in self.REQUIRED_SYMBOLS:
+            if not self._has_symbol(symbol):
+                raise RuntimeError(f"EasyTier FFI symbol not found: {symbol}")
         lib = self._lib
         if self._has_symbol('parse_config'):
             lib.parse_config.argtypes = [c_char_p]
@@ -95,22 +97,21 @@ class FfiAdapter(IEasyTierAdapter):
                 del flags['compression']
                 doc['flags'] = flags
                 toml_config = tomlkit.dumps(doc)
-            ret = self.parse_config(toml_config)
+            ret = self._parse_config(toml_config)
             if ret != 0:
-                raise RuntimeError(f"Config parse failed: {self.get_last_error()}")
+                raise RuntimeError(f"Config parse failed: {self._get_last_error()}")
             with self._lock:
                 ret = self._lib.run_network_instance(toml_config.encode('utf-8'))
                 if ret != 0:
-                    raise RuntimeError(f"run_network_instance failed: {self.get_last_error()}")
+                    raise RuntimeError(f"run_network_instance failed: {self._get_last_error()}")
             self._instance_set.add(instance_name)
-            time.sleep(1.0)
+            # time.sleep(1.0)
             logger.info(f"Instance '{instance_name}' started via FFI")
             # 触发 Android VPN 授权弹窗并启动 dummy VPN + 监控
             try:
-                from utils import run_configs
                 if run_configs.IS_ANDROID:
                     from java import jclass
-                    MainActivity = jclass("com.github.u710850609.easytiereui.MainActivity")
+                    MainActivity = jclass(run_configs.ANDROID_MAIN_ACTIVITY)
                     manager = MainActivity.getEasyTierManager()
                     if manager is not None:
                         manager.start(instance_name)
@@ -131,10 +132,9 @@ class FfiAdapter(IEasyTierAdapter):
 
         # 停止 Android VPN 监控和服务
         try:
-            from utils import run_configs
             if run_configs.IS_ANDROID:
                 from java import jclass
-                MainActivity = jclass("com.github.u710850609.easytiereui.MainActivity")
+                MainActivity = jclass(run_configs.ANDROID_MAIN_ACTIVITY)
                 manager = MainActivity.getEasyTierManager()
                 if manager is not None:
                     manager.stop()
@@ -145,7 +145,7 @@ class FfiAdapter(IEasyTierAdapter):
         return instance_name in self._instance_set
 
     def get_peers(self, instance_name: str) -> list[dict]:
-        raw = self._collect_via_raw_ffi(100)
+        raw = self._collect_via_raw_ffi()
         instance_infos = raw.get(instance_name, {})
         peers = []
         my_node_info = instance_infos.get('my_node_info', {})
@@ -219,17 +219,6 @@ class FfiAdapter(IEasyTierAdapter):
         #         })
         return peers
 
-
-    def parse_config(self, toml_config: str) -> int:
-        if self._lib is None or not self._has_symbol('parse_config'):
-            return -1
-        try:
-            with self._lock:
-                return self._lib.parse_config(toml_config.encode('utf-8'))
-        except Exception as e:
-            logger.exception(f"parse_config failed: {e}")
-            return -1
-
     def set_tun_fd(self, instance_name: str, fd: int) -> int:
         if self._lib is None:
             raise RuntimeError("FFI library not loaded")
@@ -239,16 +228,44 @@ class FfiAdapter(IEasyTierAdapter):
             with self._lock:
                 ret = self._lib.set_tun_fd(instance_name.encode('utf-8'), fd)
                 if ret != 0:
-                    raise RuntimeError(f"set_tun_fd failed: {self.get_last_error()}")
+                    raise RuntimeError(f"set_tun_fd failed: {self._get_last_error()}")
                 return 0
         except RuntimeError:
             raise
         except Exception as e:
             raise RuntimeError(f"set_tun_fd failed: {e}") from e
 
-    def get_last_error(self) -> str:
-        if self._lib is None or not self._has_symbol('get_error_msg'):
-            return ""
+    def get_route_info(self, instance_name: str) -> Optional[str]:
+        info = {
+            'virtual_ipv4': '',
+            'dns_servers': ['223.5.5.5', '119.29.29.29', '114.114.114.114', '8.8.8.8'],
+            'routes': []
+        }
+        raw = self._collect_via_raw_ffi()
+        instance_infos = raw.get(instance_name, {})
+        my_node_info = instance_infos.get('my_node_info', {})
+        virtual_ipv4 = my_node_info.get('virtual_ipv4', {})
+        addr = (virtual_ipv4.get('address') or {}).get('addr', 0)
+        addr_str = self._addr_to_ipv4(addr)
+        network_len = virtual_ipv4.get('network_length', '24')
+        info['virtual_ipv4'] = f"{addr_str}/{network_len}" if addr_str else ""
+        routes = instance_infos.get('routes', [])
+        for route in routes:
+            cidrs = route.get('proxy_cidrs', [])
+            for cidr in cidrs:
+                info['routes'].append(cidr)
+
+
+
+    def _parse_config(self, toml_config: str) -> int:
+        try:
+            with self._lock:
+                return self._lib.parse_config(toml_config.encode('utf-8'))
+        except Exception as e:
+            logger.exception(f"parse_config failed: {e}")
+            return -1
+
+    def _get_last_error(self) -> str:
         try:
             with self._lock:
                 error_ptr = c_char_p()
@@ -264,8 +281,6 @@ class FfiAdapter(IEasyTierAdapter):
             return ""
 
     def _retain_instances(self, names: List[str]) -> None:
-        if self._lib is None:
-            raise RuntimeError("FFI library not loaded")
         try:
             with self._lock:
                 if not names:
@@ -275,18 +290,16 @@ class FfiAdapter(IEasyTierAdapter):
                     arr = (c_char_p * len(names))(*encoded)
                     ret = self._lib.retain_network_instance(arr, len(names))
                 if ret != 0:
-                    raise RuntimeError(f"retain_network_instance failed: {self.get_last_error()}")
+                    raise RuntimeError(f"retain_network_instance failed: {self._get_last_error()}")
         except Exception as e:
             logger.exception(f"_retain_instances failed: {e}")
             raise
 
     def _list_all_instance_names(self) -> List[str]:
-        info = self._collect_via_raw_ffi(20)
+        info = self._collect_via_raw_ffi()
         return list(info.keys())
 
-    def _collect_via_raw_ffi(self, max_len: int) -> Dict[str, Any]:
-        if self._lib is None or not self._has_symbol('collect_network_infos'):
-            return {}
+    def _collect_via_raw_ffi(self, max_len: int = _MAX_INSTANCE_COUNT) -> Dict[str, Any]:
         try:
             with self._lock:
                 infos = (KeyValuePair * max_len)()
@@ -368,5 +381,5 @@ class FfiAdapter(IEasyTierAdapter):
     #         result[instance_name] = NetworkInstanceInfo.from_dict(json_data) if json_data else NetworkInstanceInfo()
     #     return result
 
-    def get_network_infos_raw(self, max_length: int = 10) -> Dict[str, Any]:
-        return self._collect_via_raw_ffi(max_length)
+    # def get_network_infos_raw(self, max_length: int = 10) -> Dict[str, Any]:
+    #     return self._collect_via_raw_ffi(max_length)
