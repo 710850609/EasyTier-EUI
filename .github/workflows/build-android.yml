@@ -1,6 +1,17 @@
 name: Build Android APK
 
 on:
+  workflow_call:
+    inputs:
+      easytier_ref:
+        type: string
+        default: "v2.4.5"
+      build_version:
+        type: string
+        default: ""
+      build_type:
+        type: string
+        default: "release"
   push:
     branches: [main, master, feature/apk]
     paths:
@@ -21,7 +32,7 @@ on:
       build_type:
         description: "Build type"
         required: false
-        default: "debug"
+        default: "release"
         type: choice
         options:
           - debug
@@ -33,6 +44,15 @@ concurrency:
 
 jobs:
   build:
+    strategy:
+      matrix:
+        include:
+          - arch: aarch64
+            rust_target: aarch64-linux-android
+            ndk_target: arm64-v8a
+          - arch: arm
+            rust_target: armv7-linux-androideabi
+            ndk_target: armeabi-v7a
     runs-on: ubuntu-latest
 
     steps:
@@ -90,7 +110,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: easytier-ffi-cache
-          key: easytier-ffi-${{ steps.easytier-info.outputs.version }}-${{ steps.easytier-info.outputs.commit_short }}-ndk26
+          key: easytier-ffi-${{ steps.easytier-info.outputs.version }}-${{ steps.easytier-info.outputs.commit_short }}-ndk26-${{ matrix.arch }}
 
       - name: Setup protoc  # 安装 protobuf 编译器（Rust 编译依赖）
         if: steps.ffi-cache.outputs.cache-hit != 'true'
@@ -99,12 +119,12 @@ jobs:
           version: "35.1"
           repo-token: ${{ github.token }}
 
-      - name: Setup Rust + Android target  # 安装 Rust 1.95 + aarch64-linux-android 目标
+      - name: Setup Rust + Android target  # 安装 Rust 1.95 + Android 交叉编译目标
         if: steps.ffi-cache.outputs.cache-hit != 'true'
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: "1.95"
-          target: aarch64-linux-android
+          target: ${{ matrix.rust_target }}
           cache: true
           rustflags: ""
 
@@ -112,10 +132,12 @@ jobs:
         if: steps.ffi-cache.outputs.cache-hit != 'true'
         run: cargo install cargo-ndk
 
-      - name: Build easytier-ffi for Android  # 缓存未命中时：拉取 EasyTier 源码，cross-compile 出 arm64 .so
+      - name: Build easytier-ffi for Android  # 缓存未命中时：拉取 EasyTier 源码，cross-compile 出 .so
         if: steps.ffi-cache.outputs.cache-hit != 'true'
         env:
           EASYTIER_REF: ${{ steps.easytier-info.outputs.ref }}
+          NDK_TARGET: ${{ matrix.ndk_target }}
+          RUST_TARGET: ${{ matrix.rust_target }}
         run: |
           git init easytier-src
           cd easytier-src
@@ -125,17 +147,17 @@ jobs:
           echo "EasyTier version: $(sed -n 's/^version = \"\([^\"]*\)\"/\1/p' easytier/Cargo.toml | head -n 1)"
           echo "EasyTier commit: $(git rev-parse HEAD)"
           cd easytier-contrib/easytier-ffi
-          cargo ndk -t arm64-v8a build --release
+          cargo ndk -t "$NDK_TARGET" build --release
           mkdir -p "$GITHUB_WORKSPACE/easytier-ffi-cache"
-          cp "$GITHUB_WORKSPACE/easytier-src/target/aarch64-linux-android/release/libeasytier_ffi.so" "$GITHUB_WORKSPACE/easytier-ffi-cache/"
+          cp "$GITHUB_WORKSPACE/easytier-src/target/${RUST_TARGET}/release/libeasytier_ffi.so" "$GITHUB_WORKSPACE/easytier-ffi-cache/"
           echo "FFI .so cached to easytier-ffi-cache/"
 
       - name: Integrate FFI into APK  # 将 libeasytier_ffi.so 复制到 APK jniLibs 目录
         run: |
-          LIB_DIR="android/app/src/main/jniLibs/arm64-v8a"
+          LIB_DIR="android/app/src/main/jniLibs/${{ matrix.ndk_target }}"
           mkdir -p "$LIB_DIR"
           cp easytier-ffi-cache/libeasytier_ffi.so "$LIB_DIR/"
-          echo "FFI library integrated:"
+          echo "FFI library integrated (${{ matrix.ndk_target }}):"
           ls -lh "$LIB_DIR/"
 
       # ==================== 前端编译 ====================
@@ -173,6 +195,16 @@ jobs:
           TARGET_FILE="android/app/src/main/python/utils/run_configs.py"
           sed -i "s/^BUILD_VERSION = \".*\"/BUILD_VERSION = \"$BUILD_VER\"/" "$TARGET_FILE"
 
+      - name: Write Android versionName  # 将构建版本号写入 build.gradle 的 versionName
+        env:
+          BUILD_VER: ${{ inputs.build_version || '' }}
+        run: |
+          if [ -z "$BUILD_VER" ]; then
+            BUILD_VER="0.1-$(date +%Y%m%d%H%M%S)"
+          fi
+          sed -i "s/versionName '.*'/versionName '$BUILD_VER'/" android/app/build.gradle
+          echo "Android versionName: $BUILD_VER"
+
       - name: Write FFI version  # 将 EasyTier 版本号注入 ffi_adapter.py
         run: |
           FFI_VER="${{ steps.easytier-info.outputs.version }}-${{ steps.easytier-info.outputs.commit_short }}"
@@ -207,9 +239,25 @@ jobs:
           CAPITALIZED=$(echo "$BUILD_TYPE" | sed 's/^./\U&/')
           gradle "assemble${CAPITALIZED}" --no-daemon --stacktrace
 
+      - name: Rename APK  # 重命名为 EasyTier-EUI-android-{arch}-{version}.apk
+        working-directory: android
+        env:
+          BUILD_TYPE: ${{ inputs.build_type || 'debug' }}
+          BUILD_VER: ${{ inputs.build_version || '' }}
+          APK_ARCH: ${{ matrix.arch }}
+        run: |
+          if [ -z "$BUILD_VER" ]; then
+            BUILD_VER="0.1-$(date +%Y%m%d%H%M%S)"
+          fi
+          APK_DIR="app/build/outputs/apk/${BUILD_TYPE}"
+          for apk in "$APK_DIR"/*.apk; do
+            mv "$apk" "$APK_DIR/EasyTier-EUI-android-${APK_ARCH}-${BUILD_VER}.apk"
+            echo "Renamed: EasyTier-EUI-android-${APK_ARCH}-${BUILD_VER}.apk"
+          done
+
       - name: Upload APK  # 上传 APK 到 GitHub Actions Artifact（保留 30 天）
         uses: actions/upload-artifact@v4
         with:
-          name: EasyTier-EUI-${{ inputs.build_type || 'debug' }}
+          name: android-${{ matrix.arch }}
           path: android/app/build/outputs/apk/${{ inputs.build_type || 'debug' }}/*.apk
           retention-days: 30
