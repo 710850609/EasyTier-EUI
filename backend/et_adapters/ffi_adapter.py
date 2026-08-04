@@ -150,16 +150,16 @@ class FfiAdapter(IEasyTierAdapter):
         peers = []
         my_node_info = instance_infos.get('my_node_info', {})
         if my_node_info:
-            ipv4_addr = my_node_info.get('virtual_ipv4', {})
+            ipv4_addr = my_node_info.get('virtual_ipv4') or {}
             addr = (ipv4_addr.get('address') or {}).get('addr', 0)
             ipv4 = self._addr_to_ipv4(addr)
-            network_len = ipv4_addr.get('network_length', '')
+            network_len = ipv4_addr.get('network_length') or ''
             cidr = f"{ipv4}/{network_len}" if ipv4 else ''
             peers.append({
                 'ipv4': ipv4,
                 'cidr': cidr,
-                'hostname': my_node_info.get('hostname', ''),
-                'version': my_node_info.get('version', ''),
+                'hostname': my_node_info.get('hostname') or '',
+                'version': my_node_info.get('version') or '',
                 'cost': 'Local',
                 'tunnel_proto': '-',
                 'lat_ms': "-",
@@ -182,10 +182,10 @@ class FfiAdapter(IEasyTierAdapter):
             peers.append({
                 'ipv4': ipv4,
                 'cidr': cidr,
-                'hostname': route.get('hostname', ''),
-                'version': route.get('version', ''),
+                'hostname': route.get('hostname') or '',
+                'version': route.get('version') or '',
                 'cost': self._format_cost(route.get('cost', 0)),
-                'tunnel_proto': tunnel.get('tunnel_type', ''),
+                'tunnel_proto': tunnel.get('tunnel_type') or '',
                 'lat_ms': self._latency_to_ms(stats.get('latency_us', 1000000)),
                 'loss_rate': f"{first_conn.get('loss_rate', 0)}%",
                 'rx_bytes': self._humanize_bytes(stats.get('rx_bytes', 0)),
@@ -244,14 +244,14 @@ class FfiAdapter(IEasyTierAdapter):
         raw = self._collect_via_raw_ffi()
         instance_infos = raw.get(instance_name, {})
         my_node_info = instance_infos.get('my_node_info', {})
-        virtual_ipv4 = my_node_info.get('virtual_ipv4', {})
+        virtual_ipv4 = my_node_info.get('virtual_ipv4') or {}
         addr = (virtual_ipv4.get('address') or {}).get('addr', 0)
         addr_str = self._addr_to_ipv4(addr)
-        network_len = virtual_ipv4.get('network_length', '24')
+        network_len = virtual_ipv4.get('network_length') or '24'
         info['virtual_ipv4'] = f"{addr_str}/{network_len}" if addr_str else ""
-        routes = instance_infos.get('routes', [])
+        routes = instance_infos.get('routes') or []
         for route in routes:
-            cidrs = route.get('proxy_cidrs', [])
+            cidrs = route.get('proxy_cidrs') or []
             for cidr in cidrs:
                 info['routes'].append(cidr)
 

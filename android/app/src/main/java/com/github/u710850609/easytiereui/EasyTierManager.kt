@@ -119,7 +119,12 @@ class EasyTierManager(
                 AppLogger.error(TAG, "collectNetworkStatus: facade is null")
                 return null
             }
-            val json = facade.callAttr("get_route_info", instanceName).toString()
+            val result = facade.callAttr("get_route_info", instanceName)
+            if (result == null) {
+                AppLogger.debug(TAG, "collectNetworkStatus: get_route_info returned null")
+                return null
+            }
+            val json = result.toString()
             AppLogger.debug(TAG, "collectNetworkStatus: done, jsonLen=${json.length}")
             return json
         } catch (e: Exception) {
