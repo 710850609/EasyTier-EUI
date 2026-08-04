@@ -193,31 +193,6 @@ class FfiAdapter(IEasyTierAdapter):
                 'tx_bytes': self._humanize_bytes(stats.get('tx_bytes', 0)),
                 'nat_type': self._format_nat_type(stun.get('udp_nat_type', 0)),
             })
-
-        # for instance_data in raw.values():
-        #     for pair in instance_data.get('peer_route_pairs') or []:
-        #         route = pair.get('route') or {}
-        #         stun = route.get('stun_info') or {}
-        #         ipv4_addr = route.get('ipv4_addr') or {}
-        #         peer = pair.get('peer') or {}
-        #         conns = peer.get('conns') or []
-        #         first_conn = conns[0] if conns else {}
-        #         tunnel = first_conn.get('tunnel') or {}
-        #         stats = first_conn.get('stats') or {}
-        #         ipv4 = self._addr_to_ipv4(ipv4_addr.get('address', {}).get('addr', 0))
-        #         peers.append({
-        #             'ipv4': ipv4,
-        #             'hostname': route.get('hostname', ''),
-        #             'cost': self._format_cost(route.get('cost', 0)),
-        #             'tunnel_proto': tunnel.get('tunnel_type', ''),
-        #             'lat_ms': self._latency_to_ms(stats.get('latency_us', 0)),
-        #             'loss_rate': first_conn.get('loss_rate', 0) + '%',
-        #             'rx_bytes': stats.get('rx_bytes', 0),
-        #             'tx_bytes': stats.get('tx_bytes', 0),
-        #             'nat_type': self._format_nat_type(stun.get('udp_nat_type', 0)),
-        #             'version': route.get('version', ''),
-        #             'cidr': ', '.join(route.get('proxy_cidrs') or []),
-        #         })
         return peers
 
     def set_tun_fd(self, instance_name: str, fd: int) -> int:
@@ -237,24 +212,28 @@ class FfiAdapter(IEasyTierAdapter):
             raise RuntimeError(f"set_tun_fd failed: {e}") from e
 
     def get_route_info(self, instance_name: str) -> Optional[str]:
-        info = {
-            'virtual_ipv4': '',
-            'dns_servers': ['223.5.5.5', '119.29.29.29', '114.114.114.114', '8.8.8.8'],
-            'routes': []
-        }
-        raw = self._collect_via_raw_ffi()
-        instance_infos = raw.get(instance_name, {})
-        my_node_info = instance_infos.get('my_node_info', {})
-        virtual_ipv4 = my_node_info.get('virtual_ipv4') or {}
-        addr = (virtual_ipv4.get('address') or {}).get('addr', 0)
-        addr_str = self._addr_to_ipv4(addr)
-        network_len = virtual_ipv4.get('network_length') or '24'
-        info['virtual_ipv4'] = f"{addr_str}/{network_len}" if addr_str else ""
-        routes = instance_infos.get('routes') or []
-        for route in routes:
-            cidrs = route.get('proxy_cidrs') or []
-            for cidr in cidrs:
-                info['routes'].append(cidr)
+        try:
+            info = {
+                'virtual_ipv4': '',
+                'dns_servers': ['223.5.5.5', '119.29.29.29', '114.114.114.114', '8.8.8.8'],
+                'routes': []
+            }
+            raw = self._collect_via_raw_ffi()
+            instance_infos = raw.get(instance_name, {})
+            my_node_info = instance_infos.get('my_node_info', {})
+            virtual_ipv4 = my_node_info.get('virtual_ipv4') or {}
+            addr = (virtual_ipv4.get('address') or {}).get('addr', 0)
+            addr_str = self._addr_to_ipv4(addr)
+            network_len = virtual_ipv4.get('network_length') or '24'
+            info['virtual_ipv4'] = f"{addr_str}/{network_len}" if addr_str else ""
+            routes = instance_infos.get('routes') or []
+            for route in routes:
+                cidrs = route.get('proxy_cidrs') or []
+                for cidr in cidrs:
+                    info['routes'].append(cidr)
+            return info
+        except Exception as e:
+            logger.exception(f"get_route_info failed: {e}")
 
 
 
