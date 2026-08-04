@@ -102,7 +102,7 @@ jobs:
     needs: [ build-info ]
     uses: ./.github/workflows/build-android.yml
     with:
-      easytier_ref: ${{ needs.build-info.outputs.et_ver }}
+      easytier_ref: v${{ needs.build-info.outputs.et_ver }}
       build_version: ${{ needs.build-info.outputs.version }}
       build_type: release
 
