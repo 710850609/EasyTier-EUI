@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+import json
 import logging
 import os
 import shutil
@@ -91,11 +92,11 @@ def _delete_dir(delete_path: Path):
     return total_bytes
 
 def get_log_level(params=None, *args, **kwargs):
-    params = params or {}
-    log_level = params.get('log_level', 'info').upper()
-    excluded_console = run_configs.is_docker()
-    # docker 环境下，不修改 console 日志输出，方便控制台定位问题
-    log_util.set_log_level(log_level, None, excluded_console)
+    if os.path.exists(run_configs.setting_file()):
+        with open(run_configs.setting_file(), "r", encoding="utf-8") as f:
+            setting = json.load(f)
+            log_level = setting.get('log_level', logging.INFO)
+    return log_level or 'warn'
 
 
 def set_log_level(params=None, *args, **kwargs):
@@ -113,7 +114,9 @@ def set_log_level(params=None, *args, **kwargs):
     excluded_console = run_configs.is_docker()
     # docker 环境下，不修改 console 日志输出，方便控制台定位问题
     log_util.set_log_level(log_level, None, excluded_console)
-
+    with open(run_configs.setting_file(), "w", encoding="utf-8") as f:
+        data = {'log_level': log_level}
+        json.dump(data, f, ensure_ascii=False, indent=4)
 
 def shutdown(params=None, *args, **kwargs):
     import os

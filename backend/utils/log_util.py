@@ -27,13 +27,14 @@ def setup_log(log_file:Optional[str] = None, log_level:Union[int, str] = logging
     if _log_setup_done:
         return  # 已配置过，直接返回
 
-    if isinstance(log_level, str):
-        log_level = getattr(logging, log_level.upper(), logging.INFO)
-
     if os.path.exists(run_configs.setting_file()):
         with open(run_configs.setting_file(), "r", encoding="utf-8") as f:
             setting = json.load(f)
-            log_level = setting.get('log_level', logging.INFO)
+            log_level = setting.get('log_level', 'warn').upper()
+
+    if isinstance(log_level, str):
+        log_level = getattr(logging, log_level.upper(), logging.INFO)
+
 
     # 设置日志级别（可选，默认为 WARNING，需要调低才能看到 INFO 及以上）
     root_logger = logging.getLogger()
