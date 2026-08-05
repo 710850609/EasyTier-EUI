@@ -193,16 +193,17 @@ class EasyTierManager(
                 val text = buildString {
                     val name = (currentInstanceName ?: "").removeSuffix(".toml")
                     append(name)
-                    append(" 运行中 ")
+                    append("运行中 ")
                     if (upload.isNotEmpty()) {
                         append("↑${upload}")
                     }
                     if (download.isNotEmpty()) {
-                        if (upload.isNotEmpty()) append("  ")
+                        if (upload.isNotEmpty()) append(" ")
                         append("↓${download}")
                     }
                 }
                 EasyTierVpnService.instance?.updateNotification(text)
+                AppLogger.debug(TAG, "processNetworkStatus: updateNotification $text")
             }
 
             AppLogger.debug(TAG, "processNetworkStatus: done")

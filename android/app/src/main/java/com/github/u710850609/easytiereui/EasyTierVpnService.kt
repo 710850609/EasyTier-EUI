@@ -25,7 +25,7 @@ class EasyTierVpnService : VpnService() {
 
     companion object {
         private const val TAG = "EasyTierVpnService"
-        const val CHANNEL_ID = "easytier_vpn_channel"
+        const val CHANNEL_ID = "easytier_eui_vpn_channel"
         const val NOTIFICATION_ID = 1
 
         var instance: EasyTierVpnService? = null
@@ -275,15 +275,17 @@ class EasyTierVpnService : VpnService() {
                 .setSmallIcon(R.drawable.ic_notification)
                 .setContentIntent(pendingIntent)
                 .setOngoing(true)
+                .setForegroundServiceBehavior(Notification.FOREGROUND_SERVICE_IMMEDIATE)
                 .setPriority(NotificationCompat.PRIORITY_LOW)
                 .build()
         } catch (e: Exception) {
             AppLogger.error(TAG, "buildNotification failed: ${e.message}")
             NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle("EasyTier-EUI")
-                .setContentText(text)
+                .setContentText("Service Is Running")
                 .setSmallIcon(R.drawable.ic_notification)
                 .setOngoing(true)
+                .setForegroundServiceBehavior(Notification.FOREGROUND_SERVICE_IMMEDIATE)
                 .setPriority(NotificationCompat.PRIORITY_LOW)
                 .build()
         }

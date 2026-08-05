@@ -86,6 +86,7 @@ class FfiAdapter(IEasyTierAdapter):
         return _FFI_LIB_VERSION
 
     def start_network(self, toml_path: str, instance_name: str) -> None:
+        logger.info(f"start_network {instance_name}")
         try:
             with open(toml_path, 'r', encoding='utf-8') as f:
                 toml_config = f.read()
@@ -101,6 +102,9 @@ class FfiAdapter(IEasyTierAdapter):
             ret = self._parse_config(toml_config)
             if ret != 0:
                 raise RuntimeError(f"Config parse failed: {self._get_last_error()}")
+            if run_configs.IS_ANDROID:
+                # 安卓环境下，确保所有实例都停止，再启动新实例
+                self._retain_instances([instance_name])
             with self._lock:
                 toml_bytes = toml_config.encode('utf-8')
                 c_config = ctypes.c_char_p(toml_bytes)
@@ -126,10 +130,11 @@ class FfiAdapter(IEasyTierAdapter):
             raise
 
     def stop_network(self, instance_name: str = None) -> None:
+        logger.info(f"stop_network {instance_name}")
         all_instances = self._list_all_instance_names()
         keep = [n for n in all_instances if n != instance_name]
         self._retain_instances(keep)
-        if instance_name is not None:
+        if instance_name in self._instance_set:
             self._instance_set.remove(instance_name)
 
         # 停止 Android VPN 监控和服务
@@ -197,8 +202,7 @@ class FfiAdapter(IEasyTierAdapter):
         return peers
 
     def set_tun_fd(self, instance_name: str, fd: int) -> int:
-        if self._lib is None:
-            raise RuntimeError("FFI library not loaded")
+        logger.info(f"set_tun_fd {instance_name} {fd}")
         if not self._has_symbol('set_tun_fd'):
             raise RuntimeError("set_tun_fd symbol not available")
         try:
@@ -367,14 +371,16 @@ class FfiAdapter(IEasyTierAdapter):
         """
         if isinstance(size, str):
             size = int(size)
-        unit_names = ["B", "K", "M", "G", "T"] if for_short else ["B", "KB", "MB", "GB", "TB"]
+        # unit_names = ["B", "K", "M", "G", "T"] if for_short else ["B", "KB", "MB", "GB", "TB"]
+        unit_names = ["B", "KB", "MB", "GB", "TB"]
         for unit in unit_names:
             if abs(size) < 1024:
                 if for_short and size >= 10:
                     return f"{int(size)} {unit}"
                 return f"{size:.2f} {unit}"
             size /= 1024
-        return f"{size:.2f} PB" if for_short else f"{size:.2f} P"
+        # return f"{size:.2f} PB" if for_short else f"{size:.2f} P"
+        return f"{size:.2f} PB"
 
     # def get_network_infos(self, max_length: int = 10) -> Dict[str, NetworkInstanceInfo]:
     #     raw = self._collect_via_raw_ffi(max_length)
