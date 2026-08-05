@@ -17,7 +17,7 @@ class EasyTierManager(
 ) {
     companion object {
         private const val TAG = "EasyTierManager"
-        private const val MONITOR_INTERVAL = 3000L
+        private const val MONITOR_INTERVAL = 5000L
         const val VPN_REQUEST_CODE = 1001
     }
 
@@ -151,6 +151,27 @@ class EasyTierManager(
                 return
             }
 
+            val now = System.currentTimeMillis()
+            if (now - lastNotificationUpdateTime >= 60_000) {
+                lastNotificationUpdateTime = now
+                val upload = root.optString("total_upload", "")
+                val download = root.optString("total_download", "")
+                val text = buildString {
+                    val name = (currentInstanceName ?: "").removeSuffix(".toml")
+                    append(name)
+                    append("运行中 ")
+                    if (upload.isNotEmpty()) {
+                        append("↑${upload}")
+                    }
+                    if (download.isNotEmpty()) {
+                        if (upload.isNotEmpty()) append(" ")
+                        append("↓${download}")
+                    }
+                }
+                EasyTierVpnService.instance?.updateNotification(text)
+                AppLogger.debug(TAG, "processNetworkStatus: updateNotification $text")
+            }
+
             val newProxyCidrs = mutableListOf<String>()
             val routesArr = root.optJSONArray("routes")
             if (routesArr != null) {
@@ -185,27 +206,6 @@ class EasyTierManager(
                 restartVpnService(newIpv4, newProxyCidrs, newDnsServers)
                 // 重启vpn后，立即重置刷新时间，尽量及时更新流量
                 lastNotificationUpdateTime = 0L
-            }
-
-            val now = System.currentTimeMillis()
-            if (now - lastNotificationUpdateTime >= 60_000) {
-                lastNotificationUpdateTime = now
-                val upload = root.optString("total_upload", "")
-                val download = root.optString("total_download", "")
-                val text = buildString {
-                    val name = (currentInstanceName ?: "").removeSuffix(".toml")
-                    append(name)
-                    append("运行中 ")
-                    if (upload.isNotEmpty()) {
-                        append("↑${upload}")
-                    }
-                    if (download.isNotEmpty()) {
-                        if (upload.isNotEmpty()) append(" ")
-                        append("↓${download}")
-                    }
-                }
-                EasyTierVpnService.instance?.updateNotification(text)
-                AppLogger.debug(TAG, "processNetworkStatus: updateNotification $text")
             }
 
             AppLogger.debug(TAG, "processNetworkStatus: done")
