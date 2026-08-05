@@ -251,8 +251,7 @@
                   :color="node.type === 'server' ? 'var(--color-success)' : 'var(--color-primary)'" 
                 />
                 <span class="node-ip" @click="handleClickCell(node, 'ipv4')">{{ node.ipv4 || '' }}</span>
-                <span v-if="visibleColumnsMap.hostname && node.hostname" class="info-chip host-chip">
-                  <var-icon name="label" size="14" />
+                <span v-if="visibleColumnsMap.hostname && node.hostname && node.ipv4" class="info-chip host-chip">
                   {{ node.hostname }}
                 </span>
               </div>
@@ -273,7 +272,7 @@
                 {{ node.tunnel_proto }}
               </span>
             </div>
-            <div v-if="visibleColumnsMap.nat_type || visibleColumnsMap.rx_bytes || visibleColumnsMap.tx_bytes" class="node-card-meta">
+            <div v-if="visibleColumnsMap.nat_type || visibleColumnsMap.rx_bytes || visibleColumnsMap.tx_bytes || !node.ipv4" class="node-card-meta">
               <span v-if="visibleColumnsMap.nat_type && node.nat_type" class="info-chip nat-chip">
                 {{ parseNode(node, 'nat_type') }}
               </span>
@@ -284,6 +283,9 @@
               <span v-if="visibleColumnsMap.tx_bytes && node.tx_bytes !== undefined && node.tx_bytes !== '-'" class="traffic-item upload">
                 <svg-icon size="14" type="mdi" :path="mdilArrowUp" color="var(--color-success)"></svg-icon>
                 {{ parseNode(node, 'tx_bytes') }}
+              </span>
+              <span v-if="visibleColumnsMap.hostname && node.hostname && !node.ipv4" class="info-chip host-chip" style="margin-left: auto;">
+                {{ node.hostname }}
               </span>
             </div>
             <div class="node-card-footer">

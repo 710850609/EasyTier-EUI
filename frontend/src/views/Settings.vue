@@ -52,10 +52,10 @@
       <var-divider />
       <!-- 安卓ffi模式不支持设置日志 -->
       <div class="setting-row" v-if="platform !== 'android'">
-        <span class="setting-label">{{ $t('settings.logLevel.label') }}</span>
+        <span class="setting-label">{{ $t('settings.etLogLevel.label') }}</span>
         <var-select 
           class="setting-select" 
-          :placeholder="$t('settings.logLevel.placeholder')" 
+          :placeholder="$t('settings.etLogLevel.placeholder')" 
           v-model="etLogLevel" 
           variant="outlined"
           size="small"
@@ -78,7 +78,7 @@
           v-model="etVersion.selected_version"
         >
           <template #default>
-            <var-option v-for="item in etVersionList" :key="item.version" :label="item.version" :value="item.version">
+            <var-option v-for="item in etVersionList" :key="item.version" :label="item.version" :value="item.version" class="version-option">
               <var-cell :title="item.version">
                 <template #extra>
                   <div style="display: flex; align-items: center;">
@@ -207,11 +207,11 @@
         <span class="setting-label">
           {{ $t('common.installationPath') }}
         </span>
-        <var-chip type="primary" size="small">{{ installPath }}</var-chip>
+        <var-chip type="primary" size="small" style="word-break: break-all; white-space: normal; text-align: left;">{{ installPath }}</var-chip>
       </div>
       <div class="setting-row">
         <span class="setting-label">
-          {{ $t('settings.logLevel.label') }}
+          {{ $t('settings.euiLogLevel.label') }}
         </span>
         <var-select 
           class="setting-select" 
@@ -320,6 +320,7 @@
       <!-- 版本信息卡片 -->
       <div class="about-version-card">
         <div class="version-main">
+          <img src="/icon.png" alt="Logo" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover;" />
           <span class="version-name">{{ $t('settings.about.appName') }} {{ forUser ? $t('settings.about.liteVersion') : '' }}</span>
         </div>
         <div class="version-actions">
@@ -1212,5 +1213,11 @@ onMounted(() => {
     /* 下拉框 左右无边距 */
     padding: 0px 0px 0px 0px !important;
   }
+}
+</style>
+<!-- 全局样式，影响下拉 option -->
+<style>
+.version-option {
+  padding: 0;
 }
 </style>

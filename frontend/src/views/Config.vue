@@ -459,7 +459,7 @@
                     <var-select
                       v-model="config.listeners"
                       multiple
-                      :placeholder="$t('config.customListenerPlaceholder')"
+                      :placeholder="$t('config.listenersCount', { n: config.listeners.length })"
                       variant="outlined"
                       :chip="true"
                       size="small"
