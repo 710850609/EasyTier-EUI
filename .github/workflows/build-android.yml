@@ -254,7 +254,7 @@ jobs:
       - name: Rename APK  # 重命名为 EasyTier-EUI-android-{arch}-{version}.apk
         working-directory: android
         env:
-          BUILD_TYPE: ${{ inputs.build_type || 'debug' }}
+          BUILD_TYPE: ${{ inputs.build_type || 'release' }}
           BUILD_VER: ${{ inputs.build_version || '' }}
           APK_ARCH: ${{ matrix.arch }}
         run: |
