@@ -1,5 +1,6 @@
 package com.github.u710850609.easytiereui
 
+import com.github.u710850609.easytiereui.BuildConfig
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.DownloadManager
