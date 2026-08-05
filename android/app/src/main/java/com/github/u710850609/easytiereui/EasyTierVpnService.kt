@@ -89,7 +89,7 @@ class EasyTierVpnService : VpnService() {
             }
 
             vpnInterface = pfd
-            startForeground(NOTIFICATION_ID, buildNotification("$instanceName 运行中"))
+            startForeground(NOTIFICATION_ID, buildNotification("${instanceName?.removeSuffix(".toml")} 运行中"))
             AppLogger.info(TAG, "VPN interface created, fd=${pfd.fd}")
 
             val name = instanceName!!

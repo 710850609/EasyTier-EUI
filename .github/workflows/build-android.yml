@@ -246,7 +246,7 @@ jobs:
       - name: Build APK  # Gradle 编译 Android APK（debug = 可调试/快速，release = 优化/正式）
         working-directory: android
         env:
-          BUILD_TYPE: ${{ inputs.build_type || 'debug' }}
+          BUILD_TYPE: ${{ inputs.build_type || 'release' }}
         run: |
           CAPITALIZED=$(echo "$BUILD_TYPE" | sed 's/^./\U&/')
           gradle "assemble${CAPITALIZED}" --no-daemon --stacktrace

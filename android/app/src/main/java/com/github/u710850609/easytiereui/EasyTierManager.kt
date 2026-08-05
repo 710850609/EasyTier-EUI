@@ -191,8 +191,9 @@ class EasyTierManager(
                 val upload = root.optString("total_upload", "")
                 val download = root.optString("total_download", "")
                 val text = buildString {
-                    append(currentInstanceName ?: "")
-                    append(" 运行中  ")
+                    val name = (currentInstanceName ?: "").removeSuffix(".toml")
+                    append(name)
+                    append(" 运行中 ")
                     if (upload.isNotEmpty()) {
                         append("↑${upload}")
                     }

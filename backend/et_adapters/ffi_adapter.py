@@ -244,8 +244,8 @@ class FfiAdapter(IEasyTierAdapter):
                     stats = conn.get('stats') or {}
                     total_download += stats.get('rx_bytes', 0) # 下载
                     total_upload += stats.get('tx_bytes', 0) # 上传
-            info['total_upload'] = self._humanize_bytes(total_upload)
-            info['total_download'] = self._humanize_bytes(total_download)
+            info['total_upload'] = self._humanize_bytes(total_upload, for_short=True)
+            info['total_download'] = self._humanize_bytes(total_download, for_short=True)
             return info
         except Exception as e:
             logger.exception(f"get_route_info failed: {e}")
@@ -359,14 +359,22 @@ class FfiAdapter(IEasyTierAdapter):
             return "p2p"
         return f"relay{cost}"
 
-    def _humanize_bytes(self, size: int) -> str:
+    def _humanize_bytes(self, size: int, for_short: bool = False) -> str:
+        """将字节数转为可读格式。
+
+        for_short=False: 1.46 KB, 15.00 MB, 5.20 GB
+        for_short=True:  1.46 K, 15 M, 5.20 G  （单位单字母，>=10 时省略小数）
+        """
         if isinstance(size, str):
             size = int(size)
-        for unit in ["B", "KB", "MB", "GB", "TB"]:
+        unit_names = ["B", "K", "M", "G", "T"] if for_short else ["B", "KB", "MB", "GB", "TB"]
+        for unit in unit_names:
             if abs(size) < 1024:
+                if for_short and size >= 10:
+                    return f"{int(size)} {unit}"
                 return f"{size:.2f} {unit}"
             size /= 1024
-        return f"{size:.2f} PB"
+        return f"{size:.2f} PB" if for_short else f"{size:.2f} P"
 
     # def get_network_infos(self, max_length: int = 10) -> Dict[str, NetworkInstanceInfo]:
     #     raw = self._collect_via_raw_ffi(max_length)
