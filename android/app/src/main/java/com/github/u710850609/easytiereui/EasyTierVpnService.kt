@@ -89,7 +89,7 @@ class EasyTierVpnService : VpnService() {
             }
 
             vpnInterface = pfd
-            startForeground(NOTIFICATION_ID, buildNotification("$instanceName 配置运行中"))
+            startForeground(NOTIFICATION_ID, buildNotification("$instanceName 运行中"))
             AppLogger.info(TAG, "VPN interface created, fd=${pfd.fd}")
 
             val name = instanceName!!
@@ -252,6 +252,16 @@ class EasyTierVpnService : VpnService() {
         AppLogger.info(TAG, "VPN interface cleaned up")
     }
 
+    fun updateNotification(text: String) {
+        try {
+            val notification = buildNotification(text)
+            val nm = getSystemService(NotificationManager::class.java)
+            nm.notify(NOTIFICATION_ID, notification)
+        } catch (e: Exception) {
+            AppLogger.error(TAG, "updateNotification failed: ${e.message}")
+        }
+    }
+
     private fun buildNotification(text: String): Notification {
         return try {
             val pendingIntent = PendingIntent.getActivity(
@@ -270,7 +280,7 @@ class EasyTierVpnService : VpnService() {
         } catch (e: Exception) {
             AppLogger.error(TAG, "buildNotification failed: ${e.message}")
             NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle("EasyTier")
+                .setContentTitle("EasyTier-EUI")
                 .setContentText(text)
                 .setSmallIcon(R.drawable.ic_notification)
                 .setOngoing(true)

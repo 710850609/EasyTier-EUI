@@ -102,12 +102,14 @@ class FfiAdapter(IEasyTierAdapter):
             if ret != 0:
                 raise RuntimeError(f"Config parse failed: {self._get_last_error()}")
             with self._lock:
-                c_config = ctypes.create_string_buffer(toml_config.encode('utf-8'))
+                toml_bytes = toml_config.encode('utf-8')
+                c_config = ctypes.c_char_p(toml_bytes)
                 ret = self._lib.run_network_instance(c_config)
                 if ret != 0:
                     raise RuntimeError(f"run_network_instance failed: {self._get_last_error()}")
             self._instance_set.add(instance_name)
-            time.sleep(1.0)
+            # 等待实例分配到虚拟ipv4（这里可等可不等）
+            time.sleep(2.0)
             logger.info(f"Instance '{instance_name}' started via FFI")
             # 触发 Android VPN 授权弹窗并启动 dummy VPN + 监控
             try:
@@ -124,13 +126,11 @@ class FfiAdapter(IEasyTierAdapter):
             raise
 
     def stop_network(self, instance_name: str = None) -> None:
-        if instance_name is None:
-            self._retain_instances([])
-        else:
-            all_instances = self._list_all_instance_names()
-            keep = [n for n in all_instances if n != instance_name]
-            self._retain_instances(keep)
-        self._instance_set.remove(instance_name)
+        all_instances = self._list_all_instance_names()
+        keep = [n for n in all_instances if n != instance_name]
+        self._retain_instances(keep)
+        if instance_name is not None:
+            self._instance_set.remove(instance_name)
 
         # 停止 Android VPN 监控和服务
         try:
@@ -203,12 +203,14 @@ class FfiAdapter(IEasyTierAdapter):
             raise RuntimeError("set_tun_fd symbol not available")
         try:
             with self._lock:
-                c_name = ctypes.create_string_buffer(instance_name.encode('utf-8'))
+                name_bytes = instance_name.encode('utf-8')
+                c_name = ctypes.c_char_p(name_bytes)
                 ret = self._lib.set_tun_fd(c_name, fd)
                 if ret != 0:
                     raise RuntimeError(f"set_tun_fd failed: {self._get_last_error()}")
                 return 0
-        except RuntimeError:
+        except RuntimeError as e:
+            logger.exception(f"set_tun_fd runtime error: {e}")
             raise
         except Exception as e:
             raise RuntimeError(f"set_tun_fd failed: {e}") from e
@@ -218,8 +220,12 @@ class FfiAdapter(IEasyTierAdapter):
             info = {
                 'virtual_ipv4': '',
                 'dns_servers': ['223.5.5.5', '119.29.29.29', '114.114.114.114', '8.8.8.8'],
-                'routes': []
+                'routes': [],
+                'total_upload': '',
+                'total_download': '',
             }
+            total_upload = 0
+            total_download = 0
             raw = self._collect_via_raw_ffi()
             instance_infos = raw.get(instance_name, {})
             my_node_info = instance_infos.get('my_node_info', {})
@@ -233,6 +239,13 @@ class FfiAdapter(IEasyTierAdapter):
                 cidrs = route.get('proxy_cidrs') or []
                 for cidr in cidrs:
                     info['routes'].append(cidr)
+            for peer in (instance_infos.get('peers') or []):
+                for conn in (peer.get('conns') or []):
+                    stats = conn.get('stats') or {}
+                    total_download += stats.get('rx_bytes', 0) # 下载
+                    total_upload += stats.get('tx_bytes', 0) # 上传
+            info['total_upload'] = self._humanize_bytes(total_upload)
+            info['total_download'] = self._humanize_bytes(total_download)
             return info
         except Exception as e:
             logger.exception(f"get_route_info failed: {e}")
@@ -242,7 +255,8 @@ class FfiAdapter(IEasyTierAdapter):
     def _parse_config(self, toml_config: str) -> int:
         try:
             with self._lock:
-                c_config = ctypes.create_string_buffer(toml_config.encode('utf-8'))
+                toml_bytes = toml_config.encode('utf-8')
+                c_config = ctypes.c_char_p(toml_bytes)
                 return self._lib.parse_config(c_config)
         except Exception as e:
             logger.exception(f"parse_config failed: {e}")

@@ -37,6 +37,7 @@ class EasyTierManager(
     private var currentProxyCidrs: List<String> = emptyList()
     private var currentDnsServers: List<String> = emptyList()
     private var currentInstanceName: String? = null
+    private var lastNotificationUpdateTime: Long = 0L
     private var vpnServiceIntent: Intent? = null
     private val monitorRunnable = object : Runnable {
         override fun run() {
@@ -183,6 +184,26 @@ class EasyTierManager(
                 currentDnsServers = newDnsServers.toList()
                 restartVpnService(newIpv4, newProxyCidrs, newDnsServers)
             }
+
+            val now = System.currentTimeMillis()
+            if (now - lastNotificationUpdateTime >= 60_000) {
+                lastNotificationUpdateTime = now
+                val upload = root.optString("total_upload", "")
+                val download = root.optString("total_download", "")
+                val text = buildString {
+                    append(currentInstanceName ?: "")
+                    append(" 运行中  ")
+                    if (upload.isNotEmpty()) {
+                        append("↑${upload}")
+                    }
+                    if (download.isNotEmpty()) {
+                        if (upload.isNotEmpty()) append("  ")
+                        append("↓${download}")
+                    }
+                }
+                EasyTierVpnService.instance?.updateNotification(text)
+            }
+
             AppLogger.debug(TAG, "processNetworkStatus: done")
         } catch (t: Throwable) {
             val sw = StringWriter()
