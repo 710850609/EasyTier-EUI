@@ -320,7 +320,7 @@
       <!-- 版本信息卡片 -->
       <div class="about-version-card">
         <div class="version-main">
-          <img src="/icon.png" alt="Logo" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover;" />
+          <img src="/icon.png" alt="Logo" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover;" />
           <span class="version-name">{{ $t('settings.about.appName') }} {{ forUser ? $t('settings.about.liteVersion') : '' }}</span>
         </div>
         <div class="version-actions">
