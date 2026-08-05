@@ -46,7 +46,7 @@ on:
       build_android:
         description: '构建 Android APK'
         type: boolean
-        default: false
+        default: true
 
 env:
   PYTHON_VERSION: '3.12'
