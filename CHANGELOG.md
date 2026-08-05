@@ -1,3 +1,21 @@
+##  
+- 新增: 易组网使用独立Logo
+- 新增: 支持安卓易组网版本
+- 优化: 界面UI优化, 弹窗更清晰, 适配小屏幕组件展示 
+- 优化: 后端调用实现优化
+- 修复: 【配置】保存某些配置项空字符串问题
+
+<br>
+
+----
+
+- Added: Independent logo for EasyTier
+- Added: Support for Android EasyTier version
+- Improved: UI refinements, clearer dialogs, adapted component display for small screens
+- Improved: Backend call implementation optimization
+- Fixed: [Config] issue with saving empty string values for certain config items
+
+
 ##  1.6
 - 新增：【配置】-代理与转发，支持网段映射
 - 修复：【配置】-代理与转发，网段映射为空时，保存启动失败问题
