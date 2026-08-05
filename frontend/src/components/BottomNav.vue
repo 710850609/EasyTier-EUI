@@ -27,6 +27,7 @@
   <var-popup 
     v-model:show="showSubMenu" 
     position="bottom"
+    :safe-area="false"
   >
     <div class="submenu-popup">
       <div class="popup-title">{{ $t(currentSubMenuTitle) }}</div>
@@ -114,7 +115,8 @@ const handleSubMenuClick = (key) => {
   bottom: 0;
   left: 0;
   right: 0;
-  height: 64px;
+  height: calc(64px + var(--sab, 0px));
+  padding-bottom: var(--sab, 0px);
   background: rgba(var(--color-surface-rgb, 255, 255, 255), 0.55);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);

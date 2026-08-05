@@ -11,7 +11,10 @@ import os.path
 import sys
 from pathlib import Path
 
-import psutil
+try:
+    import psutil
+except ImportError:
+    psutil = None
 
 from actions import services
 from utils import run_configs, log_util

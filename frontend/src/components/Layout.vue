@@ -118,15 +118,28 @@ onUnmounted(() => {
   display: flex;
   height: 100vh;
   background: var(--color-body);
+  padding: var(--sat, 0px) var(--sar, 0px) var(--sab, 0px) var(--sal, 0px);
+}
+
+.layout::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--sat, 0px);
+  background: linear-gradient(to bottom, var(--color-body) 60%, transparent 100%);
+  pointer-events: none;
+  z-index: 9999999;
 }
 
 .side-menu {
   flex-shrink: 0;
   border-right: 1px solid var(--color-outline);
   position: fixed;
-  left: 0;
-  top: 0;
-  height: 100vh;
+  left: var(--sal, 0px);
+  top: var(--sat, 0px);
+  height: calc(100vh - var(--sat, 0px) - var(--sab, 0px));
   z-index: 100;
 }
 
@@ -144,7 +157,7 @@ onUnmounted(() => {
 }
 
 .main-content.has-bottom-nav {
-  padding-bottom: 64px;
+  /* padding-bottom 移到 .content-wrapper 内部，让内容能滚到导航栏后面 */
 }
 
 .content-wrapper {
@@ -157,6 +170,7 @@ onUnmounted(() => {
 .layout.is-mobile {
   flex-direction: column;
   height: 100vh;
+  padding: 0;
 }
 
 .layout.is-mobile .main-content {
@@ -167,6 +181,8 @@ onUnmounted(() => {
 .layout.is-mobile .content-wrapper {
   overflow-y: auto;
   padding: 0;
+  padding-top: var(--sat, 0px);
+  padding-bottom: calc(64px + var(--sab, 0px));
   flex: 1;
   min-height: 0;
 }
@@ -176,6 +192,7 @@ onUnmounted(() => {
   .layout {
     flex-direction: column;
     height: 100vh;
+    padding: 0;
   }
   
   .side-menu {
@@ -192,6 +209,7 @@ onUnmounted(() => {
   .content-wrapper {
     overflow-y: auto;
     padding: 0;
+    padding-top: var(--sat, 0px);
     flex: 1;
     min-height: 0;
   }

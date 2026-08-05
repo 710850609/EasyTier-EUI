@@ -1,0 +1,331 @@
+package com.github.u710850609.easytiereui
+
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Intent
+import android.net.VpnService
+import android.os.Build
+import android.os.Handler
+import android.os.Looper
+import android.os.ParcelFileDescriptor
+import androidx.core.app.NotificationCompat
+import com.chaquo.python.Python
+import kotlin.concurrent.thread
+import java.io.PrintWriter
+import java.io.StringWriter
+
+class EasyTierVpnService : VpnService() {
+
+    private var vpnInterface: ParcelFileDescriptor? = null
+    private var isRunning = false
+    private var instanceName: String? = null
+    private val handler = Handler(Looper.getMainLooper())
+
+    companion object {
+        private const val TAG = "EasyTierVpnService"
+        const val CHANNEL_ID = "easytier_eui_vpn_channel"
+        const val NOTIFICATION_ID = 1
+
+        var instance: EasyTierVpnService? = null
+            private set
+
+        fun requestStop() {
+            instance?.let { service ->
+                AppLogger.info(TAG, "requestStop: cleaning up and stopping")
+                service.isRunning = false
+                try {
+                    service.vpnInterface?.close()
+                } catch (e: Exception) {
+                    AppLogger.error(TAG, "requestStop: close vpnInterface failed: ${e.message}")
+                }
+                service.vpnInterface = null
+                try {
+                    service.stopForeground(STOP_FOREGROUND_REMOVE)
+                    AppLogger.info(TAG, "requestStop: stopForeground succeeded")
+                } catch (e: Exception) {
+                    AppLogger.error(TAG, "requestStop: stopForeground failed: ${e.message}")
+                }
+                service.stopSelf()
+            } ?: AppLogger.warn(TAG, "requestStop: no active instance")
+        }
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        AppLogger.info(TAG, "VPN Service onCreate: start")
+        try {
+            createNotificationChannel()
+            AppLogger.info(TAG, "VPN Service notification channel created")
+        } catch (e: Exception) {
+            AppLogger.error(TAG, "Failed to create notification channel: ${e.message}")
+        }
+        instance = this
+        AppLogger.info(TAG, "VPN Service created")
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        AppLogger.info(TAG, "onStartCommand: flags=$flags, startId=$startId")
+        val ipv4Address = intent?.getStringExtra("ipv4_address")
+        val proxyCidrs = intent?.getStringArrayListExtra("proxy_cidrs") ?: arrayListOf()
+        val dnsServers = intent?.getStringArrayListExtra("dns_servers") ?: arrayListOf()
+        instanceName = intent?.getStringExtra("instance_name")
+
+        if (ipv4Address == null || instanceName == null) {
+            AppLogger.error(TAG, "Missing parameters: ipv4Address=$ipv4Address, instanceName=$instanceName")
+            stopSelf()
+            return START_NOT_STICKY
+        }
+
+        AppLogger.info(TAG, "Starting VPN - IPv4: $ipv4Address, Proxy CIDRs: $proxyCidrs, DNS: $dnsServers, Instance: $instanceName")
+
+        try {
+            val pfd = createVpnInterface(ipv4Address, proxyCidrs, dnsServers)
+            if (pfd == null) {
+                AppLogger.error(TAG, "Failed to create VPN interface (pfd is null)")
+                stopSelf()
+                return START_NOT_STICKY
+            }
+
+            vpnInterface = pfd
+            startForeground(NOTIFICATION_ID, buildNotification("${instanceName?.removeSuffix(".toml")} 运行中"))
+            AppLogger.info(TAG, "VPN interface created, fd=${pfd.fd}")
+
+            val name = instanceName!!
+            val fd = pfd.fd
+            thread {
+                try {
+                    AppLogger.info(TAG, "Background thread: setting TUN fd=$fd for instance=$name")
+                    setTunFd(name, fd)
+                    AppLogger.info(TAG, "Background thread: entering keepalive loop")
+                    runKeepAliveLoop()
+                } catch (t: Throwable) {
+                    val sw = StringWriter()
+                    t.printStackTrace(PrintWriter(sw))
+                    AppLogger.error(TAG, "VPN background error: ${sw}")
+                } finally {
+                    AppLogger.info(TAG, "VPN background thread ending, cleaning up")
+                    handler.post {
+                        try {
+                            stopForeground(STOP_FOREGROUND_REMOVE)
+                        } catch (e: Exception) {
+                            AppLogger.error(TAG, "stopForeground in finally failed: ${e.message}")
+                        }
+                        stopSelf()
+                    }
+                }
+            }
+        } catch (t: Throwable) {
+            val sw = StringWriter()
+            t.printStackTrace(PrintWriter(sw))
+            AppLogger.error(TAG, "VPN setup failed: ${sw}")
+            try {
+                stopForeground(STOP_FOREGROUND_REMOVE)
+            } catch (e: Exception) {
+                AppLogger.error(TAG, "stopForeground in catch failed: ${e.message}")
+            }
+            stopSelf()
+            return START_NOT_STICKY
+        }
+
+        return START_STICKY
+    }
+
+    private fun createVpnInterface(ipv4Address: String, proxyCidrs: List<String>, dnsServers: List<String>): ParcelFileDescriptor? {
+        AppLogger.info(TAG, "createVpnInterface: ipv4=$ipv4Address, cidrs=${proxyCidrs.size}, dns=${dnsServers.size}")
+        val (ip, networkLength) = parseIpv4Address(ipv4Address)
+        AppLogger.debug(TAG, "createVpnInterface: parsed ip=$ip, prefix=$networkLength")
+
+        val builder = Builder()
+        builder.setSession("EasyTier-EUI VPN")
+            .addAddress(ip, networkLength)
+            .addDisallowedApplication(packageName)
+
+        if (dnsServers.isEmpty()) {
+            builder.addDnsServer("223.5.5.5")
+                .addDnsServer("119.29.29.29")
+                .addDnsServer("114.114.114.114")
+                .addDnsServer("8.8.8.8")
+        } else {
+            dnsServers.forEach { dns -> builder.addDnsServer(dns) }
+        }
+
+        proxyCidrs.forEach { cidr ->
+            try {
+                val (routeIp, routeLength) = parseCidr(cidr)
+                builder.addRoute(routeIp, routeLength)
+                AppLogger.debug(TAG, "Added route: $routeIp/$routeLength")
+            } catch (e: Exception) {
+                AppLogger.warn(TAG, "Failed to parse CIDR: $cidr - ${e.message}")
+            }
+        }
+
+        AppLogger.info(TAG, "createVpnInterface: calling builder.establish()")
+        try {
+            val pfd = builder.establish()
+            if (pfd == null) {
+                AppLogger.error(TAG, "createVpnInterface: builder.establish() returned null")
+            } else {
+                AppLogger.info(TAG, "createVpnInterface: builder.establish() succeeded, fd=${pfd.fd}")
+            }
+            return pfd
+        } catch (t: Throwable) {
+            val sw = StringWriter()
+            t.printStackTrace(PrintWriter(sw))
+            AppLogger.error(TAG, "createVpnInterface: builder.establish() threw: ${sw}")
+            return null
+        }
+    }
+
+    private fun setTunFd(instanceName: String, fd: Int) {
+        try {
+            val module = Python.getInstance().getModule("et_adapters.facade")
+            val facade = module.callAttr("get_facade")
+            if (facade == null) {
+                AppLogger.error(TAG, "TUN fd set: facade is null")
+                return
+            }
+            val result = facade.callAttr("set_tun_fd", instanceName, fd).toInt()
+            if (result == 0) {
+                AppLogger.info(TAG, "TUN fd set successfully: $fd")
+            } else {
+                AppLogger.error(TAG, "TUN fd set failed: $result")
+            }
+        } catch (t: Throwable) {
+            val sw = StringWriter()
+            t.printStackTrace(PrintWriter(sw))
+            AppLogger.error(TAG, "TUN fd set error: ${sw}")
+        }
+    }
+
+    private fun runKeepAliveLoop() {
+        isRunning = true
+        AppLogger.info(TAG, "Keep-alive loop started")
+        while (isRunning && vpnInterface != null) {
+            try {
+                Thread.sleep(1000)
+            } catch (e: InterruptedException) {
+                AppLogger.info(TAG, "Keep-alive loop interrupted")
+                break
+            }
+        }
+        AppLogger.info(TAG, "Keep-alive loop ended (isRunning=$isRunning, vpnInterface=${if (vpnInterface != null) "present" else "null"})")
+    }
+
+    private fun parseIpv4Address(ipv4Address: String): Pair<String, Int> {
+        return try {
+            if (ipv4Address.contains("/")) {
+                val parts = ipv4Address.split("/")
+                Pair(parts[0], parts[1].toInt())
+            } else {
+                Pair(ipv4Address, 24)
+            }
+        } catch (e: Exception) {
+            AppLogger.error(TAG, "parseIpv4Address failed for '$ipv4Address': ${e.message}")
+            throw e
+        }
+    }
+
+    private fun parseCidr(cidr: String): Pair<String, Int> {
+        return try {
+            val parts = cidr.split("/")
+            when (parts.size) {
+                2 -> Pair(parts[0], parts[1].toInt())
+                1 -> Pair(parts[0], 32)
+                else -> throw IllegalArgumentException("Invalid CIDR format: $cidr")
+            }
+        } catch (e: Exception) {
+            AppLogger.error(TAG, "parseCidr failed for '$cidr': ${e.message}")
+            throw e
+        }
+    }
+
+    private fun cleanup() {
+        isRunning = false
+        try {
+            vpnInterface?.close()
+        } catch (e: Exception) {
+            AppLogger.error(TAG, "VPN interface close failed: ${e.message}")
+        }
+        vpnInterface = null
+        AppLogger.info(TAG, "VPN interface cleaned up")
+    }
+
+    fun updateNotification(text: String) {
+        try {
+            val notification = buildNotification(text)
+            val nm = getSystemService(NotificationManager::class.java)
+            nm.notify(NOTIFICATION_ID, notification)
+        } catch (e: Exception) {
+            AppLogger.error(TAG, "updateNotification failed: ${e.message}")
+        }
+    }
+
+    private fun buildNotification(text: String): Notification {
+        return try {
+            val pendingIntent = PendingIntent.getActivity(
+                this, 0,
+                Intent(this, MainActivity::class.java),
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            )
+            NotificationCompat.Builder(this, CHANNEL_ID)
+                .setContentTitle("易组网")
+                .setContentText(text)
+                .setSmallIcon(R.drawable.ic_notification)
+                .setContentIntent(pendingIntent)
+                .setOngoing(true)
+                .setForegroundServiceBehavior(Notification.FOREGROUND_SERVICE_IMMEDIATE)
+                .setPriority(NotificationCompat.PRIORITY_LOW)
+                .build()
+        } catch (e: Exception) {
+            AppLogger.error(TAG, "buildNotification failed: ${e.message}")
+            NotificationCompat.Builder(this, CHANNEL_ID)
+                .setContentTitle("EasyTier-EUI")
+                .setContentText("Service Is Running")
+                .setSmallIcon(R.drawable.ic_notification)
+                .setOngoing(true)
+                .setForegroundServiceBehavior(Notification.FOREGROUND_SERVICE_IMMEDIATE)
+                .setPriority(NotificationCompat.PRIORITY_LOW)
+                .build()
+        }
+    }
+
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            try {
+                val channel = NotificationChannel(
+                    CHANNEL_ID, "组网服务", NotificationManager.IMPORTANCE_LOW
+                ).apply {
+                    description = "组网运行通知"
+                    setShowBadge(true)
+                }
+                getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
+                AppLogger.info(TAG, "Notification channel created")
+            } catch (e: Exception) {
+                AppLogger.error(TAG, "createNotificationChannel failed: ${e.message}")
+            }
+        }
+    }
+
+    override fun onDestroy() {
+        AppLogger.info(TAG, "onDestroy: start")
+        try {
+            cleanup()
+        } catch (e: Exception) {
+            AppLogger.error(TAG, "onDestroy: cleanup failed: ${e.message}")
+        }
+        try {
+            stopForeground(STOP_FOREGROUND_REMOVE)
+        } catch (e: Exception) {
+            AppLogger.error(TAG, "onDestroy: stopForegroundCompat failed: ${e.message}")
+        }
+        instance = null
+        try {
+            super.onDestroy()
+        } catch (e: Exception) {
+            AppLogger.error(TAG, "onDestroy: super.onDestroy failed: ${e.message}")
+        }
+        AppLogger.info(TAG, "onDestroy: done")
+    }
+}

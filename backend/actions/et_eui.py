@@ -20,6 +20,7 @@ from locales import get_message
 from utils import run_configs
 from utils.async_task import DownloadTask, UpdateTask
 
+logger = logging.getLogger(__name__)
 
 def update(params: dict, *args, **kwargs):
     params = params or {}
@@ -66,18 +67,18 @@ def _do_update(task: UpdateTask, ver_tag: str):
         task.update_progress(85, get_message('update.updating_backend'))
         backend_path = Path(run_configs.core_dir()).parent.joinpath('backend')
         shutil.copytree(os.path.join(app_dir, 'backend'), backend_path, dirs_exist_ok=True)
-        logging.info(f"更新backend： {backend_path}")
+        logger.info(f"更新backend： {backend_path}")
 
         task.update_progress(92, get_message('update.updating_frontend'))
         frontend_path = Path(run_configs.core_dir()).parent.joinpath('frontend')
         shutil.copytree(os.path.join(app_dir, 'frontend'), frontend_path, dirs_exist_ok=True)
-        logging.info(f"更新frontend： {frontend_path}")
+        logger.info(f"更新frontend： {frontend_path}")
 
         task.update_progress(97, get_message('update.installing_deps'))
         cmd = f"{backend_path}/.venv/bin/pip install --no-index --find-links={backend_path}/wheels -r {backend_path}/requirements-base.txt"
         common_util.run_cmd(cmd)
-        logging.info(f"安装依赖完成")
-        logging.info(f"更新到 {ver_tag} 版本完成")
+        logger.info(f"安装依赖完成")
+        logger.info(f"更新到 {ver_tag} 版本完成")
         task.set_completed(get_message('update.update_completed', ver_tag=ver_tag))
     else:
         # task.update_progress(72, '正在停止服务...')
@@ -99,7 +100,7 @@ def _do_update(task: UpdateTask, ver_tag: str):
             cmd = ['sh', persistent_script, str(app_path)]
         else:
             cmd = [persistent_script, str(app_path)]
-        logging.info(f"执行升级脚本：{' '.join(cmd)}")
+        logger.info(f"执行升级脚本：{' '.join(cmd)}")
         import subprocess as _sp
         import time as _time
         _clean_env = _clean_env_for_upgrade()
@@ -110,12 +111,12 @@ def _do_update(task: UpdateTask, ver_tag: str):
         else:
             _sp.Popen(cmd, stdout=_sp.DEVNULL, stderr=_sp.DEVNULL,
                       cwd=str(app_path), env=_clean_env)
-        logging.info("升级脚本已脱离当前进程启动，即将退出当前进程")
+        logger.info("升级脚本已脱离当前进程启动，即将退出当前进程")
         task.set_completed(get_message('update.completed'))
         import threading
         def _delayed_shutdown():
             _time.sleep(1)
-            logging.shutdown()
+            logger.shutdown()
             os._exit(0)
         threading.Thread(target=_delayed_shutdown, daemon=True).start()
 
@@ -143,7 +144,7 @@ def get_release_info(params: dict, *args, **kwargs):
     cache_time = 1000 * 60
     if refresh or release_info is None:
         if cur_diff_time < cache_time and release_info is not None:
-            logging.info(f'上次刷新时间距离当前时间仅隔 {cur_diff_time} ms, 直接返回上次刷新结果')
+            logger.info(f'上次刷新时间距离当前时间仅隔 {cur_diff_time} ms, 直接返回上次刷新结果')
             return release_info
         total_download = 0
         release_info = {'update_time': cur_time, 'total_download': total_download, 'latest_release': {}, 'latest_prerelease': {}}
@@ -263,13 +264,13 @@ def _get_et_eui_package_async(platform: str, arch: str, et_lite_version: str, do
         file_name = file_name.replace('.zip', '.fpk')
     download_file = download_dir + '/' + file_name
     if Path(download_file).exists():
-        logging.debug(f"已存在缓存:{download_file}")
+        logger.debug(f"已存在缓存:{download_file}")
         return download_file
     if not download_url:
         download_url = f"https://github.com/710850609/EasyTier-EUI/releases/download/{last_version}/{file_name}"
-    logging.debug(f"不存在缓存，开始下载 {download_url}")
+    logger.debug(f"不存在缓存，开始下载 {download_url}")
     github_util.download_release_file(download_url, download_file, Path(download_file).name, progress_callback=progress_callback)
-    logging.debug(f"已下载： {download_file}")
+    logger.debug(f"已下载： {download_file}")
     return download_file
 
 # def _get_et_eui_latest_version():
@@ -279,7 +280,7 @@ def _get_et_eui_package_async(platform: str, arch: str, et_lite_version: str, do
     
 def _merge_package(profile, et_lite_package, output_file, unzip_dir):
     unzip_temp_dir = f"{unzip_dir}/temp/{int(time.time())}"
-    logging.info(f"解压: {et_lite_package} -> {unzip_temp_dir}")
+    logger.info(f"解压: {et_lite_package} -> {unzip_temp_dir}")
     with zipfile.ZipFile(et_lite_package, 'r') as zf:
         # zf.extractall(unzip_temp_dir)
         for info in zf.infolist():
@@ -295,17 +296,17 @@ def _merge_package(profile, et_lite_package, output_file, unzip_dir):
                 with zf.open(info) as src, open(local_path, 'wb') as dst:
                     dst.write(src.read())
     if profile:
-        logging.info(f"内置配置文件：{profile}")
+        logger.info(f"内置配置文件：{profile}")
         config_file = configs.copy(profile)
         cfg_target_file = Path(unzip_temp_dir, 'EasyTier-EUI', 'config', profile)
         Path(cfg_target_file).parent.mkdir(parents=True, exist_ok=True)
-        logging.info(f"复制: {config_file}  ->  {cfg_target_file}")
+        logger.info(f"复制: {config_file}  ->  {cfg_target_file}")
         common_util.move(f"{config_file}", f"{cfg_target_file}")
     else:
-        logging.info(f"未指定profile，不内置配置文件")
+        logger.info(f"未指定profile，不内置配置文件")
     
 
-    logging.info(f"开始打包: {output_file}")
+    logger.info(f"开始打包: {output_file}")
     Path(output_file).parent.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(output_file, 'w', zipfile.ZIP_DEFLATED) as zf:
         for item in Path(unzip_temp_dir).rglob('*'):
@@ -315,7 +316,7 @@ def _merge_package(profile, et_lite_package, output_file, unzip_dir):
     common_util.delete(unzip_temp_dir)
 
 def _extract_package(package_file:str, extract_dir:str):
-    logging.info(f"解压: {package_file} -> {extract_dir}")
+    logger.info(f"解压: {package_file} -> {extract_dir}")
     with zipfile.ZipFile(package_file, 'r') as zf:
         # zf.extractall(unzip_temp_dir)
         for info in zf.infolist():
@@ -349,6 +350,7 @@ def __get_download_url(is_release: bool) -> tuple[str, str, str]:
         "armv7l": "armv7"
     }
     system = sys.platform
+    system = 'android' if run_configs.IS_ANDROID else system
     machine = os.uname().machine if hasattr(os, 'uname') else platform.machine()
     sys_name = sys_map.get(system, system)
     arch_name = arch_map.get(machine.lower())
@@ -361,7 +363,7 @@ def __get_download_url(is_release: bool) -> tuple[str, str, str]:
     try:
         release_infos = get_release_info({'refresh': 'true'})
     except Exception as e:
-        logging.exception(f"获取release信息失败，尝试使用本地缓存")
+        logger.exception(f"获取release信息失败，尝试使用本地缓存")
         release_infos = get_release_info({'refresh': 'false'})
 
     latest_info = release_infos.get('latest_release', {}) if is_release else release_infos.get('latest_prerelease', {})
@@ -373,7 +375,7 @@ def __get_download_url(is_release: bool) -> tuple[str, str, str]:
 
 def _clean_env_for_upgrade():
     """为升级脚本准备干净的环境变量"""
-    logging.info(f"当前环境变量: {json.dumps(dict(os.environ), indent=0, ensure_ascii=False)}")
+    logger.info(f"当前环境变量: {json.dumps(dict(os.environ), indent=0, ensure_ascii=False)}")
     clean = {}
     for k, v in os.environ.items():
         # 过滤 PyInstaller 内部变量

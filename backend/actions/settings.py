@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+import json
 import logging
 import os
 import shutil
@@ -11,12 +12,14 @@ import tomlkit
 
 from http_dispatcher.dispatcher import HttpException
 from locales import get_message
-from utils import run_configs, github_util
+from utils import run_configs, github_util, log_util
 
+logger = logging.getLogger(__name__)
 
 def eui_info(*args, **kwargs):
     platform = 'trim' if run_configs.is_fn_system() else sys.platform
-    install_path = Path(run_configs.core_dir()).parent
+    platform = 'android' if run_configs.IS_ANDROID else platform
+    install_path = Path(run_configs.log_dir()).parent
     # 解析符号链接，获取真实路径
     install_path = install_path.resolve()
     is_docker = run_configs.is_docker()
@@ -87,6 +90,61 @@ def _delete_dir(delete_path: Path):
                 pass
     shutil.rmtree(delete_path, ignore_errors=True)
     return total_bytes
+
+def delete_log(params=None, *args, **kwargs):
+    log_path = Path(run_configs.log_dir())
+    total_bytes = 0
+    if log_path.exists():
+        for entry in log_path.iterdir():
+            if entry.is_file():
+                try:
+                    total_bytes += entry.stat().st_size
+                    entry.write_text('', encoding='utf-8')
+                except (OSError, PermissionError):
+                    pass
+    if total_bytes == 0:
+        return get_message('settings.logDeleted')
+    units = ["B", "KB", "MB", "GB", "TB"]
+    i = 0
+    size = total_bytes
+    while size >= 1024 and i < len(units) - 1:
+        size /= 1024
+        i += 1
+    size_str = f"{size:.2f} {units[i]}"
+    logging.info(f"清空日志目录: {log_path}, 累计释放 {size_str}")
+    return get_message('settings.log_deleted', size=size_str)
+
+def get_log_level(params=None, *args, **kwargs):
+    log_level = 'warn'
+    if os.path.exists(run_configs.setting_file()):
+        with open(run_configs.setting_file(), "r", encoding="utf-8") as f:
+            setting = json.load(f)
+            log_level = setting.get('log_level', 'warn')
+    return log_level
+
+
+def set_log_level(params=None, *args, **kwargs):
+    params = params or {}
+    log_level = params.get('log_level', 'info').upper()
+    try:
+        if run_configs.IS_ANDROID:
+            from java import jclass
+            MainActivity = jclass(run_configs.ANDROID_MAIN_ACTIVITY)
+            manager = MainActivity.getEasyTierManager()
+            if manager is not None:
+                manager.setLogLevel(log_level)
+    except Exception as e:
+        logger.exception(f"fail to set android log level: {e}")
+    excluded_console = run_configs.is_docker()
+    # docker 环境下，不修改 console 日志输出，方便控制台定位问题
+    log_util.set_log_level(log_level, None, excluded_console)
+    setting = {}
+    if os.path.exists(run_configs.setting_file()):
+        with open(run_configs.setting_file(), "r", encoding="utf-8") as f:
+            setting = json.load(f)
+    setting['log_level'] = log_level.lower()
+    with open(run_configs.setting_file(), "w", encoding="utf-8") as f:
+        json.dump(setting, f, ensure_ascii=False, indent=4)
 
 def shutdown(params=None, *args, **kwargs):
     import os

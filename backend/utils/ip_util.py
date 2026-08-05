@@ -2,7 +2,10 @@
 # # -*- coding: utf-8 -*-
 import socket
 import ipaddress
-import psutil
+try:
+    import psutil
+except ImportError:
+    psutil = None
 import platform
 from typing import List, Dict, Optional, Tuple
 
@@ -126,6 +129,9 @@ def get_lan_ips(
     获取本地IP
     返回key name, ip, netmask
     """
+    # 安卓 不支持 psutil
+    if psutil is None:
+        return []
     results: List[Dict[str, str]] = []
     stats = psutil.net_if_stats() if exclude_down else {}
     addrs = psutil.net_if_addrs()

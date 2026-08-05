@@ -40,7 +40,6 @@ body {
   background: var(--color-on-surface-variant);
 }
 
-/* MD3 主题变量适配 */
 :root {
   --app-primary: var(--color-primary);
   /* RGB 变量用于 rgba() */
@@ -108,13 +107,15 @@ html.dark {
 /* var-select 下拉框毛玻璃效果 */
 html body .var-select__scroller,
 html body .var-select__scroller.var-elevation--3 {
-  --select-scroller-background: rgba(var(--color-surface-container-rgb, 234, 240, 248), 0.08) !important;
-  background: rgba(var(--color-surface-container-rgb, 234, 240, 248), 0.08) !important;
-  background-color: rgba(var(--color-surface-container-rgb, 234, 240, 248), 0.08) !important;
-  backdrop-filter: blur(20px) saturate(140%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(140%) !important;
+  --select-scroller-background: rgba(var(--color-surface-container-rgb, 234, 240, 248), 0.02) !important;
+  background: rgba(var(--color-surface-container-rgb, 234, 240, 248), 0.02) !important;
+  background-color: rgba(var(--color-surface-container-rgb, 234, 240, 248), 0.02) !important;
+  backdrop-filter: blur(10px) saturate(120%) !important;
+  -webkit-backdrop-filter: blur(10px) saturate(120%) !important;
   will-change: backdrop-filter !important;
   border: none !important;
+  border-left: 2px solid rgba(255, 255, 255, 0.25) !important;
+  border-right: 2px solid rgba(255, 255, 255, 0.25) !important;
   border-radius: 16px !important;
   box-shadow:
     0 8px 32px rgba(0, 0, 0, 0.1),
@@ -126,6 +127,8 @@ html.dark body .var-select__scroller.var-elevation--3 {
   --select-scroller-background: rgba(var(--color-surface-container-rgb, 30, 36, 53), 0.18) !important;
   background: rgba(var(--color-surface-container-rgb, 30, 36, 53), 0.18) !important;
   background-color: rgba(var(--color-surface-container-rgb, 30, 36, 53), 0.18) !important;
+  border-left: 1px solid rgba(255, 255, 255, 0.25) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.25) !important;
   box-shadow:
     0 8px 32px rgba(0, 0, 0, 0.35),
     inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
@@ -241,7 +244,8 @@ html.dark body .var-checkbox-group--vertical .var-checkbox__wrap:not(:last-child
   border: none !important;
   box-shadow:
     0 8px 40px rgba(0, 0, 0, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -2px 0 rgba(255, 255, 255, 0.25) !important;
 }
 
 html.dark .var-popup__content,
@@ -249,7 +253,8 @@ html.dark .var-popup__content[var-popup-cover] {
   background: rgba(var(--color-surface-container-rgb, 51, 65, 85), 0.12) !important;
   box-shadow:
     0 8px 40px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    inset 0 -2px 0 rgba(255, 255, 255, 0.08) !important;
 }
 
 /* 弹窗顶部高光条 —— 模拟玻璃边缘反光 */
@@ -271,6 +276,10 @@ html.dark .var-popup__content[var-popup-cover] {
 }
 
 /* 顶部弹出层：高光条移到底部，发光边框渐变反转，视觉聚焦在屏幕中间 */
+.var-popup__content.var-popup--top {
+  padding-top: var(--sat, 0px);
+}
+
 .var-popup__content.var-popup--top::after {
   top: auto;
   bottom: 0;
@@ -340,6 +349,10 @@ html.dark .var-popup__content.var-popup--top::before {
 /* 顶部弹出层圆角 */
 .var-popup--top {
   border-radius: 0 0 16px 16px !important;
+}
+
+.var-popup--top .var-popup__content {
+  padding-top: var(--sat, 0px) !important;
 }
 
 /* 居中弹出层圆角 */
@@ -490,7 +503,8 @@ html:not(.dark) .var-dialog__overlay {
   border: none !important;
   box-shadow:
     0 8px 32px rgba(0, 0, 0, 0.15),
-    0 2px 8px rgba(0, 0, 0, 0.08) !important;
+    0 2px 8px rgba(0, 0, 0, 0.08),
+    inset 0 -2px 0 rgba(255, 255, 255, 0.25) !important;
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
               opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
   animation: dialog-enter 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
@@ -501,7 +515,8 @@ html.dark .var-dialog {
   background: transparent !important;
   box-shadow:
     0 8px 32px rgba(0, 0, 0, 0.45),
-    0 2px 8px rgba(0, 0, 0, 0.2) !important;
+    0 2px 8px rgba(0, 0, 0, 0.2),
+    inset 0 -2px 0 rgba(255, 255, 255, 0.08) !important;
 }
 
 /* 内发光边框 */
@@ -589,6 +604,8 @@ html:not(.dark) .var-dialog--box::after {
 html.dark .var-menu.var--box.var-select__menu {
   background: rgba(var(--color-surface-container-rgb, 51, 65, 85), 0.18) !important;
   border-color: rgba(255, 255, 255, 0.08) !important;
+  border-left-color: rgba(255, 255, 255, 0.12) !important;
+  border-right-color: rgba(255, 255, 255, 0.12) !important;
 }
 
 /* 折叠面板样式 - 移除高光，更柔和 */
@@ -666,5 +683,23 @@ html.no-glass .submenu-popup-content {
 html.no-glass.dark .submenu-popup-content {
   background: var(--color-surface-container) !important;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* 关闭毛玻璃后，底部导航栏使用实色背景 */
+html.no-glass .bottom-nav {
+  background: var(--color-surface) !important;
+}
+
+html.no-glass.dark .bottom-nav {
+  background: var(--color-surface) !important;
+}
+
+/* 关闭毛玻璃后，底部导航子菜单使用实色背景 */
+html.no-glass .submenu-popup {
+  background: var(--color-surface-container) !important;
+}
+
+html.no-glass.dark .submenu-popup {
+  background: var(--color-surface-container) !important;
 }
 </style>

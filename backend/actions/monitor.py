@@ -1,14 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import json
 import logging
-import os
-import sys
-
-from utils import common_util, et_run_info
-from utils import run_configs
+from et_adapters import get_facade
 from utils.validators import Validator
 
+logger = logging.getLogger(__name__)
 
 def list(params, *args, **kwargs):
     """
@@ -17,21 +13,4 @@ def list(params, *args, **kwargs):
     """
     profile, _ = Validator.not_empty(params, 'profile', 'validate.profile_required')
     profile = Validator.check_profile(profile)
-    info = et_run_info.get(profile)
-    if not info:
-        logging.debug(f"未找到配置元数据：{profile}")
-        return []
-    if not info.rpc_portal:
-        logging.debug(f"元数据没有rpc信息：{info.__dict__}")
-        return []
-    _ext = ".exe" if sys.platform == "win32" else ""
-    cmd = f"{os.path.join(run_configs.core_dir(), 'easytier-cli')}{_ext} -o json  --rpc-portal {info.rpc_portal} peer"
-    try:
-        result = common_util.run_cmd(cmd)
-        peer_list = json.loads(result)
-        return peer_list
-    except Exception as e:
-        if str(e).find('failed to connect to server') > 0:
-            logging.debug(str(e))
-            return []
-        raise e
+    return get_facade().get_peers(profile)

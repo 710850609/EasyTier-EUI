@@ -1,9 +1,13 @@
 # #!/usr/bin/env python3
 # # -*- coding: utf-8 -*-
 import io
-import qrcode
 
-def create_str(qrcode_data:str) -> str:
+def create_str(qrcode_data:str) -> str | None:
+    try:
+        import qrcode
+    except ImportError:
+        qrcode = None
+        return None
     qr = qrcode.QRCode(
         version=1,
         error_correction=qrcode.constants.ERROR_CORRECT_M,

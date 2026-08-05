@@ -13,10 +13,53 @@ import signal
 import subprocess
 import logging
 from pathlib import Path
-import psutil
+
+from utils import run_configs
+
+try:
+    import psutil
+except ImportError:
+    psutil = None
 
 
 _ANSI_PATTERN = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+
+
+def pid_exists(pid):
+    """
+    通过检查 /proc/[pid] 目录是否运行
+    """
+    if pid <= 0:
+        return False
+    if psutil is not None:
+        return psutil.pid_exists(pid)
+    if run_configs.IS_ANDROID:
+        try:
+            # 检查进程目录是否存在且可访问
+            return os.path.exists(f"/proc/{pid}")
+        except Exception:
+            # 发生任何异常，都认为进程不存在或无法访问
+            return False
+    else:
+        return False
+
+def get_cmdline(pid: int) -> list[str]:
+    """
+    获取进程命令行参数列表（Android 兼容）
+    返回: 命令行参数列表，如 ['python', 'main.py', '--port', '8080']
+    """
+    try:
+        if run_configs.IS_ANDROID or psutil is None:
+            # Android 或 psutil 不可用时，直接读取 /proc/[pid]/cmdline
+            with open(f"/proc/{pid}/cmdline", "r") as f:
+                return f.read().split("\x00")
+        else:
+            p = psutil.Process(pid)
+            return p.cmdline()
+    except Exception as e:
+        logging.warning(f"Failed to read cmdline for PID {pid}: {e}")
+        return []
+
 
 def strip_ansi(text):
     """去除 ANSI 转义序列"""
@@ -30,7 +73,13 @@ class ProcessManager:
 
 
     def __check_process(self, pid: int) -> bool:
-        return psutil.pid_exists(pid)
+        if psutil is not None:
+            return psutil.pid_exists(pid)
+        try:
+            os.kill(pid, 0)
+            return True
+        except (OSError, ProcessLookupError):
+            return False
 
     def status(self) -> bool:
         """

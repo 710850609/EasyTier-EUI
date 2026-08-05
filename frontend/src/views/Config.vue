@@ -37,7 +37,7 @@
       </var-button>
     </div>
 
-    <template v-else>
+    <div v-else class="config-else-wrapper">
       <var-paper class="toolbar" :elevation="2" v-if="!fastSettingMode">
         <!-- 桌面端布局 -->
         <div class="toolbar-row toolbar-desktop">
@@ -317,7 +317,7 @@
           </var-paper>
 
           <!-- 本机信息 -->
-          <var-paper v-if="!fastSettingMode" :elevation="2" class="config-section-panel">
+          <var-paper v-if="!fastSettingMode" :elevation="1" class="config-section-panel">
             <var-collapse v-model="advancedOpen" class="panel-section-inner">
               <var-collapse-item name="hostInfo">
               <template #title>
@@ -400,7 +400,7 @@
           </var-paper>
 
           <!-- 连接方式 -->
-          <var-paper v-if="!fastSettingMode" :elevation="2" class="config-section-panel">
+          <var-paper v-if="!fastSettingMode" :elevation="1" class="config-section-panel">
             <var-collapse v-model="advancedOpen" class="panel-section-inner">
               <var-collapse-item name="connection">
               <template #title>
@@ -459,7 +459,7 @@
                     <var-select
                       v-model="config.listeners"
                       multiple
-                      :placeholder="$t('config.customListenerPlaceholder')"
+                      :placeholder="$t('config.listenersCount', { n: config.listeners.length })"
                       variant="outlined"
                       :chip="true"
                       size="small"
@@ -485,7 +485,7 @@
           </var-paper>
 
           <!-- 性能安全 -->
-          <var-paper v-if="!fastSettingMode" :elevation="2" class="config-section-panel">
+          <var-paper v-if="!fastSettingMode" :elevation="1" class="config-section-panel">
             <var-collapse v-model="advancedOpen" class="panel-section-inner">
               <var-collapse-item name="performance">
               <template #title>
@@ -583,7 +583,7 @@
           </var-paper>
 
           <!-- 代理与转发 -->
-          <var-paper v-if="!fastSettingMode" :elevation="2" class="config-section-panel">
+          <var-paper v-if="!fastSettingMode" :elevation="1" class="config-section-panel">
             <var-collapse v-model="forwardOpen" class="panel-section-inner">
               <var-collapse-item name="forward">
                 <template #title>
@@ -819,10 +819,10 @@
           </var-paper>
         </var-form>
       </div>
-    </template>
+    </div>
 
     <!-- 编辑配置弹窗 -->
-    <var-popup v-model:show="showCodePage" class="code-editor-popup" :close-on-click-overlay="false" :style="{ width: '100vw', height: '100vh', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, margin: 0, padding: 0, maxWidth: 'none', maxHeight: 'none' }">
+    <var-popup v-model:show="showCodePage" class="code-editor-popup" :close-on-click-overlay="false" :style="{ width: '100vw', height: '100vh', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, margin: 0, padding: 'var(--sat, 0px) 0 0 0', maxWidth: 'none', maxHeight: 'none' }">
       <div class="code-editor-wrapper">
         <div class="code-editor-header">
           <span class="editor-title">{{ $t('config.editConfigTitle', { name: currentConfigData.name }) }}</span>
@@ -914,6 +914,7 @@
 
 <script setup>
 import { copyToClipboard } from '../utils/clipboard.js'
+import { openDownloadUrl } from '../utils/download.js'
 import { validateIP, validateIPPort } from '../utils/validate.js'
 import { ref, computed, inject, onMounted, nextTick, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -1233,7 +1234,7 @@ const saveConfig = () => {
     } else {
       delete data.flags.instance_recv_bps_limit
     }
-    ['dev_name', 'encryption_algorithm', 'default_protocol', 'compression', 'relay_network_whitelist'].forEach(key => {
+    ['hostname', 'dev_name', 'encryption_algorithm', 'default_protocol', 'compression', 'relay_network_whitelist'].forEach(key => {
       if (config.value.flags[key] == null || config.value.flags[key].trim() === '') {
         delete data.flags[key]
       }
@@ -1270,7 +1271,7 @@ const saveConfig = () => {
 
 const downloadConfig = () => {
   const url = api.configs.getShareConfigDownloadUrl(selectedConfig.value)
-  window.open(url, '_blank')
+  openDownloadUrl(url)
 }
 
 const copyConfig = () => {
@@ -1723,8 +1724,16 @@ onUnmounted(() => {
 .config-page {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 64px);
+  height: 100%;
   overflow: hidden;
+}
+
+.config-else-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
 }
 
 .config-skeleton {
@@ -2735,8 +2744,16 @@ html.dark .config-section-panel {
   .config-page {
     display: flex;
     flex-direction: column;
-    height: calc(100vh - 64px);
+    height: 100%;
     overflow: hidden;
+  }
+
+  .config-else-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
   }
 
   .toolbar {
@@ -2970,7 +2987,7 @@ html.dark .config-section-panel {
   }
 
   .config-section-panel {
-    margin-top: 8px;
+    margin-top: 12px;
   }
 
   .port-forward-row {

@@ -50,11 +50,12 @@
         <span class="block-title">{{ $t('settings.kernel.title') }}</span>
       </div>
       <var-divider />
-      <div class="setting-row">
-        <span class="setting-label">{{ $t('settings.logLevel.label') }}</span>
+      <!-- 安卓ffi模式不支持设置日志 -->
+      <div class="setting-row" v-if="platform !== 'android'">
+        <span class="setting-label">{{ $t('settings.etLogLevel.label') }}</span>
         <var-select 
           class="setting-select" 
-          :placeholder="$t('settings.logLevel.placeholder')" 
+          :placeholder="$t('settings.etLogLevel.placeholder')" 
           v-model="etLogLevel" 
           variant="outlined"
           size="small"
@@ -77,7 +78,7 @@
           v-model="etVersion.selected_version"
         >
           <template #default>
-            <var-option v-for="item in etVersionList" :key="item.version" :label="item.version" :value="item.version">
+            <var-option v-for="item in etVersionList" :key="item.version" :label="item.version" :value="item.version" class="version-option">
               <var-cell :title="item.version">
                 <template #extra>
                   <div style="display: flex; align-items: center;">
@@ -108,8 +109,8 @@
       </div>
       <div class="setting-row" v-if="etVersion.selected_version != ''">
         <div class="setting-actions">
-          <var-chip v-if="hasNewVersion" type="warning" size="mini" plain>{{ $t('common.canUpgrade') }}</var-chip>
-          <var-button type="primary" size="small" @click="installEtCore(true)" auto-loading>
+          <var-chip v-if="hasNewVersion && platform !== 'android'" type="warning" size="mini" plain>{{ $t('common.canUpgrade') }}</var-chip>
+          <var-button type="primary" size="small" @click="installEtCore(true)" auto-loading v-if="platform !== 'android'">
             <!-- <var-icon name="download" /> -->
             {{ $t('common.install') }}
           </var-button>
@@ -206,7 +207,33 @@
         <span class="setting-label">
           {{ $t('common.installationPath') }}
         </span>
-        <var-chip type="primary" size="small">{{ installPath }}</var-chip>
+        <var-chip type="primary" size="small" style="word-break: break-all; white-space: normal; text-align: left;">{{ installPath }}</var-chip>
+      </div>
+      <div class="setting-row">
+        <span class="setting-label">
+          {{ $t('settings.euiLogLevel.label') }}
+        </span>
+        <var-select 
+          class="setting-select" 
+          v-model="logLevel"
+          variant="outlined"
+          size="small"
+          :line="true"
+          :options="logLevelOptions"
+          label-key="label"
+          value-key="value"
+          @change="changeLogLevel"
+        >
+        </var-select>
+      </div>
+      <div class="setting-row">
+        <span class="setting-label">
+          {{ $t('common.deleteLog') }}
+        </span>
+        <var-button type="primary" size="small" @click="deleteLog" auto-loading >
+          <var-icon name="delete" size="18" />
+          {{ $t('common.delete') }}
+        </var-button>
       </div>
       <div class="setting-row">
         <span class="setting-label">
@@ -217,7 +244,7 @@
           {{ $t('common.delete') }}
         </var-button>
       </div>
-      <div class="setting-row" v-if="platform !== 'trim' && !isDocker">
+      <div class="setting-row" v-if="platform !== 'trim' && platform !== 'android' && !isDocker">
         <span class="setting-label">{{ $t('settings.specifyIpPort') }}</span>
         <var-button type="primary" size="small" @click="releaseConfig" auto-loading>
           {{ $t('settings.releaseConfig') }}
@@ -293,6 +320,7 @@
       <!-- 版本信息卡片 -->
       <div class="about-version-card">
         <div class="version-main">
+          <img src="/icon.png" alt="Logo" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover;" />
           <span class="version-name">{{ $t('settings.about.appName') }} {{ forUser ? $t('settings.about.liteVersion') : '' }}</span>
         </div>
         <div class="version-actions">
@@ -323,7 +351,7 @@
   </div>
 
   <!-- GitHub辅助下载 -->
-  <var-dialog v-model:show="showGithubUrlPopup" :title="$t('settings.githubDownload')" :confirm-button-text="$t('settings.githubDownloadReadClipboard')" @confirm="confirmGithubDownload" @cancel="showGithubUrlPopup = false">
+  <var-dialog v-model:show="showGithubUrlPopup" :title="$t('settings.githubDownload')" :confirm-button-text="$t('settings.githubDownloadReadClipboard')" safe-area="false" @confirm="confirmGithubDownload" @cancel="showGithubUrlPopup = false">
     <p>{{ $t('settings.githubDownloadDesc') }}</p>
   </var-dialog>
 
@@ -372,6 +400,7 @@ import { VCONSOLE_ENABLED_KEY } from '../config/storage-keys.js'
 import toast from '../components/toast.js'
 import api from '../utils/api.js'
 import { getAcceleratedDownloadUrl } from '../utils/github.js'
+import { openDownloadUrl } from '../utils/download.js'
 import { setLanguage, getLanguage } from '../locales/index.js'
 import { useI18n } from 'vue-i18n'
 // import { getLatestVersionWithCache } from '../utils/github.js'
@@ -400,6 +429,7 @@ const showRewardCdoe = ref(false)
 const showGithubUrlPopup = ref(false)
 const platform = ref('')
 const isDocker = ref(false)
+const logLevel = ref('warn')
 const etLogLevel = ref('error')
 const euiReleaseInfo = ref({})
 const euiRelease = ref({})
@@ -414,7 +444,6 @@ const logLevelOptions = computed(() => [
   { value: 'warn', label: t('settings.logLevel.warn') },
   { value: 'info', label: t('settings.logLevel.info') },
   { value: 'debug', label: t('settings.logLevel.debug') },
-  { value: 'trace', label: t('settings.logLevel.trace') },
 ])
 
 const languageOptions = [
@@ -712,6 +741,38 @@ const setEtLogLevel = async (level) => {
   }
 }
 
+const fetchLogLevel = async () => {
+  try {
+    const { data } = await api.settings.getLogLevel()
+    if (data) {
+      logLevel.value = data
+    }
+  } catch (e) {
+    console.error('获取日志级别失败:', e)
+  }
+}
+
+const changeLogLevel = async (level) => {
+  const loadingToast = toast.loading(t('settings.settingLogLevel'))
+  try {
+    await api.settings.setLogLevel({ log_level: level })
+    const selectedLabel = logLevelOptions.value.find(item => item.value === level)?.label || level
+    toast.success(t('settings.logLevelSet', { label: selectedLabel }))
+  } finally {
+    loadingToast.clear()
+  }
+}
+
+const deleteLog = async () => {
+  return new Promise((resolve) => {
+    api.settings.deleteLog().then(data => {
+      toast.success(data.data || t('settings.logDeleted'))
+    }).finally(() => {
+      resolve()
+    })
+  })
+}
+
 const getEuiReleaseInfo = (refresh=false, showTip = true) => {
   return new Promise((resolve, reject) => {
     api.etEui.getReleaseInfo({'refresh': refresh}).then((data) => {
@@ -807,7 +868,7 @@ const confirmGithubDownload = async () => {
     }
     const acceleratedUrl = await getAcceleratedDownloadUrl(realUrl)
     showGithubUrlPopup.value = false
-    window.open(acceleratedUrl, '_blank')
+    openDownloadUrl(acceleratedUrl)
   } catch {
     toast.warning(t('settings.githubDownloadEmpty'))
   }
@@ -843,6 +904,7 @@ onMounted(() => {
   getEuiReleaseInfo(true, false)
   getEtVersion()
   getEtLogLevel()
+  fetchLogLevel()
   getEuiInfo()
 })
 </script>
@@ -1112,6 +1174,10 @@ onMounted(() => {
 
 /* 移动端响应式 */
 @media (max-width: 480px) {
+  .settings-page {
+    padding-bottom: calc(64px + var(--sab, 0px) + 16px);
+  }
+
   .about-version-card {
     flex-direction: column;
     gap: 12px;
@@ -1147,5 +1213,11 @@ onMounted(() => {
     /* 下拉框 左右无边距 */
     padding: 0px 0px 0px 0px !important;
   }
+}
+</style>
+<!-- 全局样式，影响下拉 option -->
+<style>
+.version-option {
+  padding: 0;
 }
 </style>

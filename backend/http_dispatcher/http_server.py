@@ -12,10 +12,14 @@ from socketserver import ThreadingMixIn
 
 from typing import Optional
 
-import psutil
+try:
+    import psutil
+except ImportError:
+    psutil = None
 
 from http_dispatcher import dispatcher
-from utils import run_configs, log_util
+from utils import run_configs, log_util, process_util
+
 
 class CGIProxyHandler(BaseHTTPRequestHandler):
     """处理 HTTP 请求并转发给 CGI 脚本"""
@@ -149,12 +153,23 @@ def _acquire_instance_lock() -> bool:
         try:
             with open(pid_file, 'r') as f:
                 existing_pid = int(f.read().strip())
-            if psutil.pid_exists(existing_pid):
+            if process_util.pid_exists(existing_pid):
                 logging.warning(f"HTTP 服务已在运行中，{pid_file} 【{existing_pid}】")
-                p = psutil.Process(existing_pid)
-                cmdline = ' '.join(p.cmdline())
+                cmdline_list = process_util.get_cmdline(existing_pid)
+                cmdline = ' '.join(cmdline_list)
                 logging.info(f"上次运行命令行参数： 【{cmdline}】")
-                if run_configs.is_docker() and existing_pid == os.getpid() and 'EasyTier-EUI' in cmdline:
+                
+                # 判断是否是同一个实例
+                is_same_instance = False
+                if run_configs.is_docker():
+                    is_same_instance = True
+                elif run_configs.IS_ANDROID:
+                    # Android 下，PID 在应用生命周期内不变，只需判断 PID 是否相同
+                    is_same_instance = (existing_pid == os.getpid())
+                else:
+                    # 其他平台，检查 PID 和 cmdline
+                    is_same_instance = (existing_pid == os.getpid() and 'EasyTier-EUI' in cmdline)
+                if is_same_instance:
                     logging.info(f"服务 pid 未变，继续运行： 【{existing_pid}】")
                     return True
                 return False
@@ -195,7 +210,7 @@ def build(host:str, port:int=5666, base_uri: str = '') -> Optional[ThreadedHTTPS
         if host == '0.0.0.0' and run_configs.get_run_mode() == 0:
             # win本地开发模式下，默认绑定到 127.0.0.1，优化启动速度
             host = '127.0.0.1'
-        logging.info(f"HTTP服务启动中....")
+        logging.info(f"HTTP服务[{port}]启动中 ....")
         CGIProxyHandler.base_uri = base_uri
         server = ThreadedHTTPServer((host, port), CGIProxyHandler)
         logging.info(f"Starting HTTP server on {host}, port: {port}")

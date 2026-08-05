@@ -1,74 +1,275 @@
 name: Build Android APK
 
 on:
-#  push:
-#    branches: [main, master]
-#    paths:
-#      - 'android/**'
-#      - 'backend/**'
-#      - 'frontend/**'
-#      - '.github/workflows/build-android.yml'
+  workflow_call:
+    inputs:
+      easytier_ref:
+        type: string
+        default: "v2.4.5"
+      build_version:
+        type: string
+        default: ""
+      build_type:
+        type: string
+        default: "release"
+      reuse_frontend:
+        type: string
+        default: "false"
+  push:
+    branches: [main, master, feature/apk]
+    paths:
+      - 'android/**'
+      - 'backend/**'
+      - 'frontend/**'
+      - '.github/workflows/build-android.yml'
   workflow_dispatch:
+    inputs:
+      easytier_ref:
+        description: "EasyTier git ref - supports branch, tag, or commit hash (leave empty for latest release)"
+        required: false
+        default: "v2.4.5"
+      build_version:
+        description: "Build version (leave empty for auto: 0.1-{timestamp})"
+        required: false
+        default: ""
+      build_type:
+        description: "Build type"
+        required: false
+        default: "release"
+        type: choice
+        options:
+          - debug
+          - release
+
+concurrency:
+  group: android-build-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
+    strategy:
+      matrix:
+        include:
+          - arch: aarch64
+            rust_target: aarch64-linux-android
+            ndk_target: arm64-v8a
+          - arch: arm
+            rust_target: armv7-linux-androideabi
+            ndk_target: armeabi-v7a
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      # ==================== 源码拉取 ====================
+      - name: Checkout  # 拉取 EasyTier-EUI 源码
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      # ==================== 构建环境 ====================
+      - name: Setup JDK 17  # 安装 Java 17（Temurin 发行版）
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Python 3.12  # 安装 Python 3.12（Chaquopy 依赖）
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Setup Android SDK + NDK  # 安装 Android SDK 34 + NDK 26
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'platforms;android-35 build-tools;35.0.0 ndk;26.1.10909125'
+
+      # ==================== EasyTier FFI 编译（缓存命中则跳过 Rust 环境） ====================
+      - name: Get EasyTier release info  # 获取 EasyTier 的 ref/version/commit（支持 branch/tag/commit，留空则用最新 release）
+        id: easytier-info
+        env:
+          EASYTIER_REF: ${{ inputs.easytier_ref || '' }}
+        run: |
+          if [ -n "$EASYTIER_REF" ]; then
+            REF="$EASYTIER_REF"
+            echo "Using specified ref: $REF"
+          else
+            REF=$(curl -sL https://api.github.com/repos/easytier/easytier/releases/latest | jq -r .tag_name)
+            echo "Using latest release: $REF"
+          fi
+          COMMIT=$(git ls-remote https://github.com/easytier/easytier.git "$REF" | head -n1 | cut -f1)
+          if [ -z "$COMMIT" ]; then
+            echo "ERROR: Failed to resolve ref '$REF' to a commit hash"
+            exit 1
+          fi
+          VERSION="${REF#v}"
+          echo "ref=$REF" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "commit=$COMMIT" >> "$GITHUB_OUTPUT"
+          echo "commit_short=${COMMIT:0:8}" >> "$GITHUB_OUTPUT"
+          echo "EasyTier ref: $REF"
+          echo "EasyTier version: $VERSION"
+          echo "EasyTier commit_short: ${COMMIT:0:8}"
+          echo "EasyTier commit: $COMMIT"
+
+      - name: Cache easytier-ffi build  # 只缓存编译好的 .so 文件（按 ET 版本号 + commit 短哈希区分）
+        id: ffi-cache
+        uses: actions/cache@v4
+        with:
+          path: easytier-ffi-cache
+          key: easytier-ffi-${{ steps.easytier-info.outputs.version }}-${{ steps.easytier-info.outputs.commit_short }}-ndk26-${{ matrix.arch }}
+
+      - name: Setup protoc  # 安装 protobuf 编译器（Rust 编译依赖）
+        if: steps.ffi-cache.outputs.cache-hit != 'true'
+        uses: arduino/setup-protoc@v3
+        with:
+          version: "35.1"
+          repo-token: ${{ github.token }}
+
+      - name: Setup Rust + Android target  # 安装 Rust 1.95 + Android 交叉编译目标
+        if: steps.ffi-cache.outputs.cache-hit != 'true'
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: "1.95"
+          target: ${{ matrix.rust_target }}
+          cache: true
+          rustflags: ""
+
+      - name: Install cargo-ndk  # 安装 cargo-ndk（Rust → Android NDK 编译桥接）
+        if: steps.ffi-cache.outputs.cache-hit != 'true'
+        run: cargo install cargo-ndk
+
+      - name: Build easytier-ffi for Android  # 缓存未命中时：拉取 EasyTier 源码，cross-compile 出 .so
+        if: steps.ffi-cache.outputs.cache-hit != 'true'
+        env:
+          EASYTIER_REF: ${{ steps.easytier-info.outputs.ref }}
+          NDK_TARGET: ${{ matrix.ndk_target }}
+          RUST_TARGET: ${{ matrix.rust_target }}
+        run: |
+          git init easytier-src
+          cd easytier-src
+          git remote add origin https://github.com/easytier/easytier.git
+          git fetch --depth=1 origin "$EASYTIER_REF"
+          git checkout FETCH_HEAD
+          echo "EasyTier version: $(sed -n 's/^version = \"\([^\"]*\)\"/\1/p' easytier/Cargo.toml | head -n 1)"
+          echo "EasyTier commit: $(git rev-parse HEAD)"
+          cd easytier-contrib/easytier-ffi
+          cargo ndk -t "$NDK_TARGET" build --release
+          mkdir -p "$GITHUB_WORKSPACE/easytier-ffi-cache"
+          cp "$GITHUB_WORKSPACE/easytier-src/target/${RUST_TARGET}/release/libeasytier_ffi.so" "$GITHUB_WORKSPACE/easytier-ffi-cache/"
+          echo "FFI .so cached to easytier-ffi-cache/"
+
+      - name: Integrate FFI into APK  # 将 libeasytier_ffi.so 复制到 APK jniLibs 目录
+        run: |
+          LIB_DIR="android/app/src/main/jniLibs/${{ matrix.ndk_target }}"
+          mkdir -p "$LIB_DIR"
+          cp easytier-ffi-cache/libeasytier_ffi.so "$LIB_DIR/"
+          echo "FFI library integrated (${{ matrix.ndk_target }}):"
+          ls -lh "$LIB_DIR/"
+
+      # ==================== 前端编译 ====================
+      - name: Setup Node.js  # 安装 Node.js 24，启用 npm 缓存
+        if: ${{ inputs.reuse_frontend != 'true' }}
         uses: actions/setup-node@v4
         with:
           node-version: '24'
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
 
-      - name: Build Frontend
+      - name: Build Frontend  # npm install + 编译 Vue 前端
+        if: ${{ inputs.reuse_frontend != 'true' }}
         run: |
           cd frontend
           npm install
           npm run build
 
-      - name: Copy Frontend to Android Assets
+      - name: Download Frontend  # 复用主流程已构建的前端产物
+        if: ${{ inputs.reuse_frontend == 'true' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
+
+      - name: Copy Frontend to Android Assets  # 前端产物 → Android assets 目录
         run: |
           mkdir -p android/app/src/main/assets/frontend
           cp -r frontend/dist/* android/app/src/main/assets/frontend/
 
-      - name: Copy Python Backend
+      - name: Copy Python Backend  # Python 后端 → Android python 目录
         run: |
           mkdir -p android/app/src/main/python
           cp -r backend/* android/app/src/main/python/
 
-      - name: Setup JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
+      - name: Write build version  # 将构建版本号写入 run_configs.py（未指定则自动生成 0.1-{时间戳}）
+        env:
+          BUILD_VER: ${{ inputs.build_version || '' }}
+        run: |
+          if [ -z "$BUILD_VER" ]; then
+            BUILD_VER="0.1-$(date +%Y%m%d%H%M%S)"
+          fi
+          echo "Build version: $BUILD_VER"
+          TARGET_FILE="android/app/src/main/python/utils/run_configs.py"
+          sed -i "s/^BUILD_VERSION = \".*\"/BUILD_VERSION = \"$BUILD_VER\"/" "$TARGET_FILE"
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-        with:
-          packages: 'platforms;android-34 build-tools;34.0.0 ndk;26.1.10909125'
+      - name: Write Android versionName  # 将构建版本号写入 build.gradle 的 versionName
+        env:
+          BUILD_VER: ${{ inputs.build_version || '' }}
+        run: |
+          if [ -z "$BUILD_VER" ]; then
+            BUILD_VER="0.1-$(date +%Y%m%d%H%M%S)"
+          fi
+          sed -i "s/versionName '.*'/versionName '$BUILD_VER'/" android/app/build.gradle
+          echo "Android versionName: $BUILD_VER"
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
-        with:
-          build-root-directory: android
-          generate-job-summary: false
+      - name: Write FFI version  # 将 EasyTier 版本号注入 ffi_adapter.py
+        run: |
+          FFI_VER="${{ steps.easytier-info.outputs.version }}-${{ steps.easytier-info.outputs.commit_short }}"
+          echo "FFI version: $FFI_VER"
+          TARGET_FILE="android/app/src/main/python/et_adapters/ffi_adapter.py"
+          sed -i "s/^_FFI_LIB_VERSION = \".*\"/_FFI_LIB_VERSION = \"$FFI_VER\"/" "$TARGET_FILE"
 
-      - name: Generate Gradle Wrapper
+      # ==================== APK 构建 & 上传 ====================
+      - name: Decode keystore  # 从 GitHub Secrets 解码签名密钥
+        env:
+          APK_KEYSTORE_BASE64: ${{ secrets.APK_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$APK_KEYSTORE_BASE64" ]; then
+            echo "$APK_KEYSTORE_BASE64" | base64 -d > android/release.keystore
+            echo "Keystore decoded, fingerprint:"
+            keytool -list -keystore android/release.keystore -storepass android -alias androiddebugkey 2>/dev/null || true
+          else
+            echo "ERROR: APK_KEYSTORE_BASE64 secret not set!"
+            exit 1
+          fi
+
+      - name: Setup Gradle  # 安装 Gradle 8.11.1 并启用构建缓存
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.11.1"
+
+      - name: Build APK  # Gradle 编译 Android APK（debug = 可调试/快速，release = 优化/正式）
         working-directory: android
-        run: gradle wrapper --gradle-version 8.5
+        env:
+          BUILD_TYPE: ${{ inputs.build_type || 'release' }}
+        run: |
+          CAPITALIZED=$(echo "$BUILD_TYPE" | sed 's/^./\U&/')
+          gradle "assemble${CAPITALIZED}" --no-daemon --stacktrace
 
-      - name: Build Debug APK
+      - name: Rename APK  # 重命名为 EasyTier-EUI-android-{arch}-{version}.apk
         working-directory: android
-        run: ./gradlew assembleDebug --no-daemon --stacktrace
+        env:
+          BUILD_TYPE: ${{ inputs.build_type || 'release' }}
+          BUILD_VER: ${{ inputs.build_version || '' }}
+          APK_ARCH: ${{ matrix.arch }}
+        run: |
+          if [ -z "$BUILD_VER" ]; then
+            BUILD_VER="0.1-$(date +%Y%m%d%H%M%S)"
+          fi
+          APK_DIR="app/build/outputs/apk/${BUILD_TYPE}"
+          for apk in "$APK_DIR"/*.apk; do
+            mv "$apk" "$APK_DIR/EasyTier-EUI-android-${APK_ARCH}-${BUILD_VER}.apk"
+            echo "Renamed: EasyTier-EUI-android-${APK_ARCH}-${BUILD_VER}.apk"
+          done
 
-      - name: Upload APK
+      - name: Upload APK  # 上传 APK 到 GitHub Actions Artifact（保留 30 天）
         uses: actions/upload-artifact@v4
         with:
-          name: EasyTier-EUI-debug
-          path: android/app/build/outputs/apk/debug/*.apk
+          name: android-${{ matrix.arch }}
+          path: android/app/build/outputs/apk/${{ inputs.build_type || 'release' }}/*.apk
           retention-days: 30

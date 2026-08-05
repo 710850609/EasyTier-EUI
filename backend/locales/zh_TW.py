@@ -16,6 +16,8 @@ MESSAGES = {
     "settings": {
         "cache_cleared": "快取已刪除乾淨",
         "cache_deleted": "快取已刪除 ({size})",
+        "logDeleted": "日誌已刪除",
+        "log_deleted": "日誌已刪除，釋放 {size}",
         "shutting_down": "正在關閉服務",
         "proxy_config_failed": "讀取代理設定失敗",
         "current_system_not_support": "當前系統不支援設定",

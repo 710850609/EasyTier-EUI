@@ -1,9 +1,7 @@
 import logging
 import os
-import signal
 import sys
 import time
-import webbrowser
 import threading
 from typing import Optional
 
@@ -17,11 +15,11 @@ BASE_URI = "/cgi/ThirdParty/EasyTier-EUI/index.cgi"
 
 def start_server(host: str, port: int, exit_on_failure: bool = False) -> Optional[ServerHandle]:
     """启动 HTTP 服务（提权 + 启动），不打开浏览器。
-
+    Android 或已 root/admin 时直接启动，无需提权。
     返回 (success: bool, handle: ServerHandle | None)
     调用 handle.stop() 即可停止服务，无论管理员还是提权模式。
     """
-    if not permissions_util.is_admin():
+    if not run_configs.IS_ANDROID and not permissions_util.is_admin():
         try:
             handle = permissions_util.run_elevated_module(
                 'http_dispatcher.http_server', args=[f'--host={host}', f'--port={port}', f'--base_uri={BASE_URI}'])
@@ -73,14 +71,123 @@ def stop_server(handle: ServerHandle, port: int):
                 pass
 
 
+def start_android_server(data_dir: str, external_dir: str = "", host: str = "127.0.0.1", port: int = 0) -> dict:
+    """Android 入口：初始化环境 + 启动 HTTP 服务，返回 {'port': int, 'host': str}"""
+    import traceback
+    import faulthandler
+    import sys
+
+    def _rotate_file(filepath, max_size=5*1024*1024, backups=2):
+        try:
+            if os.path.exists(filepath) and os.path.getsize(filepath) >= max_size:
+                for i in range(backups - 1, 0, -1):
+                    src = f"{filepath}.{i}"
+                    dst = f"{filepath}.{i+1}"
+                    if os.path.exists(src):
+                        if os.path.exists(dst):
+                            os.remove(dst)
+                        os.rename(src, dst)
+                bak = f"{filepath}.1"
+                if os.path.exists(bak):
+                    os.remove(bak)
+                os.rename(filepath, bak)
+        except:
+            pass
+
+    class _RotatingFile:
+        def __init__(self, filepath, max_size=5*1024*1024, backups=2):
+            self.filepath = filepath
+            self.max_size = max_size
+            self.backups = backups
+            self._fd = open(filepath, 'a', buffering=1)
+        def write(self, data):
+            if self._fd.tell() >= self.max_size:
+                self._fd.close()
+                _rotate_file(self.filepath, self.max_size, self.backups)
+                self._fd = open(self.filepath, 'a', buffering=1)
+            self._fd.write(data)
+            self._fd.flush()
+        def flush(self):
+            self._fd.flush()
+        def close(self):
+            self._fd.close()
+        def fileno(self):
+            return self._fd.fileno()
+
+    os.environ['ANDROID_DATA_DIR'] = data_dir
+    os.environ['ANDROID_EXTERNAL_DIR'] = external_dir
+    run_configs.setup_env()
+    run_mode = run_configs.get_run_mode()
+    log_util.setup_log(log_file=os.path.join(external_dir, 'logs', 'app.log'),
+                       log_level=logging.DEBUG if run_mode > 0 else logging.DEBUG,
+                       enabled_console=run_mode == 0)
+    log_file = os.path.join(external_dir, 'logs', 'easytier_py.log')
+
+    def py_log(msg):
+        try:
+            _rotate_file(log_file)
+            with open(log_file, 'a') as f:
+                f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} [PY] {msg}\n")
+                f.flush()
+        except:
+            pass
+
+    # 启用 faulthandler：捕获 SIGSEGV/SIGABRT 等致命信号时 dump Python 调用栈
+    crash_log = os.path.join(external_dir, 'logs', 'easytier_py_crash.log')
+    _rotate_file(crash_log)
+    try:
+        faulthandler.enable(file=open(crash_log, 'a', buffering=1), all_threads=True)
+        py_log(f"faulthandler enabled, crash log: {crash_log}")
+    except Exception as fe:
+        py_log(f"faulthandler enable failed: {fe}")
+
+    # 重定向 stderr 到文件，确保 Python 异常输出不丢失
+    stderr_log = os.path.join(external_dir, 'logs', 'easytier_py_stderr.log')
+    try:
+        sys.stderr = _RotatingFile(stderr_log)
+        py_log(f"stderr redirected to: {stderr_log}")
+    except Exception as se:
+        py_log(f"stderr redirect failed: {se}")
+
+    try:
+        py_log("start_android_server called")
+        py_log(f"data_dir={data_dir}")
+        py_log("calling setup_env...")
+        py_log(f"__file__ = {__file__}")
+        py_log(f"__file__ exists = {os.path.exists(__file__)}")
+        py_log(f"__file__ is .py = {__file__.endswith('.py')}")
+        py_log(f"setup_env done, IS_ANDROID={run_configs.IS_ANDROID}")
+        py_log(f"FRONTEND_PATH={run_configs.FRONTEND_PATH}")
+        if os.path.isdir(run_configs.FRONTEND_PATH):
+            files = os.listdir(run_configs.FRONTEND_PATH)
+            py_log(f"FRONTEND_PATH contents: {files}")
+        else:
+            py_log(f"FRONTEND_PATH does NOT exist or is not a directory")
+        host = host or run_configs.EUI_RUN_HOST or '127.0.0.1'
+        port = port or run_configs.EUI_RUN_PORT or 0
+        py_log(f"calling start_server host={host} port={port}...")
+        handle = start_server(host, port, exit_on_failure=True)
+        if handle is None:
+            py_log("ERROR: start_server returned None")
+            raise RuntimeError("HTTP server start failed")
+        actual_port = handle._server.server_address[1]
+        py_log(f"HTTP server started on {host}:{actual_port}")
+        return {"port": actual_port, "host": host}
+    except Exception as e:
+        py_log(f"EXCEPTION: {e}\n{traceback.format_exc()}")
+        raise
+
+
 def run():
     """main_noui 完整入口：启动服务 + 打开浏览器 + 等待 Ctrl+C 停止"""
+    import signal
+    import webbrowser
     permissions_util.handle_elevated_run()
     run_configs.setup_env()
     run_mode = run_configs.get_run_mode()
     log_util.setup_log(log_file=os.path.join(run_configs.log_dir(), 'app.log'),
                        log_level=logging.INFO if run_mode > 0 else logging.DEBUG,
-                       enabled_console=run_mode == 0)
+                       enabled_console=run_mode == 0 or run_configs.is_docker())
     # logging.info(f"前端路径: {os.path.join(sys._MEIPASS, 'frontend')}")
 
     if sys.platform != 'win32':

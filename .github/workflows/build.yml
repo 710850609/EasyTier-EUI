@@ -43,6 +43,10 @@ on:
         description: '构建 Linux (Alpine) 和 Docker 镜像'
         type: boolean
         default: true
+      build_android:
+        description: '构建 Android APK'
+        type: boolean
+        default: false
 
 env:
   PYTHON_VERSION: '3.12'
@@ -92,6 +96,17 @@ jobs:
             echo "$release_notes"
             echo "GH_OUTPUT_EOF"
           } >> $GITHUB_OUTPUT
+
+  build-android:
+    if: ${{ github.event.inputs.build_android == 'true' }}
+    needs: [ build-info, build-frontend ]
+    uses: ./.github/workflows/build-android.yml
+    with:
+      easytier_ref: v${{ needs.build-info.outputs.et_ver }}
+      build_version: ${{ needs.build-info.outputs.version }}
+      build_type: release
+      reuse_frontend: "true"
+    secrets: inherit
 
   build-frontend:
     runs-on: ubuntu-latest
@@ -744,7 +759,9 @@ jobs:
           REPO="ghcr.io/${{ github.actor }}/easytier-eui"
           VERSION="${{ needs.build-info.outputs.version }}"
           RELEASE_TAG="${{ github.event.inputs.no-draft != 'true' && 'dev' || (needs.build-info.outputs.prerelease == 'true' && 'edge' || 'latest') }}"
-
+          echo "push docker version: $VERSION"
+          echo "push docker tag: $RELEASE_TAG"
+          
           docker buildx imagetools create -t ${REPO}:${VERSION} \
             ${REPO}:amd64-${VERSION} \
             ${REPO}:arm64-${VERSION} \
@@ -758,6 +775,7 @@ jobs:
   release:
     needs:
       - build-info
+      - build-android
       - build-fnos
       - build-windows-amd64
       - build-macos-amd64
@@ -774,13 +792,14 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: artifacts
-          pattern: '{frontend-*,windows-*,macos-*,linux-*,fpk-*}'
+          pattern: '{frontend-*,windows-*,macos-*,linux-*,fpk-*,android-*}'
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
             artifacts/*/*.zip
             artifacts/*/*.fpk
+            artifacts/*/*.apk
           name: ${{ needs.build-info.outputs.version }}
           tag_name: ${{ needs.build-info.outputs.version }}
           draft: ${{ github.event.inputs.no-draft != 'true' }}

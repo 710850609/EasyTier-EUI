@@ -123,6 +123,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { getAcceleratedDownloadUrl } from '../../utils/github.js'
+import { openDownloadUrl } from '../../utils/download.js'
 import { api } from '../../utils/api.js'
 
 const prereleaseVersion = ref('')
@@ -139,7 +140,7 @@ onMounted(() => {
 const download = async (arch, prerelease) => {
   const resp = await api.etApp.getDownloadUrl({type:'apk', arch, prerelease})
   const url = await getAcceleratedDownloadUrl(resp.data)
-  window.open(url, '_blank')
+  openDownloadUrl(url)
 }
 
 </script>

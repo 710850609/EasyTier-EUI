@@ -16,6 +16,8 @@ MESSAGES = {
     "settings": {
         "cache_cleared": "Cache cleared completely",
         "cache_deleted": "Cache deleted ({size})",
+        "logDeleted": "Logs deleted",
+        "log_deleted": "Logs deleted, freed {size}",
         "shutting_down": "Shutting down service",
         "proxy_config_failed": "Failed to read proxy config",
         "current_system_not_support": "Current system does not support configuration",
@@ -23,6 +25,7 @@ MESSAGES = {
         "eui_config_released": "EasyTier config generated, please manually fix and restart:\n{path}",
     },
     "service": {
+        "not_supported_android": "Service start is not supported on Android",
         "profile_required": "Profile is required",
         "config_not_found": "Config file not found",
         "config_not_running": "No running config: {old_profile}",
@@ -60,6 +63,7 @@ MESSAGES = {
         "update_completed": "Updated to {ver_tag}",
     },
     "download": {
+        "not_supported_android": "Core download is not supported on Android",
         "init_task": "Initializing download task",
         "id_required": "download_id parameter is required",
         "task_not_found": "Download task not found",
