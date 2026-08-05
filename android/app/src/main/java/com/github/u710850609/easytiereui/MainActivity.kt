@@ -78,8 +78,8 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        AppLogger.logFile = File(File(getExternalFilesDir(null), "logs"), "apk.log")
-        AppLogger.logFile?.parentFile?.mkdirs()
+        AppLogger.logDir = File(getExternalFilesDir(null), "logs")
+        AppLogger.logDir?.mkdirs()
 
         initLogLevel()
 
@@ -91,12 +91,17 @@ class MainActivity : AppCompatActivity() {
         }
 
         AppLogger.info(TAG, "=== App started ===")
-        AppLogger.info(TAG, "Log file: ${AppLogger.logFile?.absolutePath}")
+        AppLogger.info(TAG, "Log dir: ${AppLogger.logDir?.absolutePath}")
         AppLogger.info(TAG, "FilesDir: ${filesDir.absolutePath}")
         AppLogger.info(TAG, "ExternalFilesDir: ${getExternalFilesDir(null)?.absolutePath}")
 
         try {
             AppLogger.info(TAG, "onCreate: setting up UI")
+            if (BuildConfig.DEBUG) {
+                // 调试地址 chrome://inspect
+                WebView.setWebContentsDebuggingEnabled(true)
+                AppLogger.info(TAG, "WebView remote debugging enabled")
+            }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 try {
                     WebView.setDataDirectorySuffix(applicationContext.packageName)
@@ -148,6 +153,7 @@ class MainActivity : AppCompatActivity() {
                 settings.domStorageEnabled = true
                 settings.allowFileAccess = true
                 settings.allowContentAccess = true
+                settings.cacheMode = android.webkit.WebSettings.LOAD_NO_CACHE
                 settings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
                 settings.useWideViewPort = true
                 settings.loadWithOverviewMode = true

@@ -183,6 +183,8 @@ class EasyTierManager(
                 currentProxyCidrs = newProxyCidrs.toList()
                 currentDnsServers = newDnsServers.toList()
                 restartVpnService(newIpv4, newProxyCidrs, newDnsServers)
+                // 重启vpn后，立即重置刷新时间，尽量及时更新流量
+                lastNotificationUpdateTime = 0L
             }
 
             val now = System.currentTimeMillis()

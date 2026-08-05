@@ -104,7 +104,8 @@ class FfiAdapter(IEasyTierAdapter):
                 raise RuntimeError(f"Config parse failed: {self._get_last_error()}")
             if run_configs.IS_ANDROID:
                 # 安卓环境下，确保所有实例都停止，再启动新实例
-                self._retain_instances([instance_name])
+                self._retain_instances([])
+                self._instance_set.clear()
             with self._lock:
                 toml_bytes = toml_config.encode('utf-8')
                 c_config = ctypes.c_char_p(toml_bytes)
