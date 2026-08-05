@@ -1234,7 +1234,7 @@ const saveConfig = () => {
     } else {
       delete data.flags.instance_recv_bps_limit
     }
-    ['dev_name', 'encryption_algorithm', 'default_protocol', 'compression', 'relay_network_whitelist'].forEach(key => {
+    ['hostname', 'dev_name', 'encryption_algorithm', 'default_protocol', 'compression', 'relay_network_whitelist'].forEach(key => {
       if (config.value.flags[key] == null || config.value.flags[key].trim() === '') {
         delete data.flags[key]
       }
