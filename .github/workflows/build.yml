@@ -820,6 +820,8 @@ jobs:
           draft: ${{ github.event.inputs.no-draft != 'true' }}
           prerelease: ${{ needs.build-info.outputs.prerelease == 'true' }}
           body: |
+            ![Downloads](https://img.shields.io/github/downloads/710850609/EasyTier-EUI/${{ needs.build-info.outputs.version }}/total?logo=github)
+
             ${{ needs.build-info.outputs.release_notes }}
 
             ---
