@@ -7,6 +7,8 @@ import sys
 import threading
 from typing import Optional
 
+import tomlkit
+
 from et_adapters.core_background_adapter import CoreBackgroundAdapter
 from utils import run_configs
 from .core_adapter import CoreAdapter

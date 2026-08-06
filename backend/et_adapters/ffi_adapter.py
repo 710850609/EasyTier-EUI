@@ -88,24 +88,41 @@ class FfiAdapter(IEasyTierAdapter):
     def start_network(self, toml_path: str, instance_name: str) -> None:
         logger.info(f"start_network {instance_name}")
         try:
+            # 避免外部修改配置文件名，导致启动后，找不到组网节点数据
+            with open(toml_path, "r", encoding="utf-8") as f:
+                doc = tomlkit.parse(f.read())
+                if doc['instance_name'] != instance_name:
+                    logger.warning(f"配置中的instance_name参数和实际指定值不一致，已覆盖配置文件中的instance_name参数为指定值【{instance_name}】：{toml_path}")
+                    doc['instance_name'] = instance_name
+                    with open(toml_path, "w", encoding="utf-8") as f:
+                        f.write(tomlkit.dumps(doc))
+
             with open(toml_path, 'r', encoding='utf-8') as f:
                 toml_config = f.read()
             doc = tomlkit.parse(toml_config)
             flags = doc.get('flags', {})
+            rebuild_toml = False
             if 'compression' in flags:
                 compression = flags['compression']
                 if compression:
                     flags['data_compress_algo'] = compression.capitalize()
                 del flags['compression']
                 doc['flags'] = flags
+                rebuild_toml = True
+            # 避免外部修改配置文件名，导致启动后，找不到组网节点数据
+            if doc['instance_name'] != instance_name:
+                logger.warning(f"配置中的instance_name参数和实际指定值不一致，已覆盖为指定值【{instance_name}】")
+                doc['instance_name'] = instance_name
+                rebuild_toml = True
+            if rebuild_toml:
                 toml_config = tomlkit.dumps(doc)
             ret = self._parse_config(toml_config)
             if ret != 0:
                 raise RuntimeError(f"Config parse failed: {self._get_last_error()}")
             if run_configs.IS_ANDROID:
-                # 安卓环境下，确保所有实例都停止，再启动新实例
-                self._retain_instances([])
-                self._instance_set.clear()
+                while len(self._instance_set) > 0:
+                    # 安卓环境下，确保所有实例都停止，再启动新实例
+                    self.stop_network(self._instance_set.pop())
             with self._lock:
                 toml_bytes = toml_config.encode('utf-8')
                 c_config = ctypes.c_char_p(toml_bytes)
