@@ -641,6 +641,23 @@
                         />
                       </div>
                       <div class="input-section">
+                        <var-tooltip :content="$t('config.forwardWhitelistHint')" trigger="click">
+                          <div class="section-subtitle">{{ $t('config.forwardWhitelist') }}
+                            <var-icon name="help-circle-outline" size="16" class="help-icon" />
+                          </div>
+                        </var-tooltip>
+                        <var-input
+                          v-model="config.flags.relay_network_whitelist"
+                          multiple
+                          :placeholder="$t('config.forwardWhitelistPlaceholder')"
+                          variant="outlined"
+                          :chip="true"
+                          size="small"
+                        />
+                      </div>
+                      </div>
+                    <div class="input-row">
+                      <div class="input-section">
                         <var-tooltip :content="$t('config.exitNodesHint')" trigger="click">
                           <div class="section-subtitle">{{ $t('config.exitNodes') }}
                             <var-icon name="help-circle-outline" size="16" class="help-icon" />
@@ -669,24 +686,36 @@
                           <var-option v-for="(e, index) in config.exit_nodes" :key="index" :label="e" :value="e" />
                         </var-select>
                       </div>
-                    </div>
-                    <div class="input-row">
                       <div class="input-section">
-                        <var-tooltip :content="$t('config.forwardWhitelistHint')" trigger="click">
-                          <div class="section-subtitle">{{ $t('config.forwardWhitelist') }}
+                        <var-tooltip :content="$t('config.customRoutesHint')" trigger="click">
+                          <div class="section-subtitle">{{ $t('config.customRoutes') }}
                             <var-icon name="help-circle-outline" size="16" class="help-icon" />
                           </div>
                         </var-tooltip>
-                        <var-input
-                          v-model="config.flags.relay_network_whitelist"
-                          multiple
-                          :placeholder="$t('config.forwardWhitelistPlaceholder')"
+                        <var-select
+                          v-model="config.routes"
+                          :placeholder="$t('config.customRoutesPlaceholder')"
+                          :multiple="true"
                           variant="outlined"
                           :chip="true"
                           size="small"
-                        />
+                          @focus="onSelectFocus('route')"
+                        >
+                          <var-cell :key="selectInputRenderKey.route">
+                            <template #icon>
+                              <svg-icon type="mdi" :path="mdilPencil" color="var(--color-primary)" />
+                            </template>
+                            <template #description>
+                              <var-input :placeholder="$t('config.customRoutePlaceholder')" size="small" v-model="customRoute" blur-color="var(--color-primary)" />
+                            </template>
+                            <template #extra>
+                              <var-button type="primary" size="small" @click="addRoute">{{ $t('config.addCustomRoute') }}</var-button>
+                            </template>
+                          </var-cell>
+                          <var-option v-for="(r, index) in config.routes" :key="index" :label="r" :value="r" />
+                        </var-select>
                       </div>
-                      </div>
+                    </div>
                     <var-divider />
                     <div class="forward-section">
                       <var-tooltip teleport="body" trigger="click" :offset-x="80">
@@ -945,7 +974,8 @@ const advancedRenderKeys = ref({
 const selectInputRenderKey = ref({
   peer: 0,
   listener: 0,
-  exitNode: 0
+  exitNode: 0,
+  route: 0
 })
 
 const onSelectFocus = (name) => {
@@ -982,6 +1012,7 @@ const showRenameDialog = ref(false)
 const newConfigName = ref('')
 const editNameValue = ref('')
 const customExitNode = ref('')
+const customRoute = ref('')
 const encryptionAlgorithmList = ref(['aes-gcm','xor','chacha20','aes-gcm','aes-gcm-256','openssl-aes128-gcm','openssl-aes256-gcm','openssl-chacha20'])
 const defaultProtocolList = computed(() => [{label: t('config.defaultOption'), value: ''}, {label: 'tcp', value: 'tcp'}, {label: 'udp', value: 'udp'}, {label: 'quic', value: 'quic'}, {label: 'wg', value: 'wg'}, {label: 'ws', value: 'ws'}, {label: 'wss', value: 'wss'}, {label: 'faketcp', value: 'faketcp'}])
 const compressionOptions = computed(() => [{label: t('config.noCompression'), value: 'none'}, {label: 'zstd', value: 'zstd'}])
@@ -995,6 +1026,7 @@ const config = ref({
   peer: [],
   proxy_network: [],
   exit_nodes: [],
+  routes: [],
   socks5_proxy: null,
   port_forward: [],
   flags: { 
@@ -1112,6 +1144,7 @@ function getCidrPrefixLength(cidr) {
 }
 
 const cidrRegex = /^(\d{1,3}\.){3}\d{1,3}\/\d{1,2}$/
+const routeRegex = /^(\d{1,3}\.){3}\d{1,3}(\/\d{1,2})?$/
 
 const validateCidr = (v, index, field) => {
   if (!v) return true
@@ -1160,6 +1193,17 @@ const validateSubnetProxy = () => {
   return null
 }
 
+const validateRoutes = () => {
+  if (!config.value.routes || config.value.routes.length === 0) return null
+  const entries = config.value.routes
+  for (let i = 0; i < entries.length; i++) {
+    if (!routeRegex.test(entries[i])) {
+      return t('config.routeInvalid', { index: i + 1 })
+    }
+  }
+  return null
+}
+
 const ensureInt = (str) => {
   if (str && typeof str === 'string') return parseInt(str, 10)
   return str
@@ -1183,6 +1227,12 @@ const saveConfig = () => {
     if (spError) {
       reject();
       toast.error(spError)
+      return
+    }
+    const rtError = validateRoutes()
+    if (rtError) {
+      reject();
+      toast.error(rtError)
       return
     }      
 
@@ -1391,6 +1441,7 @@ const loadConfig = (profile) => {
       ...json,
       hostname: json.hostname ?? '',
       ipv4: json.ipv4 ?? '',
+      routes: json.routes || [],
       flags: {
         ...config.value.flags,
         ...json.flags,
@@ -1661,6 +1712,26 @@ const addExitNode = () => {
   }
   config.value.exit_nodes.push(customExitNode.value.trim())
   customExitNode.value = ''
+}
+
+const addRoute = () => {
+  if (!customRoute.value.trim()) {
+    toast.warning(t('config.routeRequired'))
+    return
+  }
+  if (!routeRegex.test(customRoute.value.trim())) {
+    toast.warning(t('config.invalidRouteFormat'))
+    return
+  }
+  if (!config.value.routes) {
+    config.value.routes = []
+  }
+  if (config.value.routes.includes(customRoute.value.trim())) {
+    toast.warning(t('config.routeExists', { name: customRoute.value.trim() }))
+    return
+  }
+  config.value.routes.push(customRoute.value.trim())
+  customRoute.value = ''
 }
 
 const validatePortForward = () => {

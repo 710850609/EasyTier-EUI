@@ -100,6 +100,10 @@ html.dark {
   color: var(--color-on-primary-container) !important;
 }
 
+.var-select__empty {
+  color: var(--color-on-surface-variant) !important;
+}
+
 .var-option:hover {
   background: var(--color-surface-container-high) !important;
 }

@@ -46,6 +46,7 @@ class FfiAdapter(IEasyTierAdapter):
         logger.info(f"Loaded EasyTier FFI: {lib_name}")
         self._lock = threading.RLock()
         self._instance_set: Set[str] = set()
+        self._routes_config: Dict[str, List[str]] = {}
 
     def _has_symbol(self, name: str) -> bool:
         try:
@@ -116,6 +117,7 @@ class FfiAdapter(IEasyTierAdapter):
                 rebuild_toml = True
             if rebuild_toml:
                 toml_config = tomlkit.dumps(doc)
+            self._routes_config[instance_name] = [str(r) for r in (doc.get('routes') or [])]
             ret = self._parse_config(toml_config)
             if ret != 0:
                 raise RuntimeError(f"Config parse failed: {self._get_last_error()}")
@@ -154,6 +156,7 @@ class FfiAdapter(IEasyTierAdapter):
         self._retain_instances(keep)
         if instance_name in self._instance_set:
             self._instance_set.remove(instance_name)
+        self._routes_config.pop(instance_name, None)
 
         # 停止 Android VPN 监控和服务
         try:
@@ -261,6 +264,11 @@ class FfiAdapter(IEasyTierAdapter):
                 cidrs = route.get('proxy_cidrs') or []
                 for cidr in cidrs:
                     info['routes'].append(cidr)
+            # 参考2.6.4官方安卓版本实现逻辑：合并 自定义路由
+            manual_routes = self._routes_config.get(instance_name, [])
+            for r in manual_routes:
+                if r not in info['routes']:
+                    info['routes'].append(r)
             for peer in (instance_infos.get('peers') or []):
                 for conn in (peer.get('conns') or []):
                     stats = conn.get('stats') or {}
