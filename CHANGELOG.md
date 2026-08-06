@@ -1,3 +1,16 @@
+## 2.1
+- 新增：【配置】-自定义路由
+- 修复：易组网安卓版本下载、更新问题、去除不支持的开机自启配置
+- 修复：易组网windows，MacOS版本桌面图标统一为新图标
+
+<br>
+
+----
+
+- Added: [Config] - Custom Routes
+- Fixed: EasyTier-EUI Android download/update issues, removed unsupported auto-start configuration
+- Fixed: EasyTier-EUI Windows and macOS desktop icons unified to new icon
+
 ##  2.0
 - 新增: 易组网使用独立Logo
 - 新增: 支持安卓易组网版本
