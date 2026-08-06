@@ -660,7 +660,9 @@ const installEuiVersion = (versionType) => {
               window.AndroidBridge.installApk(progress.file_path)
             }
             resolve()
-            waitForRestart(targetVersion)
+            if (platform.value !== 'android') {
+              waitForRestart(targetVersion)
+            }
           } else if (progress.status === 2) {
             clearInterval(pollTimer)
             updateProgress.value = { ...progress, active: false }
@@ -675,7 +677,9 @@ const installEuiVersion = (versionType) => {
             updateProgress.value = { ...updateProgress.value, active: false }
             loadingToast.clear()
             resolve()
-            waitForRestart(targetVersion)
+            if (platform.value !== 'android') {
+              waitForRestart(targetVersion)
+            }
           }
         }
       }, 1500)

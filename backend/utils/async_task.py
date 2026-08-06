@@ -65,7 +65,7 @@ class AsyncTask:
                 logging.exception(f'异步任务失败: {self.task_id}')
                 self.set_error(str(e))
 
-        if hasattr(os, 'fork'):
+        if hasattr(os, 'fork') and not run_configs.IS_ANDROID:
             pid = os.fork()
             if pid == 0:
                 os.closerange(0, 3)
