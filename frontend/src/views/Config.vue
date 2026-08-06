@@ -35,6 +35,10 @@
         <var-icon name="plus" size="18" />
         {{ $t('config.normalAdd') }}
       </var-button>
+      <var-button type="primary" size="large" @click="setupCloudMode" auto-loading>
+        <var-icon name="cloud-outline" size="18" />
+        {{ $t('config.cloudAdd') }}
+      </var-button>
     </div>
 
     <div v-else class="config-else-wrapper">
@@ -64,8 +68,9 @@
 
             <div class="config-actions-group" v-if="selectedConfig">
               <var-button size="small" type="primary" @click="showCreateDialog = true; showMode = 1;" v-if="showMode === 0">{{ $t('config.add') }}</var-button>
+              <var-button size="small" type="primary" @click="setupCloudMode" v-if="showMode === 0">{{ $t('config.cloudAdd') }}</var-button>
               <var-button size="small" type="primary" @click="startEditName" :loading="isRenaming" v-if="showMode === 0">{{ $t('config.rename') }}</var-button>
-              <var-button type="primary" size="small" @click="showShareConfigType = true" v-if="showMode === 0">{{ $t('config.shareNetwork') }}</var-button>
+              <var-button type="primary" size="small" @click="showShareConfigType = true" v-if="showMode === 0 && currentConfigData.config_mode !== 'cloud'">{{ $t('config.shareNetwork') }}</var-button>
               <var-button size="small" type="danger" @click="showDeleteDialog = true" :loading="isDeletingConfig" v-if="showMode === 0">{{ $t('config.delete') }}</var-button>
               <label class="toggle-item" v-if="showMode === 0 && platform !== 'android'">
                 <var-loading v-if="changingAutostart" size="small" />
@@ -81,9 +86,10 @@
           <div class="toolbar-group toolbar-status" v-if="selectedConfig">
             <div class="toolbar-toggles">
               <div class="toggle-item">
-                <var-button size="small" type="danger" @click="exitAddMode" :loading="isDeletingConfig" v-if="showMode !== 0">{{ $t('config.exitAdd') }}</var-button>
-                <var-button type="primary" size="small" @click="saveConfig" auto-loading>{{ $t('config.saveConfig') }}</var-button>
-                <var-button type="primary" size="small" @click="openCodePage" auto-loading v-if="showMode === 0">{{ $t('config.editFile') }}</var-button>
+                <var-button size="small" type="danger" @click="exitAddMode" :loading="isDeletingConfig" v-if="showMode !== 0 || cloudMode">{{ $t('config.exitAdd') }}</var-button>
+                <var-button type="primary" size="small" @click="saveConfig" auto-loading v-if="!cloudMode && currentConfigData.config_mode !== 'cloud'">{{ $t('config.saveConfig') }}</var-button>
+                <var-button type="primary" size="small" @click="saveCloudConfig" auto-loading v-if="cloudMode">{{ $t('config.saveConfig') }}</var-button>
+                <var-button type="primary" size="small" @click="openCodePage" auto-loading v-if="showMode === 0 && currentConfigData.config_mode !== 'cloud'">{{ $t('config.editFile') }}</var-button>
               </div>
             </div>
           </div>
@@ -121,10 +127,13 @@
               </label>
               <span class="toggle-label" v-if="showMode === 0 && platform !== 'android'">{{ $t('config.autostart') }}</span>
               <var-button variant="outlined" size="small" type="danger" @click="exitAddMode" :loading="isDeletingConfig" v-if="showMode !== 0">
+              <span class="toggle-label" v-if="showMode === 0">{{ $t('config.autostart') }}</span>
+              <var-button variant="outlined" size="small" type="danger" @click="exitAddMode" :loading="isDeletingConfig" v-if="showMode !== 0 || cloudMode">
                 <var-icon name="close" :size="16" />
                 {{ $t('config.exitAdd') }}
               </var-button>
-              <var-button type="primary" size="small" @click="saveConfig" auto-loading>{{ $t('config.save') }}</var-button>
+              <var-button type="primary" size="small" @click="saveConfig" auto-loading v-if="!cloudMode && currentConfigData.config_mode !== 'cloud'">{{ $t('config.save') }}</var-button>
+              <var-button type="primary" size="small" @click="saveCloudConfig" auto-loading v-if="cloudMode">{{ $t('config.save') }}</var-button>
               <var-button size="small" icon round text @click="toggleToolbarMore" v-if="showMode === 0">
                 <var-icon :name="toolbarMoreOpen.length ? 'menu-open' : 'menu'" :size="20" />
               </var-button>
@@ -137,6 +146,9 @@
                 <var-button variant="outlined" size="small" type="primary" @click="showCreateDialog = true; showMode = 1;toggleToolbarMore()" v-if="showMode === 0">
                   {{ $t('config.add') }}
                 </var-button>
+                <var-button variant="outlined" size="small" type="primary" @click="setupCloudMode();toggleToolbarMore()" v-if="showMode === 0">
+                  {{ $t('config.cloudAdd') }}
+                </var-button>
                 <var-button variant="outlined" size="small" type="primary" @click="startEditName();toggleToolbarMore()" :loading="isRenaming" v-if="showMode === 0">
                   <var-icon name="pencil-outline" :size="16" />
                   {{ $t('config.rename') }}
@@ -147,11 +159,11 @@
                 </var-button>
               </div>
               <div class="toolbar-more-row">
-                <var-button variant="outlined" size="small" type="primary" @click="showShareConfigType = true;toggleToolbarMore()" v-if="showMode === 0">
+                <var-button variant="outlined" size="small" type="primary" @click="showShareConfigType = true;toggleToolbarMore()" v-if="showMode === 0 && currentConfigData.config_mode !== 'cloud'">
                   <var-icon name="share-variant-outline" :size="16" />
                   {{ $t('config.shareNetwork') }}
                 </var-button>
-                <var-button variant="outlined" size="small" type="primary" @click="openCodePage();toggleToolbarMore()" auto-loading v-if="showMode === 0">
+                <var-button variant="outlined" size="small" type="primary" @click="openCodePage();toggleToolbarMore()" auto-loading v-if="showMode === 0 && currentConfigData.config_mode !== 'cloud'">
                   <var-icon name="file-edit-outline" :size="16" />
                   {{ $t('config.editFile') }}
                 </var-button>
@@ -164,8 +176,87 @@
 
       <div class="toolbar-more-backdrop" v-show="toolbarMoreOpen.length" @click="toolbarMoreOpen = ''"></div>
 
-      <div class="content-area" v-if="selectedConfig || fastSettingMode">
-        <var-form ref="form">
+      <div class="content-area" v-if="selectedConfig || fastSettingMode || cloudMode">
+        <!-- 云端配置输入面板 -->
+        <var-paper v-if="cloudMode" class="cloud-config-panel" :elevation="2">
+          <div class="section-header">
+            <div class="section-header-left">
+              <var-icon name="cloud-outline" size="24" color="var(--color-primary)" />
+              <span class="section-title">{{ $t('config.cloudSettings') }}</span>
+              <var-icon name="help-circle-outline" size="16" color="var(--color-primary)" @click="showCloudHelp = true" class="help-icon" />
+            </div>
+          </div>
+
+          <var-cell>
+            <var-input
+              v-model="cloudConfig.profile_name"
+              :placeholder="$t('config.cloudProfileName')"
+              size="small"
+              variant="outlined"
+              :rules="[(v) => !!v || $t('config.cloudProfileNameRequired')]"
+            >
+              <template #label>{{ $t('config.cloudProfileName') }}</template>
+            </var-input>
+          </var-cell>
+
+          <var-cell>
+            <div style="display: flex; gap: 8px; align-items: center; width: 100%;">
+              <var-input
+                v-model="cloudConfig.config_server"
+                :placeholder="$t('config.cloudServerHint')"
+                size="small"
+                variant="outlined"
+                :rules="[(v) => !!v || $t('config.cloudServerRequired')]"
+                style="flex: 1;"
+              >
+                <template #label>
+                  {{ $t('config.cloudServer') }}
+                  <var-icon name="help-circle-outline" size="14" color="var(--color-primary)" @click="showCloudHelp = true" class="help-icon" />
+                </template>
+              </var-input>
+              <var-button type="primary" size="small" @click="fetchConfigServerUrl" :loading="isFetchingServer">
+                {{ $t('config.cloudFetchServer') }}
+              </var-button>
+            </div>
+          </var-cell>
+
+          <!-- 格式说明（模仿官方 Windows GUI 的提示） -->
+          <div class="cloud-format-hint">
+            <div class="cloud-format-title">{{ $t('config.cloudServerFormatTitle') }}</div>
+            <div class="cloud-format-line">{{ $t('config.cloudServerFormatFull') }}</div>
+            <div class="cloud-format-line">{{ $t('config.cloudServerFormatUser') }}</div>
+            <div class="cloud-format-line">{{ $t('config.cloudServerFormatEmpty') }}</div>
+          </div>
+
+          <var-cell>
+            <div class="cloud-secure-row">
+              <span class="cloud-secure-label">{{ $t('config.cloudSecureMode') }}</span>
+              <var-switch v-model="cloudConfig.secure_mode" />
+              <span class="cloud-secure-state">{{ cloudConfig.secure_mode ? $t('common.enabled') : $t('common.disabled') }}</span>
+            </div>
+          </var-cell>
+        </var-paper>
+
+        <!-- 云端配置信息展示（查看已有云端配置时） -->
+        <var-paper v-if="!cloudMode && currentConfigData.config_mode === 'cloud' && cloudConfigInfo" class="cloud-config-panel" :elevation="2">
+          <div class="section-header">
+            <div class="section-header-left">
+              <var-icon name="cloud-outline" size="24" color="var(--color-primary)" />
+              <span class="section-title">{{ $t('config.cloudSettings') }}</span>
+              <var-icon name="help-circle-outline" size="16" color="var(--color-primary)" @click="showCloudHelp = true" class="help-icon" />
+            </div>
+          </div>
+          <div class="cloud-info-row">
+            <span class="cloud-info-label">{{ $t('config.cloudServer') }}</span>
+            <span class="cloud-info-value cloud-info-value-url">{{ cloudConfigInfo.config_server || '-' }}</span>
+          </div>
+          <div class="cloud-info-row">
+            <span class="cloud-info-label">{{ $t('config.cloudSecureMode') }}</span>
+            <span class="cloud-info-value">{{ cloudConfigInfo.secure_mode ? $t('common.enabled') : $t('common.disabled') }}</span>
+          </div>
+        </var-paper>
+
+        <var-form ref="form" v-if="!cloudMode && currentConfigData.config_mode !== 'cloud'">
           <!-- 骨架屏遮罩层：覆盖在内容上方 -->
           <div v-if="isLoadingConfig" class="sk-overlay"></div>
           <var-paper class="config-section merged-section" :elevation="2">
@@ -912,6 +1003,16 @@
       :cancel-button-text="$t('config.cancel')" @cancel="showDeleteDialog = false">
     </var-dialog>
 
+    <!-- 云端配置帮助弹窗 -->
+    <var-popup position="top" v-model:show="showCloudHelp">
+      <div class="help-content">
+        <p class="help-paragraph"><span class="help-bold">{{ $t('config.cloudHelpTitle') }}</span></p>
+        <p class="help-paragraph">{{ $t('config.cloudHelpDesc1') }}</p>
+        <p class="help-paragraph">{{ $t('config.cloudHelpDesc2') }}</p>
+        <p class="help-paragraph">{{ $t('config.cloudHelpDesc3') }}</p>
+      </div>
+    </var-popup>
+
     <!-- 公共节点帮助弹窗 -->
     <var-popup position="top" v-model:show="showPublicPeerTip">
       <div class="help-content">
@@ -945,7 +1046,7 @@
 import { copyToClipboard } from '../utils/clipboard.js'
 import { openDownloadUrl } from '../utils/download.js'
 import { validateIP, validateIPPort } from '../utils/validate.js'
-import { ref, computed, inject, onMounted, nextTick, watch } from 'vue'
+import { ref, computed, inject, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import toast from '../components/toast.js'
 import { api } from '../utils/api.js'
@@ -1005,6 +1106,19 @@ const toggleToolbarMore = () => {
 }
 const lanIps = ref([])
 const platform = ref('android')
+
+// 云端配置相关
+const cloudMode = ref(false)
+// config_server 存完整 URL：proto://host:port[/token]
+const cloudConfig = ref({
+  profile_name: '',
+  config_server: 'tcp://et-web.console.easytier.net:22020',
+  secure_mode: true,
+})
+const cloudConfigInfo = ref(null)
+const showCloudHelp = ref(false)
+const isFetchingServer = ref(false)
+
 const configList = ref([])
 const selectedConfig = ref('')
 const showCreateDialog = ref(false)
@@ -1477,10 +1591,15 @@ const loadConfigs = async () => {
 const onConfigSwitch = async (profile) => {
   const cfg = configList.value.find(c => c.profile === profile)
   if (cfg) {
-    try {
-      await loadConfig(cfg.profile)
-    } catch (error) {
-      toast.error(t('config.loadConfigFailed', { error: error.message || t('config.unknown') }))
+    cloudConfigInfo.value = null
+    if (cfg.config_mode === 'cloud') {
+      await loadCloudConfig(cfg.profile)
+    } else {
+      try {
+        await loadConfig(cfg.profile)
+      } catch (error) {
+        toast.error(t('config.loadConfigFailed', { error: error.message || t('config.unknown') }))
+      }
     }
   }
 }
@@ -1679,12 +1798,109 @@ const setupShowMode = async (mode) => {
   })
 }
 
+const setupCloudMode = () => {
+  cloudMode.value = true
+  showMode.value = 0
+  cloudConfig.value = {
+    profile_name: '',
+    config_server: 'tcp://et-web.console.easytier.net:22020',
+    secure_mode: true,
+  }
+  cloudConfigInfo.value = null
+}
+
+const exitCloudMode = async () => {
+  cloudMode.value = false
+  await loadConfigs()
+  selectedConfig.value = configList.value?.[0]?.profile || ''
+}
+
+const fetchConfigServerUrl = async () => {
+  isFetchingServer.value = true
+  try {
+    const res = await api.configs.fetchConfigServerUrl()
+    if (res && res.data && res.data.config_server) {
+      cloudConfig.value.config_server = res.data.config_server
+      toast.success(t('config.cloudFetchServerSuccess'))
+    }
+  } catch (e) {
+    toast.error(t('config.cloudFetchServerFailed'))
+  } finally {
+    isFetchingServer.value = false
+  }
+}
+
+const saveCloudConfig = () => {
+  return new Promise(async (resolve, reject) => {
+    if (!cloudConfig.value.profile_name.trim()) {
+      toast.warning(t('config.cloudProfileNameRequired'))
+      reject()
+      return
+    }
+    if (!cloudConfig.value.config_server.trim()) {
+      toast.warning(t('config.cloudServerRequired'))
+      reject()
+      return
+    }
+    // 把 secure_mode 转成字符串，便于后端按字符串/布尔兼容处理
+    const payload = { ...cloudConfig.value }
+    if (typeof payload.secure_mode !== 'string') {
+      payload.secure_mode = payload.secure_mode ? 'true' : 'false'
+    }
+    api.configs.saveCloud(payload).then(async res => {
+      toast.success(t('config.saveSuccess'))
+      cloudMode.value = false
+      await loadConfigs()
+      if (res && res.data && res.data.profile) {
+        selectedConfig.value = res.data.profile
+        await loadConfig(res.data.profile)
+        // 自动启动服务
+        const startLoading = toast.loading(t('config.serviceStarting'))
+        await api.services.start(res.data.profile).then(() => {
+          toast.success(t('config.serviceStarted'))
+        }).catch(e => {
+          toast.error(t('config.serviceStartFailed', { error: e.message }))
+        }).finally(() => {
+          startLoading.clear()
+        })
+      }
+      resolve()
+    }).catch(e => {
+      toast.error(t('config.saveFailed', { error: e.message }))
+      reject(e)
+    })
+  })
+}
+
+const loadCloudConfig = async (profile) => {
+  try {
+    const res = await api.configs.get(profile)
+    if (res && res.data && res.data.cloud) {
+      cloudConfigInfo.value = res.data.cloud
+    } else {
+      cloudConfigInfo.value = null
+    }
+  } catch (e) {
+    console.error('加载云端配置信息失败:', e)
+    cloudConfigInfo.value = null
+  }
+}
+
 const exitAddMode = async () => {
   showMode.value = 0
+  cloudMode.value = false
   showCreateDialog.value = false
   newConfigName.value = ''
   await loadConfigs()
   selectedConfig.value = configList.value?.[0]?.profile || ''
+  if (selectedConfig.value) {
+    const cfg = configList.value[0]
+    if (cfg.config_mode === 'cloud') {
+      await loadCloudConfig(cfg.profile)
+    } else {
+      await loadConfig(cfg.profile)
+    }
+  }
 }
 
 const getLanIps = () => {
@@ -1784,7 +2000,12 @@ onMounted(async () => {
     return
   }
   selectedConfig.value = configList.value[0].profile
-  await loadConfig(configList.value[0].profile)
+  const firstCfg = configList.value[0]
+  if (firstCfg.config_mode === 'cloud') {
+    await loadCloudConfig(firstCfg.profile)
+  } else {
+    await loadConfig(firstCfg.profile)
+  }
   api.peers.publicPeers({'profile': selectedConfig.value}).then(async data => {
     publicPeerOptions.value = data.data
   })
@@ -2136,6 +2357,20 @@ html.dark .sk-breathe {
   flex-direction: column;
   padding-bottom: 20px;
   background: rgba(var(--color-surface-container-rgb, 226, 236, 250), 0.08) !important;
+}
+
+/* ===== 云端配置面板 ===== */
+.cloud-config-panel {
+  margin: 0 0 16px;
+  padding: 8px 20px 20px;
+  border-radius: 16px;
+  background: var(--color-surface) !important;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+html.dark .cloud-config-panel {
+  background: var(--color-surface-container) !important;
 }
 
 html.dark .merged-section {
@@ -2812,6 +3047,82 @@ html.dark .config-section-panel {
 
 .is-spinning {
   animation: spin 1s linear infinite;
+}
+
+/* ===== 云端配置样式 ===== */
+.cloud-secure-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 0;
+  width: 100%;
+}
+
+.cloud-secure-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+  flex: 1;
+}
+
+.cloud-secure-state {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  min-width: 32px;
+}
+
+.cloud-info-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--color-outline-variant);
+}
+
+.cloud-info-row:last-child {
+  border-bottom: none;
+}
+
+.cloud-info-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+  min-width: 120px;
+  flex-shrink: 0;
+}
+
+.cloud-info-value {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  word-break: break-all;
+}
+
+.cloud-info-value-url {
+  font-family: var(--font-family-mono, 'SF Mono', Menlo, Consolas, monospace);
+  font-size: 13px;
+  color: var(--color-primary);
+}
+
+.cloud-format-hint {
+  margin: 4px 0 4px;
+  padding: 10px 14px;
+  background: var(--color-surface-variant, rgba(127, 127, 127, 0.06));
+  border-radius: 8px;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--color-text-secondary);
+}
+
+.cloud-format-title {
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 2px;
+}
+
+.cloud-format-line {
+  font-family: var(--font-family-mono, 'SF Mono', Menlo, Consolas, monospace);
+  font-size: 12px;
+  color: var(--color-text-secondary);
 }
 
 /* ===== 响应式 ===== */

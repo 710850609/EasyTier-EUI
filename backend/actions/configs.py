@@ -3,6 +3,7 @@
 
 import logging
 import os
+import re
 import shutil
 from datetime import datetime
 from pathlib import Path
@@ -18,6 +19,11 @@ from utils import security
 from utils.validators import Validator
 
 logger = logging.getLogger(__name__)
+_CONSOLE_API_BASE = 'https://api.console.easytier.net'
+_DEFAULT_CONFIG_SERVER_URL = 'tcp://et-web.console.easytier.net:22020'
+# 校验 config_server 格式：proto://host:port[/path]
+# proto 只允许 tcp/udp，host:port 必填，path 可选（带 token 时必须有）
+_CONFIG_SERVER_RE = re.compile(r'^(tcp|udp)://[A-Za-z0-9_.\-]+:\d{1,5}(/.*)?$')
 
 
 def list_lan_ips(*args, **kwargs):
@@ -41,6 +47,7 @@ def list_config_files(*args, **kwargs):
             'name': name,
             'profile': profile,
             'autostart': info.autostart if info else False,
+            'config_mode': info.config_mode if info else 'local',
         })
     return result
 
@@ -112,6 +119,67 @@ def save(data, *args, **kwargs):
         f.write(tomlkit.dumps(doc))
     #
     et_run_info.save(profile, None, None, None)
+
+
+def save_cloud(data, *args, **kwargs):
+    profile_name = data.pop('profile_name', None) if data else None
+    if not profile_name:
+        raise HttpException('profile_name is required')
+    profile_name = security.validate_profile(profile_name)
+    if not profile_name:
+        raise HttpException(get_message('config.invalid_name', profile=profile_name))
+    # config_server 现在是单字段完整 URL：proto://host:port[/token|admin|...]
+    config_server = data.get('config_server', '').strip()
+    if not config_server:
+        raise HttpException('config_server is required')
+    if not _CONFIG_SERVER_RE.match(config_server):
+        raise HttpException('config_server format is invalid, expected: proto://host:port[/token]')
+    secure_mode = data.get('secure_mode', True)
+    if isinstance(secure_mode, str):
+        secure_mode = secure_mode.lower() == 'true'
+
+    profile = f"{profile_name}.toml"
+    et_config_file = run_configs.et_config_file(profile)
+    path_config_file = Path(et_config_file)
+    if not path_config_file.exists():
+        path_config_file.parent.mkdir(parents=True, exist_ok=True)
+        path_config_file.touch()
+    with open(et_config_file, "r", encoding="utf-8") as f:
+        doc = tomlkit.parse(f.read())
+    doc['instance_name'] = profile_name
+    # 存储完整 URL，token 作为路径段已经包含在 config_server 里
+    doc['cloud'] = {
+        'config_server': config_server,
+        'secure_mode': secure_mode,
+    }
+    with open(et_config_file, "w", encoding="utf-8") as f:
+        f.write(tomlkit.dumps(doc))
+
+    # 兼容旧字段：bootstrap_token 留空（旧代码读取时不会报错），不再参与启动命令拼接
+    et_run_info.save(profile, None, None, None,
+                     config_mode='cloud',
+                     cloud_config_server=config_server,
+                     cloud_bootstrap_token='',
+                     cloud_secure_mode=secure_mode)
+    return {'profile': profile, 'name': profile_name}
+
+
+def fetch_config_server_url(*args, **kwargs):
+    import urllib.request
+    import json as _json
+    try:
+        req = urllib.request.Request(
+            f"{_CONSOLE_API_BASE}/api/v1/releases/latest",
+            headers={'Accept': 'application/json'}
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = _json.loads(resp.read().decode('utf-8'))
+            server_url = data.get('web_config_server_url', _DEFAULT_CONFIG_SERVER_URL)
+            version = data.get('version', '')
+            return {'config_server': server_url, 'version': version}
+    except Exception as e:
+        logging.warning(f"获取配置服务器地址失败，使用默认值: {e}")
+        return {'config_server': _DEFAULT_CONFIG_SERVER_URL, 'version': ''}
 
 
 def save_toml(data: str, *args, **kwargs):

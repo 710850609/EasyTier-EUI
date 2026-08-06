@@ -17,7 +17,8 @@ class EtRunInfo:
     """
     et 运行信息
     """
-    def __init__(self, profile:str, rpc_portal:Optional[str], autostart:bool, use_system_service:bool, log_level:str = _default_log_level):
+    def __init__(self, profile:str, rpc_portal:Optional[str], autostart:bool, use_system_service:bool, log_level:str = _default_log_level,
+                 config_mode:str = 'local', cloud_config_server:str = '', cloud_bootstrap_token:str = '', cloud_secure_mode:bool = True):
         if not profile:
             raise HttpException("profile cannot be None for save")
         self.profile = profile
@@ -25,8 +26,13 @@ class EtRunInfo:
         self.autostart = autostart
         self.use_system_service = use_system_service
         self.log_level = log_level
+        self.config_mode = config_mode  # 'local' 或 'cloud'
+        self.cloud_config_server = cloud_config_server
+        self.cloud_bootstrap_token = cloud_bootstrap_token
+        self.cloud_secure_mode = cloud_secure_mode
 
-def save(profile:Optional[str], rpc_portal:Optional[str], autostart:Optional[bool], use_system_service:Optional[bool], log_level:str = _default_log_level):
+def save(profile:Optional[str], rpc_portal:Optional[str], autostart:Optional[bool], use_system_service:Optional[bool], log_level:str = _default_log_level,
+         config_mode:str = None, cloud_config_server:str = None, cloud_bootstrap_token:str = None, cloud_secure_mode:bool = None):
     if not profile:
         raise HttpException("profile cannot be None for save")
     data = __load_data() or {}
@@ -37,6 +43,15 @@ def save(profile:Optional[str], rpc_portal:Optional[str], autostart:Optional[boo
         info.rpc_portal = rpc_portal if rpc_portal is not None else info.rpc_portal
         info.autostart = autostart if autostart is not None else info.autostart
         info.use_system_service = use_system_service if use_system_service is not None else info.use_system_service
+    # 云端配置字段更新（None 表示不修改）
+    if config_mode is not None:
+        info.config_mode = config_mode
+    if cloud_config_server is not None:
+        info.cloud_config_server = cloud_config_server
+    if cloud_bootstrap_token is not None:
+        info.cloud_bootstrap_token = cloud_bootstrap_token
+    if cloud_secure_mode is not None:
+        info.cloud_secure_mode = cloud_secure_mode
     data[profile] = info
     __save_data(data)
     __load_data(reload=True)

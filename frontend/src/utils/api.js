@@ -234,6 +234,8 @@ export const api = {
     delete: (profile) => post('/configs/delete', { profile }, {toastError: false}),
     rename: (oldProfile, newProfile) => post('/configs/rename', { oldProfile, newProfile }, {toastError: false}),
     getLanIps: () => get('/configs/list_lan_ips', {}),
+    saveCloud: (data) => post('/configs/save_cloud', data, {}, {toastError: false}),
+    fetchConfigServerUrl: () => get('/configs/fetch_config_server_url', {}, {toastError: false}),
   },
   peers: {
     checkPeers: (params = {}) => get('/peers/check_peers', params),
