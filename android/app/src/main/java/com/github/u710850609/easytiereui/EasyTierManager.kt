@@ -206,7 +206,7 @@ class EasyTierManager(
             val dnsChanged = newDnsServers != currentDnsServers
 
             if (ipv4Changed || cidrsChanged || dnsChanged) {
-                AppLogger.info(TAG, "Network changed: IPv4=$currentIpv4->$newIpv4, CIDRs=${currentProxyCidrs.size}->${newProxyCidrs.size}, DNS=${currentDnsServers.size}->${newDnsServers.size}")
+                AppLogger.info(TAG, "Network changed: IPv4=$currentIpv4->$newIpv4, CIDRs=${currentProxyCidrs}->${newProxyCidrs}, DNS=${currentDnsServers}->${newDnsServers}")
                 currentIpv4 = newIpv4
                 currentProxyCidrs = newProxyCidrs.toList()
                 currentDnsServers = newDnsServers.toList()

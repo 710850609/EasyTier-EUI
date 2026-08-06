@@ -11,6 +11,7 @@ import android.content.res.Configuration
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
 import android.os.Handler
 import android.os.Looper
 import android.webkit.JavascriptInterface
@@ -280,15 +281,35 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun downloadUsingSystemManager(url: String) {
+    private fun downloadUsingSystemManager(url: String, fileName: String?) {
         try {
             val downloadManager = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-            downloadManager.enqueue(DownloadManager.Request(Uri.parse(url)))
-            AppLogger.info(TAG, "DownloadManager: enqueued $url")
+            val request = DownloadManager.Request(Uri.parse(url))
+            val destName = when {
+                !fileName.isNullOrEmpty() -> fileName
+                else -> extractFileNameFromUrl(url)
+            }
+            if (!destName.isNullOrEmpty()) {
+                request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, destName)
+            }
+            downloadManager.enqueue(request)
+            AppLogger.info(TAG, "DownloadManager: enqueued $url, fileName=$destName")
         } catch (e: Exception) {
             AppLogger.error(TAG,"downloadUsingSystemManager failed", e)
             Toast.makeText(this, getString(com.github.u710850609.easytiereui.R.string.download_failed), Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun extractFileNameFromUrl(url: String): String? {
+        try {
+            val path = Uri.parse(url).lastPathSegment ?: return null
+            if (path.contains('.') && !path.endsWith('.') && path.length > 1) {
+                return path.substringAfterLast('/')
+            }
+        } catch (e: Exception) {
+            AppLogger.warn(TAG, "extractFileNameFromUrl failed: ${e.message}")
+        }
+        return null
     }
 
     private suspend fun startPythonBackend() {
@@ -516,10 +537,10 @@ class MainActivity : AppCompatActivity() {
         }
 
         @JavascriptInterface
-        fun downloadFile(url: String) {
-            AppLogger.debug(TAG, "AndroidBridge.downloadFile: $url")
+        fun downloadFile(url: String, fileName: String?) {
+            AppLogger.debug(TAG, "AndroidBridge.downloadFile: url=$url, fileName=$fileName")
             runOnUiThread {
-                downloadUsingSystemManager(url)
+                downloadUsingSystemManager(url, fileName)
             }
         }
     }

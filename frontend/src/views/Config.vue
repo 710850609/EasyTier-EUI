@@ -974,7 +974,7 @@ const toggleToolbarMore = () => {
   toolbarMoreOpen.value = toolbarMoreOpen.value.length ? [] : ['more']
 }
 const lanIps = ref([])
-const platform = ref('')
+const platform = ref('android')
 const configList = ref([])
 const selectedConfig = ref('')
 const showCreateDialog = ref(false)
@@ -1703,6 +1703,10 @@ onMounted(async () => {
   if (window.location.href.includes('/cgi/ThirdParty/EasyTier-EUI.User/index.cgi')) {
     config.value.flags.no_tun = true
   }
+  api.settings.getEuiInfo().then(data => {
+    console.log(data)
+    platform.value = data.data.platform
+  })
   getLanIps()
   await loadConfigs()
   if (configList.value.length == 0) {
@@ -1712,10 +1716,6 @@ onMounted(async () => {
   await loadConfig(configList.value[0].profile)
   api.peers.publicPeers({'profile': selectedConfig.value}).then(async data => {
     publicPeerOptions.value = data.data
-  })
-  api.settings.getEuiInfo().then(data => {
-    console.log(data)
-    platform.value = data.data.platform
   })
 })
 

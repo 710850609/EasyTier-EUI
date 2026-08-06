@@ -742,8 +742,23 @@ jobs:
           cache-to: type=gha,mode=max,scope=docker-${{ matrix.arch }}
 
   # 合并多架构 Manifest
+  # 等待所有构建步骤完成（包括成功和被跳过的），任何非忽略的步骤失败则不执行
   merge-docker-manifest:
-    needs: [build-docker, build-info]
+    needs:
+      - build-info
+      - build-android
+      - build-frontend
+      - build-frontend-user
+      - build-fnos
+      - build-windows-amd64
+      - build-macos-amd64
+      - build-macos-arm64
+      - build-linux-amd64
+      - build-linux-arm64
+      - build-linux-riscv64
+      - build-linux-armv7
+      - build-linux-alpine
+      - build-docker
     runs-on: ubuntu-latest
     if: ${{ always() && !failure() && !cancelled() }}
     steps:

@@ -15,7 +15,7 @@ export default {
     name: '名稱',
     enabled: '啟用',
     disabled: '禁用',
-    shutdown: '關機',
+    shutdown: '關閉',
     install: '安裝',
     update: '更新',
     check: '檢查',

@@ -15,7 +15,7 @@ export default {
     name: '名称',
     enabled: '启用',
     disabled: '禁用',
-    shutdown: '关机',
+    shutdown: '关闭',
     install: '安装',
     update: '更新',
     check: '检查',

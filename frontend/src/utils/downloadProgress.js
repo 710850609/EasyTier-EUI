@@ -44,6 +44,7 @@ export function useAsyncDownload(startDownloadFunc, queryProgressFunc, buildResu
     try {
       const resp = await startDownloadFunc(params)
       const downloadId = resp.data.download_id
+      const fileName = resp.data.file_name || ''
 
       pollTimer = setInterval(async () => {
         try {
@@ -61,6 +62,10 @@ export function useAsyncDownload(startDownloadFunc, queryProgressFunc, buildResu
               if (typeof window.pywebview !== 'undefined') {
                 // pywebview 模式：委托给系统浏览器下载
                 window.pywebview.api.window_open(downloadUrl)
+              } else if (window.AndroidBridge && window.AndroidBridge.downloadFile) {
+                // AndroidBridge 模式：委托应用发起下载
+                console.log(`AndroidBridge available, using downloadFile: ${downloadUrl} , fileName: ${fileName}`)
+                window.AndroidBridge.downloadFile(downloadUrl, fileName)
               } else {
                 // 浏览器模式：使用 <a> 标签点击触发下载，不会被 popup blocker 拦截
                 const a = document.createElement('a')

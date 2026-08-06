@@ -15,7 +15,7 @@ export default {
     name: 'Name',
     enabled: 'Aktiviert',
     disabled: 'Deaktiviert',
-    shutdown: 'Herunterfahren',
+    shutdown: 'Schließen',
     install: 'Installieren',
     update: 'Aktualisieren',
     check: 'Prüfen',

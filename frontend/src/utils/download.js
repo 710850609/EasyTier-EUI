@@ -4,6 +4,7 @@
  */
 export function openDownloadUrl(url) {
   if (window.AndroidBridge && window.AndroidBridge.downloadFile) {
+    console.log(`AndroidBridge available, using downloadFile: ${url}`)
     window.AndroidBridge.downloadFile(url)
   } else {
     window.open(url, '_blank')

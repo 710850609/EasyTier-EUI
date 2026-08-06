@@ -97,7 +97,7 @@ object AppLogger {
 
     private fun cleanOldLogs() {
         val dir = logDir ?: return
-        val logFiles = dir.listFiles { f -> f.name.startsWith("app_") && f.name.endsWith(".log") }
+        val logFiles = dir.listFiles { f -> f.name.startsWith("apk_") && f.name.endsWith(".log") }
             ?: return
 
         val cutoff = System.currentTimeMillis() - MAX_DAYS * 24L * 3600 * 1000

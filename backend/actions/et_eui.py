@@ -197,7 +197,7 @@ def get_download_progress(params: dict, *args, **kwargs):
     if progress is None:
         raise HttpResponse(get_message('download.task_not_found', id=download_id))
     progress.pop('file_path', None)
-    progress.pop('file_name', None)
+    # progress.pop('file_name', None)
     return HttpResponse(data=progress)
 
 
@@ -251,7 +251,7 @@ def _do_download_easytier_eui(task: DownloadTask, platform: str, arch: str, prof
 
 
 def _get_et_eui_package_async(platform: str, arch: str, et_lite_version: str, download_dir: str, download_url: str = None, progress_callback=None):
-    support_platforms = ['windows', 'linux', 'macos', 'fnos']
+    support_platforms = ['windows', 'linux', 'linux-musl', 'macos', 'fnos']
     if platform not in support_platforms:
         raise HttpResponse(get_message('download.platform_not_supported', platform=platform, list_str=str(support_platforms)))
     support_arches = ['x86_64', 'aarch64', 'riscv64', 'armv7']
