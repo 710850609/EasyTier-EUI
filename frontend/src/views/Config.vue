@@ -67,14 +67,14 @@
               <var-button size="small" type="primary" @click="startEditName" :loading="isRenaming" v-if="showMode === 0">{{ $t('config.rename') }}</var-button>
               <var-button type="primary" size="small" @click="showShareConfigType = true" v-if="showMode === 0">{{ $t('config.shareNetwork') }}</var-button>
               <var-button size="small" type="danger" @click="showDeleteDialog = true" :loading="isDeletingConfig" v-if="showMode === 0">{{ $t('config.delete') }}</var-button>
-              <label class="toggle-item" v-if="showMode === 0">
+              <label class="toggle-item" v-if="showMode === 0 && platform !== 'android'">
                 <var-loading v-if="changingAutostart" size="small" />
                 <label class="switch-wrapper" v-if="!changingAutostart">
                   <input type="checkbox" :checked="currentConfigAutostart" @change="(e) => handleSwitchChange(currentConfigData, 'autostart', e.target.checked)" />
                   <span class="switch-slider"></span>
                 </label>
               </label>
-              <span class="toggle-label" v-if="showMode === 0">{{ $t('config.autostart') }}</span>
+              <span class="toggle-label" v-if="showMode === 0 && platform !== 'android'">{{ $t('config.autostart') }}</span>
             </div>
           </div>
           <var-divider class="toolbar-divider" />
@@ -112,14 +112,14 @@
               </var-option>
             </var-select>
             <div class="toolbar-mobile-actions" v-if="selectedConfig">
-              <label class="toggle-item" v-if="showMode === 0">
+              <label class="toggle-item" v-if="showMode === 0 && platform !== 'android'">
                 <var-loading v-if="changingAutostart" size="small" />
                 <label class="switch-wrapper" v-if="!changingAutostart">
                   <input type="checkbox" :checked="currentConfigAutostart" @change="(e) => handleSwitchChange(currentConfigData, 'autostart', e.target.checked)" />
                   <span class="switch-slider"></span>
                 </label>
               </label>
-              <span class="toggle-label" v-if="showMode === 0">{{ $t('config.autostart') }}</span>
+              <span class="toggle-label" v-if="showMode === 0 && platform !== 'android'">{{ $t('config.autostart') }}</span>
               <var-button variant="outlined" size="small" type="danger" @click="exitAddMode" :loading="isDeletingConfig" v-if="showMode !== 0">
                 <var-icon name="close" :size="16" />
                 {{ $t('config.exitAdd') }}
@@ -974,7 +974,7 @@ const toggleToolbarMore = () => {
   toolbarMoreOpen.value = toolbarMoreOpen.value.length ? [] : ['more']
 }
 const lanIps = ref([])
-
+const platform = ref('')
 const configList = ref([])
 const selectedConfig = ref('')
 const showCreateDialog = ref(false)
@@ -1712,6 +1712,10 @@ onMounted(async () => {
   await loadConfig(configList.value[0].profile)
   api.peers.publicPeers({'profile': selectedConfig.value}).then(async data => {
     publicPeerOptions.value = data.data
+  })
+  api.settings.getEuiInfo().then(data => {
+    console.log(data)
+    platform.value = data.data.platform
   })
 })
 
