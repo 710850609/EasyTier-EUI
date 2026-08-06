@@ -1,4 +1,8 @@
-# EasyTier-EUI
+<p align="center">
+  <img src="assets/icon.png" width="80" alt="EasyTier-EUI" />
+</p>
+
+<h1 align="center">易组网 / EasyTier-EUI</h1>
 
 ![Downloads](https://img.shields.io/github/downloads/710850609/EasyTier-EUI/total?color=blue)
 ![Version](https://img.shields.io/github/v/release/710850609/EasyTier-EUI?color=blue)
