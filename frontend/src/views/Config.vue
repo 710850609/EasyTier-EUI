@@ -1241,7 +1241,7 @@ const saveConfig = () => {
     })
     api.configs.save(data).then(async res => {
       toast.success(t('config.saveSuccess'))
-      if (fastSettingMode.value) {
+      if (fastSettingMode.value && platform.value !== 'android') {
         // 快速设置模式，自动开启启动服务
         await autoStart()
       }
