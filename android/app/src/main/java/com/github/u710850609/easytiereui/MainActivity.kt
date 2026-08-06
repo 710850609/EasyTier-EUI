@@ -291,7 +291,9 @@ class MainActivity : AppCompatActivity() {
             }
             if (!destName.isNullOrEmpty()) {
                 request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, destName)
+                request.setTitle(destName)
             }
+            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
             downloadManager.enqueue(request)
             AppLogger.info(TAG, "DownloadManager: enqueued $url, fileName=$destName")
         } catch (e: Exception) {
@@ -541,6 +543,14 @@ class MainActivity : AppCompatActivity() {
             AppLogger.debug(TAG, "AndroidBridge.downloadFile: url=$url, fileName=$fileName")
             runOnUiThread {
                 downloadUsingSystemManager(url, fileName)
+            }
+        }
+
+        @JavascriptInterface
+        fun installApk(filePath: String) {
+            AppLogger.debug(TAG, "AndroidBridge.installApk: $filePath")
+            runOnUiThread {
+                easyTierManager?.installApk(filePath)
             }
         }
     }

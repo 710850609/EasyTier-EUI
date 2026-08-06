@@ -83,14 +83,8 @@ def _do_update(task: UpdateTask, ver_tag: str):
         task.set_completed(get_message('update.update_completed', ver_tag=ver_tag))
     elif run_configs.IS_ANDROID:
         task.update_progress(78, get_message('update.extracting'))
-        from java import jclass
-        MainActivity = jclass(run_configs.ANDROID_MAIN_ACTIVITY)
-        manager = MainActivity.getEasyTierManager()
-        if manager is not None:
-            manager.installApk(download_file)
-            task.set_completed(get_message('update.completed'))
-        else:
-            raise HttpResponse(get_message('update.failed'))
+        task.set_file_path(download_file)
+        task.set_completed(get_message('update.completed'))
     else:
         # task.update_progress(72, '正在停止服务...')
         # services.stop_all()

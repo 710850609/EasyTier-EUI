@@ -149,14 +149,19 @@ class UpdateTask(AsyncTask):
         super().__init__(params, 'update', get_message('task.preparing_update'), get_message('task.update_failed'), update_id)
         self.update_id = self.task_id
         self.update_version = ''
+        self.file_path = None
 
     def set_update_version(self, update_version: str):
         self.update_version = update_version
+
+    def set_file_path(self, file_path: str):
+        self.file_path = file_path
 
     def _build_save_data(self) -> dict:
         data = super()._build_save_data()
         data['update_id'] = self.update_id
         data['update_version'] = self.update_version
+        data['file_path'] = self.file_path
         return data
 
     @staticmethod

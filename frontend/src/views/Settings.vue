@@ -656,6 +656,9 @@ const installEuiVersion = (versionType) => {
             updateProgress.value = { ...progress, active: false }
             loadingToast.clear()
             toast.success(progress.description || t('settings.toast.updateReady'))
+            if (progress.file_path && window.AndroidBridge && window.AndroidBridge.installApk) {
+              window.AndroidBridge.installApk(progress.file_path)
+            }
             resolve()
             waitForRestart(targetVersion)
           } else if (progress.status === 2) {
