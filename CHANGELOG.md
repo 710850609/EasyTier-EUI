@@ -1,20 +1,31 @@
-##  
+##  2.0
 - 新增: 易组网使用独立Logo
 - 新增: 支持安卓易组网版本
+  - 安卓不支持多配置同时运行（受限于 Android 系统限制）
+  - 安卓不支持热更新 Easytier 内核（受限于 Android 系统限制）
+  - 安卓不支持设置 EasyTier 日志级别（受限于 EasyTier FFI 接口兼容支持）
+  - 安卓不支持开机自启
+- 新增：【设置】支持设置易组网日志级别
+- 新增：【设置】支持清理易组网日志
 - 优化: 界面UI优化, 弹窗更清晰, 适配小屏幕组件展示 
-- 优化: 后端调用实现优化
+- 优化: 后端调用 Easytier 内核实现优化
 - 修复: 【配置】保存某些配置项空字符串问题
 
 <br>
 
 ----
 
-- Added: Independent logo for EasyTier
-- Added: Support for Android EasyTier version
-- Improved: UI refinements, clearer dialogs, adapted component display for small screens
-- Improved: Backend call implementation optimization
-- Fixed: [Config] issue with saving empty string values for certain config items
-
+- New: EasyTier-EUI now uses its own independent logo
+- New: Android version support
+  - Android does not support running multiple configs simultaneously (limited by Android system restrictions)
+  - Android does not support hot-updating the EasyTier core (limited by Android system restrictions)
+  - Android does not support setting EasyTier log level (limited by EasyTier FFI interface compatibility)
+  - Android does not support auto-start on boot
+- New: [Settings] Support setting EasyTier-EUI log level
+- New: [Settings] Support clearing EasyTier-EUI logs
+- Improved: UI enhancements, clearer dialogs, optimized component display for small screens
+- Improved: Backend EasyTier core integration optimized
+- Fixed: [Config] Empty string issue when saving certain config items
 
 ##  1.6
 - 新增：【配置】-代理与转发，支持网段映射
