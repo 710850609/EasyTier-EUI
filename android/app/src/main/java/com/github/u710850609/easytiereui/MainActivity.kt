@@ -54,12 +54,12 @@ class MainActivity : AppCompatActivity() {
         try {
             val settingFile = File(filesDir, "data/setting.json")
             if (!settingFile.exists()) {
-                AppLogger.info(TAG, "initLogLevel: setting.json not found, using default DEBUG")
+                AppLogger.info(TAG, "initLogLevel: setting.json not found, using default WARN")
                 return
             }
             val json = settingFile.readText()
             val root = JSONObject(json)
-            val levelStr = root.optString("log_level", "debug").lowercase()
+            val levelStr = root.optString("log_level", "warn").lowercase()
             AppLogger.minLevel = when (levelStr) {
                 "debug" -> AppLogger.Level.DEBUG
                 "info" -> AppLogger.Level.INFO
@@ -68,8 +68,8 @@ class MainActivity : AppCompatActivity() {
                 "fatal" -> AppLogger.Level.FATAL
                 "off" -> AppLogger.Level.OFF
                 else -> {
-                    AppLogger.warn(TAG, "initLogLevel: unknown level '$levelStr', using DEBUG")
-                    AppLogger.Level.DEBUG
+                    AppLogger.warn(TAG, "initLogLevel: unknown level '$levelStr', using WARN")
+                    AppLogger.Level.WARN
                 }
             }
             AppLogger.info(TAG, "initLogLevel: set to ${AppLogger.minLevel}")

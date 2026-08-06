@@ -44,7 +44,6 @@ export function useAsyncDownload(startDownloadFunc, queryProgressFunc, buildResu
     try {
       const resp = await startDownloadFunc(params)
       const downloadId = resp.data.download_id
-      const fileName = resp.data.file_name || ''
 
       pollTimer = setInterval(async () => {
         try {
@@ -59,6 +58,7 @@ export function useAsyncDownload(startDownloadFunc, queryProgressFunc, buildResu
             } else {
               toast.success(result.data.description + '\n' + t('download.start'))
               const downloadUrl = buildResultUrl({ download_id: downloadId })
+              const fileName = result.data.file_name || ''
               if (typeof window.pywebview !== 'undefined') {
                 // pywebview 模式：委托给系统浏览器下载
                 window.pywebview.api.window_open(downloadUrl)

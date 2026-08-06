@@ -20,8 +20,9 @@ object AppLogger {
     }
 
     var logDir: File? = null
-    var minLevel: Level = Level.DEBUG
+    var minLevel: Level = Level.WARN
 
+    private const val LOG_FILE_PREFIX = "app_kt_"
     // 每个文件最大大小，5MB
     private const val MAX_FILE_SIZE = 5L * 1024 * 1024
     // 最大文件数量，50个
@@ -77,7 +78,7 @@ object AppLogger {
 
         currentLogFile?.let { f ->
             val name = f.nameWithoutExtension
-            if (name.startsWith("app_$today")) return f
+            if (name.startsWith("${LOG_FILE_PREFIX}$today")) return f
         }
 
         dir.mkdirs()
@@ -86,7 +87,7 @@ object AppLogger {
         var file: File
         do {
             val suffix = if (index == 0) "" else "_$index"
-            file = File(dir, "app_$today$suffix.log")
+            file = File(dir, "${LOG_FILE_PREFIX}$today$suffix.log")
             index++
         } while (file.exists() && file.length() >= MAX_FILE_SIZE)
 
@@ -97,7 +98,7 @@ object AppLogger {
 
     private fun cleanOldLogs() {
         val dir = logDir ?: return
-        val logFiles = dir.listFiles { f -> f.name.startsWith("apk_") && f.name.endsWith(".log") }
+        val logFiles = dir.listFiles { f -> f.name.startsWith(LOG_FILE_PREFIX) && f.name.endsWith(".log") }
             ?: return
 
         val cutoff = System.currentTimeMillis() - MAX_DAYS * 24L * 3600 * 1000

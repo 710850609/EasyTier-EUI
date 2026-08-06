@@ -36,7 +36,7 @@ function cleanupTimeout() {
 setInterval(cleanupTimeout, 30000)
 
 function getFullUrl(url, data) {
-  url = url.startsWith('http') ? url : `${API_BASE}${url}`
+  url = url.startsWith('http') ? url : `${window.location.origin}${API_BASE}${url}`
   let search_parts = ''
   Object.keys(data || {}).forEach(key => {
     search_parts += `&${key}=${data[key]}`

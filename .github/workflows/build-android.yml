@@ -27,7 +27,7 @@ on:
       easytier_ref:
         description: "EasyTier git ref - supports branch, tag, or commit hash (leave empty for latest release)"
         required: false
-        default: "v2.4.5"
+        default: "v2.6.4"
       build_version:
         description: "Build version (leave empty for auto: 0.1-{timestamp})"
         required: false

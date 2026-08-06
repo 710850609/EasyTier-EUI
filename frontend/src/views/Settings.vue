@@ -279,8 +279,8 @@
       </div>
       <div class="setting-row">
         <span class="setting-label">{{ $t('settings.developer.githubMirror') }}</span>
-        <var-select v-model="githubMirror" variant="outlined" size="small" :line="true" class="setting-select">
-          <var-option v-for="item in githubMirrors" :key="item.url" :value="item.url" :label="item.label">
+        <var-select v-model="githubMirror" variant="outlined" size="small" class="setting-select" placeholder="点击查看延迟">
+          <var-option v-for="item in githubMirrors" :key="item.url" :value="item.url" :label="item.label" class="version-option" disabled>
             <var-cell border style="display: flex;">
               <template #description>
                 {{ item.label }} 

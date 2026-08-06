@@ -342,33 +342,31 @@ class EasyTierManager(
 
     fun installApk(filePath: String) {
         AppLogger.info(TAG, "installApk: $filePath")
-        handler.post {
-            try {
-                val apkFile = File(filePath)
-                if (!apkFile.exists()) {
-                    AppLogger.error(TAG, "installApk: file not found: $filePath")
-                    return@post
-                }
-                val intent = Intent(Intent.ACTION_VIEW).apply {
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        val uri = FileProvider.getUriForFile(
-                            activity,
-                            "${activity.packageName}.fileprovider",
-                            apkFile
-                        )
-                        setDataAndType(uri, "application/vnd.android.package-archive")
-                    } else {
-                        val uri = Uri.fromFile(apkFile)
-                        setDataAndType(uri, "application/vnd.android.package-archive")
-                    }
-                }
-                activity.startActivity(intent)
-                AppLogger.info(TAG, "installApk: intent started")
-            } catch (e: Exception) {
-                AppLogger.error(TAG, "installApk: failed", e)
+        try {
+            val apkFile = File(filePath)
+            if (!apkFile.exists()) {
+                AppLogger.error(TAG, "installApk: file not found: $filePath")
+                return
             }
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    val uri = FileProvider.getUriForFile(
+                        activity,
+                        "${activity.packageName}.fileprovider",
+                        apkFile
+                    )
+                    setDataAndType(uri, "application/vnd.android.package-archive")
+                } else {
+                    val uri = Uri.fromFile(apkFile)
+                    setDataAndType(uri, "application/vnd.android.package-archive")
+                }
+            }
+            activity.startActivity(intent)
+            AppLogger.info(TAG, "installApk: intent started")
+        } catch (e: Exception) {
+            AppLogger.error(TAG, "installApk: failed", e)
         }
     }
 

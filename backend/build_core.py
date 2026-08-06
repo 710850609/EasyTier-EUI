@@ -10,7 +10,6 @@ import platform
 import shutil
 import subprocess
 import sys
-import sysconfig
 import venv
 import zipfile
 from pathlib import Path
