@@ -14,6 +14,7 @@
 - [快速开始](#快速开始)
 - [功能简介](#功能简介)
 - [UI界面说明](#UI界面说明)
+- [Android 版本说明](#android-版本说明)
 - [技术栈](#技术栈)
 - [其他链接](#其他链接)
 - [贡献](#贡献)
@@ -70,6 +71,7 @@ Docker 镜像支持多架构：
 | Windows | x86_64                          | Windows10及其以上版本                                                                                                                 |
 | Linux   | x86_64, aarch64, armv7, riscv64 | 支持有图形界面 (GUI) 和无图形界面 (Headless) <br> 支持 glibc >= 2.28 <br> 支持 musl Linux <br> 已验证支持最低版本：Ubuntu 20.04 / Debian 10 / UOS 20；</br> |
 | MacOS   | Intel, arm64                    | 未验证                                                                                                                             |
+| Android | arm64-v8a, armeabi-v7a          | Android 8.0+ (API 26+) <br> 基于 WebView + Chaquopy(Python) + FFI 实现 <br> 通过 Android VPN Service 创建 TUN 虚拟网卡                              |
 - 快速组网，仅填入网络名和密钥即可快速启动
 - 提供其它设备组网应用（官方、其它常见第三方）下载连接、组网说明，快速组网
 - 支持多配置
@@ -138,14 +140,47 @@ Docker 镜像支持多架构：
 |---------------------------------|------|
 | ![应用下载](assets/download-m1.png) | ![设置](assets/setting-m1.png) |
 
+## Android 版本说明
+
+### 实现原理
+
+Android 版本与桌面版采用不同的技术方案，但共享同一套 Python 后端和 Vue 前端代码：
+
+| 层级 | 桌面版 | Android 版 |
+|------|--------|------------|
+| UI 框架 | pywebview | Android WebView |
+| Python 嵌入 | 系统 Python | Chaquopy 17.0.0 (Python 3.12) |
+| EasyTier 核心 | 子进程调用 CLI | FFI 直接调用 `libeasytier_ffi.so` |
+| 虚拟网卡 | 系统 TUN 设备 | Android VPN Service |
+| 前端 | Vue 3 + Varlet UI | 同桌面版（复用） |
+
+### 权限说明
+
+- **VPN 权限**：首次启动组网时，系统会弹出 VPN 连接授权对话框，需点击「允许」才能创建虚拟网卡
+- **通知权限**（Android 13+）：用于显示组网运行状态通知，告知用户 VPN 正在运行
+- **存储权限**：用于保存配置文件、日志等数据
+
+### 使用注意事项
+
+1. **VPN 独占**：Android 系统仅允许同时运行一个 VPN 服务。若启动了其他 VPN 应用（如加速器、广告拦截器等），易组网 VPN 会被系统断开
+2. **前台服务**：组网运行期间会在通知栏显示「易组网」常驻通知，这是 Android 系统对 VPN 服务的强制要求，无法关闭
+3. **后台运行**：建议在系统设置中将易组网加入电池优化白名单，避免后台被系统限制
+4. **网络切换**：切换 Wi-Fi 或移动数据时，VPN 会自动重连，无需手动操作
+5. **支持 arm64-v8a 和 armeabi-v7a**：支持大多数现代 Android 设备（64 位和 32 位 ARM），不支持 x86 模拟器
+
+### 安装方式
+
+前往 [Releases](https://github.com/710850609/EasyTier-EUI/releases) 页面，下载 `EasyTier-EUI-*.apk` 安装包，直接安装即可。
+
 ## 技术栈
 
-| 层级   | 技术                                                                   |
-|------|----------------------------------------------------------------------|
-| 桌面框架 | [pywebview](https://pywebview.flowrl.com/)                                          |
-| 前端   | [Vue 3](https://vuejs.org/) + [Varlet UI](https://www.varletjs.com/) |
-| 后端   | [Python3](https://www.python.org/)                                       |
-| 组网内核 | [EasyTier](https://github.com/EasyTier/EasyTier)                     |
+| 层级   | 桌面版技术                                                               | Android 版技术 |
+|------|----------------------------------------------------------------------|--------------|
+| 桌面框架 | [pywebview](https://pywebview.flowrl.com/)                           | Android WebView |
+| 前端   | [Vue 3](https://vuejs.org/) + [Varlet UI](https://www.varletjs.com/) | 同桌面版（复用）     |
+| 后端   | [Python3](https://www.python.org/)                                   | Python 3.12 (Chaquopy) |
+| 组网内核 | [EasyTier](https://github.com/EasyTier/EasyTier)                     | EasyTier FFI (`libeasytier_ffi.so`) |
+| 原生层  | -                                                                    | Kotlin 2.0.0 + Android VPN Service |
 
 ## 其他链接
 

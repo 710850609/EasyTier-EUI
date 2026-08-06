@@ -39,6 +39,13 @@ class EasyTierManager(
     private var currentInstanceName: String? = null
     private var lastNotificationUpdateTime: Long = 0L
     private var vpnServiceIntent: Intent? = null
+
+    init {
+        EasyTierVpnService.onRevokeCallback = {
+            onVpnRevoked()
+        }
+    }
+
     private val monitorRunnable = object : Runnable {
         override fun run() {
             if (!isMonitoring) {
@@ -328,5 +335,37 @@ class EasyTierManager(
             }
         }
         AppLogger.info(TAG, "setLogLevel: changed to ${AppLogger.minLevel}")
+    }
+
+    private fun onVpnRevoked() {
+        AppLogger.info(TAG, "onVpnRevoked: VPN was revoked by another app")
+        if (isMonitoring) {
+            isMonitoring = false
+            handler.removeCallbacks(monitorRunnable)
+            AppLogger.info(TAG, "onVpnRevoked: monitoring stopped")
+        }
+        val instanceName = currentInstanceName
+        currentIpv4 = null
+        currentProxyCidrs = emptyList()
+        currentDnsServers = emptyList()
+        currentInstanceName = null
+        vpnServiceIntent = null
+
+        if (instanceName != null) {
+            monitorExecutor.execute {
+                try {
+                    AppLogger.info(TAG, "onVpnRevoked: stopping Python network instance $instanceName")
+                    val python = Python.getInstance()
+                    val module = python.getModule("et_adapters.facade")
+                    val facade = module.callAttr("get_facade")
+                    if (facade != null) {
+                        facade.callAttr("stop_network", instanceName)
+                        AppLogger.info(TAG, "onVpnRevoked: Python network instance stopped")
+                    }
+                } catch (e: Exception) {
+                    AppLogger.error(TAG, "onVpnRevoked: stop_network failed: ${e.message}")
+                }
+            }
+        }
     }
 }

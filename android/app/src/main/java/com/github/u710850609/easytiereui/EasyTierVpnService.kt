@@ -31,6 +31,8 @@ class EasyTierVpnService : VpnService() {
         var instance: EasyTierVpnService? = null
             private set
 
+        var onRevokeCallback: (() -> Unit)? = null
+
         fun requestStop() {
             instance?.let { service ->
                 AppLogger.info(TAG, "requestStop: cleaning up and stopping")
@@ -306,6 +308,36 @@ class EasyTierVpnService : VpnService() {
                 AppLogger.error(TAG, "createNotificationChannel failed: ${e.message}")
             }
         }
+    }
+
+    override fun onRevoke() {
+        AppLogger.info(TAG, "onRevoke: VPN revoked by system (another VPN took over)")
+        isRunning = false
+        try {
+            vpnInterface?.close()
+        } catch (e: Exception) {
+            AppLogger.error(TAG, "onRevoke: close vpnInterface failed: ${e.message}")
+        }
+        vpnInterface = null
+        try {
+            stopForeground(STOP_FOREGROUND_REMOVE)
+            AppLogger.info(TAG, "onRevoke: stopForeground succeeded")
+        } catch (e: Exception) {
+            AppLogger.error(TAG, "onRevoke: stopForeground failed: ${e.message}")
+        }
+        try {
+            onRevokeCallback?.invoke()
+        } catch (e: Exception) {
+            AppLogger.error(TAG, "onRevoke: callback failed: ${e.message}")
+        }
+        instance = null
+        try {
+            super.onRevoke()
+        } catch (e: Exception) {
+            AppLogger.error(TAG, "onRevoke: super.onRevoke failed: ${e.message}")
+        }
+        AppLogger.info(TAG, "onRevoke: done")
+        stopSelf()
     }
 
     override fun onDestroy() {
