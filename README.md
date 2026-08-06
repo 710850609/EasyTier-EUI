@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/icon.png" width="80" alt="EasyTier-EUI" />
+  <img src="backend/assets/icon.png" width="80" alt="EasyTier-EUI" />
 </p>
 
 <h1 align="center">易组网 / EasyTier-EUI</h1>
