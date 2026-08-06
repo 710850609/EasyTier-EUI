@@ -578,6 +578,8 @@ export default {
     fnOSInstallDesc: 'After installation, share the network from EasyTier-EUI, paste the config into FnOS EasyTier-EUI [Config] - [Edit File], save and start the service.',
     androidVersion: 'EasyTier Android',
     androidInstallDesc: 'Download and install the APK. Share the config from EasyTier-EUI, then on Android tap [Edit as File] and paste the config.',
+    euiAndroidVersion: 'EasyTier-EUI Android',
+    euiAndroidInstallDesc: 'Download and install the EasyTier-EUI APK. Share the config from another device, tap [Edit as File] and paste the config.',
     startNetwork: 'Start the network to connect',
     commonModel: 'Common',
     oldModel: 'Legacy',

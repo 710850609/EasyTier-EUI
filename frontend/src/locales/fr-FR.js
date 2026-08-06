@@ -503,6 +503,8 @@ export default {
     fnOSInstallDesc: 'Partager réseau, coller dans FnOS [Config] - [Modifier fichier], sauvegarder et démarrer',
     androidVersion: 'EasyTier Android',
     androidInstallDesc: 'Télécharger APK et installer. Partager config et coller sur Android',
+    euiAndroidVersion: 'EasyTier-EUI Android',
+    euiAndroidInstallDesc: 'Téléchargez et installez l\'APK EasyTier-EUI. Partagez la configuration depuis un autre appareil et collez-la.',
     startNetwork: 'Démarrer réseau pour connecter',
     commonModel: 'Standard',
     oldModel: 'Legacy',

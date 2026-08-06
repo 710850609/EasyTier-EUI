@@ -590,6 +590,8 @@ export default {
     fnOSInstallDesc: '安裝後，從易組網分享網路，到FnOS的易組網[設定]-[編輯檔案]，貼上設定，儲存後啟動服務即可',
     androidVersion: 'EasyTier Android 版本',
     androidInstallDesc: '下載APK安裝應用，從當前易組網分享設定後，到手機的Easytier應用上點選[編輯檔案]貼上設定',
+    euiAndroidVersion: '易組網 Android 版本',
+    euiAndroidInstallDesc: '下載安裝易組網APK，從其他裝置分享設定後，點選[編輯檔案]貼上設定',
     startNetwork: '啟動服務即可組網',
     commonModel: '常見機型',
     oldModel: '古老機型',

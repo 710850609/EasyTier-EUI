@@ -1,5 +1,65 @@
 <template>
   <div class="platform-page">
+    <!-- 易组网 -->
+    <var-paper class="download-card" :elevation="1">
+      <div class="platform-header">
+        <div class="platform-info">
+          <h2>{{ $t('software.easyTierEui') }}</h2>
+        </div>
+      </div>
+      <div class="version-info">
+        <var-cell>
+          <p>{{ $t('software.euiAndroidInstallDesc') }}</p>
+        </var-cell>
+        <var-space :size="[20, 20]" justify="center">
+          <a class="shield-badge" href="https://github.com/710850609/EasyTier-EUI/releases" target="_blank">
+            <span class="badge-label">{{ $t('software.stable') }}</span>
+            <span class="badge-value">{{ euiLatestReleaseVersion || '--' }}</span>
+          </a>
+        </var-space>
+      </div>
+      <var-divider />
+
+      <div class="download-grid">
+        <var-paper class="download-item" :elevation="3">
+          <div class="item-header">
+            <var-icon name="package" size="24" />
+            <span class="item-title">arm64
+            <var-badge type="primary">
+               <template #value>{{ $t('software.commonModel') }}</template>
+            </var-badge>
+            </span>
+          </div>
+          <div class="item-actions">
+            <var-button type="primary" size="normal" @click="downloadEui('aarch64')" :loading="downloadingKey === 'android-aarch64'" auto-loading>
+              <var-icon name="download"/>
+              {{ $t('software.stable') }}
+            </var-button>
+          </div>
+        </var-paper>
+        <var-paper class="download-item" :elevation="3">
+          <div class="item-header">
+            <var-icon name="package" size="24" />
+            <span class="item-title">arm
+            <var-badge type="primary">
+               <template #value>{{ $t('software.oldModel') }}</template>
+            </var-badge>
+            </span>
+          </div>
+          <div class="item-actions">
+            <var-button type="primary" size="normal" @click="downloadEui('armv7')" :loading="downloadingKey === 'android-armv7'" auto-loading>
+              <var-icon name="download"/>
+              {{ $t('software.stable') }}
+            </var-button>
+          </div>
+        </var-paper>
+      </div>
+      <div v-if="progress" class="download-progress">
+        <var-progress :value="progress.current_progress" :track="true" />
+        <p class="progress-desc">{{ progress.description }}</p>
+      </div>
+    </var-paper>
+
     <!-- 官方 -->
     <var-paper class="download-card" :elevation="1">
       <div class="platform-header">
@@ -125,9 +185,17 @@ import { ref, onMounted } from 'vue'
 import { getAcceleratedDownloadUrl } from '../../utils/github.js'
 import { openDownloadUrl } from '../../utils/download.js'
 import { api } from '../../utils/api.js'
+import { useAsyncDownload } from '../../utils/downloadProgress.js'
 
 const prereleaseVersion = ref('')
 const latestReleaseVersion = ref('')
+const euiLatestReleaseVersion = ref('')
+
+const { startDownload, progress, downloadingKey } = useAsyncDownload(
+  api.etEui.startDownload,
+  api.etEui.getDownloadProgress,
+  api.etEui.getDownloadResultUrl,
+)
 
 onMounted(() => {
   api.etApp.getAppInfo().then((resp) => {
@@ -135,12 +203,22 @@ onMounted(() => {
     prereleaseVersion.value = data.prerelease?.version || ''
     latestReleaseVersion.value = data.release?.version || ''
   })
+  api.etEui.getReleaseInfo({refresh: 'true'}).then((resp) => {
+    const data = resp.data
+    euiLatestReleaseVersion.value = data.latest_release?.version || ''
+  })
 })
 
 const download = async (arch, prerelease) => {
   const resp = await api.etApp.getDownloadUrl({type:'apk', arch, prerelease})
   const url = await getAcceleratedDownloadUrl(resp.data)
   openDownloadUrl(url)
+}
+
+const downloadEui = (arch) => {
+  startDownload(`android-${arch}`, { platform: 'android', arch, profile: '' }).catch(err => {
+    console.error('下载失败:', err)
+  })
 }
 
 </script>
@@ -257,5 +335,16 @@ const download = async (arch, prerelease) => {
   padding: 0 8px;
   background: #007ec6;
   color: #fff;
+}
+
+.download-progress {
+  margin-top: 16px;
+  text-align: center;
+}
+
+.progress-desc {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--color-on-surface-variant);
 }
 </style>

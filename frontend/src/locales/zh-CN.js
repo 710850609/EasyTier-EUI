@@ -580,6 +580,7 @@ export default {
     fnOSInstallDesc: '安装后，从当前易组网分享网络，到飞牛易组网【配置】-【编辑文件】，黏贴并保存，启动后即可组网',
     androidVersion: 'EasyTier 安卓版本',
     androidInstallDesc: '下载安装APK，从易组网分享配置后，到安卓上点击【编辑为文件】并黏贴保存配置',
+    euiAndroidInstallDesc: '下载安装易组网APK，从其他设备分享配置后，点击【编辑为文件】黏贴保存配置',
     startNetwork: '启动网络即可',
     commonModel: '常见机型',
     oldModel: '古老机型',

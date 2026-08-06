@@ -503,6 +503,8 @@ export default {
     fnOSInstallDesc: 'Netzwerk teilen, in FnOS [Konfig] - [Datei bearbeiten] einfügen, speichern und starten',
     androidVersion: 'EasyTier Android',
     androidInstallDesc: 'APK herunterladen und installieren. Konfiguration teilen und auf Android einfügen',
+    euiAndroidVersion: 'EasyTier-EUI Android',
+    euiAndroidInstallDesc: 'Laden Sie die EasyTier-EUI APK herunter und installieren Sie sie. Konfiguration von einem anderen Gerät teilen und einfügen.',
     startNetwork: 'Netzwerk starten zum Verbinden',
     commonModel: 'Standard',
     oldModel: 'Legacy',

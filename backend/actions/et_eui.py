@@ -15,10 +15,11 @@ from pathlib import Path
 import actions.configs as configs
 import utils.common_util as common_util
 import utils.github_util as github_util
-from http_dispatcher.dispatcher import HttpResponse
+from http_dispatcher.dispatcher import HttpResponse, HttpException
 from locales import get_message
 from utils import run_configs
 from utils.async_task import DownloadTask, UpdateTask
+from utils.validators import Validator
 
 logger = logging.getLogger(__name__)
 
@@ -80,6 +81,16 @@ def _do_update(task: UpdateTask, ver_tag: str):
         logger.info(f"安装依赖完成")
         logger.info(f"更新到 {ver_tag} 版本完成")
         task.set_completed(get_message('update.update_completed', ver_tag=ver_tag))
+    elif run_configs.IS_ANDROID:
+        task.update_progress(78, get_message('update.extracting'))
+        from java import jclass
+        MainActivity = jclass(run_configs.ANDROID_MAIN_ACTIVITY)
+        manager = MainActivity.getEasyTierManager()
+        if manager is not None:
+            manager.installApk(download_file)
+            task.set_completed(get_message('update.completed'))
+        else:
+            raise HttpResponse(get_message('update.failed'))
     else:
         # task.update_progress(72, '正在停止服务...')
         # services.stop_all()
@@ -162,7 +173,7 @@ def get_release_info(params: dict, *args, **kwargs):
                 if is_latest_prerelease or is_prerelease:
                     filename = asset.get('name')
                     download_url = asset.get('browser_download_url')
-                    platform_arch = filename.replace('EasyTier-EUI-', '').replace(f'-{ver}', '').replace('.zip', '').replace('.fpk', '')
+                    platform_arch = filename.replace('EasyTier-EUI-', '').replace(f'-{ver}', '').replace('.zip', '').replace('.fpk', '').replace('.apk', '')
                     assets[platform_arch] = {'download_url': download_url, 'download_count': download_count}
                     info = {'version': ver, 'download_count': item_download_count, 'assets': assets, 'changelog': item.get('body')}
                     if is_latest_prerelease:
@@ -238,7 +249,7 @@ def _do_download_easytier_eui(task: DownloadTask, platform: str, arch: str, prof
 
     et_lite_package = _get_et_eui_package_async(platform, arch, et_lite_version, download_dir, download_url=download_url, progress_callback=on_download_progress)
 
-    if platform == 'fnos':
+    if platform in ('fnos', 'android'):
         task.update_progress(95, get_message('download.preparing'))
         task.set_completed(et_lite_package, os.path.basename(et_lite_package))
     else:
@@ -251,10 +262,10 @@ def _do_download_easytier_eui(task: DownloadTask, platform: str, arch: str, prof
 
 
 def _get_et_eui_package_async(platform: str, arch: str, et_lite_version: str, download_dir: str, download_url: str = None, progress_callback=None):
-    support_platforms = ['windows', 'linux', 'linux-musl', 'macos', 'fnos']
+    support_platforms = ['windows', 'linux', 'linux-musl', 'macos', 'fnos', 'android']
     if platform not in support_platforms:
         raise HttpResponse(get_message('download.platform_not_supported', platform=platform, list_str=str(support_platforms)))
-    support_arches = ['x86_64', 'aarch64', 'riscv64', 'armv7']
+    support_arches = ['x86_64', 'aarch64', 'riscv64', 'armv7', 'arm64', 'arm', 'x86']
     if arch not in support_arches:
         raise HttpResponse(get_message('download.arch_not_supported', arch=arch, list_str=str(support_arches)))
 
@@ -262,6 +273,8 @@ def _get_et_eui_package_async(platform: str, arch: str, et_lite_version: str, do
     file_name = f"EasyTier-EUI-{platform}-{arch}-{last_version}.zip"
     if platform == 'fnos':
         file_name = file_name.replace('.zip', '.fpk')
+    if platform == 'android':
+        file_name = file_name.replace('.zip', '.apk')
     download_file = download_dir + '/' + file_name
     if Path(download_file).exists():
         logger.debug(f"已存在缓存:{download_file}")
