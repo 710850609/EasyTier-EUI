@@ -91,7 +91,9 @@ class EasyTierVpnService : VpnService() {
             }
 
             vpnInterface = pfd
-            startForeground(NOTIFICATION_ID, buildNotification("${instanceName?.removeSuffix(".toml")} 运行中"))
+            val notificationTitle = intent?.getStringExtra("notification_title") ?: "易组网 - ${instanceName?.removeSuffix(".toml")} 运行中"
+            val notificationText = intent?.getStringExtra("notification_text") ?: "网络连接中..."
+            startForeground(NOTIFICATION_ID, buildNotification(notificationTitle, notificationText))
             AppLogger.info(TAG, "VPN interface created, fd=${pfd.fd}")
 
             val name = instanceName!!
@@ -254,9 +256,9 @@ class EasyTierVpnService : VpnService() {
         AppLogger.info(TAG, "VPN interface cleaned up")
     }
 
-    fun updateNotification(text: String) {
+    fun updateNotification(title: String, text: String) {
         try {
-            val notification = buildNotification(text)
+            val notification = buildNotification(title, text)
             val nm = getSystemService(NotificationManager::class.java)
             nm.notify(NOTIFICATION_ID, notification)
         } catch (e: Exception) {
@@ -264,7 +266,7 @@ class EasyTierVpnService : VpnService() {
         }
     }
 
-    private fun buildNotification(text: String): Notification {
+    private fun buildNotification(title: String, text: String): Notification {
         return try {
             val pendingIntent = PendingIntent.getActivity(
                 this, 0,
@@ -272,7 +274,7 @@ class EasyTierVpnService : VpnService() {
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
             )
             NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle("易组网")
+                .setContentTitle(title)
                 .setContentText(text)
                 .setSmallIcon(R.drawable.ic_notification)
                 .setContentIntent(pendingIntent)

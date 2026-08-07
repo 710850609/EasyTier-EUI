@@ -161,25 +161,38 @@ class EasyTierManager(
                 return
             }
 
+            val i18n = root.optString("i18n", "zh_CN")
+            val isChinese = i18n.startsWith("zh")
+            val name = (currentInstanceName ?: "").removeSuffix(".toml")
+            val title = if (isChinese) "易组网 - $name 运行中" else "EasyTier-EUI - $name Running"
+            val initialText = if (isChinese) "连接中..." else "Connecting..."
+
             val now = System.currentTimeMillis()
             if (now - lastNotificationUpdateTime >= 60_000) {
                 lastNotificationUpdateTime = now
                 val upload = root.optString("total_upload", "")
                 val download = root.optString("total_download", "")
+                val uptime = root.optLong("uptime", 0L)
+
                 val text = buildString {
-                    val name = (currentInstanceName ?: "").removeSuffix(".toml")
-                    append(name)
-                    append("运行中 ")
                     if (upload.isNotEmpty()) {
                         append("↑${upload}")
                     }
                     if (download.isNotEmpty()) {
-                        if (upload.isNotEmpty()) append(" ")
+                        if (upload.isNotEmpty()) append("  ")
                         append("↓${download}")
                     }
+                    if (uptime > 0) {
+                        if (upload.isNotEmpty() || download.isNotEmpty()) append("  ")
+                        if (isChinese) {
+                            append(formatUptimeZh(uptime))
+                        } else {
+                            append(formatUptimeEn(uptime))
+                        }
+                    }
                 }
-                EasyTierVpnService.instance?.updateNotification(text)
-                AppLogger.debug(TAG, "processNetworkStatus: updateNotification $text")
+                EasyTierVpnService.instance?.updateNotification(title, text)
+                AppLogger.debug(TAG, "processNetworkStatus: updateNotification title=$title text=$text")
             }
 
             val newProxyCidrs = mutableListOf<String>()
@@ -213,7 +226,7 @@ class EasyTierManager(
                 currentIpv4 = newIpv4
                 currentProxyCidrs = newProxyCidrs.toList()
                 currentDnsServers = newDnsServers.toList()
-                restartVpnService(newIpv4, newProxyCidrs, newDnsServers)
+                restartVpnService(newIpv4, newProxyCidrs, newDnsServers, title, initialText)
                 // 重启vpn后，立即重置刷新时间，尽量及时更新流量
                 lastNotificationUpdateTime = 0L
             }
@@ -226,11 +239,11 @@ class EasyTierManager(
         }
     }
 
-    private fun restartVpnService(ipv4: String, proxyCidrs: List<String>, dnsServers: List<String>) {
+    private fun restartVpnService(ipv4: String, proxyCidrs: List<String>, dnsServers: List<String>, title: String, initialText: String) {
         try {
             AppLogger.info(TAG, "Restarting VPN: $ipv4")
             stopVpnService()
-            startVpnService(ipv4, proxyCidrs, dnsServers)
+            startVpnService(ipv4, proxyCidrs, dnsServers, title, initialText)
         } catch (e: Exception) {
             val sw = StringWriter()
             e.printStackTrace(PrintWriter(sw))
@@ -238,7 +251,7 @@ class EasyTierManager(
         }
     }
 
-    private fun startVpnService(ipv4: String, proxyCidrs: List<String>, dnsServers: List<String>) {
+    private fun startVpnService(ipv4: String, proxyCidrs: List<String>, dnsServers: List<String>, title: String, initialText: String) {
         try {
             if (activity.isFinishing) {
                 AppLogger.error(TAG, "Activity is finishing, cannot start VPN")
@@ -254,6 +267,8 @@ class EasyTierManager(
             intent.putStringArrayListExtra("proxy_cidrs", ArrayList(proxyCidrs))
             intent.putStringArrayListExtra("dns_servers", ArrayList(dnsServers))
             intent.putExtra("instance_name", currentInstanceName ?: "unknown")
+            intent.putExtra("notification_title", title)
+            intent.putExtra("notification_text", initialText)
 
             AppLogger.info(TAG, "startVpnService: calling startService")
             activity.startService(intent)
@@ -376,6 +391,28 @@ class EasyTierManager(
             AppLogger.info(TAG, "installApk: intent started")
         } catch (e: Exception) {
             AppLogger.error(TAG, "installApk: failed", e)
+        }
+    }
+
+    private fun formatUptimeZh(seconds: Long): String {
+        val days = seconds / 86400
+        val hours = (seconds % 86400) / 3600
+        val minutes = (seconds % 3600) / 60
+        return buildString {
+            if (days > 0) append("${days}天")
+            if (hours > 0) append("${hours}时")
+            append("${minutes}分")
+        }
+    }
+
+    private fun formatUptimeEn(seconds: Long): String {
+        val days = seconds / 86400
+        val hours = (seconds % 86400) / 3600
+        val minutes = (seconds % 3600) / 60
+        return buildString {
+            if (days > 0) append("${days}d ")
+            if (hours > 0) append("${hours}h ")
+            append("${minutes}m")
         }
     }
 

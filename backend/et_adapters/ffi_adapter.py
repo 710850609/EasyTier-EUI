@@ -47,6 +47,7 @@ class FfiAdapter(IEasyTierAdapter):
         self._lock = threading.RLock()
         self._instance_set: Set[str] = set()
         self._routes_config: Dict[str, List[str]] = {}
+        self._start_times: Dict[str, float] = {}
 
     def _has_symbol(self, name: str) -> bool:
         try:
@@ -115,8 +116,21 @@ class FfiAdapter(IEasyTierAdapter):
                 logger.warning(f"配置中的instance_name参数和实际指定值不一致，已覆盖为指定值【{instance_name}】")
                 doc['instance_name'] = instance_name
                 rebuild_toml = True
+            # 安卓系统下，如果hostname为空，使用设备名称
+            if run_configs.IS_ANDROID:
+                hostname = doc.get('hostname')
+                if not hostname:
+                    try:
+                        from java import jclass
+                        Build = jclass("android.os.Build")
+                        doc['hostname'] = str(Build.MODEL)
+                        rebuild_toml = True
+                        logger.info(f"安卓设备名称为空，已使用设备名称替代: {doc['hostname']}")
+                    except Exception as e:
+                        logger.warning(f"获取安卓设备名称失败: {e}")
             if rebuild_toml:
                 toml_config = tomlkit.dumps(doc)
+                logger.info(f"Rebuilt toml config for run_network_instance: \n{toml_config}")
             self._routes_config[instance_name] = [str(r) for r in (doc.get('routes') or [])]
             ret = self._parse_config(toml_config)
             if ret != 0:
@@ -132,6 +146,7 @@ class FfiAdapter(IEasyTierAdapter):
                 if ret != 0:
                     raise RuntimeError(f"run_network_instance failed: {self._get_last_error()}")
             self._instance_set.add(instance_name)
+            self._start_times[instance_name] = time.time()
             # 等待实例分配到虚拟ipv4（这里可等可不等）
             time.sleep(2.0)
             logger.info(f"Instance '{instance_name}' started via FFI")
@@ -157,6 +172,7 @@ class FfiAdapter(IEasyTierAdapter):
         if instance_name in self._instance_set:
             self._instance_set.remove(instance_name)
         self._routes_config.pop(instance_name, None)
+        self._start_times.pop(instance_name, None)
 
         # 停止 Android VPN 监控和服务
         try:
@@ -242,7 +258,11 @@ class FfiAdapter(IEasyTierAdapter):
 
     def get_route_info(self, instance_name: str) -> Optional[str]:
         try:
+            from locales import get_lang
+            start_time = self._start_times.get(instance_name)
             info = {
+                'i18n': get_lang(),
+                'uptime': int(time.time() - start_time) if start_time else 0,
                 'virtual_ipv4': '',
                 'dns_servers': ['223.5.5.5', '119.29.29.29', '114.114.114.114', '8.8.8.8'],
                 'routes': [],
