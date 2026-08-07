@@ -1,5 +1,6 @@
 ##  
 - 新增：【配置】支持二维码分享网络、支持扫描二维码增加配置
+  - 仅支持https方式访问才能扫码（浏览器安全限制）
 - 优化：【配置】只提交最小有效配置
 - 优化：【节点】安卓版显示当前设备名
 - 优化：安卓通知自适应中/英文显示，增加显示vpn uptime
@@ -10,6 +11,7 @@
 ----
 
 - Added: [Config] Support QR code sharing for network config, support scanning QR code to add config
+  - QR scanning requires HTTPS access (browser security restriction)
 - Improved: [Config] Only submit minimal valid configuration
 - Improved: [Peers] Display current device name on Android
 - Improved: Android notification adapts to Chinese/English display, added VPN uptime display
