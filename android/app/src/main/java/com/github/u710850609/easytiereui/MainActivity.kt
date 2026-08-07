@@ -32,7 +32,6 @@ import kotlinx.coroutines.*
 import java.io.File
 import java.io.PrintWriter
 import java.io.StringWriter
-import java.util.Locale
 import org.json.JSONObject
 import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
@@ -160,16 +159,6 @@ class MainActivity : AppCompatActivity() {
                 settings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
                 settings.useWideViewPort = true
                 settings.loadWithOverviewMode = true
-
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    val locale = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        Locale.getDefault().toLanguageTag()
-                    } else {
-                        Locale.getDefault().toString().replace("_", "-")
-                    }
-                    settings.setAcceptLanguage(locale)
-                    AppLogger.info(TAG, "WebView Accept-Language set to: $locale")
-                }
 
                 if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
                     WebSettingsCompat.setAlgorithmicDarkeningAllowed(settings, false)
