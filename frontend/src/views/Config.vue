@@ -914,7 +914,8 @@
     <!-- 分享配置弹窗 -->
     <var-dialog v-model:show="showShareConfigType" :title="$t('config.selectShareType')"
       :confirm-button-text="$t('config.downloadFile')"  @confirm="downloadConfig" 
-      :cancel-button-text="$t('config.copyClipboard')" @cancel="copyConfig">
+      :cancel-button-text="$t('config.copyClipboard')" @cancel="copyConfig"
+      width="320px">
       <div class="share-qr-area">
         <img v-if="shareQrDataUrl" :src="shareQrDataUrl" class="share-qr-img" alt="QR Code" />
         <var-loading v-else size="small" />
@@ -1569,7 +1570,7 @@ watch(showShareConfigType, async (newVal) => {
       const resp = await api.configs.getShareConfigStr(selectedConfig.value)
       const configStr = resp.data
       shareQrDataUrl.value = await QRCode.toDataURL(configStr, {
-        width: 220,
+        width: 280,
         margin: 2,
         color: {
           dark: '#000000',
@@ -3327,12 +3328,12 @@ html.dark .port-forward-row {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 16px 0 8px 0;
+  padding: 16px 16px 8px 16px;
 }
 
 .share-qr-img {
-  width: 220px;
-  height: 220px;
+  width: 280px;
+  height: 280px;
   border: 2px solid var(--color-border);
   border-radius: 12px;
 }
