@@ -2,4 +2,5 @@
 <resources>
     <string name="app_name">易组网</string>
     <string name="download_failed">下载失败</string>
+    <string name="camera_permission_denied">摄像头权限被拒绝，无法使用扫码功能</string>
 </resources>

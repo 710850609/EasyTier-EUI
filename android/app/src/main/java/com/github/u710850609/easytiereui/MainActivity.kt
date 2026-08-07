@@ -16,6 +16,7 @@ import android.os.Handler
 import android.os.Looper
 import android.webkit.JavascriptInterface
 import android.webkit.WebChromeClient
+import android.webkit.PermissionRequest
 import android.webkit.WebResourceRequest
 import android.os.Build
 import android.webkit.WebView
@@ -167,6 +168,26 @@ class MainActivity : AppCompatActivity() {
                 overScrollMode = android.view.View.OVER_SCROLL_NEVER
 
                 webChromeClient = object : WebChromeClient() {
+                    override fun onPermissionRequest(request: PermissionRequest?) {
+                        request?.let {
+                            val resources = it.resources
+                            for (resource in resources) {
+                                if (resource == PermissionRequest.RESOURCE_VIDEO_CAPTURE) {
+                                    if (checkSelfPermission(Manifest.permission.CAMERA) ==
+                                        android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                                        it.grant(resources)
+                                        return
+                                    } else {
+                                        requestCameraPermission()
+                                        it.deny()
+                                        return
+                                    }
+                                }
+                            }
+                            it.deny()
+                        }
+                    }
+
                     override fun onCreateWindow(
                         view: WebView?,
                         isDialog: Boolean,
@@ -227,6 +248,30 @@ class MainActivity : AppCompatActivity() {
             if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) !=
                 android.content.pm.PackageManager.PERMISSION_GRANTED) {
                 requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 0)
+            }
+        }
+    }
+
+    private fun requestCameraPermission() {
+        if (checkSelfPermission(Manifest.permission.CAMERA) !=
+            android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(arrayOf(Manifest.permission.CAMERA), 1)
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == 1) {
+            if (grantResults.isNotEmpty() && grantResults[0] == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                AppLogger.info(TAG, "Camera permission granted, reloading WebView")
+                webView.reload()
+            } else {
+                AppLogger.warn(TAG, "Camera permission denied by user")
+                Toast.makeText(this, R.string.camera_permission_denied, Toast.LENGTH_SHORT).show()
             }
         }
     }
