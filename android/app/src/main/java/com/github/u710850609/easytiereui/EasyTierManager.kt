@@ -185,7 +185,7 @@ class EasyTierManager(
                         append("↓${download}")
                     }
                     if (uptime > 0) {
-                        if (upload.isNotEmpty() || download.isNotEmpty()) append("  ⏱")
+                        if (upload.isNotEmpty() || download.isNotEmpty()) append("  🕓  ")
                         if (isChinese) {
                             append(formatUptimeZh(uptime))
                         } else {

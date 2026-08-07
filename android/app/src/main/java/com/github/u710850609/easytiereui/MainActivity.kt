@@ -190,6 +190,11 @@ class MainActivity : AppCompatActivity() {
                         val url = request?.url?.toString() ?: return false
                         val host = request.url?.host ?: return false
                         if (host != "127.0.0.1" && host != "localhost") {
+                            val isDebug = request.url?.getQueryParameter("debug") == "true"
+                            if (isDebug) {
+                                view?.loadUrl(url)
+                                return true
+                            }
                             openInSystemBrowser(url)
                             return true
                         }
@@ -260,6 +265,7 @@ class MainActivity : AppCompatActivity() {
 
             val js = """
                 (function() {
+                    if (!document.documentElement) return;
                     document.documentElement.style.setProperty('--sat', '${satDp}px');
                     document.documentElement.style.setProperty('--sab', '${sabDp}px');
                     document.documentElement.style.setProperty('--sar', '${sarDp}px');
