@@ -29,6 +29,7 @@
     public *** start(...);
     public *** stop(...);
     public *** setLogLevel(...);
+    public *** getDeviceName(...);
 }
 
 # NotificationCompat — keep builder methods (may be accessed via reflection)
