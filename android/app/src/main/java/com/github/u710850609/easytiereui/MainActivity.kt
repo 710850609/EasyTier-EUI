@@ -214,10 +214,9 @@ class MainActivity : AppCompatActivity() {
                         if (host == "127.0.0.1" || host == "localhost"
                             || host.startsWith("192.168.") || host.startsWith("10.")
                             || isDebug) {
-                            view?.loadUrl(url)
-                        } else {
-                            openInSystemBrowser(url)
+                            return false
                         }
+                        openInSystemBrowser(url)
                         return true
                     }
                     override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
@@ -231,6 +230,17 @@ class MainActivity : AppCompatActivity() {
                     }
                     override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: android.webkit.WebResourceError?) {
                         AppLogger.error(TAG, "WebView error: ${error?.description} for ${request?.url}")
+                    }
+                    override fun onReceivedSslError(view: WebView?, handler: android.webkit.SslErrorHandler?, error: android.net.http.SslError?) {
+                        val host = Uri.parse(error?.url).host ?: ""
+                        val isLocal = host == "127.0.0.1" || host == "localhost"
+                            || host.startsWith("192.168.") || host.startsWith("10.")
+                        AppLogger.info(TAG, "onReceivedSslError: url=${error?.url}, host=$host, isLocal=$isLocal, error=${error?.primaryError}")
+                        if (isLocal) {
+                            handler?.proceed()
+                        } else {
+                            handler?.cancel()
+                        }
                     }
                 }
 

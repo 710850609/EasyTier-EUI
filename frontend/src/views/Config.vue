@@ -887,7 +887,7 @@
 
     <!-- 创建新配置弹窗 -->
     <var-dialog v-model:show="showCreateDialog" @before-close="beforeCloseCreateDilog"
-      @closed="onCreateDialogClosed">
+      @closed="onCreateDialogClosed" width="320px">
       <template #title>
         <span>{{ $t('config.newConfigTitle') }}</span>
       </template>
@@ -1453,13 +1453,8 @@ const checkPeers = () => {
   })
 }
 
-const loadConfig = (profile) => {
-  isLoadingConfig.value = true
-  advancedOpen.value = []
-  forwardOpen.value = []
-  return api.configs.get(profile).then(data => {
-    const json = data.data
-    json.peer = (json.peer || []).map(e => e.uri)
+const formatBackendConfigToConfig = (json) => {
+  json.peer = (json.peer || []).map(e => e.uri)
     json.proxy_network = (json.proxy_network || []).map(e => ({
       subnet_cidr: e.cidr || '',
       mapped_cidr: e.mapped_cidr || ''
@@ -1475,7 +1470,7 @@ const loadConfig = (profile) => {
     if (json.flags?.mtu) json.flags.mtu = ensureInt(json.flags.mtu)
     if (json.flags?.multi_thread_count) json.flags.multi_thread_count = ensureInt(json.flags.multi_thread_count)
     if (json.flags?.instance_recv_bps_limit) json.flags.instance_recv_bps_limit = ensureInt(json.flags.instance_recv_bps_limit)
-    config.value = {
+    return  {
       ...json,
       hostname: json.hostname ?? '',
       ipv4: json.ipv4 ?? '',
@@ -1492,11 +1487,15 @@ const loadConfig = (profile) => {
         multi_thread_count: json.flags?.multi_thread_count ?? undefined,
       }
     }
+}
 
-    // 将 flags 中 undefined 的字符串字段统一设为空字符串，确保 var-input/var-select 的 placeholder 正常显示
-    // ;['dev_name', 'encryption_algorithm', 'default_protocol', 'compression', 'relay_network_whitelist'].forEach(key => {
-    //   if (config.value.flags[key] == null) config.value.flags[key] = ''
-    // })
+const loadConfig = (profile) => {
+  isLoadingConfig.value = true
+  advancedOpen.value = []
+  forwardOpen.value = []
+  return api.configs.get(profile).then(data => {
+    const json = data.data
+    config.value = formatBackendConfigToConfig(json)
   }).finally(() => {
     isLoadingConfig.value = false
   })
@@ -1619,21 +1618,25 @@ const deleteCurrentConfig = async () => {
   })
 }
 
-const beforeCloseCreateDilog = (action, done) => {
-  stopQrScanner()
-  if (action === 'confirm') {
-    if (confirmCreateConfig()) {
+const beforeCloseCreateDilog = async (action, done) => {
+  try {
+    stopQrScanner()
+    if (action === 'confirm') {
+      if (confirmCreateConfig()) {
+        done()
+      }
+    } else {
+      await exitAddMode()
       done()
     }
-  } else {
-    exitAddMode()
+  } catch {
     done()
   }
 }
 
-const onCreateCancel = (cancel) => {
+const onCreateCancel = async (cancel) => {
   stopQrScanner()
-  exitAddMode()
+  await exitAddMode()
   cancel()
 }
 
@@ -1678,7 +1681,11 @@ const onStartScan = async () => {
       cameraId ? { deviceId: { exact: cameraId } } : { facingMode: 'environment' },
       {
         fps: 10,
-        qrbox: { width: 250, height: 250 },
+        qrbox: (viewfinderWidth, viewfinderHeight) => {
+          const minEdge = Math.min(viewfinderWidth, viewfinderHeight)
+          const size = Math.floor(minEdge * 0.85)
+          return { width: size, height: size }
+        },
       },
       (decodedText) => {
         onQrScanSuccess(decodedText)
@@ -1712,8 +1719,7 @@ const onQrScanSuccess = async (decodedText) => {
         }
       }
       if (confirmCreateConfig()) {
-        parsedData.peer = (parsedData.peer || []).map(e => e.uri)
-        Object.assign(config.value, parsedData)
+        config.value = formatBackendConfigToConfig(parsedData)
         config.value._profile = selectedConfig.value
         toast.success(t('config.scanSuccess'))
         showCreateDialog.value = false
@@ -1726,16 +1732,11 @@ const onQrScanSuccess = async (decodedText) => {
 
 const stopQrScanner = () => {
   if (html5QrCode.value) {
-    html5QrCode.value.stop().then(() => {
-      html5QrCode.value.clear()
-      html5QrCode.value = null
-      isScanning.value = false
-      showQrScanner.value = false
-    }).catch(() => {
-      html5QrCode.value = null
-      isScanning.value = false
-      showQrScanner.value = false
-    })
+    const scanner = html5QrCode.value
+    html5QrCode.value = null
+    isScanning.value = false
+    showQrScanner.value = false
+    scanner.stop().then(() => scanner.clear()).catch(() => {})
   } else {
     isScanning.value = false
     showQrScanner.value = false
@@ -3311,10 +3312,14 @@ html.dark .port-forward-row {
 
 .qr-reader-box {
   width: 280px;
-  height: 280px;
   border: 2px solid var(--color-border);
   border-radius: 12px;
   overflow: hidden;
+}
+
+.qr-reader-box video {
+  width: 100% !important;
+  height: auto !important;
 }
 
 .qr-scan-hint {

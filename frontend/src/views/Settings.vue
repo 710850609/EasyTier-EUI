@@ -456,6 +456,9 @@ const languageOptions = [
 
 const changeLanguage = (val) => {
   setLanguage(val)
+  if (platform.value === 'android') {
+    api.settings.getEuiInfo()
+  }
 }
 
 const toggleGlassEffect = (val) => {
