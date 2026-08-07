@@ -41,6 +41,7 @@ class EasyTierManager(
     private var currentDnsServers: List<String> = emptyList()
     private var currentInstanceName: String? = null
     private var lastNotificationUpdateTime: Long = 0L
+    private var vpnStartTime: Long = 0L
     private var vpnServiceIntent: Intent? = null
 
     init {
@@ -172,7 +173,7 @@ class EasyTierManager(
                 lastNotificationUpdateTime = now
                 val upload = root.optString("total_upload", "")
                 val download = root.optString("total_download", "")
-                val uptime = root.optLong("uptime", 0L)
+                val uptime = if (vpnStartTime > 0) (System.currentTimeMillis() - vpnStartTime) / 1000 else 0L
 
                 val text = buildString {
                     if (upload.isNotEmpty()) {
@@ -273,6 +274,7 @@ class EasyTierManager(
             AppLogger.info(TAG, "startVpnService: calling startService")
             activity.startService(intent)
             vpnServiceIntent = intent
+            vpnStartTime = System.currentTimeMillis()
 
             AppLogger.info(TAG, "VPN started: $ipv4, CIDRs=${proxyCidrs.size}, DNS=${dnsServers.size}")
         } catch (e: Exception) {
@@ -332,6 +334,7 @@ class EasyTierManager(
                 AppLogger.info(TAG, "stopService(fallback) result=$stopped")
             }
             vpnServiceIntent = null
+            vpnStartTime = 0L
         } catch (e: Exception) {
             val sw = StringWriter()
             e.printStackTrace(PrintWriter(sw))
@@ -428,6 +431,7 @@ class EasyTierManager(
         currentProxyCidrs = emptyList()
         currentDnsServers = emptyList()
         currentInstanceName = null
+        vpnStartTime = 0L
         vpnServiceIntent = null
 
         if (instanceName != null) {
