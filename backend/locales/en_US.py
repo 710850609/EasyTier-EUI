@@ -132,6 +132,8 @@ MESSAGES = {
         "name_exists": "New name already exists: {name}",
         "invalid_name": "Invalid profile name: {profile}",
         "profile_required_for_save": "Profile is required for saving TOML",
+        "toml_empty": "TOML data cannot be empty",
+        "toml_parse_error": "TOML parse error: {error}",
     },
     "log": {
         "fetch_failed": "Failed to fetch logs: {error}",

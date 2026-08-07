@@ -130,6 +130,8 @@ MESSAGES = {
         "name_exists": "Le nouveau nom existe déjà: {name}",
         "invalid_name": "Nom de profil invalide: {profile}",
         "profile_required_for_save": "Le profil est requis pour enregistrer le TOML",
+        "toml_empty": "Les données TOML ne peuvent pas être vides",
+        "toml_parse_error": "Erreur d'analyse TOML: {error}",
     },
     "log": {
         "fetch_failed": "Échec de la récupération des journaux: {error}",

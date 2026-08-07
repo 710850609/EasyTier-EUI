@@ -130,6 +130,8 @@ MESSAGES = {
         "name_exists": "Neuer Name existiert bereits: {name}",
         "invalid_name": "Ungültiger Profilname: {profile}",
         "profile_required_for_save": "Profil ist zum Speichern von TOML erforderlich",
+        "toml_empty": "TOML-Daten dürfen nicht leer sein",
+        "toml_parse_error": "TOML-Parsefehler: {error}",
     },
     "log": {
         "fetch_failed": "Protokolle konnten nicht abgerufen werden: {error}",

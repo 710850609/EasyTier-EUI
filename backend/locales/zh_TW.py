@@ -130,6 +130,8 @@ MESSAGES = {
         "name_exists": "新名稱已存在: {name}",
         "invalid_name": "無效的設定檔名: {profile}",
         "profile_required_for_save": "儲存TOML時profile不能為空",
+        "toml_empty": "TOML資料不能為空",
+        "toml_parse_error": "TOML解析失敗: {error}",
     },
     "log": {
         "fetch_failed": "獲取日誌失敗: {error}",

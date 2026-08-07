@@ -23,6 +23,8 @@
     "@varlet/touch-emulator": "^3.14.0",
     "@varlet/ui": "^3.3.2",
     "codemirror": "^6.0.2",
+    "html5-qrcode": "^2.3.8",
+    "qrcode": "^1.5.4",
     "markdown-it": "^14.2.0",
     "vconsole": "^3.15.1",
     "vue": "^3.5.30",
@@ -30,6 +32,7 @@
     "vue-i18n": "^9.14.0"
   },
   "devDependencies": {
+    "@vitejs/plugin-basic-ssl": "^1.2.0",
     "@vitejs/plugin-vue": "^5.2.1",
     "@vue/compiler-sfc": "^3.5.13",
     "cross-env": "^7.0.3",

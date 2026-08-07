@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import basicSsl from '@vitejs/plugin-basic-ssl'
 import { resolve } from 'path'
 import Components from 'unplugin-vue-components/vite'
 import AutoImport from 'unplugin-auto-import/vite'
@@ -17,6 +18,7 @@ export default defineConfig(({ mode }) => {
   return ({
     base: isProduction ? BASE : './',
     plugins: [
+      basicSsl(),
       vue(),
       // 自动导入 Vue 相关 API
       AutoImport({

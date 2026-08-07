@@ -887,7 +887,7 @@
 
     <!-- 创建新配置弹窗 -->
     <var-dialog v-model:show="showCreateDialog" @before-close="beforeCloseCreateDilog"
-      :confirm-button-text="$t('common.confirm')" :cancel-button-text="$t('common.cancel')">
+      @closed="onCreateDialogClosed">
       <template #title>
         <span>{{ $t('config.newConfigTitle') }}</span>
       </template>
@@ -898,12 +898,28 @@
         v-model="newConfigName"
         :rules="[v => !!v || $t('config.nameRequired')]"
       />
+      <div v-if="showQrScanner" class="qr-scanner-area">
+        <div id="qr-reader" class="qr-reader-box"></div>
+        <p class="qr-scan-hint">{{ $t('config.scanHint') }}</p>
+      </div>
+      <template #actions="{ slotClass, cancel, confirm }">
+        <div :class="slotClass" style="gap: 8px;">
+          <var-button size="small" text @click="onCreateCancel(cancel)">{{ $t('common.cancel') }}</var-button>
+          <var-button size="small" text type="primary" @click="onStartScan" :loading="isScanning">{{ $t('config.scanAdd') }}</var-button>
+          <var-button size="small" text type="primary" @click="onCreateConfirm">{{ $t('config.editAdd') }}</var-button>
+        </div>
+      </template>
     </var-dialog>
 
     <!-- 分享配置弹窗 -->
     <var-dialog v-model:show="showShareConfigType" :title="$t('config.selectShareType')"
       :confirm-button-text="$t('config.downloadFile')"  @confirm="downloadConfig" 
       :cancel-button-text="$t('config.copyClipboard')" @cancel="copyConfig">
+      <div class="share-qr-area">
+        <img v-if="shareQrDataUrl" :src="shareQrDataUrl" class="share-qr-img" alt="QR Code" />
+        <var-loading v-else size="small" />
+        <p class="share-qr-hint">{{ $t('config.shareQrHint') }}</p>
+      </div>
     </var-dialog>
 
     <!-- 删除配置弹窗 -->
@@ -953,6 +969,8 @@ import CodeEditor from '../components/CodeEditor.vue'
 import SvgIcon from '@jamescoyle/vue-icon'
 import { mdiEye, mdiEyeOff, mdiHomeEdit, mdiRouterNetwork, mdiMonitor, mdiLanConnect, mdiTuneVariant } from '@mdi/js'
 import { mdilPencil, mdilAccount, mdilLock } from '@mdi/light-js'
+import { Html5Qrcode } from 'html5-qrcode'
+import QRCode from 'qrcode'
 
 
 // 显示模式： 0 修改 1 快速新增 2 普通新增
@@ -987,6 +1005,7 @@ const onSelectFocus = (name) => {
 }
 const form = ref(null)
 const showShareConfigType = ref(false)
+const shareQrDataUrl = ref('')
 const showCodePage = ref(false)
 const isLoadingConfig = ref(false)
 const isLoadingConfigList = ref(true)
@@ -1009,6 +1028,9 @@ const configList = ref([])
 const selectedConfig = ref('')
 const showCreateDialog = ref(false)
 const showRenameDialog = ref(false)
+const showQrScanner = ref(false)
+const isScanning = ref(false)
+const html5QrCode = ref(null)
 const newConfigName = ref('')
 const editNameValue = ref('')
 const customExitNode = ref('')
@@ -1540,6 +1562,28 @@ watch(forwardOpen, (newVal) => {
   }
 })
 
+watch(showShareConfigType, async (newVal) => {
+  if (newVal) {
+    shareQrDataUrl.value = ''
+    try {
+      const resp = await api.configs.getShareConfigStr(selectedConfig.value)
+      const configStr = resp.data
+      shareQrDataUrl.value = await QRCode.toDataURL(configStr, {
+        width: 220,
+        margin: 2,
+        color: {
+          dark: '#000000',
+          light: '#ffffff'
+        }
+      })
+    } catch (err) {
+      console.error('Generate QR code failed:', err)
+    }
+  } else {
+    shareQrDataUrl.value = ''
+  }
+})
+
 const deleteCurrentConfig = async () => {
   const cfg = currentConfigData.value
   if (!cfg || !cfg.profile) return
@@ -1575,6 +1619,7 @@ const deleteCurrentConfig = async () => {
 }
 
 const beforeCloseCreateDilog = (action, done) => {
+  stopQrScanner()
   if (action === 'confirm') {
     if (confirmCreateConfig()) {
       done()
@@ -1582,6 +1627,116 @@ const beforeCloseCreateDilog = (action, done) => {
   } else {
     exitAddMode()
     done()
+  }
+}
+
+const onCreateCancel = (cancel) => {
+  stopQrScanner()
+  exitAddMode()
+  cancel()
+}
+
+const onCreateConfirm = () => {
+  stopQrScanner()
+  if (confirmCreateConfig()) {
+    showCreateDialog.value = false
+  }
+}
+
+const onCreateDialogClosed = () => {
+  stopQrScanner()
+}
+
+const onStartScan = async () => {
+  if (isScanning.value) {
+    stopQrScanner()
+    return
+  }
+  if (!newConfigName.value.trim()) {
+    toast.warning(t('config.profileNameRequired'))
+    return
+  }
+  try {
+    const devices = await Html5Qrcode.getCameras()
+    if (!devices || devices.length === 0) {
+      toast.error(t('config.cameraNotSupported'))
+      return
+    }
+    showQrScanner.value = true
+    isScanning.value = true
+    await nextTick()
+    const qrCodeScanner = new Html5Qrcode('qr-reader')
+    html5QrCode.value = qrCodeScanner
+    let cameraId = ''
+    if (devices.length >= 2) {
+      cameraId = devices[1].id
+    } else {
+      cameraId = devices[0].id
+    }
+    await qrCodeScanner.start(
+      cameraId ? { deviceId: { exact: cameraId } } : { facingMode: 'environment' },
+      {
+        fps: 10,
+        qrbox: { width: 250, height: 250 },
+      },
+      (decodedText) => {
+        onQrScanSuccess(decodedText)
+      },
+      () => {}
+    )
+  } catch (err) {
+    console.error('QR scan error:', err)
+    isScanning.value = false
+    showQrScanner.value = false
+    if (err?.name === 'NotAllowedError' || err?.name === 'PermissionDeniedError') {
+      toast.error(t('config.cameraPermissionDenied'))
+    } else if (err?.name === 'NotFoundError') {
+      toast.error(t('config.cameraNotSupported'))
+    } else {
+      toast.error(t('config.scanFailed'))
+    }
+  }
+}
+
+const onQrScanSuccess = async (decodedText) => {
+  stopQrScanner()
+  try {
+    const res = await api.configs.parseToml({ toml: decodedText })
+    const parsedData = res.data
+    if (parsedData && typeof parsedData === 'object') {
+      if (!newConfigName.value.trim()) {
+        const networkName = parsedData.network_identity?.network_name
+        if (networkName) {
+          newConfigName.value = networkName
+        }
+      }
+      if (confirmCreateConfig()) {
+        Object.assign(config.value, parsedData)
+        config.value._profile = selectedConfig.value
+        toast.success(t('config.scanSuccess'))
+        showCreateDialog.value = false
+      }
+    }
+  } catch (err) {
+    toast.error(t('config.parseTomlFailed') + ': ' + (err.message || ''))
+  }
+}
+
+const stopQrScanner = () => {
+  if (html5QrCode.value) {
+    html5QrCode.value.stop().then(() => {
+      html5QrCode.value.clear()
+      html5QrCode.value = null
+      isScanning.value = false
+      showQrScanner.value = false
+    }).catch(() => {
+      html5QrCode.value = null
+      isScanning.value = false
+      showQrScanner.value = false
+    })
+  } else {
+    isScanning.value = false
+    showQrScanner.value = false
   }
 }
 
@@ -1707,6 +1862,7 @@ const setupShowMode = async (mode) => {
 }
 
 const exitAddMode = async () => {
+  stopQrScanner()
   showMode.value = 0
   showCreateDialog.value = false
   newConfigName.value = ''
@@ -3141,6 +3297,51 @@ html.dark .port-forward-row {
   .port-forward-label {
     font-size: 11px;
   }
+}
+
+/* QR 扫描区域 */
+.qr-scanner-area {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.qr-reader-box {
+  width: 280px;
+  height: 280px;
+  border: 2px solid var(--color-border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.qr-scan-hint {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+/* 分享配置二维码 */
+.share-qr-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 0 8px 0;
+}
+
+.share-qr-img {
+  width: 220px;
+  height: 220px;
+  border: 2px solid var(--color-border);
+  border-radius: 12px;
+}
+
+.share-qr-hint {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  text-align: center;
 }
 </style>
 
