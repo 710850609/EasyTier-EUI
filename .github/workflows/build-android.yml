@@ -246,7 +246,7 @@ jobs:
       - name: Build APK  # Gradle 编译 Android APK（debug = 可调试/快速，release = 优化/正式）
         working-directory: android
         env:
-          BUILD_TYPE: ${{ inputs.build_type || 'release' }}
+          BUILD_TYPE: ${{ inputs.build_type || 'debug' }}
         run: |
           CAPITALIZED=$(echo "$BUILD_TYPE" | sed 's/^./\U&/')
           gradle "assemble${CAPITALIZED}" --no-daemon --stacktrace
@@ -254,7 +254,7 @@ jobs:
       - name: Rename APK  # 重命名为 EasyTier-EUI-android-{arch}-{version}.apk
         working-directory: android
         env:
-          BUILD_TYPE: ${{ inputs.build_type || 'release' }}
+          BUILD_TYPE: ${{ inputs.build_type || 'debug' }}
           BUILD_VER: ${{ inputs.build_version || '' }}
           APK_ARCH: ${{ matrix.arch }}
         run: |
@@ -271,5 +271,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: android-${{ matrix.arch }}
-          path: android/app/build/outputs/apk/${{ inputs.build_type || 'release' }}/*.apk
+          path: android/app/build/outputs/apk/${{ inputs.build_type || 'debug' }}/*.apk
           retention-days: 30

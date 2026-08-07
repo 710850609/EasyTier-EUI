@@ -164,15 +164,20 @@ def _acquire_instance_lock() -> bool:
                 if run_configs.is_docker():
                     is_same_instance = True
                 elif run_configs.IS_ANDROID:
-                    # Android 下，PID 在应用生命周期内不变，只需判断 PID 是否相同
                     is_same_instance = (existing_pid == os.getpid())
+                    if not is_same_instance and 'easytiereui' not in cmdline.lower():
+                        # PID 不同且 cmdline 不包含 easytiereui，说明旧进程已被 kill 且 PID 被其他进程回收
+                        logging.warning(f"PID {existing_pid} 已被其他进程回收（cmdline={cmdline}），清理旧锁文件")
+                        os.remove(pid_file)
                 else:
                     # 其他平台，检查 PID 和 cmdline
                     is_same_instance = (existing_pid == os.getpid() and 'EasyTier-EUI' in cmdline)
                 if is_same_instance:
                     logging.info(f"服务 pid 未变，继续运行： 【{existing_pid}】")
                     return True
-                return False
+                if os.path.exists(pid_file):
+                    return False
+                # pid_file 已被清理（Android PID 回收场景），继续执行创建新锁文件
             else:
                 os.remove(pid_file)
         except (ValueError, OSError):
