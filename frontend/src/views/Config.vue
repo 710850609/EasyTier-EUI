@@ -1712,6 +1712,7 @@ const onQrScanSuccess = async (decodedText) => {
         }
       }
       if (confirmCreateConfig()) {
+        parsedData.peer = (parsedData.peer || []).map(e => e.uri)
         Object.assign(config.value, parsedData)
         config.value._profile = selectedConfig.value
         toast.success(t('config.scanSuccess'))

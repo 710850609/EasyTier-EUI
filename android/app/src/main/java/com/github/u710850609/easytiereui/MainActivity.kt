@@ -210,16 +210,15 @@ class MainActivity : AppCompatActivity() {
                     override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                         val url = request?.url?.toString() ?: return false
                         val host = request.url?.host ?: return false
-                        if (host != "127.0.0.1" && host != "localhost") {
-                            val isDebug = request.url?.getQueryParameter("debug") == "true"
-                            if (isDebug) {
-                                view?.loadUrl(url)
-                                return true
-                            }
+                        val isDebug = request.url?.getQueryParameter("debug") == "true"
+                        if (host == "127.0.0.1" || host == "localhost"
+                            || host.startsWith("192.168.") || host.startsWith("10.")
+                            || isDebug) {
+                            view?.loadUrl(url)
+                        } else {
                             openInSystemBrowser(url)
-                            return true
                         }
-                        return false
+                        return true
                     }
                     override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
                         super.onPageStarted(view, url, favicon)

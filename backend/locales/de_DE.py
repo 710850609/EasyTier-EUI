@@ -124,7 +124,7 @@ MESSAGES = {
         "load_failed": "Konfiguration konnte nicht geladen werden: {error}",
         "share_success": "Konfigurationsfreigabe generiert",
         "share_failed": "Konfigurationsfreigabe fehlgeschlagen: {error}",
-        "share_comment": "Generiert aus EasyTier-Netzwerkfreigabe, erstellt am: {datetime}",
+        "share_comment": "EUI share at: {datetime}",
         "old_profile_empty": "Alter Profilname ist leer",
         "new_profile_empty": "Neuer Profilname ist leer",
         "name_exists": "Neuer Name existiert bereits: {name}",

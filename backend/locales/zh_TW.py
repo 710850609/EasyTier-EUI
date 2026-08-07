@@ -124,7 +124,7 @@ MESSAGES = {
         "load_failed": "載入設定失敗: {error}",
         "share_success": "分享設定已產生",
         "share_failed": "分享設定失敗: {error}",
-        "share_comment": "來源於組網分享網路，建立於：{datetime}",
+        "share_comment": "EUI分享於：{datetime}",
         "old_profile_empty": "舊設定名空",
         "new_profile_empty": "新設定名空",
         "name_exists": "新名稱已存在: {name}",

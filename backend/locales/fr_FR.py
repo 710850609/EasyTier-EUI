@@ -124,7 +124,7 @@ MESSAGES = {
         "load_failed": "Échec du chargement de la configuration: {error}",
         "share_success": "Partage de configuration généré",
         "share_failed": "Échec du partage de configuration: {error}",
-        "share_comment": "Généré à partir du partage réseau EasyTier, créé le: {datetime}",
+        "share_comment": "EUI share at: {datetime}",
         "old_profile_empty": "L'ancien nom de profil est vide",
         "new_profile_empty": "Le nouveau nom de profil est vide",
         "name_exists": "Le nouveau nom existe déjà: {name}",

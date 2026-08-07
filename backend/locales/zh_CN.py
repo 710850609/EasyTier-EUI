@@ -126,7 +126,7 @@ MESSAGES = {
         "load_failed": "加载配置失败: {error}",
         "share_success": "分享配置已生成",
         "share_failed": "分享配置失败: {error}",
-        "share_comment": "来源于组网分享网络，创建于：{datetime}",
+        "share_comment": "EUI分享于：{datetime}",
         "old_profile_empty": "旧配置名空",
         "new_profile_empty": "新配置名空",
         "name_exists": "新名称已存在: {name}",

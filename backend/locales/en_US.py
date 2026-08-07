@@ -126,7 +126,7 @@ MESSAGES = {
         "load_failed": "Config load failed: {error}",
         "share_success": "Config share generated",
         "share_failed": "Config share failed: {error}",
-        "share_comment": "Generated from EasyTier network share, created at: {datetime}",
+        "share_comment": "EUI share at: {datetime}",
         "old_profile_empty": "Old profile name is empty",
         "new_profile_empty": "New profile name is empty",
         "name_exists": "New name already exists: {name}",
