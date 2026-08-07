@@ -7,6 +7,7 @@ import android.net.VpnService
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.provider.Settings
 import androidx.core.content.FileProvider
 import java.io.File
 import com.chaquo.python.Python
@@ -356,6 +357,30 @@ class EasyTierManager(
             }
         }
         AppLogger.info(TAG, "setLogLevel: changed to ${AppLogger.minLevel}")
+    }
+
+    fun getDeviceName(): String {
+        try {
+            val name = Settings.Global.getString(activity.contentResolver, Settings.Global.DEVICE_NAME)
+            if (!name.isNullOrEmpty()) {
+                AppLogger.debug(TAG, "getDeviceName from Settings.Global: $name")
+                return name
+            }
+        } catch (e: Exception) {
+            AppLogger.debug(TAG, "getDeviceName from Settings.Global failed: ${e.message}")
+        }
+        try {
+            val name = Settings.System.getString(activity.contentResolver, "device_name")
+            if (!name.isNullOrEmpty()) {
+                AppLogger.debug(TAG, "getDeviceName from Settings.System: $name")
+                return name
+            }
+        } catch (e: Exception) {
+            AppLogger.debug(TAG, "getDeviceName from Settings.System failed: ${e.message}")
+        }
+        val model = Build.MODEL ?: "Unknown"
+        AppLogger.debug(TAG, "getDeviceName fallback to Build.MODEL: $model")
+        return model
     }
 
     fun installApk(filePath: String) {

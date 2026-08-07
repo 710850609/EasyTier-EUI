@@ -122,8 +122,10 @@ class FfiAdapter(IEasyTierAdapter):
                 if not hostname:
                     try:
                         from java import jclass
-                        Build = jclass("android.os.Build")
-                        doc['hostname'] = str(Build.MODEL)
+                        MainActivity = jclass(run_configs.ANDROID_MAIN_ACTIVITY)
+                        manager = MainActivity.getEasyTierManager()
+                        if manager is not None:
+                            doc['hostname'] = manager.getDeviceName()
                         rebuild_toml = True
                         logger.info(f"安卓设备名称为空，已使用设备名称替代: {doc['hostname']}")
                     except Exception as e:

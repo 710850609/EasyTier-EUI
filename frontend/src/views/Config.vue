@@ -1029,12 +1029,13 @@ const config = ref({
   routes: [],
   socks5_proxy: null,
   port_forward: [],
-  flags: { 
-    bind_device: true, 
-    multi_thread: true, 
+  flags: {
+    bind_device: true,
     enable_ipv6: true,
-    private_mode: true,
+    proxy_forward_by_system: true,
     enable_encryption: true,
+    private_mode: true,
+    multi_thread: true,
     latency_first: true,
   },
 })
@@ -1284,11 +1285,25 @@ const saveConfig = () => {
     } else {
       delete data.flags.instance_recv_bps_limit
     }
+    // 删除 flags 中 空 字段
     ['hostname', 'dev_name', 'encryption_algorithm', 'default_protocol', 'compression', 'relay_network_whitelist'].forEach(key => {
       if (config.value.flags[key] == null || config.value.flags[key].trim() === '') {
         delete data.flags[key]
       }
-    })
+    });
+    // 删除config一级属性， 空值 字段
+    ['ipv4', 'rpc_portal'].forEach(key => {
+      if (config.value[key] == null || config.value[key].trim() === '') {
+        delete data[key]
+      }
+    });
+    // 删除空数组字段
+    ['peer', 'listeners', 'proxy_network', 'exit_nodes', 'port_forward', 'routes'].forEach(key => {
+      if (data[key] == null || data[key].length === 0) {
+        delete data[key]
+      }
+    });
+
     api.configs.save(data).then(async res => {
       toast.success(t('config.saveSuccess'))
       if (fastSettingMode.value && platform.value !== 'android') {
@@ -1442,13 +1457,19 @@ const loadConfig = (profile) => {
       hostname: json.hostname ?? '',
       ipv4: json.ipv4 ?? '',
       routes: json.routes || [],
+      listeners: json.listeners || [],
+      exit_nodes: json.exit_nodes || [],
+      port_forward: json.port_forward || [],
+      peer: json.peer || [],
+      socks5_proxy: json.socks5_proxy ?? null,
       flags: {
         ...config.value.flags,
         ...json.flags,
         mtu: json.flags?.mtu ?? undefined,
-        multi_thread_count: json.flags?.multi_thread_count ?? undefined
+        multi_thread_count: json.flags?.multi_thread_count ?? undefined,
       }
     }
+
     // 将 flags 中 undefined 的字符串字段统一设为空字符串，确保 var-input/var-select 的 placeholder 正常显示
     // ;['dev_name', 'encryption_algorithm', 'default_protocol', 'compression', 'relay_network_whitelist'].forEach(key => {
     //   if (config.value.flags[key] == null) config.value.flags[key] = ''
@@ -1571,16 +1592,22 @@ const confirmCreateConfig = () => {
   }
   const name = newConfigName.value.trim()
   const profile = `${name}.toml`
+  config.value = {}
   config.value._profile = profile
-  config.value.hostname = undefined
   config.value.dhcp = true,
-  config.value.ipv4 =  '',
+  config.value.listeners = [],
+  config.value.peer = [],
+  config.value.proxy_network = [],
   config.value.network_identity = { network_name: '', network_secret: '' },
-  config.value.rpc_portal = '',
-  config.value.listeners = []
-  config.value.peer = []
-  config.value.flags = { ...config.value.flags, bind_device: true, multi_thread: true, enable_ipv6: true }
-  config.value.proxy_network = []
+  config.value.flags = {
+    bind_device: true,
+    enable_ipv6: true,
+    proxy_forward_by_system: true,
+    enable_encryption: true,
+    private_mode: true,
+    multi_thread: true,
+    latency_first: true,
+  }
   configList.value.push({ 'profile': profile, 'name': name, 'autostart': false })
   selectedConfig.value = profile
   newConfigName.value = ''
@@ -1775,7 +1802,6 @@ onMounted(async () => {
     config.value.flags.no_tun = true
   }
   api.settings.getEuiInfo().then(data => {
-    console.log(data)
     platform.value = data.data.platform
   })
   getLanIps()
