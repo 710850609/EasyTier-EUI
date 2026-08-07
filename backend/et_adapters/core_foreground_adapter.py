@@ -66,14 +66,27 @@ class CoreForegroundAdapter(IEasyTierAdapter):
         # 使用用列表传参，避免执行文件路径含空格，导致报错找不到文件
         cmd = [
             f"{self._core_path}",
-            "-c",
-            toml_path,
+        ]
+        # 根据配置模式选择启动方式
+        # 云端模式：cloud_config_server 存的是完整 URL (proto://host:port[/token])，直接喂给 --config-server
+        if info is not None and info.config_mode == 'cloud' and info.cloud_config_server:
+            secure_mode = 'true' if info.cloud_secure_mode else 'false'
+            cmd.extend([
+                "--config-server", info.cloud_config_server,
+                "--secure-mode", secure_mode,
+            ])
+        else:
+            cmd.extend([
+                "-c",
+                toml_path,
+            ])
+        cmd.extend([
             "-r",
             rpc_portal,
             f"--file-log-dir", f"{run_configs.log_dir()}",
             f"--file-log-level", f"{info.log_level or 'error'}",
             f"--file-log-size", f"50"  # 单个文件日志大小，单位 MB，默认值为 100MB
-        ]
+        ])
         logging.info(f"启动ET命令: {cmd}")
         pm = _get_process_manager(instance_name)
         pm.start(cmd)

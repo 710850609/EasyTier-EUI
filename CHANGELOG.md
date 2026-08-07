@@ -1,3 +1,14 @@
+##  1.7.1
+- 变更：云端配置输入框改为单字段「配置服务器地址」，直接填写完整 URL（如 `tcp://host:port/token`），与官方 Windows GUI 保持一致；下方列出支持的格式说明
+- 修复：启动时不再拼接 token 和 config_server，避免单字段输入下重复拼接出错
+
+<br>
+
+----
+
+- Changed: Cloud config input simplified to a single "Config Server Address" field, accepting full URL (e.g. `tcp://host:port/token`), aligned with official Windows GUI; supported formats listed below
+- Fixed: No longer concatenates token and config_server on startup, avoiding duplicate concatenation errors with single-field input
+
 ## 2.1
 - 新增：【配置】-自定义路由
 - 修复：易组网安卓版本下载、更新问题、去除不支持的开机自启配置
