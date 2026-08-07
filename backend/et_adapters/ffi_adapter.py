@@ -258,10 +258,10 @@ class FfiAdapter(IEasyTierAdapter):
 
     def get_route_info(self, instance_name: str) -> Optional[str]:
         try:
-            from locales import get_lang
+            from locales import get_last_lang
             start_time = self._start_times.get(instance_name)
             info = {
-                'i18n': get_lang(),
+                'i18n': get_last_lang(),
                 'uptime': int(time.time() - start_time) if start_time else 0,
                 'virtual_ipv4': '',
                 'dns_servers': ['223.5.5.5', '119.29.29.29', '114.114.114.114', '8.8.8.8'],

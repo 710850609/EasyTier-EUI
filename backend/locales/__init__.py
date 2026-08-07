@@ -27,6 +27,9 @@ DEFAULT_LANG = 'zh_CN'
 # 上下文变量：存储当前请求的语言，线程/协程安全
 lang_ctx: ContextVar[str] = ContextVar('current_lang', default=DEFAULT_LANG)
 
+# 记录最后一次请求的语言（用于后台线程如通知更新等场景）
+_last_lang: str = DEFAULT_LANG
+
 
 def parse_accept_language(accept_lang: str) -> str:
     """
@@ -87,22 +90,34 @@ def parse_accept_language(accept_lang: str) -> str:
 
 def set_lang(lang: str) -> None:
     """
-    设置当前请求的语言
-    
+    设置当前请求的语言，同时记录为最后一次请求语言
+
     Args:
         lang: 语言代码，如 'zh_CN', 'zh_TW', 'en_US', 'de_DE', 'fr_FR', 'ja_JP'
     """
+    global _last_lang
     lang_ctx.set(lang)
+    _last_lang = lang
 
 
 def get_lang() -> str:
     """
     获取当前请求的语言
-    
+
     Returns:
         语言代码
     """
     return lang_ctx.get()
+
+
+def get_last_lang() -> str:
+    """
+    获取最后一次请求的语言（适用于后台线程等无请求上下文的场景）
+
+    Returns:
+        语言代码
+    """
+    return _last_lang
 
 
 def get_message(key: str, lang: str = None, **kwargs: Any) -> str:
