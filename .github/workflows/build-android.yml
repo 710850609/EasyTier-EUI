@@ -56,6 +56,12 @@ jobs:
           - arch: armv7
             rust_target: armv7-linux-androideabi
             ndk_target: armeabi-v7a
+          - arch: x86
+            rust_target: i686-linux-android
+            ndk_target: x86
+          - arch: x86_64
+            rust_target: x86_64-linux-android
+            ndk_target: x86_64
     runs-on: ubuntu-latest
 
     steps:
