@@ -621,6 +621,19 @@
                             </template>
                           </var-tooltip>
                         </div>
+                        <div class="feature-item">
+                          <var-checkbox v-model="config.flags.proxy_forward_by_system">
+                            {{ $t('config.flags.proxy_forward_by_system.label') }}
+                          </var-checkbox>
+                          <var-tooltip teleport="body">
+                            <var-icon name="help-circle-outline" size="16" class="help-icon" />
+                            <template #content>
+                              <div class="tooltip-multiline">
+                                {{ $t('config.flags.proxy_forward_by_system.tooltip') }}
+                              </div>
+                            </template>
+                          </var-tooltip>
+                        </div>
                       </div>
                     </div>
                     <var-divider />
@@ -1073,7 +1086,6 @@ const hostInfoSwitches = [
   { key: 'bind_device', label: 'config.flags.bind_device.label', tooltip: 'config.flags.bind_device.tooltip' },
   { key: 'accept_dns', label: 'config.flags.accept_dns.label', tooltip: 'config.flags.accept_dns.tooltip' },
   { key: 'use_smoltcp', label: 'config.flags.use_smoltcp.label', tooltip: 'config.flags.use_smoltcp.tooltip' },
-  { key: 'proxy_forward_by_system', label: 'config.flags.proxy_forward_by_system.label', tooltip: 'config.flags.proxy_forward_by_system.tooltip' },
 ]
 
 const connectionSwitches = [
@@ -1234,7 +1246,7 @@ const ensureInt = (str) => {
   return str
 }
 
-const saveConfig = (newConfig=true) => {
+const saveConfig = () => {
   return new Promise(async (resolve, reject) => {
     const valid = await form.value.validate()
     if (!valid) {
@@ -1286,7 +1298,7 @@ const saveConfig = (newConfig=true) => {
       configList.value.push({ 'profile': selectedConfig.value, 'name': networkName, 'autostart': false })
     }
     data._profile = selectedConfig.value
-    data._new_config = newConfig
+    data._new_config = showMode.value != 0
     data.peer = data.peer.map(e => ({ uri: e }))
     data.proxy_network = data.proxy_network
       .filter(e => e.subnet_cidr && e.subnet_cidr.trim())
@@ -1311,21 +1323,21 @@ const saveConfig = (newConfig=true) => {
       delete data.flags.instance_recv_bps_limit
     }
     // 删除 flags 中 空 字段
-    ['hostname', 'dev_name', 'encryption_algorithm', 'default_protocol', 'compression', 'relay_network_whitelist'].forEach(key => {
+    ['dev_name', 'encryption_algorithm', 'default_protocol', 'compression', 'relay_network_whitelist'].forEach(key => {
       if (config.value.flags[key] == null || config.value.flags[key].trim() === '') {
-        delete data.flags[key]
+        data.flags[key] = null
       }
     });
     // 删除config一级属性， 空值 字段
-    ['ipv4', 'rpc_portal'].forEach(key => {
+    ['hostname', 'ipv4', 'rpc_portal'].forEach(key => {
       if (config.value[key] == null || config.value[key].trim() === '') {
-        delete data[key]
+        data[key] = null
       }
     });
     // 删除空数组字段
     ['peer', 'listeners', 'proxy_network', 'exit_nodes', 'port_forward', 'routes'].forEach(key => {
       if (data[key] == null || data[key].length === 0) {
-        delete data[key]
+        data[key] = null
       }
     });
 
@@ -1727,7 +1739,7 @@ const processTomlConfig = async (tomlText) => {
         toast.success(t('config.scanSuccess'))
         showCreateDialog.value = false
         await nextTick()
-        await saveConfig(true)
+        await saveConfig()
       }
     }
   } catch (err) {
@@ -1897,9 +1909,9 @@ const exitAddMode = async (showProfile) => {
   showCreateDialog.value = false
   newConfigName.value = ''
   await loadConfigs()
-  await loadConfig(selectedConfig.value)
   selectedConfig.value = showProfile || selectedConfig.value
   // selectedConfig.value = showProfile || configList.value?.[0]?.profile || ''
+  await loadConfig(selectedConfig.value)
 }
 
 const getLanIps = () => {

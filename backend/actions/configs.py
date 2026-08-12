@@ -222,11 +222,12 @@ def parse_toml(data, *args, **kwargs):
 def __deep_merge(base, override):
     """深度合并两个字典，override 中的值会覆盖 base 中的值"""
     for key, value in override.items():
-        # 跳过 null 值，不写入 TOML
         if value is None:
             base.pop(key, None)
             continue
-        if key in base and isinstance(base[key], dict) and isinstance(value, dict):
+        if isinstance(value, dict):
+            if key not in base or not isinstance(base[key], dict):
+                base[key] = tomlkit.table()
             __deep_merge(base[key], value)
         else:
             base[key] = value

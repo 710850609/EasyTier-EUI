@@ -297,7 +297,7 @@ export default {
     configCreated: '配置已创建',
     configCreateFailed: '配置创建失败',
     profileName: '配置名称',
-    profileNameHint: '请输入配置名称',
+    profileNameHint: '请输入配置名称（编辑必填）',
     confirmDeleteDesc: '删除后无法恢复',
     confirm: '确认',
     cancel: '取消',

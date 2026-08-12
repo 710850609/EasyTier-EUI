@@ -215,7 +215,7 @@ export default {
     configCreated: 'Konfiguration erstellt',
     configCreateFailed: 'Erstellen fehlgeschlagen',
     profileName: 'Profilname',
-    profileNameHint: 'Profilname eingeben',
+    profileNameHint: 'Profilname eingeben (für Bearbeitung erforderlich)',
     confirmDeleteDesc: 'Diese Aktion kann nicht rückgängig gemacht werden',
     confirm: 'Bestätigen',
     cancel: 'Abbrechen',

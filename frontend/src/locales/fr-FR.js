@@ -215,7 +215,7 @@ export default {
     configCreated: 'Configuration créée',
     configCreateFailed: 'Échec création',
     profileName: 'Nom du profil',
-    profileNameHint: 'Saisir le nom du profil',
+    profileNameHint: 'Saisir le nom du profil (requis pour modifier)',
     confirmDeleteDesc: 'Cette action est irréversible',
     confirm: 'Confirmer',
     cancel: 'Annuler',

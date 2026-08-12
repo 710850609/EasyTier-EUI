@@ -297,7 +297,7 @@ export default {
     configCreated: '設定已建立',
     configCreateFailed: '設定建立失敗',
     profileName: '設定名稱',
-    profileNameHint: '請輸入設定名稱',
+    profileNameHint: '請輸入設定名稱（編輯必填）',
     confirmDeleteDesc: '刪除後無法復原',
     confirm: '確認',
     cancel: '取消',

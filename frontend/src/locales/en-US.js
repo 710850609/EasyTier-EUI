@@ -297,7 +297,7 @@ export default {
     configCreated: 'Config created',
     configCreateFailed: 'Failed to create config',
     profileName: 'Profile Name',
-    profileNameHint: 'Enter profile name',
+    profileNameHint: 'Enter profile name (required for edit)',
     confirmDeleteDesc: 'This action cannot be undone',
     confirm: 'Confirm',
     cancel: 'Cancel',
