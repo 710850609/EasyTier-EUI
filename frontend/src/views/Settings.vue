@@ -328,6 +328,9 @@
             <img :alt="$t('settings.about.starsLabel')" :src="starsBadgeUrl">
           </a>
           <var-chip elevation="1" @click="showRewardCdoe = true" type="info" size="small">{{ $t('settings.about.reward') }}</var-chip>
+          <a href="https://github.com/710850609/EasyTier-EUI/issues" target="_blank" style="text-decoration: none;">
+            <var-chip elevation="1" type="primary" size="small">{{ $t('settings.about.feedback') }}</var-chip>
+          </a>
         </div>
       </div>
       

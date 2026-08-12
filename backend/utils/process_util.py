@@ -137,7 +137,7 @@ class ProcessManager:
             else:
                 # Linux/macOS: 使用 bash -c
                 # 改用 sh 命令 兼容 alpine Linux 无 bash 环境
-                bash_cmd = ["sh", "-c", " ".join(shlex.quote(x) for x in start_cmd)]
+                bash_cmd = ["sh", "-c", "exec " + " ".join(shlex.quote(x) for x in start_cmd)]
                 process = subprocess.Popen(
                     # ["bash", "-c", *start_cmd],
                     bash_cmd,

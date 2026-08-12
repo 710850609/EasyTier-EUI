@@ -74,6 +74,7 @@ export default {
       description3: 'Gratuit, appareils illimités, multi-plateforme',
       reward: 'Soutenir',
       rewardDesc: 'Star sur GitHub ou don WeChat, merci !',
+      feedback: 'Retour',
       starsLabel: 'Star',
       downloadCount: 'Téléchargements GitHub',
       downloadCountAlt: 'Téléchargements',

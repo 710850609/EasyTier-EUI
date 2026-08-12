@@ -131,6 +131,7 @@ export default {
       description3: '享受 EasyTier 免費、不限裝置數量、支援多類型終端等優勢',
       reward: '讚賞',
       rewardDesc: '點Stars或是微信讚賞 感謝你的肯定',
+      feedback: '回饋',
       starsLabel: '點 Stars',
       downloadCount: 'GitHub下載量',
       downloadCountAlt: '下載量',

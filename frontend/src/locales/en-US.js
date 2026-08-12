@@ -131,6 +131,7 @@ export default {
       description3: 'Enjoy advantages like free, unlimited devices, multi-platform support, etc.',
       reward: 'Donate',
       rewardDesc: 'Star on GitHub or donate via WeChat, thank you!',
+      feedback: 'Feedback',
       starsLabel: 'Star',
       downloadCount: 'GitHub Downloads',
       downloadCountAlt: 'Downloads',

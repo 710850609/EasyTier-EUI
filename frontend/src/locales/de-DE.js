@@ -74,6 +74,7 @@ export default {
       description3: 'Kostenlos, unbegrenzte Geräte, Multi-Plattform-Unterstützung',
       reward: 'Spenden',
       rewardDesc: 'Star auf GitHub oder per WeChat spenden, danke!',
+      feedback: 'Feedback',
       starsLabel: 'Star',
       downloadCount: 'GitHub Downloads',
       downloadCountAlt: 'Downloads',

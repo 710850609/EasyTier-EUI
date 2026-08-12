@@ -42,15 +42,20 @@ body:
       description: 您遇到的问题发生在哪个平台上？
       options:
         - Windows (x86_64)
+        - Android (aarch64)
+        - Android (armv7)
         - Linux (x86_64)
         - Linux (aarch64)
         - Linux (riscv64)
+        - Linux musl (x86_64)
+        - Linux musl (aarch64)
+        - Linux musl (riscv64)
         - MacOS (Intel)
-        - MacOS (arm64)
+        - MacOS (aarch64)
         - FnOS (x86_64)
         - FnOS (aarch64)
-        - FnOS 残血版 (x86_64)
-        - FnOS 残血版 (aarch64)
+        - FnOS 用户版 (x86_64)
+        - FnOS 用户版 (aarch64)
         - 其他
     validations:
       required: true

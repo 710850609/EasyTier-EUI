@@ -7,7 +7,10 @@
 - 修复：安卓后台被杀，小概率无法直接进入app
 ----
 - 新增：【配置】支持从剪贴板添加配置
+- 新增：【设置】增加GitHub反馈入口
 - 优化：【配置】扫码新增时，支持不填写配置名称，识别成功后立即保存
+- 修复：飞牛版本、Linux版本（非开机自启模式）、MacOS版本（非开机自启模式）下，关闭组网后，组网进程未被完全终止 ([issues #5](https://github.com/710850609/EasyTier-EUI/issues/5))
+
 <br>
 
 ----
@@ -18,6 +21,11 @@
 - Improved: [Peers] Display current device name on Android
 - Improved: Android notification adapts to Chinese/English display, added VPN uptime display
 - Fixed: Rare issue where Android app couldn't be opened directly after being killed in background
+----
+- Added: [Config] Support adding configuration from clipboard
+- Added: [Settings] Add GitHub feedback entry
+- Improved: [Config] QR scan add now supports saving without entering a config name, saves immediately after recognition
+- Fixed: On FNOS, Linux (non-autostart mode), and macOS (non-autostart mode), the networking process was not fully terminated after stopping the network (https://github.com/710850609/EasyTier-EUI/issues/5)
 
 ## 2.1
 - 新增：【配置】-自定义路由
