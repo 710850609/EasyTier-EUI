@@ -87,10 +87,14 @@ export const copyToClipboard = async (text) => {
 
 /**
  * 从剪贴板读取文本
+ * Android WebView 中 navigator.clipboard 不可用，需通过原生桥接
  * @returns {Promise<string>} - 剪贴板文本内容
  * @throws {Error} - 读取失败时抛出异常
  */
 export const readFromClipboard = async () => {
+  if (window.AndroidBridge && window.AndroidBridge.readClipboard) {
+    return await window.AndroidBridge.readClipboard()
+  }
   if (navigator.clipboard && window.isSecureContext) {
     return await navigator.clipboard.readText()
   }

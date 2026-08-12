@@ -5,6 +5,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.DownloadManager
 import android.content.Context
+import android.content.ClipboardManager
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.res.Configuration
@@ -612,6 +613,17 @@ class MainActivity : AppCompatActivity() {
             runOnUiThread {
                 easyTierManager?.installApk(filePath)
             }
+        }
+
+        @JavascriptInterface
+        fun readClipboard(): String {
+            AppLogger.debug(TAG, "AndroidBridge.readClipboard")
+            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            val clip = clipboard.primaryClip
+            if (clip != null && clip.itemCount > 0) {
+                return clip.getItemAt(0).text?.toString() ?: ""
+            }
+            return ""
         }
     }
 }
