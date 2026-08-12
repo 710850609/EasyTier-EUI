@@ -41,6 +41,10 @@ body:
       label: 操作系统
       description: 您遇到的问题发生在哪个平台上？
       options:
+        - FnOS (x86_64)
+        - FnOS (aarch64)
+        - FnOS 用户版 (x86_64)
+        - FnOS 用户版 (aarch64)
         - Windows (x86_64)
         - Android (aarch64)
         - Android (armv7)
@@ -52,10 +56,9 @@ body:
         - Linux musl (riscv64)
         - MacOS (Intel)
         - MacOS (aarch64)
-        - FnOS (x86_64)
-        - FnOS (aarch64)
-        - FnOS 用户版 (x86_64)
-        - FnOS 用户版 (aarch64)
+        - Docker (x86_64)
+        - Docker (aarch64)
+        - Docker (riscv64)
         - 其他
     validations:
       required: true
