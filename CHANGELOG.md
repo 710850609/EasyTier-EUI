@@ -8,6 +8,7 @@
 ----
 - 新增：【配置】支持从剪贴板添加配置
 - 新增：【设置】增加GitHub反馈入口
+- 新增：【应用】-Android 支持x86_64和x86架构
 - 优化：【配置】扫码新增时，支持不填写配置名称，识别成功后立即保存
 - 修复：【配置】保存配置时，界面设置没覆盖到配置已有配置项
 - 修复：飞牛版本、Linux版本（非开机自启模式）、MacOS版本（非开机自启模式）下，关闭组网后，组网进程未被完全终止 ([issues #5](https://github.com/710850609/EasyTier-EUI/issues/5))
@@ -25,6 +26,7 @@
 ----
 - Added: [Config] Support adding configuration from clipboard
 - Added: [Settings] Add GitHub feedback entry
+- Added: [App] Android now supports x86_64 and x86 architectures
 - Improved: [Config] QR scan add now supports saving without entering a config name, saves immediately after recognition
 - Fixed: [Config] UI settings were not overriding existing config items when saving configuration
 - Fixed: On FNOS, Linux (non-autostart mode), and macOS (non-autostart mode), the networking process was not fully terminated after stopping the network (https://github.com/710850609/EasyTier-EUI/issues/5)

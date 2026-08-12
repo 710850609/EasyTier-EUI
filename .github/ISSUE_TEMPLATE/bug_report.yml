@@ -48,6 +48,8 @@ body:
         - Windows (x86_64)
         - Android (aarch64)
         - Android (armv7)
+        - Android (x86_64)
+        - Android (x86)
         - Linux (x86_64)
         - Linux (aarch64)
         - Linux (riscv64)

@@ -53,6 +53,30 @@
             </var-button>
           </div>
         </var-paper>
+        <var-paper class="download-item" :elevation="3">
+          <div class="item-header">
+            <var-icon name="package" size="24" />
+            <span class="item-title">x86_64</span>
+          </div>
+          <div class="item-actions">
+            <var-button type="primary" size="normal" @click="downloadEui('x86_64')" :loading="downloadingKey === 'android-x86_64'" auto-loading>
+              <var-icon name="download"/>
+              {{ $t('software.stable') }}
+            </var-button>
+          </div>
+        </var-paper>
+        <var-paper class="download-item" :elevation="3">
+          <div class="item-header">
+            <var-icon name="package" size="24" />
+            <span class="item-title">x86</span>
+          </div>
+          <div class="item-actions">
+            <var-button type="primary" size="normal" @click="downloadEui('x86')" :loading="downloadingKey === 'android-x86'" auto-loading>
+              <var-icon name="download"/>
+              {{ $t('software.stable') }}
+            </var-button>
+          </div>
+        </var-paper>
       </div>
       <div v-if="progress" class="download-progress">
         <var-progress :value="progress.current_progress" :track="true" />
