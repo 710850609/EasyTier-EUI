@@ -1,6 +1,6 @@
 /**
  * 剪贴板工具函数
- * 支持复制文本到剪贴板，兼容 HTTP/HTTPS 环境
+ * 支持读写剪贴板，兼容 HTTP/HTTPS 环境
  */
 
 /**
@@ -30,6 +30,40 @@ const fallbackCopy = (text) => {
 }
 
 /**
+ * 降级读取方案（通过粘贴事件读取剪贴板）
+ * @returns {Promise<string>} - 剪贴板文本内容
+ */
+const fallbackRead = () => {
+  return new Promise((resolve, reject) => {
+    const textarea = document.createElement('textarea')
+    textarea.style.position = 'fixed'
+    textarea.style.left = '-9999px'
+    textarea.style.top = '0'
+    textarea.setAttribute('readonly', '')
+    document.body.appendChild(textarea)
+    textarea.focus()
+
+    const onPaste = (e) => {
+      const text = e.clipboardData?.getData('text') || ''
+      cleanup()
+      resolve(text)
+    }
+    const onTimeout = () => {
+      cleanup()
+      reject(new Error('Clipboard read timeout'))
+    }
+    const cleanup = () => {
+      textarea.removeEventListener('paste', onPaste)
+      clearTimeout(timeout)
+      document.body.removeChild(textarea)
+    }
+
+    textarea.addEventListener('paste', onPaste)
+    const timeout = setTimeout(onTimeout, 10000)
+  })
+}
+
+/**
  * 复制文本到剪贴板
  * @param {string} text - 要复制的文本
  * @returns {Promise<boolean>} - 是否复制成功
@@ -51,7 +85,20 @@ export const copyToClipboard = async (text) => {
   return fallbackCopy(text)
 }
 
+/**
+ * 从剪贴板读取文本
+ * @returns {Promise<string>} - 剪贴板文本内容
+ * @throws {Error} - 读取失败时抛出异常
+ */
+export const readFromClipboard = async () => {
+  if (navigator.clipboard && window.isSecureContext) {
+    return await navigator.clipboard.readText()
+  }
+  return await fallbackRead()
+}
+
 
 export default {
-  copyToClipboard
+  copyToClipboard,
+  readFromClipboard
 }

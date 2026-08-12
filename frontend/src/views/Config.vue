@@ -81,7 +81,7 @@
           <div class="toolbar-group toolbar-status" v-if="selectedConfig">
             <div class="toolbar-toggles">
               <div class="toggle-item">
-                <var-button size="small" type="danger" @click="exitAddMode" :loading="isDeletingConfig" v-if="showMode !== 0">{{ $t('config.exitAdd') }}</var-button>
+                <var-button size="small" type="danger" @click="exitAddMode()" :loading="isDeletingConfig" v-if="showMode !== 0">{{ $t('config.exitAdd') }}</var-button>
                 <var-button type="primary" size="small" @click="saveConfig" auto-loading>{{ $t('config.saveConfig') }}</var-button>
                 <var-button type="primary" size="small" @click="openCodePage" auto-loading v-if="showMode === 0">{{ $t('config.editFile') }}</var-button>
               </div>
@@ -120,7 +120,7 @@
                 </label>
               </label>
               <span class="toggle-label" v-if="showMode === 0 && platform !== 'android'">{{ $t('config.autostart') }}</span>
-              <var-button variant="outlined" size="small" type="danger" @click="exitAddMode" :loading="isDeletingConfig" v-if="showMode !== 0">
+              <var-button variant="outlined" size="small" type="danger" @click="exitAddMode()" :loading="isDeletingConfig" v-if="showMode !== 0">
                 <var-icon name="close" :size="16" />
                 {{ $t('config.exitAdd') }}
               </var-button>
@@ -887,7 +887,7 @@
 
     <!-- 创建新配置弹窗 -->
     <var-dialog v-model:show="showCreateDialog" @before-close="beforeCloseCreateDilog"
-      @closed="onCreateDialogClosed" width="320px">
+      @closed="onCreateDialogClosed" width="340px">
       <template #title>
         <span>{{ $t('config.newConfigTitle') }}</span>
       </template>
@@ -905,6 +905,7 @@
       <template #actions="{ slotClass, cancel, confirm }">
         <div :class="slotClass" style="gap: 8px;">
           <var-button size="small" text @click="onCreateCancel(cancel)">{{ $t('common.cancel') }}</var-button>
+          <var-button size="small" text type="primary" @click="onClipboardAdd">{{ $t('config.clipboardAdd') }}</var-button>
           <var-button size="small" text type="primary" @click="onStartScan" :loading="isScanning">{{ $t('config.scanAdd') }}</var-button>
           <var-button size="small" text type="primary" @click="onCreateConfirm">{{ $t('config.editAdd') }}</var-button>
         </div>
@@ -959,7 +960,7 @@
 </template>
 
 <script setup>
-import { copyToClipboard } from '../utils/clipboard.js'
+import { copyToClipboard, readFromClipboard } from '../utils/clipboard.js'
 import { openDownloadUrl } from '../utils/download.js'
 import { validateIP, validateIPPort } from '../utils/validate.js'
 import { ref, computed, inject, onMounted, nextTick, watch } from 'vue'
@@ -1233,7 +1234,7 @@ const ensureInt = (str) => {
   return str
 }
 
-const saveConfig = () => {
+const saveConfig = (newConfig=true) => {
   return new Promise(async (resolve, reject) => {
     const valid = await form.value.validate()
     if (!valid) {
@@ -1285,6 +1286,7 @@ const saveConfig = () => {
       configList.value.push({ 'profile': selectedConfig.value, 'name': networkName, 'autostart': false })
     }
     data._profile = selectedConfig.value
+    data._new_config = newConfig
     data.peer = data.peer.map(e => ({ uri: e }))
     data.proxy_network = data.proxy_network
       .filter(e => e.subnet_cidr && e.subnet_cidr.trim())
@@ -1346,7 +1348,7 @@ const saveConfig = () => {
         fastSettingMode.value = false
       }
       if (showMode.value != 0) {
-        exitAddMode()
+        exitAddMode(res.data.profile)
       }
     }).catch(e => {
       toast.error(t('config.saveFailed', { error: e.message }))
@@ -1354,6 +1356,9 @@ const saveConfig = () => {
     }).finally(() => {
       resolve()
     })
+  }).catch(e => {
+    console.error('保存配置失败:', e.message)
+    reject(e)
   })
 }
 
@@ -1507,6 +1512,7 @@ const loadConfigs = async () => {
     if (res && res.data) {
       await nextTick()
       configList.value = res.data
+      console.log("configList.value:", configList.value)
     } else {
       configList.value = []
     }
@@ -1656,10 +1662,6 @@ const onStartScan = async () => {
     stopQrScanner()
     return
   }
-  if (!newConfigName.value.trim()) {
-    toast.warning(t('config.profileNameRequired'))
-    return
-  }
   try {
     const devices = await Html5Qrcode.getCameras()
     if (!devices || devices.length === 0) {
@@ -1706,16 +1708,17 @@ const onStartScan = async () => {
   }
 }
 
-const onQrScanSuccess = async (decodedText) => {
-  stopQrScanner()
+const processTomlConfig = async (tomlText) => {
   try {
-    const res = await api.configs.parseToml({ toml: decodedText })
+    const res = await api.configs.parseToml({ toml: tomlText })
     const parsedData = res.data
     if (parsedData && typeof parsedData === 'object') {
       if (!newConfigName.value.trim()) {
         const networkName = parsedData.network_identity?.network_name
         if (networkName) {
           newConfigName.value = networkName
+        } else {
+          newConfigName.value = t('config.scanConfig')
         }
       }
       if (confirmCreateConfig()) {
@@ -1723,10 +1726,34 @@ const onQrScanSuccess = async (decodedText) => {
         config.value._profile = selectedConfig.value
         toast.success(t('config.scanSuccess'))
         showCreateDialog.value = false
+        await nextTick()
+        await saveConfig(true)
       }
     }
   } catch (err) {
     toast.error(t('config.parseTomlFailed') + ': ' + (err.message || ''))
+  }
+}
+
+const onQrScanSuccess = async (decodedText) => {
+  stopQrScanner()
+  await processTomlConfig(decodedText)
+}
+
+const onClipboardAdd = async () => {
+  try {
+    const text = await readFromClipboard()
+    if (!text || !text.trim()) {
+      toast.warning(t('config.clipboardEmpty'))
+      return
+    }
+    await processTomlConfig(text.trim())
+  } catch (err) {
+    if (err?.name === 'NotAllowedError') {
+      toast.error(t('config.clipboardPermissionDenied'))
+    } else {
+      toast.error(t('config.clipboardReadFailed'))
+    }
   }
 }
 
@@ -1749,7 +1776,7 @@ const confirmCreateConfig = () => {
     return false
   }
   const name = newConfigName.value.trim()
-  const profile = `${name}.toml`
+  const profile = name ? `${name}.toml` : ''
   config.value = {}
   config.value._profile = profile
   config.value.dhcp = true,
@@ -1864,13 +1891,15 @@ const setupShowMode = async (mode) => {
   })
 }
 
-const exitAddMode = async () => {
+const exitAddMode = async (showProfile) => {
   stopQrScanner()
   showMode.value = 0
   showCreateDialog.value = false
   newConfigName.value = ''
   await loadConfigs()
-  selectedConfig.value = configList.value?.[0]?.profile || ''
+  await loadConfig(selectedConfig.value)
+  selectedConfig.value = showProfile || selectedConfig.value
+  // selectedConfig.value = showProfile || configList.value?.[0]?.profile || ''
 }
 
 const getLanIps = () => {
@@ -3311,7 +3340,7 @@ html.dark .port-forward-row {
 }
 
 .qr-reader-box {
-  width: 280px;
+  width: 300px;
   border: 2px solid var(--color-border);
   border-radius: 12px;
   overflow: hidden;

@@ -96,8 +96,19 @@ def rename(params, *args, **kwargs):
 def save(data, *args, **kwargs):
     profile = data.pop('_profile', None) if data else None
     profile = Validator.check_profile(profile, check_exists=False)
+    new_config = data.pop('_new_config', True) if data else True
     et_config_file = run_configs.et_config_file(profile)
     path_config_file = Path(et_config_file)
+    if new_config:
+        try_count = 0
+        profile_name = profile.replace('.toml', '')
+        while path_config_file.exists():
+            try_count += 1
+            profile = f"{profile_name}-{try_count}.toml"
+            et_config_file = run_configs.et_config_file(profile)
+            path_config_file = Path(et_config_file)
+            logger.info(f"存在同名配置，尝试使用配置名称: {et_config_file}")
+
     if not path_config_file.exists():
         path_config_file.parent.mkdir(parents=True, exist_ok=True)
         path_config_file.touch()
@@ -112,6 +123,8 @@ def save(data, *args, **kwargs):
         f.write(tomlkit.dumps(doc))
     #
     et_run_info.save(profile, None, None, None)
+    logger.info(f"save profile: {profile}")
+    return {'profile': profile}
 
 
 def save_toml(data: str, *args, **kwargs):
@@ -181,12 +194,12 @@ def copy(profile:str):
         doc = tomlkit.parse(f.read())
 
     share_doc = document()
-    share_doc.add(comment(get_message('config.share_comment', datetime=datetime.now().strftime('%Y-%m-%d %H:%M:%S'))))
+    # share_doc.add(comment(get_message('config.share_comment', datetime=datetime.now().strftime('%Y-%m-%d %H:%M:%S'))))
     # 仅拷贝必要的配置项
     share_doc["ipv4"] = ""
     share_doc["dhcp"] = True
-    share_doc["network_identity"] = doc.get("network_identity", {})
-    share_doc["peer"] = doc.get("peer", [])
+    share_doc["network_identity"] = doc.get("network_identity") or {}
+    share_doc["peer"] = doc.get("peer") or []
 
 
     with open(tmp_file, "w", encoding="utf-8") as f:
