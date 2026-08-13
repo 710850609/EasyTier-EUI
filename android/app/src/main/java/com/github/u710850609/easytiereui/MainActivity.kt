@@ -380,10 +380,25 @@ class MainActivity : AppCompatActivity() {
 
         try {
             AppLogger.info(TAG, "Pre-loading libeasytier_ffi.so...")
-            System.loadLibrary("easytier_ffi")
+            val updatedSo = File(filesDir, "libs/libeasytier_ffi.so")
+            if (updatedSo.exists() && updatedSo.length() > 0L) {
+                updatedSo.setReadOnly()
+                AppLogger.info(TAG, "Loading updated FFI: ${updatedSo.absolutePath}")
+                System.load(updatedSo.absolutePath)
+            } else {
+                AppLogger.info(TAG, "Loading bundled FFI: System.loadLibrary(\"easytier_ffi\")")
+                System.loadLibrary("easytier_ffi")
+            }
             AppLogger.info(TAG, "libeasytier_ffi.so pre-loaded for Python ctypes")
         } catch (e: UnsatisfiedLinkError) {
-            AppLogger.warn(TAG, "libeasytier_ffi.so not found: ${e.message}")
+            AppLogger.warn(TAG, "libeasytier_ffi.so load failed: ${e.message}")
+            try {
+                AppLogger.info(TAG, "Falling back to bundled FFI...")
+                System.loadLibrary("easytier_ffi")
+                AppLogger.info(TAG, "Bundled FFI loaded successfully")
+            } catch (e2: UnsatisfiedLinkError) {
+                AppLogger.error(TAG, "Bundled FFI also failed: ${e2.message}")
+            }
         } catch (e: Exception) {
             AppLogger.warn(TAG, "libeasytier_ffi.so load failed: ${e.message}")
         }

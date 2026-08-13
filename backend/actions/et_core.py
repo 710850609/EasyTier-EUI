@@ -114,11 +114,35 @@ def version_changelog(params: dict, *args, **kwargs):
 
 def install(data, *args, **kwargs):
     if run_configs.IS_ANDROID:
-        raise HttpException(get_message('download.not_supported_android'))
+        ffi_version = data.get('version', '')
+        if not ffi_version:
+            raise HttpException(get_message('download.id_required', param='version'))
+        ffi_url = data.get('url', '')
+        if not ffi_url:
+            raise HttpException(get_message('download.id_required', param='url'))
+        ffi_arch = __get_arch()
+        ffi_filename = 'libeasytier_ffi.so'
+
+        ffi_dir = os.path.join(os.environ['ANDROID_DATA_DIR'], 'libs')
+        os.makedirs(ffi_dir, exist_ok=True)
+        ffi_path = os.path.join(ffi_dir, ffi_filename)
+        tmp_path = ffi_path + '.tmp'
+        logger.info(f"FFI 下载地址: {ffi_url}")
+        logger.info(f"FFI 保存路径: {ffi_path}")
+        github_util.download_release_file(ffi_url, tmp_path, desc='easytier-ffi')
+        if os.path.getsize(tmp_path) == 0:
+            os.remove(tmp_path)
+            raise HttpException(get_message('download.download_failed'))
+        if os.path.exists(ffi_path):
+            os.remove(ffi_path)
+        os.rename(tmp_path, ffi_path)
+        os.chmod(ffi_path, 0o555)
+        logger.info(f'FFI {ffi_version} 安装成功，重启后生效')
+        return {'success': True, 'message': 'ffi_installed', 'ffi_version': ffi_version}
+
     et_version = data['version']
     if not et_version:
         raise HttpException(get_message('download.id_required', param='version'))
-
     arch = __get_arch()
     platform = 'linux' if sys.platform == 'linux' else ('windows' if sys.platform == 'win32' else 'macos')
     url = f"https://github.com/easyTier/easytier/releases/download/{et_version}/easytier-{platform}-{arch}-{et_version}.zip"

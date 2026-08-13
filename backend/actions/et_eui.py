@@ -350,6 +350,7 @@ def __get_download_url(is_release: bool) -> tuple[str, str, str]:
     arch_map = {
         "x86_64": "x86_64",
         "amd64": "x86_64",
+        "i686": "x86",
         "aarch64": "aarch64",
         "arm64": "aarch64",
         "riscv64": "riscv64",
