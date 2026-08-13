@@ -6,6 +6,8 @@ import os
 import platform
 import shutil
 import sys
+import tarfile
+import tempfile
 import time
 import zipfile
 from pathlib import Path
@@ -186,21 +188,42 @@ def __install_et_core(et_version, arch, sys_platform):
         services.start({'profile': profile})
 
 def __install_android(et_version, arch):
-    # 安卓需要使用ffi模式调用et
-    ffi_filename = ffi_adapter.get_ffi_lib_name()
-    ffi_dir = run_configs.core_dir()
-    os.makedirs(ffi_dir, exist_ok=True)
-    ffi_path = os.path.join(ffi_dir, ffi_filename)
-    tmp_path = ffi_path + '.tmp'
     ffi_url = f"https://github.com/710850609/easytier-ffi/releases/download/{et_version}/easytier-ffi-android-{arch}-{et_version}.tar.gz"
     logger.info(f"FFI 下载地址: {ffi_url}")
-    logger.info(f"FFI 保存路径: {ffi_path}")
-    github_util.download_release_file(ffi_url, tmp_path)
-    if os.path.getsize(tmp_path) == 0:
-        os.remove(tmp_path)
+    download_file = os.path.join(run_configs.data_dir(), "download", f"easytier-ffi-android.tar.gz")
+    if os.path.exists(download_file):
+        os.remove(download_file)
+    github_util.download_release_file(ffi_url, download_file)
+    if os.path.getsize(download_file) == 0:
+        os.remove(download_file)
         raise HttpException(get_message('download.download_failed'))
-    if os.path.exists(ffi_path):
-        os.remove(ffi_path)
-    os.rename(tmp_path, ffi_path)
-    os.chmod(ffi_path, 0o555)
-    logger.info(f'FFI {et_version} 安装成功，重启后生效')
+
+    ffi_lib_name = ffi_adapter.get_ffi_lib_name()
+    ffi_dir = run_configs.core_dir()
+    os.makedirs(ffi_dir, exist_ok=True)
+    ffi_path = os.path.join(ffi_dir, ffi_lib_name)
+    logger.info(f"FFI 保存路径: {ffi_path}")
+
+    extract_dir = tempfile.mkdtemp(prefix="ffi_extract_")
+    try:
+        with tarfile.open(download_file, "r:gz") as tar:
+            tar.extractall(extract_dir)
+        extracted_so = None
+        for root, dirs, files in os.walk(extract_dir):
+            for f in files:
+                if f == ffi_lib_name:
+                    extracted_so = os.path.join(root, f)
+                    break
+            if extracted_so:
+                break
+        if not extracted_so:
+            raise HttpException(f"FFI .tar.gz 中未找到 {ffi_lib_name}")
+        logger.info(f"解压完成，找到: {extracted_so}")
+        if os.path.exists(ffi_path):
+            os.remove(ffi_path)
+        shutil.copy2(extracted_so, ffi_path)
+        os.chmod(ffi_path, 0o555)
+        logger.info(f'FFI {et_version} 安装成功，重启后生效')
+    finally:
+        shutil.rmtree(extract_dir, ignore_errors=True)
+        os.remove(download_file)
