@@ -9,6 +9,7 @@ import sys
 import time
 import zipfile
 from pathlib import Path
+import requests
 import utils.github_util as github_util
 from actions import services
 from et_adapters import get_facade
@@ -114,13 +115,13 @@ def version_changelog(params: dict, *args, **kwargs):
 
 def install(data, *args, **kwargs):
     if run_configs.IS_ANDROID:
-        ffi_version = data.get('version', '')
-        if not ffi_version:
-            raise HttpException(get_message('download.id_required', param='version'))
-        ffi_url = data.get('url', '')
+        # ffi_version = data.get('version', '')
+        # if not ffi_version:
+        #     raise HttpException(get_message('download.id_required', param='version'))
+        ffi_url = data.get('url', 'http://192.168.220.12:18080/')
         if not ffi_url:
             raise HttpException(get_message('download.id_required', param='url'))
-        ffi_arch = __get_arch()
+        # ffi_arch = __get_arch()
         ffi_filename = 'libeasytier_ffi.so'
 
         ffi_dir = os.path.join(os.environ['ANDROID_DATA_DIR'], 'libs')
@@ -129,7 +130,11 @@ def install(data, *args, **kwargs):
         tmp_path = ffi_path + '.tmp'
         logger.info(f"FFI 下载地址: {ffi_url}")
         logger.info(f"FFI 保存路径: {ffi_path}")
-        github_util.download_release_file(ffi_url, tmp_path, desc='easytier-ffi')
+        resp = requests.get(ffi_url, stream=True, timeout=300)
+        resp.raise_for_status()
+        with open(tmp_path, 'wb') as f:
+            for chunk in resp.iter_content(chunk_size=8192):
+                f.write(chunk)
         if os.path.getsize(tmp_path) == 0:
             os.remove(tmp_path)
             raise HttpException(get_message('download.download_failed'))
