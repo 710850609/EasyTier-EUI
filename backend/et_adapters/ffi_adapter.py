@@ -28,6 +28,18 @@ def get_ffi_lib_name() -> str:
     else:
         return 'libeasytier_ffi.dylib'
 
+
+def set_ffi_version(et_version):
+    """设置FFI版本"""
+    setting = {}
+    if os.path.exists(run_configs.setting_file()):
+        with open(run_configs.setting_file(), "r", encoding="utf-8") as f:
+            setting = json.load(f)
+    setting['ffi_version'] = et_version
+    with open(run_configs.setting_file(), "w", encoding="utf-8") as f:
+        json.dump(setting, f, ensure_ascii=False, indent=4)
+
+
 class KeyValuePair(Structure):
     _fields_ = [("key", c_void_p), ("value", c_void_p)]
 
@@ -95,7 +107,15 @@ class FfiAdapter(IEasyTierAdapter):
 
 
     def get_version(self) -> str:
-        return _FFI_LIB_VERSION
+        ffi_version = None
+        if os.path.exists(run_configs.setting_file()):
+            with open(run_configs.setting_file(), "r", encoding="utf-8") as f:
+                setting = json.load(f)
+                ffi_version = setting.get('ffi_version')
+        if ffi_version:
+            return ffi_version
+        else:
+            return _FFI_LIB_VERSION
 
     def start_network(self, toml_path: str, instance_name: str) -> None:
         logger.info(f"start_network {instance_name}")

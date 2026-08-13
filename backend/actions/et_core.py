@@ -223,6 +223,7 @@ def __install_android(et_version, arch):
             os.remove(ffi_path)
         shutil.copy2(extracted_so, ffi_path)
         os.chmod(ffi_path, 0o555)
+        ffi_adapter.set_ffi_version(et_version)
         logger.info(f'FFI {et_version} 安装成功，重启后生效')
     finally:
         shutil.rmtree(extract_dir, ignore_errors=True)
