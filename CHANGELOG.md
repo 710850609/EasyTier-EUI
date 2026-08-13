@@ -12,6 +12,8 @@
 - 优化：【配置】扫码新增时，支持不填写配置名称，识别成功后立即保存
 - 修复：【配置】保存配置时，界面设置没覆盖到配置已有配置项
 - 修复：飞牛版本、Linux版本（非开机自启模式）、MacOS版本（非开机自启模式）、Docker版本下，关闭组网后，组网进程未被完全终止 ([issues #5](https://github.com/710850609/EasyTier-EUI/issues/5))
+----
+- 新增：安卓版本支持选择EasyTier内核版本
 
 <br>
 
@@ -30,6 +32,8 @@
 - Improved: [Config] QR scan add now supports saving without entering a config name, saves immediately after recognition
 - Fixed: [Config] UI settings were not overriding existing config items when saving configuration
 - Fixed: On FNOS, Linux (non-autostart mode), and macOS (non-autostart mode) and Docker, the networking process was not fully terminated after stopping the network (https://github.com/710850609/EasyTier-EUI/issues/5)
+----
+- Added: Android version supports selecting EasyTier kernel version
 
 ## 2.1
 - 新增：【配置】-自定义路由

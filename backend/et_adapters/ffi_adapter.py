@@ -31,6 +31,10 @@ def get_ffi_lib_name() -> str:
 
 def set_ffi_version(et_version):
     """设置FFI版本"""
+    et_version = et_version.replace('v', '') if et_version else None
+    if not et_version:
+        logger.warning("no FFI version value")
+        return
     setting = {}
     if os.path.exists(run_configs.setting_file()):
         with open(run_configs.setting_file(), "r", encoding="utf-8") as f:
