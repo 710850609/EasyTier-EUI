@@ -41,6 +41,11 @@ class FfiAdapter(IEasyTierAdapter):
         lib_name = "libeasytier_ffi.so"
         if sys.platform == "win32":
             lib_name = os.path.join(run_configs.core_dir(), "easytier_ffi.dll")
+        elif run_configs.IS_ANDROID:
+            updated_so = os.path.join(os.environ.get('ANDROID_DATA_DIR', ''), 'libs', 'libeasytier_ffi.so')
+            if os.path.exists(updated_so) and os.path.getsize(updated_so) > 0:
+                lib_name = updated_so
+                logger.info(f"Using updated FFI: {lib_name}")
         self._lib = ctypes.CDLL(lib_name)
         self._setup_functions()
         logger.info(f"Loaded EasyTier FFI: {lib_name}")
