@@ -168,7 +168,8 @@ export default {
       updateFailed: '更新失败',
       updateRequestFailed: '更新请求失败',
       restarting: '正在更新软件包，服务重启中，请稍后...',
-      updateCompleted: '更新完成，即将刷新页面'
+      updateCompleted: '更新完成，即将刷新页面',
+      restartToApply: '重启应用后生效'
     }
   },
   logs: {

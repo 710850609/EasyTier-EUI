@@ -110,7 +110,8 @@ export default {
       updateFailed: 'Update fehlgeschlagen',
       updateRequestFailed: 'Update-Anfrage fehlgeschlagen',
       restarting: 'Update wird angewendet, Dienst startet neu...',
-      updateCompleted: 'Update abgeschlossen, Seite wird aktualisiert...'
+      updateCompleted: 'Update abgeschlossen, Seite wird aktualisiert...',
+      restartToApply: 'App neu starten, um zu übernehmen'
     }
   },
   logs: { title: 'Log-Anzeige', continue: 'Fortsetzen', pause: 'Pause', clear: 'Löschen', all: 'Alle', info: 'Info', warning: 'Warnung', error: 'Fehler', total: '{count} Logs insgesamt' },

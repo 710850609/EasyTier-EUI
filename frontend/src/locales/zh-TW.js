@@ -168,7 +168,8 @@ export default {
       updateFailed: '更新失敗',
       updateRequestFailed: '更新請求失敗',
       restarting: '正在更新軟體套件，服務重新啟動中，請稍後...',
-      updateCompleted: '更新完成，即將重新整理頁面'
+      updateCompleted: '更新完成，即將重新整理頁面',
+      restartToApply: '重啟應用後生效'
     }
   },
   logs: {

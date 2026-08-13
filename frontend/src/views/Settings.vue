@@ -668,6 +668,8 @@ const installEuiVersion = (versionType) => {
             resolve()
             if (platform.value !== 'android') {
               waitForRestart(targetVersion)
+            } else {
+              toast.success(t('settings.toast.restartToApply'))
             }
           } else if (progress.status === 2) {
             clearInterval(pollTimer)

@@ -110,7 +110,8 @@ export default {
       updateFailed: 'Échec de la mise à jour',
       updateRequestFailed: 'Échec de la requête de mise à jour',
       restarting: 'Application de la mise à jour, redémarrage...',
-      updateCompleted: 'Mise à jour terminée, actualisation...'
+      updateCompleted: 'Mise à jour terminée, actualisation...',
+      restartToApply: 'Redémarrez l\'application pour appliquer'
     }
   },
   logs: { title: 'Affichage des logs', continue: 'Continuer', pause: 'Pause', clear: 'Effacer', all: 'Tous', info: 'Info', warning: 'Avertissement', error: 'Erreur', total: '{count} logs au total' },

@@ -168,7 +168,8 @@ export default {
       updateFailed: 'Update failed',
       updateRequestFailed: 'Update request failed',
       restarting: 'Applying update, service restarting, please wait...',
-      updateCompleted: 'Update completed, refreshing page...'
+      updateCompleted: 'Update completed, refreshing page...',
+      restartToApply: 'Restart app to take effect'
     }
   },
   logs: {
