@@ -12,6 +12,7 @@ from utils import run_configs
 
 __data = None
 _default_log_level:str = 'error'
+logger = logging.getLogger(__name__)
 
 class EtRunInfo:
     """
@@ -47,7 +48,7 @@ def get(profile:Optional[str])-> Optional[EtRunInfo]:
     data = __load_data() or {}
     info = data.get(profile)
     if info is None and Path(run_configs.et_config_file(profile)).exists():
-        logging.warning(f"元数据不存在，生成默认数据：{profile}")
+        logger.warning(f"元数据不存在，生成默认数据：{profile}")
         save(profile, None, False, False)
     return data.get(profile)
 
@@ -97,9 +98,9 @@ def __load_data(reload:bool = False) -> Dict[str, EtRunInfo]:
                 try:
                     __data[key] = EtRunInfo(**value)
                 except Exception as e:
-                    logging.exception(f'加载元数据异常: {value}')
+                    logger.exception(f'加载元数据异常: {value}')
         j_data = {k: v.__dict__ for k, v in __data.items()}
-        logging.debug(f"加载元数据： {json.dumps(j_data, ensure_ascii=False)}")
+        logger.debug(f"加载元数据： {json.dumps(j_data, ensure_ascii=False)}")
     return __data
 
 def __save_data(data:Dict[str, EtRunInfo]):

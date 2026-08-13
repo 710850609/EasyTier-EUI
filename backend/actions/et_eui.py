@@ -15,11 +15,10 @@ from pathlib import Path
 import actions.configs as configs
 import utils.common_util as common_util
 import utils.github_util as github_util
-from http_dispatcher.dispatcher import HttpResponse, HttpException
+from http_dispatcher.dispatcher import HttpResponse
 from locales import get_message
 from utils import run_configs
 from utils.async_task import DownloadTask, UpdateTask
-from utils.validators import Validator
 
 logger = logging.getLogger(__name__)
 

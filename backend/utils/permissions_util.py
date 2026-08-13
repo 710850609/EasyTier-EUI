@@ -17,6 +17,8 @@ except ImportError:
     psutil = None
 
 
+logger = logging.getLogger(__name__)
+
 def is_frozen() -> bool:
     """检查当前是否运行在 PyInstaller 打包环境中"""
     return getattr(sys, 'frozen', False)
@@ -367,8 +369,8 @@ def _elevate_windows_subprocess(
         pid = ctypes.windll.kernel32.GetProcessId(sei.hProcess)
         ctypes.windll.kernel32.CloseHandle(sei.hProcess)
 
-    logging.info(f"已通过 UAC 提权启动: {exe} {params}")
-    logging.info(f"工作目录: {working_dir}, PID={pid}")
+    logger.info(f"已通过 UAC 提权启动: {exe} {params}")
+    logger.info(f"工作目录: {working_dir}, PID={pid}")
 
     if pid and pid_file:
         Path(pid_file).parent.mkdir(parents=True, exist_ok=True)
@@ -411,7 +413,7 @@ def _elevate_macos_subprocess(
         pid_str = result.stdout.strip()
         pid = int(pid_str) if pid_str else None
 
-        logging.info(f"已通过 osascript 提权启动 PID={pid}，工作目录: {working_dir}")
+        logger.info(f"已通过 osascript 提权启动 PID={pid}，工作目录: {working_dir}")
 
         if pid and pid_file:
             Path(pid_file).parent.mkdir(parents=True, exist_ok=True)
@@ -421,7 +423,7 @@ def _elevate_macos_subprocess(
     except subprocess.CalledProcessError as e:
         raise PermissionError("用户取消授权或密码错误") from e
     except ValueError:
-        logging.warning(f"无法解析 osascript 返回的 PID: {pid_str}")
+        logger.warning(f"无法解析 osascript 返回的 PID: {pid_str}")
         return None
 
 
@@ -462,7 +464,7 @@ def _elevate_linux_subprocess(
             pid = int(result.stdout.strip()) if result.stdout.strip() else None
         except subprocess.CalledProcessError as e:
             last_error = f"pkexec 认证失败: {e.stderr.strip()}"
-            logging.warning(last_error)
+            logger.warning(last_error)
 
     if pid is None and shutil.which("sudo") and sys.stdin.isatty():
         try:
@@ -474,7 +476,7 @@ def _elevate_linux_subprocess(
             pid = int(result.stdout.strip()) if result.stdout.strip() else None
         except subprocess.CalledProcessError as e:
             last_error = f"sudo 认证失败: {e.stderr.strip()}"
-            logging.warning(last_error)
+            logger.warning(last_error)
 
     if not pid:
         raise RuntimeError(
@@ -486,7 +488,7 @@ def _elevate_linux_subprocess(
         Path(pid_file).parent.mkdir(parents=True, exist_ok=True)
         Path(pid_file).write_text(str(pid))
 
-    logging.info(f"已提权启动进程 PID={pid}，工作目录: {working_dir}")
+    logger.info(f"已提权启动进程 PID={pid}，工作目录: {working_dir}")
     # 等待子进程完全启动，避免竞态导致 psutil.Process 找不到
     for _ in range(10):
         time.sleep(0.1)
@@ -494,7 +496,7 @@ def _elevate_linux_subprocess(
             return ServerHandle(proc=psutil.Process(pid))
         except psutil.NoSuchProcess:
             continue
-    logging.error(f"提权进程 PID={pid} 启动后立即退出，请检查 {log_file}")
+    logger.error(f"提权进程 PID={pid} 启动后立即退出，请检查 {log_file}")
     return None
 
 
@@ -518,7 +520,7 @@ def handle_elevated_run():
         try:
             idx = sys.argv.index('--elevated-module')
             if idx + 1 >= len(sys.argv):
-                logging.error("--elevated-module 缺少模块名参数")
+                logger.error("--elevated-module 缺少模块名参数")
                 sys.exit(1)
 
             module_name = sys.argv[idx + 1]
@@ -529,9 +531,9 @@ def handle_elevated_run():
             working_dir = os.environ.get('ELEVATED_WORKING_DIR', os.getcwd())
             os.chdir(working_dir)
 
-            logging.info(f"[Elevated] 正在执行模块: {module_name}")
-            logging.info(f"[Elevated] 工作目录: {working_dir}")
-            logging.info(f"[Elevated] 模块参数: {module_args}")
+            logger.info(f"[Elevated] 正在执行模块: {module_name}")
+            logger.info(f"[Elevated] 工作目录: {working_dir}")
+            logger.info(f"[Elevated] 模块参数: {module_args}")
 
             # 使用 importlib 执行模块，避免 runpy 在模块已被导入时的警告
             import importlib
@@ -550,7 +552,7 @@ def handle_elevated_run():
 
             sys.exit(0)
         except Exception as e:
-            logging.exception(f"[Elevated] 执行模块失败: {e}")
+            logger.exception(f"[Elevated] 执行模块失败: {e}")
             sys.exit(1)
 
     if '--elevated-run' not in sys.argv:
@@ -559,7 +561,7 @@ def handle_elevated_run():
     try:
         idx = sys.argv.index('--elevated-run')
         if idx + 1 >= len(sys.argv):
-            logging.error("--elevated-run 缺少脚本路径参数")
+            logger.error("--elevated-run 缺少脚本路径参数")
             sys.exit(1)
 
         script_path = sys.argv[idx + 1]
@@ -570,9 +572,9 @@ def handle_elevated_run():
         script_dir = os.environ.get('ELEVATED_SCRIPT_DIR', os.path.dirname(script_path))
         os.chdir(script_dir)
 
-        logging.info(f"[Elevated] 正在执行脚本: {script_path}")
-        logging.info(f"[Elevated] 工作目录: {script_dir}")
-        logging.info(f"[Elevated] 脚本参数: {script_args}")
+        logger.info(f"[Elevated] 正在执行脚本: {script_path}")
+        logger.info(f"[Elevated] 工作目录: {script_dir}")
+        logger.info(f"[Elevated] 脚本参数: {script_args}")
 
         # 使用 runpy 执行脚本
         import runpy
@@ -585,7 +587,7 @@ def handle_elevated_run():
 
         sys.exit(0)
     except Exception as e:
-        logging.exception(f"[Elevated] 执行脚本失败: {e}")
+        logger.exception(f"[Elevated] 执行脚本失败: {e}")
         sys.exit(1)
 
 

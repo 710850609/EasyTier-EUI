@@ -8,7 +8,6 @@ from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from typing import Optional, Union
 
-from actions import settings
 from utils import run_configs
 
 # 全局标志，记录日志是否已配置

@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 import logging
 import os
 import sys
@@ -8,6 +10,7 @@ import webview
 import main_noui
 from utils import run_configs, log_util
 
+logger = logging.getLogger(__name__)
 
 class WebWin:
     """主窗口 + 托盘组合控制器"""
@@ -21,7 +24,7 @@ class WebWin:
         self.is_window_visible = False
         self.http_server = main_noui.start_server(host, port)
         if self.http_server is None:
-            logging.error("已运行实例")
+            logger.error("已运行实例")
             sys.exit(1)
 
         webview.settings['OPEN_EXTERNAL_LINKS_IN_BROWSER'] = True
@@ -29,7 +32,7 @@ class WebWin:
         class Api:
             def window_open(self, url):
                 full_url = url if url.startswith('http') else f'http://{host}:{port}{url}'
-                logging.info(f"JS_API 浏览器打开地址: {full_url}")
+                logger.info(f"JS_API 浏览器打开地址: {full_url}")
                 webbrowser.open_new_tab(full_url)
 
         self.window = webview.create_window(
@@ -63,7 +66,7 @@ class WebWin:
             main_noui.stop_server(self.http_server, self.port)
         if self.window:
             self.window.destroy()
-            logging.info("关闭窗口")
+            logger.info("关闭窗口")
 
 if __name__ == '__main__':
     run_configs.setup_env()
@@ -85,7 +88,7 @@ if __name__ == '__main__':
         port = args.port or run_configs.EUI_RUN_PORT or 5666
         win = WebWin(host, port, f'易组网 {ver}')
     except BaseException:
-        logging.exception("程序异常退出")
+        logger.exception("程序异常退出")
         raise
     finally:
         if win:

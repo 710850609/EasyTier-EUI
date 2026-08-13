@@ -232,7 +232,7 @@ class FfiAdapter(IEasyTierAdapter):
                 'version': route.get('version') or '',
                 'cost': self._format_cost(route.get('cost', 0)),
                 'tunnel_proto': tunnel.get('tunnel_type') or '',
-                'lat_ms': self._latency_to_ms(stats.get('latency_us', 1000000)),
+                'lat_ms': self._latency_to_ms(stats.get('latency_us', 9999999)),
                 'loss_rate': f"{first_conn.get('loss_rate', 0)}%",
                 'rx_bytes': self._humanize_bytes(stats.get('rx_bytes', 0)),
                 'tx_bytes': self._humanize_bytes(stats.get('tx_bytes', 0)),

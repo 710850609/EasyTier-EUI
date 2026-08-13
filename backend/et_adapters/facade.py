@@ -3,11 +3,8 @@
 """EasyTierFacade — unified entry point with adapter auto-selection"""
 
 import logging
-import sys
 import threading
 from typing import Optional
-
-import tomlkit
 
 from et_adapters.core_background_adapter import CoreBackgroundAdapter
 from utils import run_configs
@@ -26,7 +23,7 @@ class EasyTierFacade(IEasyTierAdapter):
             self._adapter = FfiAdapter()
         else:
             self._adapter = CoreAdapter()
-        logger.info(f"use adapter: {self._adapter}")
+        logger.debug(f"use adapter: {self._adapter}")
 
     def get_version(self) -> str:
         return self._adapter.get_version()

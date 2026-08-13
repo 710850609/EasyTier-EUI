@@ -8,6 +8,7 @@ import re
 import logging
 from typing import Optional
 
+logger = logging.getLogger(__name__)
 # 禁止的字符模式，用于防止各种注入
 DANGEROUS_PATTERNS = [
     r'\.\./',  # 路径遍历
@@ -43,7 +44,7 @@ def sanitize_path(path: str, base_dir: str) -> Optional[str]:
     
     # 检查路径遍历特征
     if '..' in path or path.startswith('/') or path.startswith('\\'):
-        logging.warning(f"检测到潜在的路径遍历: {path}")
+        logger.warning(f"检测到潜在的路径遍历: {path}")
         return None
     
     # 规范化路径
@@ -51,7 +52,7 @@ def sanitize_path(path: str, base_dir: str) -> Optional[str]:
     
     # 再次检查是否存在路径遍历
     if '..' in safe_path:
-        logging.warning(f"规范化后仍存在路径遍历: {safe_path}")
+        logger.warning(f"规范化后仍存在路径遍历: {safe_path}")
         return None
     
     # 构建绝对路径
@@ -60,7 +61,7 @@ def sanitize_path(path: str, base_dir: str) -> Optional[str]:
     # 确保路径在允许的基础目录内
     base_dir_abs = os.path.abspath(base_dir)
     if not absolute_path.startswith(base_dir_abs + os.path.sep) and absolute_path != base_dir_abs:
-        logging.warning(f"路径超出允许范围: {absolute_path} 不在 {base_dir_abs} 内")
+        logger.warning(f"路径超出允许范围: {absolute_path} 不在 {base_dir_abs} 内")
         return None
     
     return absolute_path
@@ -82,12 +83,12 @@ def sanitize_filename(filename: str) -> Optional[str]:
     # 检查危险模式
     for pattern in DANGEROUS_PATTERNS:
         if re.search(pattern, filename):
-            logging.warning(f"文件名包含危险字符: {filename}")
+            logger.warning(f"文件名包含危险字符: {filename}")
             return None
     
     # 检查是否符合安全文件名规则
     if not SAFE_FILENAME_REGEX.match(filename):
-        logging.warning(f"文件名不符合安全规则: {filename}")
+        logger.warning(f"文件名不符合安全规则: {filename}")
         return None
     
     return filename
@@ -112,7 +113,7 @@ def sanitize_string(input_str: Optional[str], max_length: int = 1000) -> Optiona
     
     # 长度检查
     if len(input_str) > max_length:
-        logging.warning(f"字符串长度超出限制: {len(input_str)} > {max_length}")
+        logger.warning(f"字符串长度超出限制: {len(input_str)} > {max_length}")
         return input_str[:max_length]
     
     # 移除控制字符
@@ -165,14 +166,14 @@ def validate_params(params: dict, required: Optional[list] = None, allowed: Opti
     if required:
         for key in required:
             if key not in params:
-                logging.warning(f"缺少必需参数: {key}")
+                logger.warning(f"缺少必需参数: {key}")
                 return False
     
     # 检查允许的参数
     if allowed:
         for key in params:
             if key not in allowed:
-                logging.warning(f"发现未授权参数: {key}")
+                logger.warning(f"发现未授权参数: {key}")
                 return False
     
     return True

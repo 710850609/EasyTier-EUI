@@ -127,6 +127,7 @@ build_backend() {
     --exclude='http_dispatcher/http_server.py'  \
     --exclude='main_noui.py'  \
     --exclude='main_ui.py'  \
+    --exclude='process_util_android.py'  \
     --exclude='requirements-gui.txt'  \
     --exclude='shell' \
     --exclude='*.sh' \

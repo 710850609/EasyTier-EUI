@@ -10,6 +10,7 @@ from typing import Optional
 from locales import get_message
 from utils import run_configs
 
+logger = logging.getLogger(__name__)
 
 class AsyncTask:
     STATUS_RUNNING = 0
@@ -62,7 +63,7 @@ class AsyncTask:
             try:
                 target_func(self, *args)
             except Exception as e:
-                logging.exception(f'异步任务失败: {self.task_id}')
+                logger.exception(f'异步任务失败: {self.task_id}')
                 self.set_error(str(e))
 
         if hasattr(os, 'fork') and not run_configs.IS_ANDROID:

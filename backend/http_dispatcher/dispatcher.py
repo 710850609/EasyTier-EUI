@@ -16,6 +16,7 @@ from urllib.parse import unquote
 from locales import get_message, parse_accept_language, set_lang
 from utils import run_configs
 
+logger = logging.getLogger(__name__)
 
 class HttpException(Exception):
 
@@ -157,7 +158,7 @@ class HttpResponse(Exception):
             except BrokenPipeError:
                 pass  # 客户端断开
             except Exception as e:
-                logging.error(f"Send file error: {e}\n")
+                logger.error(f"Send file error: {e}\n")
                 sys.stderr.write(f"Send file error: {e}\n")
 
 
@@ -178,7 +179,7 @@ def get_request(base_uri="", body_data=None, cgi_module=True, accept_language=No
 
     if not request_uri.startswith(base_uri):
         set_lang(parse_accept_language(accept_language) if accept_language else 'zh_CN')
-        logging.info(f"重定向到基础请求路径：{base_uri}")
+        logger.info(f"重定向到基础请求路径：{base_uri}")
         raise HttpException(get_message('error.redirect_base', base_uri=base_uri), status_code=302, headers={'Location': base_uri})
     uri = request_uri
     if base_uri != '/':
@@ -235,7 +236,7 @@ def http_handle(base_uri="/", body_data=None, cgi_module=True, accept_language=N
         if cgi_module:
             method = os.environ.get('REQUEST_METHOD', '')
             if method == 'OPTIONS':
-                logging.info("处理 OPTIONS 预检请求")
+                logger.info("处理 OPTIONS 预检请求")
                 response = HttpResponse(data="ok", status_code=200)
                 response.fill_headers()
                 if cgi_module:
@@ -246,46 +247,46 @@ def http_handle(base_uri="/", body_data=None, cgi_module=True, accept_language=N
         set_lang(request.lang)
         req_msg = f"{request.method} {request.request_uri}"
         req_msg += '' if not request.request_body else '\n' + request.request_body
-        logging.debug(f"{req_msg}")
-        # logging.debug(f"request: {request.__dict__}")
+        logger.debug(f"{req_msg}")
+        # logger.debug(f"request: {request.__dict__}")
         module_name = request.module_name
         function_name = request.function_name
         if not module_name and not function_name:
             resource_uri = request.resource_uri
             if '..' in resource_uri:
-                logging.warning(f"检测到路径遍历尝试: {request.request_uri}")
+                logger.warning(f"检测到路径遍历尝试: {request.request_uri}")
                 raise HttpException(status_code=403, message=get_message('error.access_denied'))
             frontend_path = run_configs.FRONTEND_PATH
             if len(resource_uri) == 0:
                 resource_uri = 'index.html'
             resource_path = Path(frontend_path).joinpath(resource_uri).absolute()
             if not resource_path.exists() or resource_path.is_dir():
-                logging.warning(f"访问资源不存在: {resource_path}")
+                logger.warning(f"访问资源不存在: {resource_path}")
                 raise HttpException(status_code=404, message=get_message('error.resource_not_found'))
             response = HttpResponse(file=str(resource_path))
         else:
             function_params = request.function_params
-            # logging.debug(f"request: {request.__dict__}")
+            # logger.debug(f"request: {request.__dict__}")
             module = importlib.import_module(module_name)
             func = getattr(module, function_name)
             response = func(function_params, **request.__dict__)
             if not isinstance(response, HttpResponse):
                 response = HttpResponse(data=response)
     except HttpException as e:
-        logging.exception(f"HTTP 异常: {e.status_code} - {e.message}")
+        logger.exception(f"HTTP 异常: {e.status_code} - {e.message}")
         response = HttpResponse(code=1, status_code=e.status_code, data=e.message, headers=e.headers)
     except ImportError as e:
-        logging.exception(f"模块导入失败: {str(e)}", exc_info=True)
+        logger.exception(f"模块导入失败: {str(e)}", exc_info=True)
         response = HttpResponse(code=1, status_code=500, data=get_message('error.module_load_failed'))
     except AttributeError as e:
         if str(e).startswith("module 'actions.peers' has no attribute"):
-            logging.exception(f"函数不存在: {str(e)}", exc_info=True)
+            logger.exception(f"函数不存在: {str(e)}", exc_info=True)
             response = HttpResponse(code=1, status_code=404, data=get_message('error.api_not_found'))
         else:
-            logging.exception(e)
+            logger.exception(e)
             response = HttpResponse(code=1, status_code=500, data=str(e))
     except Exception as e:
-        logging.exception(f"服务异常: {str(e)}")
+        logger.exception(f"服务异常: {str(e)}")
         # 生产环境不暴露详细错误信息
         safe_error_msg = str(e) or "服务器内部错误，请稍后重试"
         response = HttpResponse(code=1, status_code=500, data=safe_error_msg)
@@ -296,7 +297,7 @@ def http_handle(base_uri="/", body_data=None, cgi_module=True, accept_language=N
         # resp_msg += '' if not response.headers else '\nHeaders: ' + json.dumps(response.headers)
         resp_msg += '' if not response.json else 'Response JSON: ' + json.dumps(response.json, ensure_ascii=False)
         resp_msg += '' if not response.file else 'Download File: ' + response.file
-        logging.debug(f"{resp_msg}")
+        logger.debug(f"{resp_msg}")
         if cgi_module:
             response.output_cgi()
         return response

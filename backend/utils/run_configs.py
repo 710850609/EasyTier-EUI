@@ -30,6 +30,8 @@ ANDROID_MAIN_ACTIVITY:str = 'com.github.u710850609.easytiereui.MainActivity'
 _is_inited_evn = False
 _run_mode = 0
 
+logger = logging.getLogger(__name__)
+
 def setup_env():
     global _is_inited_evn
     if _is_inited_evn:
@@ -107,14 +109,14 @@ def setup_env():
     Path(LOG_DIR).mkdir(parents=True, exist_ok=True)
 
     # if init_logger:
-    #     log_level = logging.DEBUG if is_local_mode else logging.INFO
+    #     log_level = logger.DEBUG if is_local_mode else logger.INFO
     #     log_util.setup_log(log_file=os.path.join(LOG_DIR, 'app.log'), log_level=log_level, enabled_console=is_local_mode)
 
-    logging.info(f"FRONTEND_PATH: {FRONTEND_PATH}")
-    logging.info(f"CORE_DIR: {CORE_DIR}")
-    logging.info(f"CONFIG_DIR: {CONFIG_DIR}")
-    logging.info(f"DATA_DIR: {DATA_DIR}")
-    logging.info(f"LOG_DIR: {LOG_DIR}")
+    logger.info(f"FRONTEND_PATH: {FRONTEND_PATH}")
+    logger.info(f"CORE_DIR: {CORE_DIR}")
+    logger.info(f"CONFIG_DIR: {CONFIG_DIR}")
+    logger.info(f"DATA_DIR: {DATA_DIR}")
+    logger.info(f"LOG_DIR: {LOG_DIR}")
     _is_inited_evn = True
 
 

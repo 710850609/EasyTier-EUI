@@ -18,6 +18,7 @@ import time
 
 from utils import run_configs, log_util
 
+logger = logging.getLogger(__name__)
 
 def get_random_string(length=16):
     """获取随机字符串（指定长度）"""
@@ -60,11 +61,11 @@ def check_peers(bin_path, peer_list, max_wait_second = 10):
     for peer in peer_list:
         cmd.extend(['-p', peer])
     
-    logging.info(f"启动检测进程，RPC端口: {rpc_port}")
-    # logging.info(f"检测节点: {peer_list}")
+    logger.info(f"启动检测进程，RPC端口: {rpc_port}")
+    # logger.info(f"检测节点: {peer_list}")
     
     # 启动进程
-    # logging.info(f"启动检测进程: {' '.join(cmd)}")
+    # logger.info(f"启动检测进程: {' '.join(cmd)}")
     
     def start_process():
         if sys.platform == 'win32':
@@ -96,19 +97,19 @@ def check_peers(bin_path, peer_list, max_wait_second = 10):
     # 检查进程是否成功启动
     time.sleep(0.5)
     if process.poll() is not None:
-        logging.info(f"进程启动失败，返回码: {process.returncode}")
+        logger.info(f"进程启动失败，返回码: {process.returncode}")
         return {'success': {}, 'fail': peer_list}
     
-    logging.info(f"检测进程启动成功，PID: {process.pid}")
+    logger.info(f"检测进程启动成功，PID: {process.pid}")
     
     # 等待 RPC 服务就绪
-    logging.info(f"等待 RPC 服务就绪 (127.0.0.1:{rpc_port})...")
+    logger.info(f"等待 RPC 服务就绪 (127.0.0.1:{rpc_port})...")
     rpc_ready = False
     rpc_check_start = time.time()
     rpc_check_timeout = 10  # 最多等待10秒
     while (time.time() - rpc_check_start) < rpc_check_timeout:
         if process.poll() is not None:
-            logging.info(f"进程已退出，返回码: {process.returncode}")
+            logger.info(f"进程已退出，返回码: {process.returncode}")
             return {'success': [], 'fail': peer_list}
         
         # 尝试连接 RPC 端口
@@ -119,7 +120,7 @@ def check_peers(bin_path, peer_list, max_wait_second = 10):
             sock.close()
             if result == 0:
                 rpc_ready = True
-                logging.info(f"RPC 服务已就绪")
+                logger.info(f"RPC 服务已就绪")
                 break
         except:
             pass
@@ -139,13 +140,13 @@ def check_peers(bin_path, peer_list, max_wait_second = 10):
             
             time.sleep(3)
             result = check_peers_available_use_peer(bin_path, rpc_port, peer_list)
-            logging.debug(f"节点检测结果: {result}")
+            logger.debug(f"节点检测结果: {result}")
             # fail_list = result['fail']
             # result['fail'] = fail_list if len(result['fail']) == 0 and len(result['success']) == 0 else peer_list
             if len(result['fail']) == 0:
                 break
-            # logging.info(f"继续等待未连接节点: {result['fail']}")
-            logging.info(f"继续检测未连接节点")
+            # logger.info(f"继续等待未连接节点: {result['fail']}")
+            logger.info(f"继续检测未连接节点")
 
         # 排序处理
         
@@ -178,8 +179,8 @@ def check_peers_available_use_peer(bin_path, rpc_port, peer_list:list):
     ]
     
     try:
-        # logging.info(f"执行检测命令: {' '.join(cmd)}")
-        logging.info(f"执行节点连接检测")
+        # logger.info(f"执行检测命令: {' '.join(cmd)}")
+        logger.info(f"执行节点连接检测")
         
         # 使用 Popen 替代 run，兼容 Windows Python 3.7
         kwargs = {
@@ -197,13 +198,13 @@ def check_peers_available_use_peer(bin_path, rpc_port, peer_list:list):
         try:
             stdout, stderr = process.communicate(timeout=5)
         except subprocess.TimeoutExpired:
-            logging.info("检测命令超时")
+            logger.info("检测命令超时")
             process.kill()
             process.wait()
             return {'success': [], 'fail': []}
         
         if process.returncode != 0:
-            logging.info(f"检测命令执行失败: {stderr}")
+            logger.info(f"检测命令执行失败: {stderr}")
             return {'success': [], 'fail': []}
         
         data = json.loads(stdout)
@@ -241,10 +242,10 @@ def check_peers_available_use_peer(bin_path, rpc_port, peer_list:list):
         }
     
     except json.JSONDecodeError as e:
-        logging.info(f"解析 JSON 失败: {e}")
+        logger.info(f"解析 JSON 失败: {e}")
         raise e
     except Exception as e:
-        logging.info(f"检测失败: {e}")
+        logger.info(f"检测失败: {e}")
         raise e
 
 def check_peers_available_use_connector(bin_path, rpc_port):
@@ -259,8 +260,8 @@ def check_peers_available_use_connector(bin_path, rpc_port):
     ]
 
     try:
-        # logging.info(f"执行检测命令: {' '.join(cmd)}")
-        logging.info(f"执行节点连接检测")
+        # logger.info(f"执行检测命令: {' '.join(cmd)}")
+        logger.info(f"执行节点连接检测")
 
         # 使用 Popen 替代 run，兼容 Windows Python 3.7
         kwargs = {
@@ -279,13 +280,13 @@ def check_peers_available_use_connector(bin_path, rpc_port):
         try:
             stdout, stderr = process.communicate(timeout=5)
         except subprocess.TimeoutExpired:
-            logging.info("检测命令超时")
+            logger.info("检测命令超时")
             process.kill()
             process.wait()
             return {'success': [], 'fail': []}
 
         if process.returncode != 0:
-            logging.info(f"检测命令执行失败: {stderr}")
+            logger.info(f"检测命令执行失败: {stderr}")
             return {'success': [], 'fail': []}
 
         data = json.loads(stdout)
@@ -308,10 +309,10 @@ def check_peers_available_use_connector(bin_path, rpc_port):
         }
 
     except json.JSONDecodeError as e:
-        logging.info(f"解析 JSON 失败: {e}")
+        logger.info(f"解析 JSON 失败: {e}")
         raise e
     except Exception as e:
-        logging.info(f"检测失败: {e}")
+        logger.info(f"检测失败: {e}")
         raise e
 
 

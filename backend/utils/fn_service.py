@@ -19,6 +19,8 @@ except ImportError:
 from actions import services
 from utils import run_configs, log_util
 
+
+logger = logging.getLogger(__name__)
 _fn_check_file :str=''
 
 def status():
@@ -30,7 +32,7 @@ def status():
     3 表示应用未运行
     """
     if not os.path.exists(_fn_check_file):
-        logging.info(f"文件 {_fn_check_file} 不存在，应用未运行")
+        logger.info(f"文件 {_fn_check_file} 不存在，应用未运行")
         return 3
     boot_time_timestamp = psutil.boot_time()
     with open(_fn_check_file, 'r') as f:
@@ -38,9 +40,9 @@ def status():
         if data == str(boot_time_timestamp):
             return 0
         if abs(float(data) - boot_time_timestamp) < 2:
-            logging.warning(f"文件 {_fn_check_file} 内容是 {data}，与当前开机时间 {boot_time_timestamp} 不一致，但误差在2秒内，应用正在运行")
+            logger.warning(f"文件 {_fn_check_file} 内容是 {data}，与当前开机时间 {boot_time_timestamp} 不一致，但误差在2秒内，应用正在运行")
             return 0
-        logging.error(f"当次获取开机时间和上次记录开机时间差超过2秒，判定应用未运行")
+        logger.error(f"当次获取开机时间和上次记录开机时间差超过2秒，判定应用未运行")
         return 3
 
 
@@ -57,7 +59,7 @@ def start():
     with open(_fn_check_file, 'w') as f:
         boot_time_timestamp = str(psutil.boot_time())
         f.write(boot_time_timestamp)
-        logging.info(f"文件 {_fn_check_file} 内容写入 {boot_time_timestamp} 成功，应用启动成功")
+        logger.info(f"文件 {_fn_check_file} 内容写入 {boot_time_timestamp} 成功，应用启动成功")
 
 def stop():
     """
@@ -66,7 +68,7 @@ def stop():
     """
     services.stop_all()
     Path(_fn_check_file).unlink(missing_ok=True)
-    logging.info(f"文件 {_fn_check_file} 已删除, 应用停止成功")
+    logger.info(f"文件 {_fn_check_file} 已删除, 应用停止成功")
 
 if __name__ == '__main__':
     try:
@@ -88,6 +90,6 @@ if __name__ == '__main__':
         else:
             raise AssertionError(f"不支持的参数 {method}")
     except Exception as e:
-        logging.error(e)
-        logging.exception(e)
+        logger.error(e)
+        logger.exception(e)
         sys.exit(1)

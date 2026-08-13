@@ -6,6 +6,7 @@ import shutil
 import subprocess
 import sys
 
+logger = logging.getLogger(__name__)
 
 def run_cmd(command, *args, shell=False) -> str:
     """
@@ -19,7 +20,7 @@ def run_cmd(command, *args, shell=False) -> str:
     Returns:
         JSON 字符串: {"code": 状态码, "stdout": 标准输出, "stderr": 错误输出, "success": 是否成功}
     """
-    # logging.debug(f"执行命令: {command} {' '.join(args)}")
+    # logger.debug(f"执行命令: {command} {' '.join(args)}")
     # 构建命令列表
     if shell:
         # shell 模式：合并为字符串
@@ -92,5 +93,5 @@ def delete(path):
         if os.path.exists(real_path):
             shutil.rmtree(real_path)
     elif os.path.exists(path):
-        logging.debug(f"删除路径: {path}")
+        logger.debug(f"删除路径: {path}")
         shutil.rmtree(path)

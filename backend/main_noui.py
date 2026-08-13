@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 import logging
 import os
 import sys
@@ -10,7 +12,7 @@ from http_dispatcher import http_server
 from utils import run_configs, log_util, permissions_util, ip_util, qrcode_util, et_run_info
 from utils.permissions_util import ServerHandle
 
-
+logger = logging.getLogger(__name__)
 BASE_URI = "/cgi/ThirdParty/EasyTier-EUI/index.cgi"
 
 def start_server(host: str, port: int, exit_on_failure: bool = False) -> Optional[ServerHandle]:
@@ -24,49 +26,49 @@ def start_server(host: str, port: int, exit_on_failure: bool = False) -> Optiona
             handle = permissions_util.run_elevated_module(
                 'http_dispatcher.http_server', args=[f'--host={host}', f'--port={port}', f'--base_uri={BASE_URI}'])
             if handle is None:
-                logging.error("提权进程启动失败，返回 None")
+                logger.error("提权进程启动失败，返回 None")
                 if exit_on_failure:
                     sys.exit(1)
                 return None
-            logging.info(f"提权进程已启动 PID={handle.pid}")
+            logger.info(f"提权进程已启动 PID={handle.pid}")
             return handle
         except Exception as e:
-            logging.exception(f"提权启动异常: {e}")
+            logger.exception(f"提权启动异常: {e}")
             if exit_on_failure:
                 sys.exit(1)
             return None
     else:
-        logging.info(f"当前用户已是管理员权限")
+        logger.info(f"当前用户已是管理员权限")
         # docker 环境下强制启动，避免启动不成功
         server = http_server.build(host, port, BASE_URI)
         if server is None:
-            logging.error("HTTP 服务启动失败")
+            logger.error("HTTP 服务启动失败")
             if exit_on_failure:
                 sys.exit(1)
             return None
         threading.Thread(target=http_server.serve_forever, args=(server,), daemon=True, name='http-server').start()
-        logging.info(f"HTTP 服务已在后台线程启动")
+        logger.info(f"HTTP 服务已在后台线程启动")
         return ServerHandle(server=server)
 
 def stop_server(handle: ServerHandle, port: int):
     import urllib.request
     try:
         url = f'http://127.0.0.1:{port}{BASE_URI}/api/settings/shutdown'
-        logging.info(f"尝试通过 HTTP 请求关闭提权进程: {url}")
+        logger.info(f"尝试通过 HTTP 请求关闭提权进程: {url}")
         req = urllib.request.Request(
             url,
             data=b'{}', headers={'Content-Type': 'application/json'}, method='POST')
         urllib.request.urlopen(req, timeout=3)
-        logging.info("已通过 HTTP 请求关闭提权进程")
+        logger.info("已通过 HTTP 请求关闭提权进程")
     except KeyboardInterrupt:
         pass
     except Exception as e:
-        logging.warning(f"HTTP 关闭请求失败: {e}")
+        logger.warning(f"HTTP 关闭请求失败: {e}")
     finally:
         if handle._server is not None:
             try:
                 handle.stop()
-                logging.info("已通过 handle.stop() 停止服务")
+                logger.info("已通过 handle.stop() 停止服务")
             except Exception:
                 pass
 
@@ -188,7 +190,7 @@ def run():
     log_util.setup_log(log_file=os.path.join(run_configs.log_dir(), 'app.log'),
                        log_level=logging.INFO if run_mode > 0 else logging.DEBUG,
                        enabled_console=run_mode == 0 or run_configs.is_docker())
-    # logging.info(f"前端路径: {os.path.join(sys._MEIPASS, 'frontend')}")
+    # logger.info(f"前端路径: {os.path.join(sys._MEIPASS, 'frontend')}")
 
     if sys.platform != 'win32':
         # unzip 出来是 rw-r--r-- ，需要添加执行权限
@@ -232,17 +234,17 @@ def run():
                 acc_host = lan_ips[0].get('ip') if len(lan_ips) > 0 else '127.0.0.1'
         access_url = f"http://{acc_host}:{acc_port}"
         qr_code = qrcode_util.create_str(access_url)
-        logging.info(f"访问地址: {access_url} , QrCode: {qr_code}")
+        logger.info(f"访问地址: {access_url} , QrCode: {qr_code}")
         time.sleep(1)
         if run_mode != 0:
             webbrowser.open_new_tab(access_url)
-            logging.info(f"已打开本地设备浏览器，请在浏览器上访问")
+            logger.info(f"已打开本地设备浏览器，请在浏览器上访问")
     except Exception as e:
-        logging.error(f"打开本地设备不支持浏览器访问: {e}")
+        logger.error(f"打开本地设备不支持浏览器访问: {e}")
 
     start_hook()
     try:
-        logging.info("按 Ctrl+C 停止服务")
+        logger.info("按 Ctrl+C 停止服务")
         while not _shutdown_requested:
             time.sleep(1)
     finally:

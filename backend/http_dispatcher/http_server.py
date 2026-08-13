@@ -4,7 +4,6 @@ import atexit
 import json
 import logging
 import os
-import signal
 import sys
 import urllib.parse
 from http.server import HTTPServer, BaseHTTPRequestHandler
