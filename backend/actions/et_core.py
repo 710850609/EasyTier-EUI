@@ -12,7 +12,7 @@ from pathlib import Path
 
 import utils.github_util as github_util
 from actions import services
-from et_adapters import get_facade
+from et_adapters import get_facade, ffi_adapter
 from http_dispatcher.dispatcher import HttpException
 from locales import get_message
 from utils import run_configs, et_run_info
@@ -187,12 +187,12 @@ def __install_et_core(et_version, arch, sys_platform):
 
 def __install_android(et_version, arch):
     # 安卓需要使用ffi模式调用et
-    ffi_filename = 'libeasytier_ffi.so'
+    ffi_filename = ffi_adapter.get_ffi_lib_name()
     ffi_dir = run_configs.core_dir()
     os.makedirs(ffi_dir, exist_ok=True)
     ffi_path = os.path.join(ffi_dir, ffi_filename)
     tmp_path = ffi_path + '.tmp'
-    ffi_url = f"https://github.com/710850609/easytier-ffi/releases/download/{et_version}/easytier-ffi-{platform}-{arch}-{et_version}.tar.gz"
+    ffi_url = f"https://github.com/710850609/easytier-ffi/releases/download/{et_version}/easytier-ffi-android-{arch}-{et_version}.tar.gz"
     logger.info(f"FFI 下载地址: {ffi_url}")
     logger.info(f"FFI 保存路径: {ffi_path}")
     github_util.download_release_file(ffi_url, tmp_path)
