@@ -109,7 +109,7 @@
       </div>
       <div class="setting-row" v-if="etVersion.selected_version != ''">
         <div class="setting-actions">
-          <var-chip v-if="hasNewVersion && platform !== 'android'" type="warning" size="mini" plain>{{ $t('common.canUpgrade') }}</var-chip>
+          <var-chip v-if="hasNewVersion" type="warning" size="mini" plain>{{ $t('common.canUpgrade') }}</var-chip>
           <var-button type="primary" size="small" @click="installEtCore(true)" auto-loading>
             <!-- <var-icon name="download" /> -->
             {{ $t('common.install') }}
@@ -591,6 +591,9 @@ const installEtCore = async () => {
     .then((res) => {
       toast.success(res.data || t('settings.toast.kernelInstalled', { version: etVersion.value.selected_version }))
       getEtVersion()
+      if (platform.value === 'android') {
+        toast.success(t('settings.toast.restartToApply'))
+      }
       resolve(res)
     })
     .catch((err) => {
@@ -668,8 +671,6 @@ const installEuiVersion = (versionType) => {
             resolve()
             if (platform.value !== 'android') {
               waitForRestart(targetVersion)
-            } else {
-              toast.success(t('settings.toast.restartToApply'))
             }
           } else if (progress.status === 2) {
             clearInterval(pollTimer)
