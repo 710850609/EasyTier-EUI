@@ -110,7 +110,7 @@
       <div class="setting-row" v-if="etVersion.selected_version != ''">
         <div class="setting-actions">
           <var-chip v-if="hasNewVersion && platform !== 'android'" type="warning" size="mini" plain>{{ $t('common.canUpgrade') }}</var-chip>
-          <var-button type="primary" size="small" @click="installEtCore(true)" auto-loading v-if="platform !== 'android'">
+          <var-button type="primary" size="small" @click="installEtCore(true)" auto-loading>
             <!-- <var-icon name="download" /> -->
             {{ $t('common.install') }}
           </var-button>

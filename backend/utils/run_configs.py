@@ -50,7 +50,7 @@ def setup_env():
             raise Exception('environment variable not set: ANDROID_EXTERNAL_DIR')
         CONFIG_DIR = os.path.join(external_dir, 'config')
         DATA_DIR = os.path.join(data_dir, 'data')
-        CORE_DIR = os.path.join(data_dir, 'core')
+        CORE_DIR = os.path.join(data_dir, 'libs')
         LOG_DIR = os.path.join(external_dir, 'logs')
         FRONTEND_PATH = os.path.join(data_dir, 'frontend')
         UPGRADE_SCRIPT_PATH = ''

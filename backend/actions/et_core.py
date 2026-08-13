@@ -9,7 +9,7 @@ import sys
 import time
 import zipfile
 from pathlib import Path
-import requests
+
 import utils.github_util as github_util
 from actions import services
 from et_adapters import get_facade
@@ -68,7 +68,7 @@ def get_release_info(params: dict, *args, **kwargs) -> dict:
                 total_download += download_count
                 filename = asset.get('name')
                 need_platform = ['linux', 'windows', 'macos']
-                need_arch = ['x86_64', 'aarch64', 'armv7', 'riscv64']
+                need_arch = ['x86_64', 'x86', 'aarch64', 'armv7', 'riscv64']
                 if filename.startswith('easytier-') and filename.endswith(f'{ver}.zip'):
                     # 只取核心包 只适配部分平台架构
                     platform_arch = filename.replace('easytier-', '').replace(f'-{ver}.zip', '')
@@ -114,66 +114,16 @@ def version_changelog(params: dict, *args, **kwargs):
     return changelog
 
 def install(data, *args, **kwargs):
-    if run_configs.IS_ANDROID:
-        ffi_version = data.get('version', '')
-        if not ffi_version:
-            raise HttpException(get_message('download.id_required', param='version'))
-        ffi_url = data.get('url', 'http://192.168.220.12:18080/')
-        if not ffi_url:
-            raise HttpException(get_message('download.id_required', param='url'))
-        # ffi_arch = __get_arch()
-        ffi_filename = 'libeasytier_ffi.so'
-
-        ffi_dir = os.path.join(os.environ['ANDROID_DATA_DIR'], 'libs')
-        os.makedirs(ffi_dir, exist_ok=True)
-        ffi_path = os.path.join(ffi_dir, ffi_filename)
-        tmp_path = ffi_path + '.tmp'
-        logger.info(f"FFI 下载地址: {ffi_url}")
-        logger.info(f"FFI 保存路径: {ffi_path}")
-        resp = requests.get(ffi_url, stream=True, timeout=300)
-        resp.raise_for_status()
-        with open(tmp_path, 'wb') as f:
-            for chunk in resp.iter_content(chunk_size=8192):
-                f.write(chunk)
-        if os.path.getsize(tmp_path) == 0:
-            os.remove(tmp_path)
-            raise HttpException(get_message('download.download_failed'))
-        if os.path.exists(ffi_path):
-            os.remove(ffi_path)
-        os.rename(tmp_path, ffi_path)
-        os.chmod(ffi_path, 0o555)
-        logger.info(f'FFI {ffi_version} 安装成功，重启后生效')
-        return {'success': True, 'message': 'ffi_installed', 'ffi_version': ffi_version}
-
     et_version = data['version']
     if not et_version:
         raise HttpException(get_message('download.id_required', param='version'))
     arch = __get_arch()
-    platform = 'linux' if sys.platform == 'linux' else ('windows' if sys.platform == 'win32' else 'macos')
-    url = f"https://github.com/easyTier/easytier/releases/download/{et_version}/easytier-{platform}-{arch}-{et_version}.zip"
-    logger.info(f"内核下载地址: {url}")
-    core_dir = run_configs.core_dir()
-    run_configs.data_dir()
-    output_dir = os.path.join(run_configs.data_dir(), 'download')
-    zip_file = f'{output_dir}/easytier-{platform}-{arch}-{et_version}.zip'
-    github_util.download_release_file(url, zip_file)
-    unzip_temp_dir = __unzip(zip_file, os.path.join(run_configs.data_dir(), 'download', 'temp'))
+    sys_platform = 'linux' if sys.platform == 'linux' else ('windows' if sys.platform == 'win32' else 'macos')
 
-    stop_profiles = services.stop_all()
-    for item in Path(os.path.join(unzip_temp_dir, f'easytier-{platform}-{arch}')).iterdir():
-        dst = os.path.join(core_dir, item.name)
-        shutil.move(str(item), dst)
-        if sys.platform != 'win32':
-            # unzip 出来是 rw-r--r-- ，需要添加执行权限
-            import stat
-            os.chmod(dst, os.stat(dst).st_mode | stat.S_IEXEC)
-        logger.info(f"移动: {item.name}")
-    Path(zip_file).unlink()
-    shutil.rmtree(unzip_temp_dir)
-    logger.info(f'安装{et_version}版本成功')
-    for profile in stop_profiles:
-        logger.info(f'启动配置：{profile}')
-        services.start({'profile': profile})
+    if run_configs.IS_ANDROID:
+        __install_android(et_version, arch)
+    else:
+        __install_et_core(et_version, arch, sys_platform)
 
 def __get_arch():
     machine = platform.machine()
@@ -209,8 +159,48 @@ def __unzip(zip_file, unzip_dir):
     logger.info(f"解压完成: {zip_file} -> {unzip_temp_dir}")
     return unzip_temp_dir
 
-if __name__ == '__main__':
-    run_configs.setup_env()
-    # log_util.setup_log(log_level="DEBUG")
-    # get_release_info({'refresh': 'true'})
-    # print(version_list({}))
+def __install_et_core(et_version, arch, sys_platform):
+    url = f"https://github.com/easyTier/easytier/releases/download/{et_version}/easytier-{sys_platform}-{arch}-{et_version}.zip"
+    logger.info(f"内核下载地址: {url}")
+    core_dir = run_configs.core_dir()
+    run_configs.data_dir()
+    output_dir = os.path.join(run_configs.data_dir(), 'download')
+    zip_file = f'{output_dir}/easytier-{sys_platform}-{arch}-{et_version}.zip'
+    github_util.download_release_file(url, zip_file)
+    unzip_temp_dir = __unzip(zip_file, os.path.join(run_configs.data_dir(), 'download', 'temp'))
+
+    stop_profiles = services.stop_all()
+    for item in Path(os.path.join(unzip_temp_dir, f'easytier-{sys_platform}-{arch}')).iterdir():
+        dst = os.path.join(core_dir, item.name)
+        shutil.move(str(item), dst)
+        if sys.platform != 'win32':
+            # unzip 出来是 rw-r--r-- ，需要添加执行权限
+            import stat
+            os.chmod(dst, os.stat(dst).st_mode | stat.S_IEXEC)
+        logger.info(f"移动: {item.name}")
+    Path(zip_file).unlink()
+    shutil.rmtree(unzip_temp_dir)
+    logger.info(f'安装{et_version}版本成功')
+    for profile in stop_profiles:
+        logger.info(f'启动配置：{profile}')
+        services.start({'profile': profile})
+
+def __install_android(et_version, arch):
+    # 安卓需要使用ffi模式调用et
+    ffi_filename = 'libeasytier_ffi.so'
+    ffi_dir = run_configs.core_dir()
+    os.makedirs(ffi_dir, exist_ok=True)
+    ffi_path = os.path.join(ffi_dir, ffi_filename)
+    tmp_path = ffi_path + '.tmp'
+    ffi_url = f"https://github.com/710850609/easytier-ffi/releases/download/{et_version}/easytier-ffi-{platform}-{arch}-{et_version}.tar.gz"
+    logger.info(f"FFI 下载地址: {ffi_url}")
+    logger.info(f"FFI 保存路径: {ffi_path}")
+    github_util.download_release_file(ffi_url, tmp_path)
+    if os.path.getsize(tmp_path) == 0:
+        os.remove(tmp_path)
+        raise HttpException(get_message('download.download_failed'))
+    if os.path.exists(ffi_path):
+        os.remove(ffi_path)
+    os.rename(tmp_path, ffi_path)
+    os.chmod(ffi_path, 0o555)
+    logger.info(f'FFI {et_version} 安装成功，重启后生效')

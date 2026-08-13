@@ -20,6 +20,14 @@ logger = logging.getLogger(__name__)
 _FFI_LIB_VERSION = "unknown"
 _MAX_INSTANCE_COUNT = 20
 
+def get_ffi_lib_name() -> str:
+    if sys.platform == 'linux':
+        return 'libeasytier_ffi.so'
+    elif sys.platform == 'win32':
+        return 'easytier_ffi.dll'
+    else:
+        return 'libeasytier_ffi.dylib'
+
 class KeyValuePair(Structure):
     _fields_ = [("key", c_void_p), ("value", c_void_p)]
 
@@ -38,14 +46,11 @@ class FfiAdapter(IEasyTierAdapter):
     MISSING_SYMBOLS: List[str] = []
 
     def __init__(self):
-        lib_name = "libeasytier_ffi.so"
-        if sys.platform == "win32":
-            lib_name = os.path.join(run_configs.core_dir(), "easytier_ffi.dll")
-        elif run_configs.IS_ANDROID:
-            updated_so = os.path.join(os.environ.get('ANDROID_DATA_DIR', ''), 'libs', 'libeasytier_ffi.so')
-            if os.path.exists(updated_so) and os.path.getsize(updated_so) > 0:
-                lib_name = updated_so
-                logger.info(f"Using updated FFI: {lib_name}")
+        lib_name = get_ffi_lib_name()
+        lib_path = os.path.join(run_configs.core_dir(), lib_name)
+        if os.path.exists(lib_path) and os.path.getsize(lib_path) > 0:
+            logger.info(f"Using FFI By Path: {lib_path}")
+            lib_name = lib_path
         self._lib = ctypes.CDLL(lib_name)
         self._setup_functions()
         logger.info(f"Loaded EasyTier FFI: {lib_name}")
