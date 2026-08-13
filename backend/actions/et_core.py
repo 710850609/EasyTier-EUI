@@ -115,9 +115,9 @@ def version_changelog(params: dict, *args, **kwargs):
 
 def install(data, *args, **kwargs):
     if run_configs.IS_ANDROID:
-        # ffi_version = data.get('version', '')
-        # if not ffi_version:
-        #     raise HttpException(get_message('download.id_required', param='version'))
+        ffi_version = data.get('version', '')
+        if not ffi_version:
+            raise HttpException(get_message('download.id_required', param='version'))
         ffi_url = data.get('url', 'http://192.168.220.12:18080/')
         if not ffi_url:
             raise HttpException(get_message('download.id_required', param='url'))
