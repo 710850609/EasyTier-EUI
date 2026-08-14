@@ -173,10 +173,10 @@ class MainActivity : AppCompatActivity() {
                     AppLogger.warn(TAG, "WebView.setDataDirectorySuffix failed (already initialized): ${e.message}")
                 }
             }
-            enableEdgeToEdge(
-                statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT),
-                navigationBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT)
-            )
+            // enableEdgeToEdge(
+            //    statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT),
+            //    navigationBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT)
+            // )
             setContentView(R.layout.activity_main)
             AppLogger.info(TAG, "setContentView done, finding WebView")
             webView = findViewById(R.id.webview)
@@ -624,29 +624,7 @@ class MainActivity : AppCompatActivity() {
             AppLogger.debug(TAG, "AndroidBridge.setThemeMode: $mode")
             runOnUiThread {
                 prefs.edit().putString("theme_mode", mode).apply()
-                when (mode) {
-                    "dark" -> {
-                        h5ThemeOverride = true
-                        enableEdgeToEdge(
-                            statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
-                            navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT)
-                        )
-                    }
-                    "light" -> {
-                        h5ThemeOverride = false
-                        enableEdgeToEdge(
-                            statusBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
-                            navigationBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
-                        )
-                    }
-                    "system" -> {
-                        h5ThemeOverride = null
-                        enableEdgeToEdge(
-                            statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT),
-                            navigationBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT)
-                        )
-                    }
-                }
+                applySavedTheme()
             }
         }
 
