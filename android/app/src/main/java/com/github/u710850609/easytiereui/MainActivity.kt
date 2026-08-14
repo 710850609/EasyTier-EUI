@@ -2,6 +2,7 @@ package com.github.u710850609.easytiereui
 
 import com.github.u710850609.easytiereui.BuildConfig
 import android.Manifest
+import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.app.DownloadManager
 import android.content.Context
@@ -23,6 +24,8 @@ import android.os.Build
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
+import android.view.View
+import android.view.animation.AccelerateDecelerateInterpolator
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowInsetsCompat
@@ -51,6 +54,9 @@ class MainActivity : AppCompatActivity() {
     private var httpServerPort = 0
     private var h5ThemeOverride: Boolean? = null // null = follow system, true = dark, false = light
     private val prefs: SharedPreferences by lazy { getSharedPreferences("easytier_prefs", MODE_PRIVATE) }
+    private var splashMinDisplayElapsed = false
+    private var splashContentLoaded = false
+    private val splashContentReady: Boolean get() = splashMinDisplayElapsed && splashContentLoaded
 
     private fun initLogLevel() {
         try {
@@ -81,6 +87,57 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        val splashScreen = installSplashScreen()
+
+        splashScreen.setOnExitAnimationListener { splashScreenView ->
+            val iconView = splashScreenView.iconView
+            if (iconView == null) {
+                splashScreenView.remove()
+                return@setOnExitAnimationListener
+            }
+
+            val slideUp = ObjectAnimator.ofFloat(
+                iconView,
+                View.TRANSLATION_Y,
+                0f,
+                -resources.displayMetrics.heightPixels * 0.25f
+            ).apply {
+                duration = 280
+                interpolator = AccelerateDecelerateInterpolator()
+            }
+
+            val scaleDownX = ObjectAnimator.ofFloat(iconView, View.SCALE_X, 1f, 0.7f).apply {
+                duration = 280
+                interpolator = AccelerateDecelerateInterpolator()
+            }
+            val scaleDownY = ObjectAnimator.ofFloat(iconView, View.SCALE_Y, 1f, 0.7f).apply {
+                duration = 280
+                interpolator = AccelerateDecelerateInterpolator()
+            }
+
+            slideUp.start()
+            scaleDownX.start()
+            scaleDownY.start()
+
+            splashScreenView.view.animate()
+                .alpha(0f)
+                .setDuration(280)
+                .setStartDelay(250)
+                .setInterpolator(AccelerateDecelerateInterpolator())
+                .withEndAction { splashScreenView.remove() }
+                .start()
+        }
+
+        splashScreen.setKeepOnScreenCondition { !splashContentReady }
+
+        Handler(Looper.getMainLooper()).postDelayed({
+            splashMinDisplayElapsed = true
+        }, 1500)
+
+        Handler(Looper.getMainLooper()).postDelayed({
+            splashContentLoaded = true
+        }, 4000)
+
         super.onCreate(savedInstanceState)
         AppLogger.logDir = File(getExternalFilesDir(null), "logs")
         AppLogger.logDir?.mkdirs()
@@ -227,10 +284,12 @@ class MainActivity : AppCompatActivity() {
                     override fun onPageFinished(view: WebView?, url: String?) {
                         super.onPageFinished(view, url)
                         AppLogger.info(TAG, "WebView page finished: $url")
+                        splashContentLoaded = true
                         injectSafeArea()
                     }
                     override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: android.webkit.WebResourceError?) {
                         AppLogger.error(TAG, "WebView error: ${error?.description} for ${request?.url}")
+                        splashContentLoaded = true
                     }
                     override fun onReceivedSslError(view: WebView?, handler: android.webkit.SslErrorHandler?, error: android.net.http.SslError?) {
                         val host = Uri.parse(error?.url).host ?: ""
