@@ -93,9 +93,10 @@ class MainActivity : AppCompatActivity() {
         val splashScreen = installSplashScreen()
 
         splashScreen.setOnExitAnimationListener { splashScreenView ->
-            val iconView = splashScreenView.iconView
+            val iconView = try { splashScreenView.iconView } catch (_: Exception) { null }
             if (iconView == null) {
                 splashScreenView.remove()
+                applySavedTheme()
                 return@setOnExitAnimationListener
             }
 
@@ -135,7 +136,7 @@ class MainActivity : AppCompatActivity() {
 
         Handler(Looper.getMainLooper()).postDelayed({
             splashMinDisplayElapsed = true
-        }, 1500)
+        }, 300)
 
         Handler(Looper.getMainLooper()).postDelayed({
             splashContentLoaded = true
