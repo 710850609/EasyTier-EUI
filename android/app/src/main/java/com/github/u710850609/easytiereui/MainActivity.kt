@@ -164,18 +164,20 @@ class MainActivity : AppCompatActivity() {
 
         try {
             AppLogger.info(TAG, "onCreate: setting up UI")
-            if (BuildConfig.DEBUG) {
-                // 调试地址 chrome://inspect
-                WebView.setWebContentsDebuggingEnabled(true)
-                AppLogger.info(TAG, "WebView remote debugging enabled")
-            }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 try {
+                    // WebView.setDataDirectorySuffix() 必须在对 任何 WebView 实例化之前调用
+                    // 否则会报 IllegalStateException: WebView already initialized。
                     WebView.setDataDirectorySuffix(applicationContext.packageName)
                     AppLogger.info(TAG, "WebView.setDataDirectorySuffix ok")
                 } catch (e: IllegalStateException) {
                     AppLogger.warn(TAG, "WebView.setDataDirectorySuffix failed (already initialized): ${e.message}")
                 }
+            }
+            if (BuildConfig.DEBUG) {
+                // 调试地址 chrome://inspect
+                WebView.setWebContentsDebuggingEnabled(true)
+                AppLogger.info(TAG, "WebView remote debugging enabled")
             }
             // enableEdgeToEdge(
             //    statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT),
