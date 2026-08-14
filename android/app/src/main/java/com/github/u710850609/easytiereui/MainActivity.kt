@@ -26,8 +26,8 @@ import android.webkit.WebViewClient
 import android.widget.Toast
 import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
-
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.core.splashscreen.SplashScreenViewProvider
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowInsetsCompat
@@ -102,7 +102,7 @@ class MainActivity : AppCompatActivity() {
                 return@setOnExitAnimationListener
             }
 
-            val moveDuration = 450L
+            val moveDuration = 300L
             val slideUp = ObjectAnimator.ofFloat(
                 splashIconView!!,
                 View.TRANSLATION_Y,
@@ -600,7 +600,7 @@ class MainActivity : AppCompatActivity() {
         fadeOut.start()
 
         Handler(Looper.getMainLooper()).postDelayed({
-            provider.remove()
+            splashScreenView?.remove()
             applySavedTheme()
         }, fadeDuration)
     }
