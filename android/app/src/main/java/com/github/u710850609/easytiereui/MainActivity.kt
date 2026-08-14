@@ -28,7 +28,7 @@ import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.app.AppCompatDelegate
+
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowInsetsCompat
 import androidx.webkit.WebSettingsCompat
@@ -89,8 +89,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        applySavedNightMode()
-
         val splashScreen = installSplashScreen()
 
         splashScreen.setOnExitAnimationListener { splashScreenView ->
@@ -106,16 +104,16 @@ class MainActivity : AppCompatActivity() {
                 0f,
                 -resources.displayMetrics.heightPixels * 0.25f
             ).apply {
-                duration = 300
+                duration = 280
                 interpolator = AccelerateDecelerateInterpolator()
             }
 
             val scaleDownX = ObjectAnimator.ofFloat(iconView, View.SCALE_X, 1f, 0.7f).apply {
-                duration = 300
+                duration = 280
                 interpolator = AccelerateDecelerateInterpolator()
             }
             val scaleDownY = ObjectAnimator.ofFloat(iconView, View.SCALE_Y, 1f, 0.7f).apply {
-                duration = 300
+                duration = 280
                 interpolator = AccelerateDecelerateInterpolator()
             }
 
@@ -126,7 +124,7 @@ class MainActivity : AppCompatActivity() {
             splashScreenView.view.animate()
                 .alpha(0f)
                 .setDuration(280)
-                .setStartDelay(280)
+                .setStartDelay(250)
                 .setInterpolator(AccelerateDecelerateInterpolator())
                 .withEndAction { splashScreenView.remove() }
                 .start()
@@ -175,8 +173,10 @@ class MainActivity : AppCompatActivity() {
                     AppLogger.warn(TAG, "WebView.setDataDirectorySuffix failed (already initialized): ${e.message}")
                 }
             }
-            val savedMode = prefs.getString("theme_mode", "system") ?: "system"
-            applyEdgeToEdge(savedMode)
+            enableEdgeToEdge(
+                statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT),
+                navigationBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT)
+            )
             setContentView(R.layout.activity_main)
             AppLogger.info(TAG, "setContentView done, finding WebView")
             webView = findViewById(R.id.webview)
@@ -571,7 +571,10 @@ class MainActivity : AppCompatActivity() {
         super.onConfigurationChanged(newConfig)
         try {
             if (h5ThemeOverride == null) {
-                applyEdgeToEdge("system")
+                enableEdgeToEdge(
+                    statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT),
+                    navigationBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT)
+                )
                 webView.setBackgroundColor(Color.TRANSPARENT)
             }
             injectSafeArea()
@@ -580,42 +583,34 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun applySavedNightMode() {
-        val savedMode = prefs.getString("theme_mode", "system") ?: "system"
-        val nightMode = when (savedMode) {
-            "dark" -> AppCompatDelegate.MODE_NIGHT_YES
-            "light" -> AppCompatDelegate.MODE_NIGHT_NO
-            else -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
-        }
-        AppCompatDelegate.setDefaultNightMode(nightMode)
-    }
-
-    private fun applyEdgeToEdge(mode: String) {
-        when (mode) {
-            "dark" -> enableEdgeToEdge(
-                statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
-                navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT)
-            )
-            "light" -> enableEdgeToEdge(
-                statusBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
-                navigationBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
-            )
-            else -> enableEdgeToEdge(
-                statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT),
-                navigationBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT)
-            )
-        }
-    }
-
     private fun applySavedTheme() {
         val savedMode = prefs.getString("theme_mode", "system") ?: "system"
-        h5ThemeOverride = when (savedMode) {
-            "dark" -> true
-            "light" -> false
-            else -> null
+        when (savedMode) {
+            "dark" -> {
+                h5ThemeOverride = true
+                enableEdgeToEdge(
+                    statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
+                    navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT)
+                )
+            }
+            "light" -> {
+                h5ThemeOverride = false
+                enableEdgeToEdge(
+                    statusBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
+                    navigationBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
+                )
+            }
+            else -> {
+                h5ThemeOverride = null
+                enableEdgeToEdge(
+                    statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT),
+                    navigationBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT)
+                )
+            }
         }
         AppLogger.debug(TAG, "applySavedTheme: mode=$savedMode, override=$h5ThemeOverride")
     }
+
 
     inner class AndroidBridge {
         @JavascriptInterface
@@ -630,18 +625,7 @@ class MainActivity : AppCompatActivity() {
             AppLogger.debug(TAG, "AndroidBridge.setThemeMode: $mode")
             runOnUiThread {
                 prefs.edit().putString("theme_mode", mode).apply()
-                val nightMode = when (mode) {
-                    "dark" -> AppCompatDelegate.MODE_NIGHT_YES
-                    "light" -> AppCompatDelegate.MODE_NIGHT_NO
-                    else -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
-                }
-                AppCompatDelegate.setDefaultNightMode(nightMode)
-                h5ThemeOverride = when (mode) {
-                    "dark" -> true
-                    "light" -> false
-                    else -> null
-                }
-                applyEdgeToEdge(mode)
+                applySavedTheme()
             }
         }
 
