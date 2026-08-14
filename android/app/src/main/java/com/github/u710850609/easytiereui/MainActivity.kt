@@ -175,10 +175,8 @@ class MainActivity : AppCompatActivity() {
                     AppLogger.warn(TAG, "WebView.setDataDirectorySuffix failed (already initialized): ${e.message}")
                 }
             }
-            enableEdgeToEdge(
-                statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT),
-                navigationBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT)
-            )
+            val savedMode = prefs.getString("theme_mode", "system") ?: "system"
+            applyEdgeToEdge(savedMode)
             setContentView(R.layout.activity_main)
             AppLogger.info(TAG, "setContentView done, finding WebView")
             webView = findViewById(R.id.webview)
@@ -573,10 +571,7 @@ class MainActivity : AppCompatActivity() {
         super.onConfigurationChanged(newConfig)
         try {
             if (h5ThemeOverride == null) {
-                enableEdgeToEdge(
-                    statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT),
-                    navigationBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT)
-                )
+                applyEdgeToEdge("system")
                 webView.setBackgroundColor(Color.TRANSPARENT)
             }
             injectSafeArea()
@@ -595,30 +590,29 @@ class MainActivity : AppCompatActivity() {
         AppCompatDelegate.setDefaultNightMode(nightMode)
     }
 
+    private fun applyEdgeToEdge(mode: String) {
+        when (mode) {
+            "dark" -> enableEdgeToEdge(
+                statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
+                navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT)
+            )
+            "light" -> enableEdgeToEdge(
+                statusBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
+                navigationBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
+            )
+            else -> enableEdgeToEdge(
+                statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT),
+                navigationBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT)
+            )
+        }
+    }
+
     private fun applySavedTheme() {
         val savedMode = prefs.getString("theme_mode", "system") ?: "system"
-        when (savedMode) {
-            "dark" -> {
-                h5ThemeOverride = true
-                enableEdgeToEdge(
-                    statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
-                    navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT)
-                )
-            }
-            "light" -> {
-                h5ThemeOverride = false
-                enableEdgeToEdge(
-                    statusBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
-                    navigationBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
-                )
-            }
-            else -> {
-                h5ThemeOverride = null
-                enableEdgeToEdge(
-                    statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT),
-                    navigationBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT)
-                )
-            }
+        h5ThemeOverride = when (savedMode) {
+            "dark" -> true
+            "light" -> false
+            else -> null
         }
         AppLogger.debug(TAG, "applySavedTheme: mode=$savedMode, override=$h5ThemeOverride")
     }
@@ -642,29 +636,12 @@ class MainActivity : AppCompatActivity() {
                     else -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
                 }
                 AppCompatDelegate.setDefaultNightMode(nightMode)
-                when (mode) {
-                    "dark" -> {
-                        h5ThemeOverride = true
-                        enableEdgeToEdge(
-                            statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
-                            navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT)
-                        )
-                    }
-                    "light" -> {
-                        h5ThemeOverride = false
-                        enableEdgeToEdge(
-                            statusBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
-                            navigationBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
-                        )
-                    }
-                    "system" -> {
-                        h5ThemeOverride = null
-                        enableEdgeToEdge(
-                            statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT),
-                            navigationBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT)
-                        )
-                    }
+                h5ThemeOverride = when (mode) {
+                    "dark" -> true
+                    "light" -> false
+                    else -> null
                 }
+                applyEdgeToEdge(mode)
             }
         }
 
