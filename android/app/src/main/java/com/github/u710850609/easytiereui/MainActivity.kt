@@ -141,6 +141,7 @@ class MainActivity : AppCompatActivity() {
         splashScreen.setKeepOnScreenCondition { !splashContentReady }
 
         Handler(Looper.getMainLooper()).postDelayed({
+            splashMinDisplayElapsed = true
             splashContentLoaded = true
         }, 4000)
 
