@@ -100,43 +100,45 @@ class MainActivity : AppCompatActivity() {
                 return@setOnExitAnimationListener
             }
 
+            val animatorDuration = 350
+            val fadeOutDelay = 100
+
             val slideUp = ObjectAnimator.ofFloat(
                 iconView,
                 View.TRANSLATION_Y,
                 0f,
                 -resources.displayMetrics.heightPixels * 0.25f
             ).apply {
-                duration = 280
+                duration = animatorDuration
                 interpolator = AccelerateDecelerateInterpolator()
             }
 
             val scaleDownX = ObjectAnimator.ofFloat(iconView, View.SCALE_X, 1f, 0.7f).apply {
-                duration = 280
+                duration = animatorDuration
                 interpolator = AccelerateDecelerateInterpolator()
             }
             val scaleDownY = ObjectAnimator.ofFloat(iconView, View.SCALE_Y, 1f, 0.7f).apply {
-                duration = 280
+                duration = animatorDuration
+                interpolator = AccelerateDecelerateInterpolator()
+            }
+            val fadeOut = ObjectAnimator.ofFloat(iconView, View.ALPHA, 1f, 0f).apply {
+                startDelay = fadeOutDelay
+                duration = animatorDuration - fadeOutDelay
                 interpolator = AccelerateDecelerateInterpolator()
             }
 
             slideUp.start()
             scaleDownX.start()
             scaleDownY.start()
+            fadeOut.start()
 
-            splashScreenView.view.animate()
-                .alpha(0f)
-                .setDuration(280)
-                .setStartDelay(250)
-                .setInterpolator(AccelerateDecelerateInterpolator())
-                .withEndAction { splashScreenView.remove(); applySavedTheme() }
-                .start()
+            Handler(Looper.getMainLooper()).postDelayed({
+                splashScreenView.remove()
+                applySavedTheme()
+            }, animatorDuration.toLong())
         }
 
         splashScreen.setKeepOnScreenCondition { !splashContentReady }
-
-        Handler(Looper.getMainLooper()).postDelayed({
-            splashMinDisplayElapsed = true
-        }, 300)
 
         Handler(Looper.getMainLooper()).postDelayed({
             splashContentLoaded = true
