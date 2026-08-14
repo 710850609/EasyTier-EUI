@@ -57,9 +57,10 @@ class MainActivity : AppCompatActivity() {
     private var httpServerPort = 0
     private var h5ThemeOverride: Boolean? = null // null = follow system, true = dark, false = light
     private val prefs: SharedPreferences by lazy { getSharedPreferences("easytier_prefs", MODE_PRIVATE) }
-    private var splashMinDisplayElapsed = true
     private var splashContentLoaded = false
-    private val splashContentReady: Boolean get() = splashMinDisplayElapsed && splashContentLoaded
+    private var splashScreenView: SplashScreenViewProvider? = null
+    private var splashIconView: View? = null
+    private var splashFadeStarted = false
 
     private fun initLogLevel() {
         try {
@@ -92,57 +93,46 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
 
-        splashScreen.setOnExitAnimationListener { splashScreenView ->
-            val iconView = try { splashScreenView.iconView } catch (_: Exception) { null }
-            if (iconView == null) {
-                splashScreenView.remove()
+        splashScreen.setOnExitAnimationListener { provider ->
+            splashScreenView = provider
+            splashIconView = try { provider.iconView } catch (_: Exception) { null }
+            if (splashIconView == null) {
+                provider.remove()
                 applySavedTheme()
                 return@setOnExitAnimationListener
             }
 
-            val animatorDuration = 280L
-            val fadeOutDelay = 0L
-
+            val moveDuration = 450L
             val slideUp = ObjectAnimator.ofFloat(
-                iconView,
+                splashIconView!!,
                 View.TRANSLATION_Y,
                 0f,
                 -resources.displayMetrics.heightPixels * 0.25f
             ).apply {
-                duration = animatorDuration
+                duration = moveDuration
                 interpolator = AccelerateDecelerateInterpolator()
             }
-
-            val scaleDownX = ObjectAnimator.ofFloat(iconView, View.SCALE_X, 1f, 0.7f).apply {
-                duration = animatorDuration
+            val scaleDownX = ObjectAnimator.ofFloat(splashIconView!!, View.SCALE_X, 1f, 0.7f).apply {
+                duration = moveDuration
                 interpolator = AccelerateDecelerateInterpolator()
             }
-            val scaleDownY = ObjectAnimator.ofFloat(iconView, View.SCALE_Y, 1f, 0.7f).apply {
-                duration = animatorDuration
-                interpolator = AccelerateDecelerateInterpolator()
-            }
-            val fadeOut = ObjectAnimator.ofFloat(iconView, View.ALPHA, 1f, 0f).apply {
-                startDelay = fadeOutDelay
-                duration = animatorDuration - fadeOutDelay
+            val scaleDownY = ObjectAnimator.ofFloat(splashIconView!!, View.SCALE_Y, 1f, 0.7f).apply {
+                duration = moveDuration
                 interpolator = AccelerateDecelerateInterpolator()
             }
 
             slideUp.start()
             scaleDownX.start()
             scaleDownY.start()
-            fadeOut.start()
 
             Handler(Looper.getMainLooper()).postDelayed({
-                splashScreenView.remove()
-                applySavedTheme()
-            }, animatorDuration)
+                tryStartFade()
+            }, 150)
         }
 
-        splashScreen.setKeepOnScreenCondition { !splashContentReady }
-
         Handler(Looper.getMainLooper()).postDelayed({
-            splashMinDisplayElapsed = true
             splashContentLoaded = true
+            tryStartFade()
         }, 4000)
 
         super.onCreate(savedInstanceState)
@@ -294,12 +284,13 @@ class MainActivity : AppCompatActivity() {
                         super.onPageFinished(view, url)
                         AppLogger.info(TAG, "WebView page finished: $url")
                         splashContentLoaded = true
-                        window?.decorView?.invalidate()
+                        tryStartFade()
                         injectSafeArea()
                     }
                     override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: android.webkit.WebResourceError?) {
                         AppLogger.error(TAG, "WebView error: ${error?.description} for ${request?.url}")
                         splashContentLoaded = true
+                        tryStartFade()
                     }
                     override fun onReceivedSslError(view: WebView?, handler: android.webkit.SslErrorHandler?, error: android.net.http.SslError?) {
                         val host = Uri.parse(error?.url).host ?: ""
@@ -593,6 +584,25 @@ class MainActivity : AppCompatActivity() {
         } catch (e: Exception) {
             AppLogger.error(TAG,"onConfigurationChanged failed", e)
         }
+    }
+
+    private fun tryStartFade() {
+        val iconView = splashIconView ?: return
+        val provider = splashScreenView ?: return
+        if (!splashContentLoaded || splashFadeStarted) return
+        splashFadeStarted = true
+
+        val fadeDuration = 300L
+        val fadeOut = ObjectAnimator.ofFloat(iconView, View.ALPHA, 1f, 0f).apply {
+            duration = fadeDuration
+            interpolator = AccelerateDecelerateInterpolator()
+        }
+        fadeOut.start()
+
+        Handler(Looper.getMainLooper()).postDelayed({
+            provider.remove()
+            applySavedTheme()
+        }, fadeDuration)
     }
 
     private fun applySavedTheme() {
