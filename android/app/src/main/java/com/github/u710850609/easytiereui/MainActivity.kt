@@ -57,7 +57,7 @@ class MainActivity : AppCompatActivity() {
     private var httpServerPort = 0
     private var h5ThemeOverride: Boolean? = null // null = follow system, true = dark, false = light
     private val prefs: SharedPreferences by lazy { getSharedPreferences("easytier_prefs", MODE_PRIVATE) }
-    private var splashMinDisplayElapsed = false
+    private var splashMinDisplayElapsed = true
     private var splashContentLoaded = false
     private val splashContentReady: Boolean get() = splashMinDisplayElapsed && splashContentLoaded
 
