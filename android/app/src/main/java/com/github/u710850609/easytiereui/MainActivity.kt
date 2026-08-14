@@ -26,6 +26,8 @@ import android.webkit.WebViewClient
 import android.widget.Toast
 import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
+
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowInsetsCompat
