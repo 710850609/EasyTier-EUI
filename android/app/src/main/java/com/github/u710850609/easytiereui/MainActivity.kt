@@ -100,8 +100,8 @@ class MainActivity : AppCompatActivity() {
                 return@setOnExitAnimationListener
             }
 
-            val animatorDuration = 350
-            val fadeOutDelay = 100
+            val animatorDuration = 350L
+            val fadeOutDelay = 100L
 
             val slideUp = ObjectAnimator.ofFloat(
                 iconView,
@@ -135,7 +135,7 @@ class MainActivity : AppCompatActivity() {
             Handler(Looper.getMainLooper()).postDelayed({
                 splashScreenView.remove()
                 applySavedTheme()
-            }, animatorDuration.toLong())
+            }, animatorDuration)
         }
 
         splashScreen.setKeepOnScreenCondition { !splashContentReady }
