@@ -104,7 +104,7 @@ class MainActivity : AppCompatActivity() {
                 iconView,
                 View.TRANSLATION_Y,
                 0f,
-                -splashScreenView.height * 0.25f
+                -resources.displayMetrics.heightPixels * 0.25f
             ).apply {
                 duration = 300
                 interpolator = AccelerateDecelerateInterpolator()
