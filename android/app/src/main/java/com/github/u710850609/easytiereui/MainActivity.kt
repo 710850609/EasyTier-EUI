@@ -100,8 +100,8 @@ class MainActivity : AppCompatActivity() {
                 return@setOnExitAnimationListener
             }
 
-            val animatorDuration = 350L
-            val fadeOutDelay = 100L
+            val animatorDuration = 280L
+            val fadeOutDelay = 0L
 
             val slideUp = ObjectAnimator.ofFloat(
                 iconView,
@@ -294,6 +294,7 @@ class MainActivity : AppCompatActivity() {
                         super.onPageFinished(view, url)
                         AppLogger.info(TAG, "WebView page finished: $url")
                         splashContentLoaded = true
+                        window?.decorView?.invalidate()
                         injectSafeArea()
                     }
                     override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: android.webkit.WebResourceError?) {
