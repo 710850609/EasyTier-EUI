@@ -127,7 +127,7 @@ class MainActivity : AppCompatActivity() {
                 .setDuration(280)
                 .setStartDelay(250)
                 .setInterpolator(AccelerateDecelerateInterpolator())
-                .withEndAction { splashScreenView.remove() }
+                .withEndAction { splashScreenView.remove(); applySavedTheme() }
                 .start()
         }
 
