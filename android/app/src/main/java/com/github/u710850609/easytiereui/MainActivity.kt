@@ -15,7 +15,6 @@ import android.os.Bundle
 import android.os.Environment
 import android.os.Handler
 import android.os.Looper
-import android.animation.ObjectAnimator
 import android.webkit.JavascriptInterface
 import android.webkit.WebChromeClient
 import android.webkit.PermissionRequest
@@ -23,13 +22,9 @@ import android.webkit.WebResourceRequest
 import android.os.Build
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import android.view.View
-import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
-
-import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowInsetsCompat
 import androidx.webkit.WebSettingsCompat
 import androidx.webkit.WebViewFeature
@@ -56,9 +51,6 @@ class MainActivity : AppCompatActivity() {
     private var httpServerPort = 0
     private var h5ThemeOverride: Boolean? = null // null = follow system, true = dark, false = light
     private val prefs: SharedPreferences by lazy { getSharedPreferences("easytier_prefs", MODE_PRIVATE) }
-    private var splashMinDisplayElapsed = false
-    private var splashContentLoaded = false
-    private val splashContentReady: Boolean get() = splashMinDisplayElapsed && splashContentLoaded
 
     private fun initLogLevel() {
         try {
@@ -89,57 +81,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        val splashScreen = installSplashScreen()
-
-        splashScreen.setOnExitAnimationListener { splashScreenView ->
-            val iconView = splashScreenView.iconView
-            if (iconView == null) {
-                splashScreenView.remove()
-                return@setOnExitAnimationListener
-            }
-
-            val slideUp = ObjectAnimator.ofFloat(
-                iconView,
-                View.TRANSLATION_Y,
-                0f,
-                -resources.displayMetrics.heightPixels * 0.25f
-            ).apply {
-                duration = 280
-                interpolator = AccelerateDecelerateInterpolator()
-            }
-
-            val scaleDownX = ObjectAnimator.ofFloat(iconView, View.SCALE_X, 1f, 0.7f).apply {
-                duration = 280
-                interpolator = AccelerateDecelerateInterpolator()
-            }
-            val scaleDownY = ObjectAnimator.ofFloat(iconView, View.SCALE_Y, 1f, 0.7f).apply {
-                duration = 280
-                interpolator = AccelerateDecelerateInterpolator()
-            }
-
-            slideUp.start()
-            scaleDownX.start()
-            scaleDownY.start()
-
-            splashScreenView.view.animate()
-                .alpha(0f)
-                .setDuration(280)
-                .setStartDelay(250)
-                .setInterpolator(AccelerateDecelerateInterpolator())
-                .withEndAction { splashScreenView.remove() }
-                .start()
-        }
-
-        splashScreen.setKeepOnScreenCondition { !splashContentReady }
-
-        Handler(Looper.getMainLooper()).postDelayed({
-            splashMinDisplayElapsed = true
-        }, 1500)
-
-        Handler(Looper.getMainLooper()).postDelayed({
-            splashContentLoaded = true
-        }, 4000)
-
         super.onCreate(savedInstanceState)
         AppLogger.logDir = File(getExternalFilesDir(null), "logs")
         AppLogger.logDir?.mkdirs()
@@ -173,18 +114,18 @@ class MainActivity : AppCompatActivity() {
                     AppLogger.warn(TAG, "WebView.setDataDirectorySuffix failed (already initialized): ${e.message}")
                 }
             }
-            // enableEdgeToEdge(
-            //     statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT),
-            //     navigationBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT)
-            // )
+            enableEdgeToEdge(
+                statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT),
+                navigationBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT)
+            )
             setContentView(R.layout.activity_main)
             AppLogger.info(TAG, "setContentView done, finding WebView")
             webView = findViewById(R.id.webview)
             AppLogger.info(TAG, "WebView found, calling setupWebView")
-            applySavedTheme()
-            AppLogger.info(TAG, "applySavedTheme done, calling setupBackPress")
             setupWebView()
             AppLogger.info(TAG, "setupWebView done, calling applySavedTheme")
+            applySavedTheme()
+            AppLogger.info(TAG, "applySavedTheme done, calling setupBackPress")
             setupBackPress()
             requestNotificationPermission()
 
@@ -286,12 +227,10 @@ class MainActivity : AppCompatActivity() {
                     override fun onPageFinished(view: WebView?, url: String?) {
                         super.onPageFinished(view, url)
                         AppLogger.info(TAG, "WebView page finished: $url")
-                        splashContentLoaded = true
                         injectSafeArea()
                     }
                     override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: android.webkit.WebResourceError?) {
                         AppLogger.error(TAG, "WebView error: ${error?.description} for ${request?.url}")
-                        splashContentLoaded = true
                     }
                     override fun onReceivedSslError(view: WebView?, handler: android.webkit.SslErrorHandler?, error: android.net.http.SslError?) {
                         val host = Uri.parse(error?.url).host ?: ""
@@ -611,7 +550,6 @@ class MainActivity : AppCompatActivity() {
         AppLogger.debug(TAG, "applySavedTheme: mode=$savedMode, override=$h5ThemeOverride")
     }
 
-
     inner class AndroidBridge {
         @JavascriptInterface
         fun getApiBaseUrl(): String {
@@ -625,7 +563,29 @@ class MainActivity : AppCompatActivity() {
             AppLogger.debug(TAG, "AndroidBridge.setThemeMode: $mode")
             runOnUiThread {
                 prefs.edit().putString("theme_mode", mode).apply()
-                applySavedTheme()
+                when (mode) {
+                    "dark" -> {
+                        h5ThemeOverride = true
+                        enableEdgeToEdge(
+                            statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
+                            navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT)
+                        )
+                    }
+                    "light" -> {
+                        h5ThemeOverride = false
+                        enableEdgeToEdge(
+                            statusBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
+                            navigationBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
+                        )
+                    }
+                    "system" -> {
+                        h5ThemeOverride = null
+                        enableEdgeToEdge(
+                            statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT),
+                            navigationBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT)
+                        )
+                    }
+                }
             }
         }
 
