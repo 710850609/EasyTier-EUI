@@ -42,6 +42,7 @@ import java.io.StringWriter
 import org.json.JSONObject
 import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
+import androidx.lifecycle.Lifecycle
 
 class MainActivity : AppCompatActivity() {
 
@@ -545,6 +546,9 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        if (h5ThemeOverride == null) {
+            applySavedTheme()
+        }
         AppLogger.info(TAG, "onResume")
     }
 
@@ -569,6 +573,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
+        if (!lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) return
         try {
             if (h5ThemeOverride == null) {
                 enableEdgeToEdge(
