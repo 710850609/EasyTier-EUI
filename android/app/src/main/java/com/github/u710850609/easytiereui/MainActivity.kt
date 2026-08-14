@@ -173,18 +173,18 @@ class MainActivity : AppCompatActivity() {
                     AppLogger.warn(TAG, "WebView.setDataDirectorySuffix failed (already initialized): ${e.message}")
                 }
             }
-            enableEdgeToEdge(
-                statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT),
-                navigationBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT)
-            )
+            // enableEdgeToEdge(
+            //     statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT),
+            //     navigationBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT)
+            // )
             setContentView(R.layout.activity_main)
             AppLogger.info(TAG, "setContentView done, finding WebView")
             webView = findViewById(R.id.webview)
             AppLogger.info(TAG, "WebView found, calling setupWebView")
-            setupWebView()
-            AppLogger.info(TAG, "setupWebView done, calling applySavedTheme")
             applySavedTheme()
             AppLogger.info(TAG, "applySavedTheme done, calling setupBackPress")
+            setupWebView()
+            AppLogger.info(TAG, "setupWebView done, calling applySavedTheme")
             setupBackPress()
             requestNotificationPermission()
 
