@@ -15,6 +15,7 @@ import android.os.Bundle
 import android.os.Environment
 import android.os.Handler
 import android.os.Looper
+import android.animation.ObjectAnimator
 import android.webkit.JavascriptInterface
 import android.webkit.WebChromeClient
 import android.webkit.PermissionRequest
@@ -22,9 +23,13 @@ import android.webkit.WebResourceRequest
 import android.os.Build
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.view.View
+import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowInsetsCompat
 import androidx.webkit.WebSettingsCompat
 import androidx.webkit.WebViewFeature
@@ -51,6 +56,9 @@ class MainActivity : AppCompatActivity() {
     private var httpServerPort = 0
     private var h5ThemeOverride: Boolean? = null // null = follow system, true = dark, false = light
     private val prefs: SharedPreferences by lazy { getSharedPreferences("easytier_prefs", MODE_PRIVATE) }
+    private var splashMinDisplayElapsed = false
+    private var splashContentLoaded = false
+    private val splashContentReady: Boolean get() = splashMinDisplayElapsed && splashContentLoaded
 
     private fun initLogLevel() {
         try {
@@ -81,6 +89,59 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        applySavedNightMode()
+
+        val splashScreen = installSplashScreen()
+
+        splashScreen.setOnExitAnimationListener { splashScreenView ->
+            val iconView = splashScreenView.iconView
+            if (iconView == null) {
+                splashScreenView.remove()
+                return@setOnExitAnimationListener
+            }
+
+            val slideUp = ObjectAnimator.ofFloat(
+                iconView,
+                View.TRANSLATION_Y,
+                0f,
+                -splashScreenView.height * 0.25f
+            ).apply {
+                duration = 300
+                interpolator = AccelerateDecelerateInterpolator()
+            }
+
+            val scaleDownX = ObjectAnimator.ofFloat(iconView, View.SCALE_X, 1f, 0.7f).apply {
+                duration = 300
+                interpolator = AccelerateDecelerateInterpolator()
+            }
+            val scaleDownY = ObjectAnimator.ofFloat(iconView, View.SCALE_Y, 1f, 0.7f).apply {
+                duration = 300
+                interpolator = AccelerateDecelerateInterpolator()
+            }
+
+            slideUp.start()
+            scaleDownX.start()
+            scaleDownY.start()
+
+            splashScreenView.view.animate()
+                .alpha(0f)
+                .setDuration(280)
+                .setStartDelay(280)
+                .setInterpolator(AccelerateDecelerateInterpolator())
+                .withEndAction { splashScreenView.remove() }
+                .start()
+        }
+
+        splashScreen.setKeepOnScreenCondition { !splashContentReady }
+
+        Handler(Looper.getMainLooper()).postDelayed({
+            splashMinDisplayElapsed = true
+        }, 1500)
+
+        Handler(Looper.getMainLooper()).postDelayed({
+            splashContentLoaded = true
+        }, 4000)
+
         super.onCreate(savedInstanceState)
         AppLogger.logDir = File(getExternalFilesDir(null), "logs")
         AppLogger.logDir?.mkdirs()
@@ -227,10 +288,12 @@ class MainActivity : AppCompatActivity() {
                     override fun onPageFinished(view: WebView?, url: String?) {
                         super.onPageFinished(view, url)
                         AppLogger.info(TAG, "WebView page finished: $url")
+                        splashContentLoaded = true
                         injectSafeArea()
                     }
                     override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: android.webkit.WebResourceError?) {
                         AppLogger.error(TAG, "WebView error: ${error?.description} for ${request?.url}")
+                        splashContentLoaded = true
                     }
                     override fun onReceivedSslError(view: WebView?, handler: android.webkit.SslErrorHandler?, error: android.net.http.SslError?) {
                         val host = Uri.parse(error?.url).host ?: ""
@@ -522,6 +585,16 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun applySavedNightMode() {
+        val savedMode = prefs.getString("theme_mode", "system") ?: "system"
+        val nightMode = when (savedMode) {
+            "dark" -> AppCompatDelegate.MODE_NIGHT_YES
+            "light" -> AppCompatDelegate.MODE_NIGHT_NO
+            else -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+        }
+        AppCompatDelegate.setDefaultNightMode(nightMode)
+    }
+
     private fun applySavedTheme() {
         val savedMode = prefs.getString("theme_mode", "system") ?: "system"
         when (savedMode) {
@@ -563,6 +636,12 @@ class MainActivity : AppCompatActivity() {
             AppLogger.debug(TAG, "AndroidBridge.setThemeMode: $mode")
             runOnUiThread {
                 prefs.edit().putString("theme_mode", mode).apply()
+                val nightMode = when (mode) {
+                    "dark" -> AppCompatDelegate.MODE_NIGHT_YES
+                    "light" -> AppCompatDelegate.MODE_NIGHT_NO
+                    else -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+                }
+                AppCompatDelegate.setDefaultNightMode(nightMode)
                 when (mode) {
                     "dark" -> {
                         h5ThemeOverride = true
