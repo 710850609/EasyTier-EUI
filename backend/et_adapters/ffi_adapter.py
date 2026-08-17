@@ -274,6 +274,13 @@ class FfiAdapter(IEasyTierAdapter):
             })
         return peers
 
+
+    def change_log_level(self, log_level: str, **kwargs) -> None:
+        """
+        FFI 模式不支持改变日志级别
+        """
+        pass
+
     def set_tun_fd(self, instance_name: str, fd: int) -> int:
         logger.info(f"set_tun_fd {instance_name} {fd}")
         if not self._has_symbol('set_tun_fd'):

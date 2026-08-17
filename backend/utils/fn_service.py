@@ -11,14 +11,16 @@ import os.path
 import sys
 from pathlib import Path
 
+from et_adapters import get_facade
+from et_adapters.core_background_adapter import CoreBackgroundAdapter
+
 try:
     import psutil
 except ImportError:
     psutil = None
 
 from actions import services
-from utils import run_configs, log_util
-
+from utils import run_configs, log_util, et_run_info
 
 logger = logging.getLogger(__name__)
 _fn_check_file :str=''
@@ -52,6 +54,7 @@ def start():
     启动成功后，把 开机时间 写入 文件
     """
     Path(run_configs.config_dir()).mkdir(parents=True, exist_ok=True)
+    _fix_remove_sys_service()
     services.start_all()
     check_file = Path(_fn_check_file)
     if not check_file.exists():
@@ -69,6 +72,26 @@ def stop():
     services.stop_all()
     Path(_fn_check_file).unlink(missing_ok=True)
     logger.info(f"文件 {_fn_check_file} 已删除, 应用停止成功")
+
+
+def _fix_remove_sys_service():
+    """
+    修复：移除2.0版本错误引入系统服务
+    """
+    ext = ".exe" if sys.platform == "win32" else ""
+    cli_path = os.path.join(run_configs.core_dir(), f'easytier-cli{ext}')
+    core_path = os.path.join(run_configs.core_dir(), f'easytier-core{ext}')
+    service_adapter = CoreBackgroundAdapter(cli_path, core_path)
+    if service_adapter.system_service_status() > -1:
+        # 移除系统服务
+        service_adapter.system_service_uninstall()
+        logger.info(f"已移除注册的系统服务")
+    infos = et_run_info.get_all()
+    for info in infos.values():
+        if info.use_system_service:
+            logger.info(f"标记不使用系统服务: {info.profile}")
+            info.use_system_service = False
+            et_run_info.save(*info.__dict__.values())
 
 if __name__ == '__main__':
     try:

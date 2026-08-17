@@ -4,7 +4,6 @@
 import json
 import logging
 import subprocess
-import sys
 import threading
 from typing import Union
 
@@ -18,7 +17,6 @@ logger = logging.getLogger(__name__)
 # 延迟初始化：使用线程安全的单例模式
 _pm = {}
 _pm_lock = threading.Lock()
-_ext = ".exe" if sys.platform == "win32" else ""
 
 def _get_process_manager(profile: str = None) -> Union[ProcessManager]:
     """获取 ProcessManager 实例（延迟初始化，线程安全）"""
@@ -106,3 +104,18 @@ class CoreForegroundAdapter(IEasyTierAdapter):
                 logger.debug(str(e))
                 return []
             raise e
+
+    def change_log_level(self, log_level: str, **kwargs) -> None:
+        log_level = 'disabled' if log_level == 'off' else log_level
+        log_level = 'warning' if log_level == 'warn' else log_level
+        rpc_portal = kwargs.get('rpc_portal')
+        cmd = [
+            f"{self._cli_path}",
+            "--rpc-portal",
+            rpc_portal,
+            "logger",
+            "set",
+            log_level,
+        ]
+        logger.info(f"设置日志级别命令： {cmd}")
+        common_util.run_cmd(cmd)

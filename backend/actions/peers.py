@@ -26,7 +26,7 @@ def check_peers(params: dict, *args, **kwargs):
     peer_list = public_peers(data = {'profile': profile, 'refresh': 'false'})
     if len(peer_list) == 0:
         peer_list = public_peers(data = {'profile': profile, 'refresh': 'true'})
-    if get_facade().get_service_dapter() is None:
+    if run_configs.IS_ANDROID:
         # ffi 模式暂不支持检查节点
         return peer_list
     # 提取 URI 列表

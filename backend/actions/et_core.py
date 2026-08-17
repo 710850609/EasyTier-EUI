@@ -30,7 +30,8 @@ def set_log_level(params:dict, *args, **kwargs):
     params = params or {}
     log_level = params.get("level", 'error')
     et_run_info.set_log_level(log_level)
-    services.change_log_level(log_level)
+    get_facade().change_log_level(log_level)
+    # services.change_log_level(log_level)
 
 def version(params=None, *args, **kwargs):
     ver = get_facade().get_version()

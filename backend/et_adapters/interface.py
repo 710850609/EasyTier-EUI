@@ -26,3 +26,7 @@ class IEasyTierAdapter(ABC):
     @abstractmethod
     def get_peers(self, instance_name: str) -> list[dict]:
         """Collect network information for a specific instance."""
+
+    @abstractmethod
+    def change_log_level(self, log_level: str, **kwargs) -> None:
+        """Change log level."""

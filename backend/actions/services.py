@@ -21,7 +21,6 @@ def status(params=None, *args, **kwargs) -> bool:
     profile, _ = Validator.not_empty(params, 'profile', 'validate.profile_required')
     try:
         return get_facade().status(profile)
-        # return facade.get_current_instance() == (profile if profile else None)
     except Exception:
         return False
 
@@ -96,7 +95,7 @@ def auto_start(params: Optional[dict]=None, keep_run_status:bool=True, *args, **
     info.autostart = is_enabled
     info.use_system_service = is_enabled
     facade = get_facade()
-    service_adapter = facade.get_service_dapter()
+    service_adapter = facade.get_service_adapter()
     if service_adapter is None:
         # 不支持系统服务，仅修改配置
         info.use_system_service = False
@@ -135,7 +134,7 @@ def rename_profile(old_profile: Optional[str], new_profile: Optional[str]):
         raise HttpException(get_message('service.config_not_running', old_profile=old_profile))
     auto_start_set = __get_system_service_profiles()
     old_info = et_run_info.get(old_profile)
-    service_adapter = get_facade().get_service_dapter()
+    service_adapter = get_facade().get_service_adapter()
     if service_adapter is None or old_profile not in auto_start_set:
         # 不支持系统服务环境 或是 旧配置不是开机自启，忽略处理
         et_run_info.save(new_profile, old_info.rpc_portal, old_info.autostart, old_info.use_system_service, old_info.log_level)
@@ -158,46 +157,46 @@ def rename_profile(old_profile: Optional[str], new_profile: Optional[str]):
                 et_run_info.remove(new_profile)
             raise e
 
-def change_log_level(log_level):
-    infos = et_run_info.get_all()
-    profiles_systemed = []
-    need_handle_profiles_no_systemed = []
-    need_handle_systemed = False
-    for info in infos.values():
-        if status({'profile': info.profile}):
-            if not info.use_system_service:
-                need_handle_profiles_no_systemed.append(info.profile)
-            else:
-                need_handle_systemed = True
-        if info.use_system_service:
-            profiles_systemed.append(info.profile)
-    service_adapter = get_facade().get_service_dapter()
-    if service_adapter is None:
-        return
-    # 处理系统服务
-    if len(profiles_systemed) > 0:
-        if need_handle_systemed:
-            service_adapter.stop_network('')
-        service_adapter.system_service_uninstall()
-        service_adapter.system_service_install(profiles_systemed, log_level)
-        if need_handle_systemed:
-            service_adapter.start_network('', '')
-    # 处理非系统服务
-    for profile in need_handle_profiles_no_systemed:
-        info = et_run_info.get(profile)
-        log_level = 'disabled' if log_level == 'off' else log_level
-        log_level = 'warning' if log_level == 'warn' else log_level
-        _ext = ".exe" if sys.platform == "win32" else ""
-        cmd = [
-            f"{os.path.join(run_configs.core_dir(), 'easytier-cli')}{_ext}",
-            "--rpc-portal",
-            info.rpc_portal,
-            "logger",
-            "set",
-            log_level,
-        ]
-        logger.info(f"设置日志级别命令： {cmd}")
-        common_util.run_cmd(cmd)
+# def change_log_level(log_level):
+    # infos = et_run_info.get_all()
+    # profiles_systemed = []
+    # need_handle_profiles_no_systemed = []
+    # need_handle_systemed = False
+    # for info in infos.values():
+    #     if status({'profile': info.profile}):
+    #         if not info.use_system_service:
+    #             need_handle_profiles_no_systemed.append(info.profile)
+    #         else:
+    #             need_handle_systemed = True
+    #     if info.use_system_service:
+    #         profiles_systemed.append(info.profile)
+    # service_adapter = get_facade().get_service_adapter()
+    # if service_adapter is None:
+    #     return
+    # # 处理系统服务
+    # if len(profiles_systemed) > 0:
+    #     if need_handle_systemed:
+    #         service_adapter.stop_network('')
+    #     service_adapter.system_service_uninstall()
+    #     service_adapter.system_service_install(profiles_systemed, log_level)
+    #     if need_handle_systemed:
+    #         service_adapter.start_network('', '')
+    # # 处理非系统服务
+    # for profile in need_handle_profiles_no_systemed:
+    #     info = et_run_info.get(profile)
+    #     log_level = 'disabled' if log_level == 'off' else log_level
+    #     log_level = 'warning' if log_level == 'warn' else log_level
+    #     _ext = ".exe" if sys.platform == "win32" else ""
+    #     cmd = [
+    #         f"{os.path.join(run_configs.core_dir(), 'easytier-cli')}{_ext}",
+    #         "--rpc-portal",
+    #         info.rpc_portal,
+    #         "logger",
+    #         "set",
+    #         log_level,
+    #     ]
+    #     logger.info(f"设置日志级别命令： {cmd}")
+    #     common_util.run_cmd(cmd)
 
 
 def __get_system_service_profiles() -> Set[str]:

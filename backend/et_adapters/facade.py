@@ -40,7 +40,10 @@ class EasyTierFacade(IEasyTierAdapter):
     def get_peers(self, instance_name: str) -> list[dict]:
         return self._adapter.get_peers(instance_name)
 
-    def get_service_dapter(self) -> Optional[CoreBackgroundAdapter]:
+    def change_log_level(self, log_level: str, **kwargs) -> None:
+        self._adapter.change_log_level(log_level, **kwargs)
+
+    def get_service_adapter(self) -> Optional[CoreBackgroundAdapter]:
         if isinstance(self._adapter, CoreAdapter):
             return self._adapter.get_service_adapter()
         return None
