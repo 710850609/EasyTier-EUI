@@ -22,9 +22,9 @@ from utils.validators import Validator
 
 logger = logging.getLogger(__name__)
 
-def get_log_level(params:dict, *args, **kwargs):
-    log_level = et_run_info.get_log_level()
-    return log_level
+# def get_log_level(params:dict, *args, **kwargs):
+#     log_level = et_run_info.get_log_level()
+#     return log_level
 
 def set_log_level(params:dict, *args, **kwargs):
     params = params or {}
@@ -33,11 +33,12 @@ def set_log_level(params:dict, *args, **kwargs):
     get_facade().change_log_level(log_level)
     # services.change_log_level(log_level)
 
-def version(params=None, *args, **kwargs):
+def get_config(params=None, *args, **kwargs):
     ver = get_facade().get_version()
     dash_idx = ver.find('-')
     et_version = ver[:dash_idx] if dash_idx > 0 else ver
-    return {'version': f'v{et_version}', 'raw_version': f'easytier-core {ver}'}
+    log_level = et_run_info.get_log_level()
+    return {'version': f'v{et_version}', 'raw_version': f'easytier-core {ver}', 'log_level': log_level}
 
 def get_release_info(params: dict, *args, **kwargs) -> dict:
     params = params or {}

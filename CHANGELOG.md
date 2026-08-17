@@ -14,6 +14,10 @@
 - 修复：飞牛版本、Linux版本（非开机自启模式）、MacOS版本（非开机自启模式）、Docker版本下，关闭组网后，组网进程未被完全终止 ([issues #5](https://github.com/710850609/EasyTier-EUI/issues/5))
 ----
 - 新增：安卓版本支持选择EasyTier内核版本
+---- 
+- 新增：安卓版本增加开屏动画，优化视觉体验
+- 新增：【设置】-其它支持自定义可选初始节点
+- 修复：飞牛版本在2.0时引入，某些情况下导致系统重启报错 ([issues #6](https://github.com/710850609/EasyTier-EUI/issues/6))
 
 <br>
 
@@ -34,6 +38,10 @@
 - Fixed: On FNOS, Linux (non-autostart mode), and macOS (non-autostart mode) and Docker, the networking process was not fully terminated after stopping the network (https://github.com/710850609/EasyTier-EUI/issues/5)
 ----
 - Added: Android version supports selecting EasyTier kernel version
+---- 
+- Added: Splash screen animation on Android for improved visual experience
+- Added: [Settings] - Support for custom optional initial nodes
+- Fixed: FnOS version 2.0 caused system reboot error in certain cases ([issues #6](https://github.com/710850609/EasyTier-EUI/issues/6))
 
 ## 2.1
 - 新增：【配置】-自定义路由

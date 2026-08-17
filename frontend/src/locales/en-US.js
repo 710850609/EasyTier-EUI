@@ -70,6 +70,11 @@ export default {
       dark: 'Dark',
       auto: 'Auto',
     },
+    optionalInitialNodes: 'Optional Initial Nodes',
+    initialNodes: {
+      eui: 'Maintained by EasyTier-EUI',
+      placeholder: 'Enter optional node',
+    },
 
     language: {
       label: 'Language',
@@ -129,6 +134,7 @@ export default {
       description1: 'Simplify the UI for EasyTier usage',
       description2: 'Lower the entry barrier, quickly access remote network devices',
       description3: 'Enjoy advantages like free, unlimited devices, multi-platform support, etc.',
+      description4: 'EasyTier-EUI supports Windows, Linux, Docker, Android, FnOS, FygoOS, MacOS and other systems across different architectures',
       reward: 'Donate',
       rewardDesc: 'Star on GitHub or donate via WeChat, thank you!',
       feedback: 'Feedback',
@@ -156,6 +162,9 @@ export default {
       vconsoleFailed: 'Failed to load VConsole',
       peerSourceTest: 'Switched to test community nodes',
       peerSourceStable: 'Switched to release community nodes',
+      peerSourceEmpty: 'Please enter node address',
+      peerSourceDuplicate: 'This node already exists',
+      saving: 'Saving...',
       versionRefreshed: 'Kernel version list refreshed',
       kernelInstalled: 'Kernel version {version} installed successfully',
       mirrorsRefreshed: 'Got latest mirrors',

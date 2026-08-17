@@ -70,6 +70,11 @@ export default {
       dark: '深色',
       auto: '自动',
     },
+    optionalInitialNodes: '可选初始节点',
+    initialNodes: {
+      eui: '易组网维护',
+      placeholder: '输入可选节点',
+    },
 
     language: {
       label: '语言',
@@ -129,6 +134,7 @@ export default {
       description1: '简化 EasyTier 使用的 UI 界面',
       description2: '降低组网门槛，快速访问异地网络设备',
       description3: '享受 EasyTier 免费、不限设备数量、支持多类型终端等优势',
+      description4: '易组网已支持 Windows、Linux、Docker、Android、FnOS、FygoOS、MacOS 等系统不同架构',
       reward: '赞赏',
       rewardDesc: '点Stars或是微信赞赏 感谢你的肯定',
       feedback: '反馈',
@@ -156,6 +162,9 @@ export default {
       vconsoleFailed: '加载 VConsole 失败',
       peerSourceTest: '已切换到 测试 社区节点',
       peerSourceStable: '已切换到 正式 社区节点',
+      peerSourceEmpty: '请输入节点地址',
+      peerSourceDuplicate: '该节点已存在',
+      saving: '正在保存...',
       versionRefreshed: '内核可选版本已刷新',
       kernelInstalled: '安装内核版本 {version} 成功',
       mirrorsRefreshed: '已获取最新地址',

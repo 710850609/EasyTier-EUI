@@ -31,18 +31,11 @@ def get_ffi_lib_name() -> str:
 
 def set_ffi_version(et_version):
     """设置FFI版本"""
-    et_version = et_version.replace('v', '') if et_version else None
+    et_version: Optional[str] = et_version.replace('v', '') if et_version else None
     if not et_version:
         logger.warning("no FFI version value")
         return
-    setting = {}
-    if os.path.exists(run_configs.setting_file()):
-        with open(run_configs.setting_file(), "r", encoding="utf-8") as f:
-            setting = json.load(f)
-    setting['ffi_version'] = et_version
-    with open(run_configs.setting_file(), "w", encoding="utf-8") as f:
-        json.dump(setting, f, ensure_ascii=False, indent=4)
-
+    run_configs.update_setting('ffi_version', et_version)
 
 class KeyValuePair(Structure):
     _fields_ = [("key", c_void_p), ("value", c_void_p)]
@@ -111,11 +104,8 @@ class FfiAdapter(IEasyTierAdapter):
 
 
     def get_version(self) -> str:
-        ffi_version = None
-        if os.path.exists(run_configs.setting_file()):
-            with open(run_configs.setting_file(), "r", encoding="utf-8") as f:
-                setting = json.load(f)
-                ffi_version = setting.get('ffi_version')
+        settings = run_configs.get_settings()
+        ffi_version: Optional[str] = settings.get('ffi_version')
         if ffi_version:
             return ffi_version
         else:

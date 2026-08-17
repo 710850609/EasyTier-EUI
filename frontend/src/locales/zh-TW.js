@@ -70,6 +70,11 @@ export default {
       dark: '深色',
       auto: '自動',
     },
+    optionalInitialNodes: '可選初始節點',
+    initialNodes: {
+      eui: '易組網維護',
+      placeholder: '輸入可選節點',
+    },
 
     language: {
       label: '語言',
@@ -129,6 +134,7 @@ export default {
       description1: '簡化 EasyTier 使用的 UI 介面',
       description2: '降低組網門檻，快速存取異地網路裝置',
       description3: '享受 EasyTier 免費、不限裝置數量、支援多類型終端等優勢',
+      description4: '易組網已支援 Windows、Linux、Docker、Android、FnOS、FygoOS、MacOS 等系統不同架構',
       reward: '讚賞',
       rewardDesc: '點Stars或是微信讚賞 感謝你的肯定',
       feedback: '回饋',
@@ -156,6 +162,9 @@ export default {
       vconsoleFailed: '載入 VConsole 失敗',
       peerSourceTest: '已切換到 測試 社群節點',
       peerSourceStable: '已切換到 正式 社群節點',
+      peerSourceEmpty: '請輸入節點位址',
+      peerSourceDuplicate: '該節點已存在',
+      saving: '正在儲存...',
       versionRefreshed: '核心可選版本已重新整理',
       kernelInstalled: '安裝核心版本 {version} 成功',
       mirrorsRefreshed: '已取得最新位址',

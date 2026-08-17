@@ -26,10 +26,9 @@ def setup_log(log_file:Optional[str] = None, log_level:Union[int, str] = logging
     if _log_setup_done:
         return  # 已配置过，直接返回
 
-    if os.path.exists(run_configs.setting_file()):
-        with open(run_configs.setting_file(), "r", encoding="utf-8") as f:
-            setting = json.load(f)
-            log_level = setting.get('log_level', 'warn').upper()
+    settings = run_configs.get_settings()
+    log_level = settings.get('log_level') or 'WARN'
+    log_level = log_level.upper()
 
     if isinstance(log_level, str):
         log_level = getattr(logging, log_level.upper(), logging.INFO)

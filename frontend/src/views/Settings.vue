@@ -211,6 +211,34 @@
       </div>
       <div class="setting-row">
         <span class="setting-label">
+          {{ $t('settings.optionalInitialNodes') }}
+        </span>
+        <var-select
+          v-model="peerSource"
+          multiple
+          variant="outlined"
+          :chip="true"
+          size="small"
+          class="setting-select"
+          @change="savePeerSource"
+        >
+          <var-cell>
+            <template #icon>
+              <svg-icon type="mdi" :path="mdilPencil" color="var(--color-primary)" />
+            </template>
+            <template #description>
+              <var-input :placeholder="$t('settings.initialNodes.placeholder')" size="small" v-model="customPeerSource" blur-color="var(--color-primary)" />
+            </template>
+            <template #extra>
+              <var-button type="primary" size="small" @click="addPeerSource">{{ $t('config.addListener') }}</var-button>
+            </template>
+          </var-cell>
+          <var-option :label="$t('settings.initialNodes.eui')" value="_eui" />
+          <var-option v-for="(e, index) in peerSourceOptions.filter(e => e.value !== '_eui')" :key="'custom-' + index" :label="e.label" :value="e.value" />
+        </var-select>
+      </div>
+      <div class="setting-row">
+        <span class="setting-label">
           {{ $t('settings.euiLogLevel.label') }}
         </span>
         <var-select 
@@ -340,6 +368,7 @@
           <p>{{ $t('settings.about.description1') }}</p>
           <p>{{ $t('settings.about.description2') }}</p>
           <p>{{ $t('settings.about.description3') }}</p>
+          <p>{{ $t('settings.about.description4') }}</p>
           <img :alt="$t('settings.about.downloadCountAlt')" :src="downloadBadgeUrl" />
         </div>
       </div>
@@ -406,13 +435,17 @@ import { getAcceleratedDownloadUrl } from '../utils/github.js'
 import { openDownloadUrl } from '../utils/download.js'
 import { setLanguage, getLanguage } from '../locales/index.js'
 import { useI18n } from 'vue-i18n'
-// import { getLatestVersionWithCache } from '../utils/github.js'
 import SvgIcon from '@jamescoyle/vue-icon'
+import { mdilPencil } from '@mdi/light-js'
 import { mdiBrightness6, mdiAccessPointNetwork, mdiDevTo, mdiShieldLock, mdiMapOutline, mdiInformation, mdiTextBoxOutline } from '@mdi/js'
 
 const dev_toggle_timer = ref(null);
 const { t } = useI18n()
 const currentLanguage = ref(getLanguage())
+const peerSourceOptions = ref([])
+
+const peerSource = ref([])
+const customPeerSource = ref('')
 const showDevContent = ref(false)
 const vConsoleEnabled = ref(false)
 const changingPeerSource = ref(false)
@@ -533,7 +566,7 @@ const toggleVConsole = async (val) => {
 const togglePeerSource = async (val) => {
   changingPeerSource.value = true
   const data = { source: val ? 'test' : 'stable' }
-  await api.peers.setPeerSource(data).then(() => {
+  await api.peers.setEuiPeerSource(data).then(() => {
     testPeerSourceEnabled.value = val
     toast.success(t(val ? 'settings.toast.peerSourceTest' : 'settings.toast.peerSourceStable'))
   }).finally(() => {
@@ -543,7 +576,7 @@ const togglePeerSource = async (val) => {
 
 const loadPeerSource = async () => {
   try {
-    const { data } = await api.peers.getPeerSource()
+    const { data } = await api.peers.getEuiPeerSource()
     testPeerSourceEnabled.value = data.source === 'test'
   } catch (e) {
     console.error('获取节点来源失败:', e)
@@ -551,11 +584,49 @@ const loadPeerSource = async () => {
   }
 }
 
+const loadPeerSourceList = async () => {
+  try {
+    const { data } = await api.peers.getPeerSource()
+    if (Array.isArray(data)) {
+      data.forEach(e => {
+        peerSourceOptions.value.push({ value: e, label: e })
+      })
+      peerSource.value = data
+    }
+  } catch (e) {
+    console.error('获取可选节点失败:', e)
+  }
+}
+
+const savePeerSource = async () => {
+  const loadingToast = toast.loading(t('settings.toast.saving'))
+  await api.peers.setPeerSource({ peer_source: peerSource.value })
+  loadingToast.clear()
+}
+
+const addPeerSource = () => {
+  const val = customPeerSource.value.trim()
+  if (!val) {
+    toast.error(t('settings.toast.peerSourceEmpty'))
+    return
+  }
+  if (peerSourceOptions.value.some(item => item.value === val)) {
+    toast.error(t('settings.toast.peerSourceDuplicate'))
+    return
+  }
+  peerSourceOptions.value.push({ value: val, label: val })
+  peerSource.value.push(val)
+  customPeerSource.value = ''
+  savePeerSource()
+}
+
 // 获取当前版本
-const getEtVersion = async () => {
+const getEtInfo = async () => {
   try {
     isFetchingEtCoreVersion.value = true
-    const { data } = await api.etCore.getVersion()
+    const { data } = await api.etCore.getConfig()
+    etLogLevel.value = data.log_level
+    delete data.log_level
     etVersion.value = { ...etVersion.value, ...data }
   } catch (e) {
     console.error('获取内核版本失败:', e)
@@ -590,7 +661,8 @@ const installEtCore = async () => {
     api.etCore.install({ version: etVersion.value.selected_version })
     .then((res) => {
       toast.success(res.data || t('settings.toast.kernelInstalled', { version: etVersion.value.selected_version }))
-      getEtVersion()
+      // getEtVersion()
+      getEtInfo()
       if (platform.value === 'android') {
         toast.success(t('settings.toast.restartToApply'))
       }
@@ -628,6 +700,7 @@ const getEuiInfo = async () => {
     forUser.value = data.for_user
     platform.value = data.platform
     isDocker.value = data.is_docker
+    logLevel.value = data.log_level
   } catch (e) {
     console.error('获取版本号失败:', e)
     buildVersion.value = t('settings.toast.fetchVersionFailed')
@@ -741,11 +814,6 @@ const shutdown = async () => {
   }
 }
 
-const getEtLogLevel = async () => {
-  const { data } = await api.etCore.getEtLogLevel()
-  etLogLevel.value = data
-}
-
 const setEtLogLevel = async (level) => {
   const loadingToast = toast.loading(t('settings.settingLogLevel'))
   try {
@@ -754,17 +822,6 @@ const setEtLogLevel = async (level) => {
     toast.success(t('settings.logLevelSet', {label: selectedLabel}))
   } finally {
     loadingToast.clear()
-  }
-}
-
-const fetchLogLevel = async () => {
-  try {
-    const { data } = await api.settings.getLogLevel()
-    if (data) {
-      logLevel.value = data
-    }
-  } catch (e) {
-    console.error('获取日志级别失败:', e)
   }
 }
 
@@ -916,11 +973,10 @@ onMounted(() => {
     getGithubMirrors()
     showDevContent.value = true
   }
+  loadPeerSourceList()
   getEtReleaseInfo(true, false)
   getEuiReleaseInfo(true, false)
-  getEtVersion()
-  getEtLogLevel()
-  fetchLogLevel()
+  getEtInfo()
   getEuiInfo()
 })
 </script>

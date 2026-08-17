@@ -239,8 +239,10 @@ export const api = {
   peers: {
     checkPeers: (params = {}) => get('/peers/check_peers', params),
     publicPeers: (params = {}) => get('/peers/public_peers', params),
-    setPeerSource: (params = {}) => post('/peers/set_peer_source', params),
+    setEuiPeerSource: (params = {}) => post('/peers/set_eui_peer_source', params),
+    getEuiPeerSource: (params = {}) => post('/peers/get_eui_peer_source', params),
     getPeerSource: (params = {}) => post('/peers/get_peer_source', params),
+    setPeerSource: (params = {}) => post('/peers/set_peer_source', params),
   },
   // 服务相关
   services: {
@@ -272,7 +274,7 @@ export const api = {
   },
   // ET 核心相关
   etCore: {
-    getVersion: () => get('/et_core/version'),
+    getConfig: () => get('/et_core/get_config'),
     // getReleaseInfo: (data) => get('/et_core/get_release_info', data),
     getVersionList: (params = {}) => get('/et_core/version_list', params),
     install: (data) => post('/et_core/install', data),

@@ -29,6 +29,7 @@ def eui_info(*args, **kwargs):
         'platform': platform,
         'for_user': run_configs.is_fn_system() and run_configs.DEFAULT_TRIM_APPNAME == 'EasyTier-EUI.User',
         'is_docker': is_docker,
+        'log_level': get_log_level()
     }
 
 def github_mirrors(params:dict, *args, **kwargs):
@@ -115,13 +116,8 @@ def delete_log(params=None, *args, **kwargs):
     return get_message('settings.log_deleted', size=size_str)
 
 def get_log_level(params=None, *args, **kwargs):
-    log_level = 'warn'
-    if os.path.exists(run_configs.setting_file()):
-        with open(run_configs.setting_file(), "r", encoding="utf-8") as f:
-            setting = json.load(f)
-            log_level = setting.get('log_level', 'warn')
-    return log_level
-
+    settings = run_configs.get_settings()
+    return settings.get('log_level') or 'warn'
 
 def set_log_level(params=None, *args, **kwargs):
     params = params or {}
@@ -138,13 +134,7 @@ def set_log_level(params=None, *args, **kwargs):
     excluded_console = run_configs.is_docker()
     # docker 环境下，不修改 console 日志输出，方便控制台定位问题
     log_util.set_log_level(log_level, None, excluded_console)
-    setting = {}
-    if os.path.exists(run_configs.setting_file()):
-        with open(run_configs.setting_file(), "r", encoding="utf-8") as f:
-            setting = json.load(f)
-    setting['log_level'] = log_level.lower()
-    with open(run_configs.setting_file(), "w", encoding="utf-8") as f:
-        json.dump(setting, f, ensure_ascii=False, indent=4)
+    run_configs.update_setting('log_level', log_level.lower())
 
 def shutdown(params=None, *args, **kwargs):
     import os

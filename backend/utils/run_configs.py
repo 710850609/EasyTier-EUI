@@ -3,6 +3,7 @@
 """
 运行配置
 """
+import json
 import logging
 import os
 import platform
@@ -205,8 +206,22 @@ def fn_check_file() -> str:
     """
     return os.path.join(data_dir(), 'fn_check.txt')
 
-def setting_file() -> str:
+def _setting_file() -> str:
     return os.path.join(data_dir(), 'setting.json')
+
+def get_settings() -> dict:
+    settings_file = _setting_file()
+    settings = {}
+    if os.path.exists(settings_file):
+        with open(settings_file, "r", encoding="utf-8") as f:
+            settings = json.load(f)
+    return settings or {}
+
+def update_setting(key: str, value: str | dict | list) -> None:
+    settings = get_settings()
+    settings[key] = value
+    with open(_setting_file(), "w", encoding="utf-8") as f:
+        json.dump(settings, f, ensure_ascii=False, indent=4)
 
 def get_run_mode() -> int:
     """

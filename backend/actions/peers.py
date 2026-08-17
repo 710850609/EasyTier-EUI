@@ -13,6 +13,7 @@ from models.peers import PeersCheckResult
 from utils import check_peers as check_util, run_configs
 from utils import github_util
 from et_adapters import get_facade
+from utils.validators import Validator
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +76,10 @@ def public_peers(data:dict, *args, **kwargs):
             pass
     return peers
 
-def set_peer_source(params: dict, *args, **kwargs):
+def set_eui_peer_source(params: dict, *args, **kwargs):
+    """
+    设置易组网初始节点来源
+    """
     params = params or {}
     source = params.get('source', '')
     test_peer_mark_file = Path(run_configs.data_dir(), 'test-peer-source')
@@ -89,10 +93,28 @@ def set_peer_source(params: dict, *args, **kwargs):
     Path(run_configs.et_peer_meta_file()).unlink(missing_ok=True)
     __get_public_peers(refresh=True)
 
-def get_peer_source(*args, **kwargs):
+def get_eui_peer_source(*args, **kwargs):
+    """
+    获取易组网初始节点来源
+    """
     if Path(run_configs.data_dir(), 'test-peer-source').exists():
         return {'source': 'test'}
     return {'source': ''}
+
+
+def get_peer_source(*args, **kwargs):
+    settings = run_configs.get_settings()
+    if 'peer_source' in settings:
+        return settings.get('peer_source', [])
+    return ['_eui']
+
+def set_peer_source(params: dict, *args, **kwargs):
+    params = params or {}
+    peer_source = params.get('peer_source') or []
+    run_configs.update_setting('peer_source', peer_source)
+    Path(run_configs.et_peer_check_result_file()).unlink(missing_ok=True)
+    Path(run_configs.et_peer_meta_file()).unlink(missing_ok=True)
+    __get_public_peers(refresh=True)
 
 
 def __get_public_peers(refresh=False) -> list[dict]:
@@ -144,10 +166,6 @@ def __save_peer_check_result(peers: list[dict|PeersCheckResult], sort: bool=Fals
     return dict_peers
 
 def __download_peers() ->dict:
-    peer_meta_url = f"https://raw.githubusercontent.com/710850609/EasyTier-EUI/refs/heads/main/configs/peers.json"
-    test_peer_mark_file = Path(run_configs.data_dir(), 'test-peer-source')
-    if test_peer_mark_file.exists():
-        peer_meta_url = peer_meta_url.replace('.json', '-test.json')
     peer_meta_file = run_configs.et_peer_meta_file()
     if os.path.exists(peer_meta_file):
         with open(peer_meta_file, "r", encoding="utf-8") as f:
@@ -157,15 +175,36 @@ def __download_peers() ->dict:
         if download_diff_time < cache_time:
             logger.info(f"节点元数据 { download_diff_time } ms前下载，未超过缓存时间 { cache_time } ms，直接使用")
             return data
-    try:
-        data = github_util.download_raw_file(peer_meta_url, timeout=10)
-        data['downloadTime'] = int(time.time() * 1000)
-        with open(peer_meta_file, "w", encoding="utf-8") as f:
-            f.write(json.dumps(data, ensure_ascii=False, indent=2))
-        return data
-    except Exception as e:
-        logger.exception(f"获取节点元数据失败")
-        raise HttpException(get_message('peers.fetch_failed', error=str(e)))
+
+    settings = run_configs.get_settings()
+    peer_source = settings.get('peer_source') or []
+    customs_peer_source = []
+    exists_eui = False
+    for item in peer_source:
+        if item != '_eui':
+            customs_peer_source.append(item)
+        else:
+            exists_eui = True
+    data = {}
+    if exists_eui:
+        try:
+            peer_meta_url = f"https://raw.githubusercontent.com/710850609/EasyTier-EUI/refs/heads/main/configs/peers.json"
+            test_peer_mark_file = Path(run_configs.data_dir(), 'test-peer-source')
+            if test_peer_mark_file.exists():
+                peer_meta_url = peer_meta_url.replace('.json', '-test.json')
+            data = github_util.download_raw_file(peer_meta_url, timeout=10)
+            data['downloadTime'] = int(time.time() * 1000)
+        except Exception as e:
+            logger.exception(f"获取节点元数据失败")
+            raise HttpException(get_message('peers.fetch_failed', error=str(e)))
+
+    data['peers'] = {} if 'peers' not in data else data['peers']
+    for item in customs_peer_source:
+        data['peers'][item] = {'status': 1, 'uri': item, 'owner': None, 'dynamic': False}
+
+    with open(peer_meta_file, "w", encoding="utf-8") as f:
+        f.write(json.dumps(data, ensure_ascii=False, indent=2))
+    return data
 
 def __sort_peers(peers: list[dict]):
     peers.sort(key=lambda x: (-x.get('status'), x.get('latency', 0), x.get('src_uri', ''), x.get('uri', '')))
