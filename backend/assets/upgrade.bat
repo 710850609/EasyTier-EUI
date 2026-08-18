@@ -53,18 +53,29 @@ goto wait_exit
 :proc_exited
 call :log "旧进程已退出，开始替换文件"
 
-:: 移动新文件
+:: 移动新文件，重试最多 5 次（每次等待 1 秒）
+set RETRY=0
+:retry_move
 if exist "%UPDATE_DIR%\EasyTier-EUI.exe" (
     move /y "%UPDATE_DIR%\EasyTier-EUI.exe" "%APP_DIR%\EasyTier-EUI.exe" >nul 2>&1
-    if errorlevel 1 (
-        call :log "[错误] 主程序替换失败，文件可能被占用"
-        exit /b 1
+    if not errorlevel 1 (
+        call :log "二进制已替换"
+        goto move_done
     )
-    call :log "二进制已替换"
+    set /a RETRY+=1
+    if !RETRY! leq 5 (
+        call :log "替换失败，文件可能被占用，重试 !RETRY!/5..."
+        call :sleep 1
+        goto retry_move
+    )
+    call :log "[错误] 主程序替换失败，文件可能被占用"
+    exit /b 1
 ) else (
     call :log "[错误] 更新文件不存在 %UPDATE_DIR%\EasyTier-EUI.exe"
     exit /b 1
 )
+
+:move_done
 
 :: 清理更新目录
 rmdir /s /q "%UPDATE_DIR%" >nul 2>&1
