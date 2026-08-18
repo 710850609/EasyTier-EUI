@@ -3047,6 +3047,7 @@ html.dark .config-section-panel {
     flex-direction: column;
     height: 100%;
     overflow: hidden;
+    padding-bottom: calc(var(--sab, 0px) + 16px);
   }
 
   .config-else-wrapper {

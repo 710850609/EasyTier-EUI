@@ -1247,7 +1247,7 @@ onMounted(() => {
 /* 移动端响应式 */
 @media (max-width: 480px) {
   .settings-page {
-    padding-bottom: calc(64px + var(--sab, 0px) + 16px);
+    padding-bottom: calc(var(--sab, 0px) + 16px);
   }
 
   .about-version-card {
