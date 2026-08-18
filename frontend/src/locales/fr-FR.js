@@ -42,7 +42,7 @@ export default {
     theme: { light: 'Clair', dark: 'Sombre', auto: 'Auto' },
     optionalInitialNodes: 'Nœuds initiaux optionnels',
     initialNodes: {
-      eui: 'Maintenu par EasyTier-EUI',
+      eui: 'Nœud maintenu par EasyTier-EUI',
       placeholder: 'Saisir un nœud optionnel',
     },
     language: { label: 'Langue' },

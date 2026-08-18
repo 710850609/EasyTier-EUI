@@ -3,7 +3,6 @@
 """CoreCliAdapter — CLI subprocess adapter for EasyTier Core"""
 import json
 import logging
-import subprocess
 import threading
 from typing import Union
 
@@ -46,15 +45,12 @@ class CoreForegroundAdapter(IEasyTierAdapter):
         self._core_path = core_path
 
     def get_version(self) -> str:
+        cmd = [self._core_path, '--version']
         try:
-            result = subprocess.run(
-                [self._core_path, '--version'],
-                capture_output=True, text=True, timeout=5
-            )
-            if result.returncode == 0:
-                return result.stdout.strip().replace('easytier-core ', '')
-            return "unknown"
+            raw_version = common_util.run_cmd(cmd)
+            return raw_version.replace('easytier-core ', '')
         except Exception:
+            logger.exception(f"获取ET版本失败：{cmd}")
             return "unknown"
 
     def start_network(self, toml_path: str, instance_name: str) -> None:

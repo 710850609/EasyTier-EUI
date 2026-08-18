@@ -72,7 +72,7 @@ export default {
     },
     optionalInitialNodes: 'Optional Initial Nodes',
     initialNodes: {
-      eui: 'Maintained by EasyTier-EUI',
+      eui: 'EasyTier-EUI Maintained Node',
       placeholder: 'Enter optional node',
     },
 

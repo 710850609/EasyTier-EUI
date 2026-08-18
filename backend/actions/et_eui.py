@@ -136,6 +136,7 @@ def get_update_progress(params: dict, *args, **kwargs):
 
 def get_release_info(params: dict, *args, **kwargs):
     params = params or {}
+    no_assets = params.get('no_assets', 'false').lower() == 'true'
     refresh = params.get('refresh', 'false').lower() == 'true'
     release_file = Path(run_configs.data_dir()).joinpath('eui_release.json')
     release_info = None
@@ -149,6 +150,9 @@ def get_release_info(params: dict, *args, **kwargs):
     if refresh or release_info is None:
         if cur_diff_time < cache_time and release_info is not None:
             logger.info(f'上次刷新时间距离当前时间仅隔 {cur_diff_time} ms, 直接返回上次刷新结果')
+            if no_assets:
+                del release_info['latest_release']['assets']
+                del release_info['latest_prerelease']['assets']
             return release_info
         total_download = 0
         release_info = {'update_time': cur_time, 'total_download': total_download, 'latest_release': {}, 'latest_prerelease': {}}
@@ -176,6 +180,9 @@ def get_release_info(params: dict, *args, **kwargs):
             release_info['total_download'] = total_download
         with open(release_file, "w", encoding="utf-8") as f:
             f.write(json.dumps(release_info, ensure_ascii=False, indent=2))
+        if no_assets:
+            del release_info['latest_release']['assets']
+            del release_info['latest_prerelease']['assets']
     return release_info
 
 def download_easytier_eui(params: dict, *args, **kwargs):

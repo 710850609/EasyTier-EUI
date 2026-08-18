@@ -42,7 +42,7 @@ export default {
     theme: { light: 'Hell', dark: 'Dunkel', auto: 'Auto' },
     optionalInitialNodes: 'Optionale Startknoten',
     initialNodes: {
-      eui: 'Von EasyTier-EUI gewartet',
+      eui: 'EasyTier-EUI Wartungsknoten',
       placeholder: 'Optionalen Knoten eingeben',
     },
     language: { label: 'Sprache' },

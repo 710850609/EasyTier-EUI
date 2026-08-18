@@ -72,7 +72,7 @@ export default {
     },
     optionalInitialNodes: '可选初始节点',
     initialNodes: {
-      eui: '易组网维护',
+      eui: '易组网维护节点',
       placeholder: '输入可选节点',
     },
 

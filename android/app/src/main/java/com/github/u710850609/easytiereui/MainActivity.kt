@@ -58,6 +58,7 @@ class MainActivity : AppCompatActivity() {
     private var h5ThemeOverride: Boolean? = null // null = follow system, true = dark, false = light
     private val prefs: SharedPreferences by lazy { getSharedPreferences("easytier_prefs", MODE_PRIVATE) }
     private var splashContentLoaded = false
+    private var pendingPermissionRequest: android.webkit.PermissionRequest? = null
     private var splashScreenView: SplashScreenViewProvider? = null
     private var splashIconView: View? = null
     private var splashFadeStarted = false
@@ -235,8 +236,9 @@ class MainActivity : AppCompatActivity() {
                                         it.grant(resources)
                                         return
                                     } else {
+                                        pendingPermissionRequest?.deny()
+                                        pendingPermissionRequest = it
                                         requestCameraPermission()
-                                        it.deny()
                                         return
                                     }
                                 }
@@ -337,10 +339,13 @@ class MainActivity : AppCompatActivity() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == 1) {
             if (grantResults.isNotEmpty() && grantResults[0] == android.content.pm.PackageManager.PERMISSION_GRANTED) {
-                AppLogger.info(TAG, "Camera permission granted, reloading WebView")
-                webView.reload()
+                AppLogger.info(TAG, "Camera permission granted")
+                pendingPermissionRequest?.grant(pendingPermissionRequest?.resources ?: emptyArray())
+                pendingPermissionRequest = null
             } else {
                 AppLogger.warn(TAG, "Camera permission denied by user")
+                pendingPermissionRequest?.deny()
+                pendingPermissionRequest = null
                 Toast.makeText(this, R.string.camera_permission_denied, Toast.LENGTH_SHORT).show()
             }
         }
@@ -519,6 +524,8 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         AppLogger.info(TAG, "onDestroy: stopping HTTP server, VPN, and cancelling scope")
+        pendingPermissionRequest?.deny()
+        pendingPermissionRequest = null
         try {
             easyTierManager?.stop()
         } catch (e: Exception) {

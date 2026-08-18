@@ -848,7 +848,7 @@ const deleteLog = async () => {
 
 const getEuiReleaseInfo = (refresh=false, showTip = true) => {
   return new Promise((resolve, reject) => {
-    api.etEui.getReleaseInfo({'refresh': refresh}).then((data) => {
+    api.etEui.getReleaseInfo({'refresh': refresh, 'no_assets': true }).then((data) => {
       euiReleaseInfo.value = data.data
       // euiRelease.value = data.data.latest_release
       // euiPreRelease.value = data.data.latest_prerelease

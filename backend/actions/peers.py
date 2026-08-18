@@ -6,14 +6,14 @@ import logging
 import os.path
 import time
 from pathlib import Path
+
 import tomlkit
+
 from http_dispatcher.dispatcher import HttpException
 from locales import get_message
 from models.peers import PeersCheckResult
 from utils import check_peers as check_util, run_configs
 from utils import github_util
-from et_adapters import get_facade
-from utils.validators import Validator
 
 logger = logging.getLogger(__name__)
 
@@ -176,8 +176,7 @@ def __download_peers() ->dict:
             logger.info(f"节点元数据 { download_diff_time } ms前下载，未超过缓存时间 { cache_time } ms，直接使用")
             return data
 
-    settings = run_configs.get_settings()
-    peer_source = settings.get('peer_source') or []
+    peer_source = get_peer_source()
     customs_peer_source = []
     exists_eui = False
     for item in peer_source:
