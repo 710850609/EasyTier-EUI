@@ -1,6 +1,6 @@
 [manifest]
 display_name="易組網"
-desc="簡化 EasyTier 使用的UI介面，降低組網門檻，快速存取異地網路裝置</br>享受 EasyTier 免費、不限裝置數量、支援多類型終端等優勢</br>其他裝置要加入組網，在【應用】選單選擇下載安裝對應系統、架構的應用，依說明加入</br>更多EasyTier使用技巧，請檢視 <a href="https://easytier.cn" target="_blank">官網文件</a></br></br><a href="/cgi/ThirdParty/EasyTier-EUI/index.cgi/index.html" target="_blank">易組網Web介面快捷入口</a></br>"
+desc="簡化 EasyTier 使用的UI介面，降低組網門檻，快速存取異地網路裝置</br>享受 EasyTier 免費、不限裝置數量、支援多類型終端等優勢</br>其他裝置要加入組網，在【應用】選單選擇下載安裝對應系統、架構的應用，依說明加入</br>更多EasyTier使用技巧，請檢視 <a href="https://easytier.cn" target="_blank">官網文件</a></br>易組網已支援 Windows、Linux、Docker、Android、FnOS、FygoOS、MacOS 等系統不同架構實現</br></br><a href="/cgi/ThirdParty/EasyTier-EUI/index.cgi/index.html" target="_blank">易組網Web介面快捷入口</a></br>"
 
 [install]
 stepTitle="歡迎安裝"

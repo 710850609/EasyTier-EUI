@@ -20,7 +20,7 @@ except ImportError:
     psutil = None
 
 from actions import services
-from utils import run_configs, log_util, et_run_info
+from utils import run_configs, log_util, et_run_info, common_util
 
 logger = logging.getLogger(__name__)
 _fn_check_file :str=''
@@ -53,6 +53,7 @@ def start():
     先调用 status(), 未执行时才调用 start()
     启动成功后，把 开机时间 写入 文件
     """
+    logger.info("开始启动应用...")
     Path(run_configs.config_dir()).mkdir(parents=True, exist_ok=True)
     _fix_remove_sys_service()
     services.start_all()
@@ -78,6 +79,10 @@ def _fix_remove_sys_service():
     """
     修复：移除2.0版本错误引入系统服务
     """
+    if str(__file__).index('/EasyTier-EUI/') > 0:
+        # 仅处理 EasyTier-EUI 版本。用户版不需要处理
+        return
+    logger.info("开始检查和修复系统服务...")
     ext = ".exe" if sys.platform == "win32" else ""
     cli_path = os.path.join(run_configs.core_dir(), f'easytier-cli{ext}')
     core_path = os.path.join(run_configs.core_dir(), f'easytier-core{ext}')
@@ -92,11 +97,20 @@ def _fix_remove_sys_service():
             logger.info(f"标记不使用系统服务: {info.profile}")
             info.use_system_service = False
             et_run_info.save(*info.__dict__.values())
+    for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
+        try:
+            cmdline = proc.info.get('cmdline') or []
+            if any('/var/apps/EasyTier-EUI/target/bin/easytier-core' in arg for arg in cmdline):
+                logger.info(f"发现 EasyTier-EUI 的 et 进程: pid={proc.info['pid']}, name={proc.info['name']}, cmdline={cmdline}")
+                common_util.run_cmd(f"kill -9 {proc.info['pid']}")
+                logger.info(f"已移除 EasyTier-EUI 的 et 进程: pid={proc.info['pid']}")
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            continue
 
 if __name__ == '__main__':
     try:
         run_configs.setup_env()
-        log_util.setup_log(log_file=os.path.join(run_configs.log_dir(), 'cmd.log'), log_level=logging.INFO, enabled_console=False)
+        log_util.setup_log(log_file=os.path.join(run_configs.log_dir(), 'cmd.log'), log_level=logging.WARN, enabled_console=False)
         _fn_check_file = run_configs.fn_check_file()
         args = sys.argv
         if len(args) != 2:
@@ -113,6 +127,6 @@ if __name__ == '__main__':
         else:
             raise AssertionError(f"不支持的参数 {method}")
     except Exception as e:
-        logger.error(e)
         logger.exception(e)
+        print(f"{e}", file=sys.stderr)
         sys.exit(1)

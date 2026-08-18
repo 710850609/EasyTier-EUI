@@ -94,8 +94,10 @@ fn_service() {
     local cmd="cd ${SCRIPT_PATH} && ${SCRIPT_PATH}/.venv/bin/python3 -m utils.fn_service ${action}"
     # 在子 shell 中执行，捕获 stdout 和退出码
     local result
+    set +e
     result=$(eval "$cmd" 2>&1)   # 2>&1 将 stderr 也合并到 stdout（根据需求可选）
     local return_code=$?
+    set -e
     # 处理 echo 默认不支持\n换行
 #    msg=$(printf "invoke ${action}\n  cmd: ${cmd}\n  return_code: ${return_code}\n  result : ${result}")
     msg=$(printf "invoke ${action}  -->>  return_code: ${return_code}, result: ${result}")

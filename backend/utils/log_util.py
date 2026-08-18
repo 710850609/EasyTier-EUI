@@ -21,14 +21,15 @@ if sys.platform == 'win32' and sys.stdout:
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
-def setup_log(log_file:Optional[str] = None, log_level:Union[int, str] = logging.INFO, enabled_console:bool = False):
+def setup_log(log_file:Optional[str] = None, log_level:Union[int, str, None] = None, enabled_console:bool = False):
     global _log_setup_done
     if _log_setup_done:
         return  # 已配置过，直接返回
 
     settings = run_configs.get_settings()
-    log_level = settings.get('log_level') or 'WARN'
-    log_level = log_level.upper()
+    if log_level is None:
+        log_level = settings.get('log_level') or 'WARN'
+    log_level = log_level.upper() if isinstance(log_level, str) else log_level
 
     if isinstance(log_level, str):
         log_level = getattr(logging, log_level.upper(), logging.INFO)

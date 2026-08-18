@@ -72,7 +72,7 @@ if __name__ == '__main__':
     run_configs.setup_env()
     run_mode = run_configs.get_run_mode()
     log_util.setup_log(log_file=os.path.join(run_configs.log_dir(), 'app.log'),
-                       log_level=logging.INFO if run_mode > 0 else logging.DEBUG,
+                       log_level=logging.DEBUG if run_mode == 0 else None,
                        enabled_console=run_mode == 0)
     import argparse
     parser = argparse.ArgumentParser(description='CGI Proxy HTTP Server')

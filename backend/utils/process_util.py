@@ -173,8 +173,7 @@ class ProcessManager:
             return 0
 
         except Exception as e:
-            logging.error(f"Failed to start: {e}")
-            raise RuntimeError(f"启动进程失败: {e}") from e
+            raise RuntimeError(f"Failed to start: {e}") from e
 
 
     def stop(self) -> int:

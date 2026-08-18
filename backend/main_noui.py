@@ -121,7 +121,7 @@ def start_android_server(data_dir: str, external_dir: str = "", host: str = "127
     run_configs.setup_env()
     run_mode = run_configs.get_run_mode()
     log_util.setup_log(log_file=os.path.join(external_dir, 'logs', 'app.log'),
-                       log_level=logging.DEBUG if run_mode > 0 else logging.DEBUG,
+                       log_level=logging.DEBUG if run_mode == 0 else None,
                        enabled_console=run_mode == 0)
     log_file = os.path.join(external_dir, 'logs', 'easytier_py.log')
 
@@ -188,7 +188,7 @@ def run():
     run_configs.setup_env()
     run_mode = run_configs.get_run_mode()
     log_util.setup_log(log_file=os.path.join(run_configs.log_dir(), 'app.log'),
-                       log_level=logging.INFO if run_mode > 0 else logging.DEBUG,
+                       log_level=logging.DEBUG if run_mode == 0 else None,
                        enabled_console=run_mode == 0 or run_configs.is_docker())
     # logger.info(f"前端路径: {os.path.join(sys._MEIPASS, 'frontend')}")
 

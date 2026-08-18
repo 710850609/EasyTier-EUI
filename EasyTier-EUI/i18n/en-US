@@ -1,6 +1,6 @@
 [manifest]
 display_name="EasyTier-EUI"
-desc="A simplified UI for EasyTier, lowering the entry barrier for networking and enabling quick access to remote network devices</br>Enjoy EasyTier's advantages: free, unlimited devices, multi-platform support, and more</br>For other devices to join the network, go to the [Apps] menu, download and install the app for the corresponding system/architecture, and follow the instructions to join</br>For more EasyTier tips, check the <a href="https://easytier.cn" target="_blank">official documentation</a></br></br><a href="/cgi/ThirdParty/EasyTier-EUI/index.cgi/index.html" target="_blank">EasyTier-EUI Web UI quick access</a></br>"
+desc="A simplified UI for EasyTier, lowering the entry barrier for networking and enabling quick access to remote network devices</br>Enjoy EasyTier's advantages: free, unlimited devices, multi-platform support, and more</br>For other devices to join the network, go to the [Apps] menu, download and install the app for the corresponding system/architecture, and follow the instructions to join</br>For more EasyTier tips, check the <a href="https://easytier.cn" target="_blank">official documentation</a></br>EasyTier-EUI supports Windows, Linux, Docker, Android, FnOS, FygoOS, MacOS and other systems across different architectures</br></br><a href="/cgi/ThirdParty/EasyTier-EUI/index.cgi/index.html" target="_blank">EasyTier-EUI Web UI quick access</a></br>"
 
 [install]
 stepTitle="Welcome to Install"

@@ -3108,7 +3108,7 @@ html.dark .config-section-panel {
     background: rgba(var(--color-surface-container-rgb, 255, 255, 255), 0.85);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border-radius: 12px;
+    border-radius: 16px;
     box-shadow:
       0 8px 32px rgba(0, 0, 0, 0.15),
       inset 0 1px 0 rgba(255, 255, 255, 0.2);
