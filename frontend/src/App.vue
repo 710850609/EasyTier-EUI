@@ -46,6 +46,8 @@ body {
   --button-border-radius: 10px;
   /* 输入框圆角 */
   --field-decorator-line-border-radius: 10px;
+  /* Toast 圆角 */
+  --snackbar-border-radius: 10px;
   /* RGB 变量用于 rgba() */
   --color-surface-rgb: 253, 253, 254;
   --color-surface-container-rgb: 234, 240, 248;

@@ -1,6 +1,6 @@
 import { createApp } from 'vue'
-import App from './App.vue'
 import '@varlet/ui/es/style'
+import App from './App.vue'
 import '@varlet/touch-emulator'
 import i18n from './locales/index.js'
 // import { api } from './utils/api.js'

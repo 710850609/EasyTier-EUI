@@ -182,7 +182,7 @@ onUnmounted(() => {
   overflow-y: auto;
   padding: 0;
   padding-top: var(--sat, 0px);
-  padding-bottom: calc(64px + var(--sab, 0px));
+  padding-bottom: calc(0px + var(--sab, 0px));
   flex: 1;
   min-height: 0;
 }

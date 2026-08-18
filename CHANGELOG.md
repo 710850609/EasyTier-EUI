@@ -1,4 +1,4 @@
-##  
+##  2.2
 - 新增：【配置】支持二维码分享网络、支持扫描二维码增加配置
   - 仅支持https方式访问才能扫码（浏览器安全限制）
 - 优化：【配置】只提交最小有效配置
@@ -18,6 +18,12 @@
 - 新增：安卓版本增加开屏动画，优化视觉体验
 - 新增：【设置】-其它支持自定义可选初始节点
 - 修复：飞牛版本在2.0时引入，某些情况下导致系统重启报错 ([issues #6](https://github.com/710850609/EasyTier-EUI/issues/6))
+----
+- 优化：【设置】合并请求，减少网络请求次数，按需请求必要数据返回，减少流量消耗
+- 优化：安卓版本第一次申请摄像头权限后，页面被重置，操作中断不友好
+- 优化：整体UI视觉，更圆润、更轻盈
+- 优化：飞牛版本启动端口占用时，抛出 EasyTier 报错提示
+- 修复：自定义初始节点默认易组网维护节点时，没显示在配置可选列表中
 
 <br>
 
@@ -42,6 +48,13 @@
 - Added: Splash screen animation on Android for improved visual experience
 - Added: [Settings] - Support for custom optional initial nodes
 - Fixed: FnOS version 2.0 caused system reboot error in certain cases ([issues #6](https://github.com/710850609/EasyTier-EUI/issues/6))
+----
+- Optimized: Merged requests in Settings to reduce network requests, fetch only necessary data on demand, and reduce data consumption
+- Optimized: Fixed the issue where the page would reset after the first camera permission request on Android, causing an unfriendly interruption
+- Optimized: Refined the overall UI visuals for a rounder and lighter appearance
+- Optimized: Added EasyTier error prompt when the startup port is occupied on the FnOS version
+- Fixed: Custom initial nodes defaulting to the EasyTier maintenance node were not showing in the configurable options list
+
 
 ## 2.1
 - 新增：【配置】-自定义路由
