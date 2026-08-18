@@ -69,13 +69,13 @@ Docker 镜像支持多架构：
 ## 功能简介
 - 支持多平台
 
-| 平台      | 架构                              | 备注                                                                                                                              |
-|---------|---------------------------------|---------------------------------------------------------------------------------------------------------------------------------|
-| FnOS    | x86_64, aarch64                 | 正常版 (以 root 权限运行)</br> 用户版本 (为适配官方上架要求，非 root 应用)                                                                               |
-| Windows | x86_64                          | Windows10及其以上版本                                                                                                                 |
-| Linux   | x86_64, aarch64, armv7, riscv64 | 支持有图形界面 (GUI) 和无图形界面 (Headless) <br> 支持 glibc >= 2.28 <br> 支持 musl Linux <br> 已验证支持最低版本：Ubuntu 20.04 / Debian 10 / UOS 20；</br> |
-| MacOS   | Intel, arm64                    | 未验证                                                                                                                             |
-| Android | arm64-v8a, armeabi-v7a          | Android 8.0+ (API 26+) <br> 基于 WebView + Chaquopy(Python) + FFI 实现 <br> 通过 Android VPN Service 创建 TUN 虚拟网卡                              |
+| 平台            | 架构                              | 备注                                                                                                                              |
+|---------------|---------------------------------|---------------------------------------------------------------------------------------------------------------------------------|
+| FnOS / FygoOS | x86_64, aarch64                 | 正常版 (以 root 权限运行)</br> 用户版本 (为适配官方上架要求，非 root 应用)                                                                               |
+| Windows       | x86_64                          | Windows10及其以上版本                                                                                                                 |
+| Linux         | x86_64, aarch64, armv7, riscv64 | 支持有图形界面 (GUI) 和无图形界面 (Headless) <br> 支持 glibc >= 2.28 <br> 支持 musl Linux <br> 已验证支持最低版本：Ubuntu 20.04 / Debian 10 / UOS 20；</br> |
+| MacOS         | Intel, arm64                    | 未验证                                                                                                                             |
+| Android       | arm64-v8a, armeabi-v7a          | Android 8.0+ (API 26+) <br> 基于 WebView + Chaquopy(Python) + FFI 实现 <br> 通过 Android VPN Service 创建 TUN 虚拟网卡                              |
 - 快速组网，仅填入网络名和密钥即可快速启动
 - 提供其它设备组网应用（官方、其它常见第三方）下载连接、组网说明，快速组网
 - 支持多配置
