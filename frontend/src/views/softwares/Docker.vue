@@ -1,7 +1,7 @@
 <template>
   <div class="platform-page">
     <!-- 易组网 Docker -->
-    <var-paper class="download-card" :elevation="1">
+    <var-paper class="download-card" :elevation="0">
       <div class="platform-header">
         <div class="platform-info">
           <h2>
@@ -25,7 +25,7 @@
         </var-cell>
         <!-- 步骤卡片 -->
         <div class="docker-steps">
-          <var-paper class="step-item" :elevation="2">
+          <var-paper class="step-item" :elevation="0">
             <div class="step-number">1</div>
             <div class="step-content">
               <p class="step-title">{{ $t('software.dockerStep1Title') }}</p>
@@ -33,7 +33,7 @@
               <code class="step-code">wget https://raw.githubusercontent.com/710850609/EasyTier-EUI/main/docker-compose.yml</code>
             </div>
           </var-paper>
-          <var-paper class="step-item" :elevation="2">
+          <var-paper class="step-item" :elevation="0">
             <div class="step-number">2</div>
             <div class="step-content">
               <p class="step-title">{{ $t('software.dockerStep2Title') }}</p>
@@ -41,7 +41,7 @@
               <code class="step-code">docker compose up -d</code>
             </div>
           </var-paper>
-          <var-paper class="step-item" :elevation="2">
+          <var-paper class="step-item" :elevation="0">
             <div class="step-number">3</div>
             <div class="step-content">
               <p class="step-title">{{ $t('software.dockerStep3Title') }}</p>
@@ -133,7 +133,7 @@ const stableBadgeUrl = computed(() => {
 
 .download-card {
   padding: 24px;
-  border-radius: 16px;
+  border-radius: 20px;
   margin-bottom: 20px;
   text-align: center;
   background: var(--color-surface-container) !important;
@@ -173,7 +173,7 @@ const stableBadgeUrl = computed(() => {
   align-items: flex-start;
   gap: 16px;
   padding: 20px;
-  border-radius: 12px;
+  border-radius: 20px;
   background: var(--color-surface-container-high) !important;
   text-align: left;
 }
@@ -224,7 +224,7 @@ const stableBadgeUrl = computed(() => {
 /* compose 代码块 */
 .compose-code-block {
   background: var(--color-surface-container-high);
-  border-radius: 12px;
+  border-radius: 20px;
   border: 1px solid var(--color-outline-variant);
   padding: 16px;
   text-align: left;
@@ -248,7 +248,7 @@ const stableBadgeUrl = computed(() => {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  border-radius: 12px;
+  border-radius: 20px;
   overflow: hidden;
   background: var(--color-surface-container-high);
   border: 1px solid var(--color-outline-variant);
@@ -293,7 +293,7 @@ const stableBadgeUrl = computed(() => {
 @media (max-width: 768px) {
   .eui-opt-desc-table-container {
     overflow-x: auto;
-    border-radius: 12px;
+    border-radius: 20px;
   }
 
   .eui-opt-desc-table {

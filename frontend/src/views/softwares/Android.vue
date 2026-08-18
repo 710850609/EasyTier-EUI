@@ -1,7 +1,7 @@
 <template>
   <div class="platform-page">
     <!-- 易组网 -->
-    <var-paper class="download-card" :elevation="1">
+    <var-paper class="download-card" :elevation="0">
       <div class="platform-header">
         <div class="platform-info">
           <h2>{{ $t('software.easyTierEui') }}</h2>
@@ -21,7 +21,7 @@
       <var-divider />
 
       <div class="download-grid">
-        <var-paper class="download-item" :elevation="3">
+        <var-paper class="download-item" :elevation="0">
           <div class="item-header">
             <var-icon name="package" size="24" />
             <span class="item-title">arm64
@@ -37,7 +37,7 @@
             </var-button>
           </div>
         </var-paper>
-        <var-paper class="download-item" :elevation="3">
+        <var-paper class="download-item" :elevation="0">
           <div class="item-header">
             <var-icon name="package" size="24" />
             <span class="item-title">arm
@@ -53,7 +53,7 @@
             </var-button>
           </div>
         </var-paper>
-        <var-paper class="download-item" :elevation="3">
+        <var-paper class="download-item" :elevation="0">
           <div class="item-header">
             <var-icon name="package" size="24" />
             <span class="item-title">x86_64</span>
@@ -65,7 +65,7 @@
             </var-button>
           </div>
         </var-paper>
-        <var-paper class="download-item" :elevation="3">
+        <var-paper class="download-item" :elevation="0">
           <div class="item-header">
             <var-icon name="package" size="24" />
             <span class="item-title">x86</span>
@@ -85,7 +85,7 @@
     </var-paper>
 
     <!-- 官方 -->
-    <var-paper class="download-card" :elevation="1">
+    <var-paper class="download-card" :elevation="0">
       <div class="platform-header">
         <div class="platform-info">
           <h2>
@@ -121,7 +121,7 @@
       <var-divider />
 
       <div class="download-grid">
-        <var-paper class="download-item" :elevation="3">
+        <var-paper class="download-item" :elevation="0">
           <div class="item-header">
             <var-icon name="package" size="24" />
             <span class="item-title">arm64
@@ -143,7 +143,7 @@
         </var-paper>
       <!-- </div>
       <div class="download-grid"> -->
-        <var-paper class="download-item" :elevation="3">
+        <var-paper class="download-item" :elevation="0">
           <div class="item-header">
             <var-icon name="package" size="24" />
             <span class="item-title">arm
@@ -165,7 +165,7 @@
         </var-paper>
       </div>
       <div class="download-grid">
-        <var-paper class="download-item" :elevation="3">
+        <var-paper class="download-item" :elevation="0">
           <div class="item-header">
             <var-icon name="package" size="24" />
             <span class="item-title">x86_64</span>
@@ -183,7 +183,7 @@
         </var-paper>
       <!-- </div>
       <div class="download-grid"> -->
-        <var-paper class="download-item" :elevation="3">
+        <var-paper class="download-item" :elevation="0">
           <div class="item-header">
             <var-icon name="package" size="24" />
             <span class="item-title">x86</span>
@@ -257,7 +257,7 @@ const downloadEui = (arch) => {
 
 .download-card {
   padding: 24px;
-  border-radius: 16px;
+  border-radius: 20px;
   margin-bottom: 20px;
   text-align: center;
   background: var(--color-surface-container) !important;
@@ -299,7 +299,7 @@ const downloadEui = (arch) => {
 
 .download-item {
   padding: 20px;
-  border-radius: 12px;
+  border-radius: 20px;
   background: var(--color-surface-container-high) !important;
   display: flex;
   flex-direction: column;
@@ -338,7 +338,7 @@ const downloadEui = (arch) => {
 .shield-badge {
   display: inline-flex;
   align-items: center;
-  border-radius: 4px;
+  border-radius: 6px;
   overflow: hidden;
   font-size: 12px;
   line-height: 20px;

@@ -42,6 +42,10 @@ body {
 
 :root {
   --app-primary: var(--color-primary);
+  /* 按钮圆角 */
+  --button-border-radius: 10px;
+  /* 输入框圆角 */
+  --field-decorator-line-border-radius: 10px;
   /* RGB 变量用于 rgba() */
   --color-surface-rgb: 253, 253, 254;
   --color-surface-container-rgb: 234, 240, 248;
@@ -120,7 +124,7 @@ html body .var-select__scroller.var-elevation--3 {
   border: none !important;
   border-left: 2px solid rgba(255, 255, 255, 0.25) !important;
   border-right: 2px solid rgba(255, 255, 255, 0.25) !important;
-  border-radius: 16px !important;
+  border-radius: 12px !important;
   box-shadow:
     0 8px 32px rgba(0, 0, 0, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
@@ -298,6 +302,10 @@ html.dark .var-popup__content[var-popup-cover] {
   );
 }
 
+.var-button {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+}
+
 html.dark .var-popup__content::after {
   background: linear-gradient(
     90deg,
@@ -347,12 +355,12 @@ html.dark .var-popup__content.var-popup--top::before {
 
 /* 底部弹出层圆角 */
 .var-popup--bottom {
-  border-radius: 16px 16px 0 0 !important;
+  border-radius: 20px 20px 0 0 !important;
 }
 
 /* 顶部弹出层圆角 */
 .var-popup--top {
-  border-radius: 0 0 16px 16px !important;
+  border-radius: 0 0 20px 20px !important;
 }
 
 .var-popup--top .var-popup__content {
@@ -361,7 +369,8 @@ html.dark .var-popup__content.var-popup--top::before {
 
 /* 居中弹出层圆角 */
 .var-popup--center {
-  border-radius: 16px !important;
+  border-radius: 20px !important;
+  margin: 10px 5px 10px 5px;
 }
 
 /* var-paper 背景适配 + 玻璃质感增强 */
@@ -603,6 +612,8 @@ html:not(.dark) .var-dialog--box::after {
   -webkit-backdrop-filter: blur(20px) saturate(140%) !important;
   will-change: backdrop-filter !important;
   border: 1px solid rgba(0, 0, 0, 0.05) !important;
+  /* 下拉框菜单圆角。解决灰色边框问题。 */
+  border-radius: 12px !important;
 }
 
 html.dark .var-menu.var--box.var-select__menu {

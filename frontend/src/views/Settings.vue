@@ -1,7 +1,7 @@
 <template>
   <div class="settings-page">
     <!-- 外观设置 -->
-    <var-paper class="setting-block" :elevation="1">
+    <var-paper class="setting-block" :elevation="0">
       <div class="block-header">
         <svg-icon type="mdi" :path="mdiBrightness6" size="24" color="var(--color-primary)"></svg-icon>
         <!-- <var-icon name="palette" size="24" color="var(--color-primary)" /> -->
@@ -44,7 +44,7 @@
     </var-paper>
 
     <!-- 内核设置 -->
-    <var-paper class="setting-block" :elevation="1">
+    <var-paper class="setting-block" :elevation="0">
       <div class="block-header">
         <svg-icon type="mdi" :path="mdiShieldLock" size="24" color="var(--color-primary)"></svg-icon>
         <span class="block-title">{{ $t('settings.kernel.title') }}</span>
@@ -132,7 +132,7 @@
     </var-paper>
 
     <!-- 版本 -->
-    <var-paper class="setting-block" :elevation="1">
+    <var-paper class="setting-block" :elevation="0">
       <div class="block-header">
         <svg-icon type="mdi" :path="mdiMapOutline" size="24" color="var(--color-primary)"></svg-icon>
         <span class="block-title">{{ $t('settings.version') }}</span>
@@ -197,7 +197,7 @@
     </var-paper>
 
     <!-- 其他 -->
-    <var-paper class="setting-block" :elevation="1">
+    <var-paper class="setting-block" :elevation="0">
       <div class="block-header">
         <svg-icon type="mdi" :path="mdiTextBoxOutline" size="24" color="var(--color-primary)"></svg-icon>
         <span class="block-title">{{ $t('settings.others') }}</span>
@@ -290,7 +290,7 @@
     </var-paper>    
 
     <!-- 开发者选项 -->
-    <var-paper class="setting-block" :elevation="1" v-if="showDevContent">
+    <var-paper class="setting-block" :elevation="0" v-if="showDevContent">
       <div class="block-header">
         <!-- <var-icon name="wrench" size="24" color="var(--color-primary)" /> -->
         <svg-icon type="mdi" :path="mdiDevTo" size="24" color="var(--color-primary)"></svg-icon>
@@ -332,7 +332,7 @@
     </var-paper>
 
     <!-- 关于 -->
-    <var-paper class="setting-block" :elevation="1">
+    <var-paper class="setting-block" :elevation="0">
       <div class="block-header" 
         @mousedown="startPress"
         @mouseup="cancelPress"
@@ -353,11 +353,11 @@
         </div>
         <div class="version-actions">
           <a href='https://github.com/710850609/EasyTier-EUI' target="_blank">
-            <img :alt="$t('settings.about.starsLabel')" :src="starsBadgeUrl">
+            <img :alt="$t('settings.about.starsLabel')" :src="starsBadgeUrl" style="border-radius: 8px">
           </a>
-          <var-chip elevation="1" @click="showRewardCdoe = true" type="info" size="small">{{ $t('settings.about.reward') }}</var-chip>
+          <var-chip elevation="0" @click="showRewardCdoe = true" type="primary" size="small" style="cursor: pointer;">{{ $t('settings.about.reward') }}</var-chip>
           <a href="https://github.com/710850609/EasyTier-EUI/issues/new?template=bug_report.yml" target="_blank" style="text-decoration: none;">
-            <var-chip elevation="1" type="primary" size="small">{{ $t('settings.about.feedback') }}</var-chip>
+            <var-chip elevation="0" type="primary" size="small" style="cursor: pointer;">{{ $t('settings.about.feedback') }}</var-chip>
           </a>
         </div>
       </div>
@@ -369,7 +369,7 @@
           <p>{{ $t('settings.about.description2') }}</p>
           <p>{{ $t('settings.about.description3') }}</p>
           <p>{{ $t('settings.about.description4') }}</p>
-          <img :alt="$t('settings.about.downloadCountAlt')" :src="downloadBadgeUrl" />
+          <img :alt="$t('settings.about.downloadCountAlt')" :src="downloadBadgeUrl" style="border-radius: 8px"/>
         </div>
       </div>
     </var-paper>
@@ -520,12 +520,12 @@ const currentThemeMode = computed(() => themeMode.value)
 
 const starsBadgeUrl = computed(() => {
   const label = encodeURIComponent(t('settings.about.starsLabel'))
-  return `https://img.shields.io/github/stars/710850609/EasyTier-EUI?style=flat&label=${label}`
+  return `https://img.shields.io/github/stars/710850609/EasyTier-EUI?color=blue&style=flat-square&label=${label}`
 })
 
 const downloadBadgeUrl = computed(() => {
   const label = encodeURIComponent(t('settings.about.downloadCount'))
-  return `https://img.shields.io/github/downloads/710850609/EasyTier-EUI/total?color=blue&label=${label}`
+  return `https://img.shields.io/github/downloads/710850609/EasyTier-EUI/total?color=blue&style=flat-square&label=${label}`
 })
 
 // 加载 VConsole（动态导入）
@@ -992,7 +992,7 @@ onMounted(() => {
 
 .setting-block {
   padding: 20px;
-  border-radius: 16px;
+  border-radius: 20px;
   margin-bottom: 16px;
   background: var(--color-surface-container) !important;
 }
@@ -1077,7 +1077,7 @@ onMounted(() => {
   align-items: center;
   gap: 8px;
   padding: 16px 8px;
-  border-radius: 12px;
+  border-radius: 20px;
   border: 2px solid var(--color-outline);
   cursor: pointer;
   transition: all 0.2s ease;

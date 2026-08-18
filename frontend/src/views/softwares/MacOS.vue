@@ -1,7 +1,7 @@
 <template>
   <div class="platform-page">
     <!-- 易组网 -->
-    <var-paper class="download-card" :elevation="1">
+    <var-paper class="download-card" :elevation="0">
       <div class="platform-header">
         <div class="platform-info">
           <h2>
@@ -18,7 +18,7 @@
           <p>{{ $t('software.selfBuildNode') }}</p>
         </var-cell>
         <var-cell>
-          <var-link type="primary" underline="none" href="https://github.com/710850609/EasyTier-EUI/releases" target="_blank"><img :src="stableBadgeUrl" /></var-link>
+          <var-link type="primary" underline="none" href="https://github.com/710850609/EasyTier-EUI/releases" target="_blank"><img :src="stableBadgeUrl" style="border-radius: 6px" /></var-link>
         </var-cell>
       </div>
       <div>
@@ -45,7 +45,7 @@
     </var-paper>
 
     <!-- socoldkiller/easytier-macos -->
-    <var-paper class="download-card" :elevation="1">
+    <var-paper class="download-card" :elevation="0">
       <div class="platform-header">
         <div class="platform-info">
           <h2>{{ $t('software.macOSAppDownload') }}</h2>
@@ -55,7 +55,7 @@
         <var-cell>{{ $t('software.installAndImport') }}</var-cell>
         <var-cell><span style="font-style: italic;">{{ $t('software.macOSAppDesc') }}</span></var-cell>
         <var-cell>
-          <var-link type="primary" underline="none" href="https://github.com/socoldkiller/easytier-macos/releases" target="_blank"><img :src="socoldkillerStableBadgeUrl" /></var-link>
+          <var-link type="primary" underline="none" href="https://github.com/socoldkiller/easytier-macos/releases" target="_blank"><img :src="socoldkillerStableBadgeUrl" style="border-radius: 6px" /></var-link>
         </var-cell>
         <div>
           <var-divider />
@@ -72,7 +72,7 @@
     </var-paper>
 
     <!-- 官方 -->
-    <var-paper class="download-card" :elevation="1">
+    <var-paper class="download-card" :elevation="0">
       <div class="platform-header">
         <div class="platform-info">
           <h2>{{ $t('software.macOSGuiVersion') }}
@@ -103,7 +103,7 @@
       </div>
       <var-divider />
       <div class="download-grid">
-        <var-paper class="download-item" :elevation="3">
+        <var-paper class="download-item" :elevation="0">
           <div class="item-header">
             <var-icon name="package" size="24" />
             <span class="item-title">{{ $t('software.appleSilicon') }}</span>
@@ -119,7 +119,7 @@
             </var-button>
           </div>
         </var-paper>
-        <var-paper class="download-item" :elevation="3">
+        <var-paper class="download-item" :elevation="0">
           <div class="item-header">
             <var-icon name="package" size="24" />
             <span class="item-title">{{ $t('software.intelChip') }}</span>
@@ -173,12 +173,12 @@ const latestReleaseVersion = ref('')
 
 const stableBadgeUrl = computed(() => {
   const label = encodeURIComponent(t('software.stableLabel'))
-  return `https://img.shields.io/github/v/release/710850609/EasyTier-EUI?color=blue&label=${label}`
+  return `https://img.shields.io/github/v/release/710850609/EasyTier-EUI?color=blue&style=flat-square&label=${label}`
 })
 
 const socoldkillerStableBadgeUrl = computed(() => {
   const label = encodeURIComponent(t('software.stableLabel'))
-  return `https://img.shields.io/github/v/release/socoldkiller/easytier-macos?color=blue&label=${label}`
+  return `https://img.shields.io/github/v/release/socoldkiller/easytier-macos?color=blue&style=flat-square&label=${label}`
 })
 
 onMounted(() => {
@@ -262,7 +262,7 @@ const downloadSocoldkiller = async () => {
 
 .download-card {
   padding: 24px;
-  border-radius: 16px;
+  border-radius: 20px;
   margin-bottom: 20px;
   text-align: center;
   background: var(--color-surface-container) !important;
@@ -304,7 +304,7 @@ const downloadSocoldkiller = async () => {
 
 .download-item {
   padding: 20px;
-  border-radius: 12px;
+  border-radius: 20px;
   background: var(--color-surface-container-high) !important;
   display: flex;
   flex-direction: column;
@@ -354,7 +354,7 @@ const downloadSocoldkiller = async () => {
 .shield-badge {
   display: inline-flex;
   align-items: center;
-  border-radius: 4px;
+  border-radius: 6px;
   overflow: hidden;
   font-size: 12px;
   line-height: 20px;

@@ -1,7 +1,7 @@
 <template>
   <div class="platform-page">
     <!-- 易组网 -->
-    <var-paper class="download-card" :elevation="1">
+    <var-paper class="download-card" :elevation="0">
       <div class="platform-header">
         <div class="platform-info">
           <h2>
@@ -18,11 +18,11 @@
           <p>{{ $t('software.selfBuildNode') }}</p>
         </var-cell>
         <var-cell>
-          <var-link type="primary" underline="none" href="https://github.com/710850609/EasyTier-EUI/releases" target="_blank"><img :src="stableBadgeUrl" /></var-link>
+          <var-link type="primary" underline="none" href="https://github.com/710850609/EasyTier-EUI/releases" target="_blank"><img :src="stableBadgeUrl" style="border-radius: 6px" /></var-link>
         </var-cell>
         <var-divider />
         <div class="download-grid">
-          <var-paper class="download-item" :elevation="3">
+          <var-paper class="download-item" :elevation="0">
             <div class="item-header">
               <span class="item-title">glibc Linux (Ubuntu / Debian / UOS ...)</span>
             </div>
@@ -45,7 +45,7 @@
               </var-button>
             </div>
           </var-paper>
-          <var-paper class="download-item" :elevation="3">
+          <var-paper class="download-item" :elevation="0">
             <div class="item-header">
               <span class="item-title">musl Linux (Alpine / OpenWrt ...)</span>
             </div>
@@ -110,7 +110,7 @@
     </var-paper>
 
     <!-- 官方 -->
-    <var-paper class="download-card" :elevation="1">
+    <var-paper class="download-card" :elevation="0">
       <div class="platform-header">
         <div class="platform-info">
           <h2>{{ $t('software.linuxGuiVersion') }}
@@ -143,7 +143,7 @@
       <!-- 下载卡片网格 -->
       <div class="download-grid">
         <!-- amd64 deb -->
-        <var-paper class="download-item" :elevation="3">
+        <var-paper class="download-item" :elevation="0">
           <div class="item-header">
             <var-icon name="package" size="24" />
             <span class="item-title">x86_64 deb</span>
@@ -160,7 +160,7 @@
           </div>
         </var-paper>
         <!-- amd64 rpm -->
-        <var-paper class="download-item" :elevation="3">
+        <var-paper class="download-item" :elevation="0">
           <div class="item-header">
             <var-icon name="package" size="24" />
             <span class="item-title">x86_64 rpm</span>
@@ -177,7 +177,7 @@
           </div>
         </var-paper>
         <!-- amd64 AppImage -->
-        <var-paper class="download-item" :elevation="3">
+        <var-paper class="download-item" :elevation="0">
           <div class="item-header">
             <var-icon name="package" size="24" />
             <span class="item-title">x86_64 AppImage</span>
@@ -194,7 +194,7 @@
           </div>
         </var-paper>
         <!-- arm64 deb -->
-        <var-paper class="download-item" :elevation="3">
+        <var-paper class="download-item" :elevation="0">
           <div class="item-header">
             <var-icon name="package" size="24" />
             <span class="item-title">arm64 deb</span>
@@ -211,7 +211,7 @@
           </div>
         </var-paper>
         <!-- aarch64 rpm -->
-        <var-paper class="download-item" :elevation="3">
+        <var-paper class="download-item" :elevation="0">
           <div class="item-header">
             <var-icon name="package" size="24" />
             <span class="item-title">arm64 rpm</span>
@@ -265,7 +265,7 @@ const latestReleaseVersion = ref('')
 
 const stableBadgeUrl = computed(() => {
   const label = encodeURIComponent(t('software.stableLabel'))
-  return `https://img.shields.io/github/v/release/710850609/EasyTier-EUI?color=blue&label=${label}`
+  return `https://img.shields.io/github/v/release/710850609/EasyTier-EUI?color=blue&style=flat-square&label=${label}`
 })
 
 onMounted(() => {
@@ -338,7 +338,7 @@ const handleConfigConfirm = async () => {
 
 .download-card {
   padding: 24px;
-  border-radius: 16px;
+  border-radius: 20px;
   margin-bottom: 20px;
   text-align: center;
   background: var(--color-surface-container) !important;
@@ -380,7 +380,7 @@ const handleConfigConfirm = async () => {
 
 .download-item {
   padding: 20px;
-  border-radius: 12px;
+  border-radius: 20px;
   background: var(--color-surface-container-high) !important;
   display: flex;
   flex-direction: column;
@@ -432,7 +432,7 @@ const handleConfigConfirm = async () => {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  border-radius: 12px;
+  border-radius: 20px;
   overflow: hidden;
   background: var(--color-surface-container-high);
   border: 1px solid var(--color-outline-variant);
@@ -477,7 +477,7 @@ const handleConfigConfirm = async () => {
 @media (max-width: 768px) {
   .eui-opt-desc-table-container {
     overflow-x: auto;
-    border-radius: 12px;
+    border-radius: 20px;
   }
 
   .eui-opt-desc-table {
@@ -522,7 +522,7 @@ const handleConfigConfirm = async () => {
 .shield-badge {
   display: inline-flex;
   align-items: center;
-  border-radius: 4px;
+  border-radius: 6px;
   overflow: hidden;
   font-size: 12px;
   line-height: 20px;

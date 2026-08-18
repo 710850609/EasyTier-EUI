@@ -1,6 +1,6 @@
 <template>
   <div class="platform-page">
-    <var-paper class="download-card" :elevation="1">
+    <var-paper class="download-card" :elevation="0">
       <div class="platform-header">
         <div class="platform-info">
           <h2>{{ $t('software.iosVersion') }}</h2>

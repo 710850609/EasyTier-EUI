@@ -1,6 +1,6 @@
 <template>
   <div class="platform-page">
-    <var-paper class="download-card" :elevation="1">
+    <var-paper class="download-card" :elevation="0">
       <div class="platform-header">
         <div class="platform-info">
           <h2>{{ $t('software.harmonyosVersion') }}</h2>
@@ -52,7 +52,7 @@ const copyAndOpenLink = () => {
 
 .download-card {
   padding: 24px;
-  border-radius: 16px;
+  border-radius: 20px;
   margin-bottom: 20px;
   text-align: center;
   background: var(--color-surface-container) !important;
@@ -94,7 +94,7 @@ const copyAndOpenLink = () => {
 
 .download-item {
   padding: 20px;
-  border-radius: 12px;
+  border-radius: 20px;
   background: var(--color-surface-container-high) !important;
   display: flex;
   flex-direction: column;

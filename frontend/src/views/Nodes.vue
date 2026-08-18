@@ -146,7 +146,7 @@
     </var-popup>  
 
     <!-- 数据表格 -->
-    <var-paper class="table-container" :elevation="1">
+    <var-paper class="table-container" :elevation="0">
       <div class="table-wrapper" ref="tableWrapper">
         <!-- 骨架屏 - PC 表格骨架 -->
         <div v-if="loadingSkeleton && !useMobileList" class="skeleton-container skeleton-pc">
@@ -857,7 +857,7 @@ onUnmounted(() => {
 .stats-bar {
   padding: 16px 20px;
   margin-bottom: 16px;
-  border-radius: 12px;
+  border-radius: 20px;
   background: var(--color-surface-container) !important;
   position: sticky;
   top: 0;
@@ -1357,7 +1357,7 @@ html.dark .sk-chip {
 
 .node-card {
   background: var(--color-surface-container-low);
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 10px 14px 12px;
   transition: background 0.2s ease, border-color 0.2s ease;
   border-left: 3px solid var(--color-primary);

@@ -1,6 +1,6 @@
 <template>
   <div class="platform-page">
-    <var-paper class="download-card" :elevation="1">
+    <var-paper class="download-card" :elevation="0">
       <div class="platform-header">
         <div class="platform-info">
           <h2>
@@ -14,7 +14,7 @@
       <div class="version-info">
         <var-cell>{{ $t('software.fnOSInstallDesc') }}</var-cell>
         <var-cell>
-          <var-link type="primary" underline="none" href="https://github.com/710850609/EasyTier-EUI/releases" target="_blank"><img :src="stableBadgeUrl" /></var-link>
+          <var-link type="primary" underline="none" href="https://github.com/710850609/EasyTier-EUI/releases" target="_blank"><img :src="stableBadgeUrl" style="border-radius: 6px"/></var-link>
         </var-cell>
       </div>
       <div>
@@ -51,7 +51,7 @@ const { t } = useI18n()
 
 const stableBadgeUrl = computed(() => {
   const label = encodeURIComponent(t('software.stableLabel'))
-  return `https://img.shields.io/github/v/release/710850609/EasyTier-EUI?color=blue&label=${label}`
+  return `https://img.shields.io/github/v/release/710850609/EasyTier-EUI?color=blue&style=flat-square&label=${label}`
 })
 
 const { startDownload, progress, downloadingKey } = useAsyncDownload(
@@ -77,7 +77,7 @@ const downloadEasyTierEui = (platform, arch) => {
 
 .download-card {
   padding: 24px;
-  border-radius: 16px;
+  border-radius: 20px;
   margin-bottom: 20px;
   text-align: center;
   background: var(--color-surface-container) !important;
@@ -119,7 +119,7 @@ const downloadEasyTierEui = (platform, arch) => {
 
 .download-item {
   padding: 20px;
-  border-radius: 12px;
+  border-radius: 20px;
   background: var(--color-surface-container-high) !important;
   display: flex;
   flex-direction: column;
@@ -160,7 +160,7 @@ const downloadEasyTierEui = (platform, arch) => {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  border-radius: 12px;
+  border-radius: 20px;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   background: var(--color-surface-container-high);
@@ -212,7 +212,7 @@ const downloadEasyTierEui = (platform, arch) => {
 @media (max-width: 768px) {
   .eui-opt-desc-table-container {
     overflow-x: auto;
-    border-radius: 12px;
+    border-radius: 20px;
   }
 
   .eui-opt-desc-table {

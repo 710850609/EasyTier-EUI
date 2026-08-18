@@ -38,7 +38,7 @@
     </div>
 
     <div v-else class="config-else-wrapper">
-      <var-paper class="toolbar" :elevation="2" v-if="!fastSettingMode">
+      <var-paper class="toolbar" :elevation="1" v-if="!fastSettingMode">
         <!-- 桌面端布局 -->
         <div class="toolbar-row toolbar-desktop">
           <div class="toolbar-group toolbar-main">
@@ -168,7 +168,7 @@
         <var-form ref="form">
           <!-- 骨架屏遮罩层：覆盖在内容上方 -->
           <div v-if="isLoadingConfig" class="sk-overlay"></div>
-          <var-paper class="config-section merged-section" :elevation="2">
+          <var-paper class="config-section merged-section" :elevation="0">
             <!-- 基础设置 -->
             <div class="section-header">
               <div class="section-header-left">
@@ -317,7 +317,7 @@
           </var-paper>
 
           <!-- 本机信息 -->
-          <var-paper v-if="!fastSettingMode" :elevation="1" class="config-section-panel">
+          <var-paper v-if="!fastSettingMode" :elevation="0" class="config-section-panel">
             <var-collapse v-model="advancedOpen" class="panel-section-inner">
               <var-collapse-item name="hostInfo">
               <template #title>
@@ -400,7 +400,7 @@
           </var-paper>
 
           <!-- 连接方式 -->
-          <var-paper v-if="!fastSettingMode" :elevation="1" class="config-section-panel">
+          <var-paper v-if="!fastSettingMode" :elevation="0" class="config-section-panel">
             <var-collapse v-model="advancedOpen" class="panel-section-inner">
               <var-collapse-item name="connection">
               <template #title>
@@ -485,7 +485,7 @@
           </var-paper>
 
           <!-- 性能安全 -->
-          <var-paper v-if="!fastSettingMode" :elevation="1" class="config-section-panel">
+          <var-paper v-if="!fastSettingMode" :elevation="0" class="config-section-panel">
             <var-collapse v-model="advancedOpen" class="panel-section-inner">
               <var-collapse-item name="performance">
               <template #title>
@@ -583,7 +583,7 @@
           </var-paper>
 
           <!-- 代理与转发 -->
-          <var-paper v-if="!fastSettingMode" :elevation="1" class="config-section-panel">
+          <var-paper v-if="!fastSettingMode" :elevation="0" class="config-section-panel">
             <var-collapse v-model="forwardOpen" class="panel-section-inner">
               <var-collapse-item name="forward">
                 <template #title>
@@ -2049,7 +2049,7 @@ onUnmounted(() => {
   flex-shrink: 0;
   margin: 12px 16px 0;
   padding: 12px 20px;
-  border-radius: 12px;
+  border-radius: 20px;
   background: var(--color-surface-container);
   display: flex;
   align-items: center;
@@ -2238,7 +2238,7 @@ html.dark .sk-breathe {
   flex-shrink: 0;
   margin: 24px 16px 8px;
   padding: 16px 20px;
-  border-radius: 12px;
+  border-radius: 20px;
   background: var(--color-surface-container) !important;
 }
 
@@ -2352,7 +2352,7 @@ html.dark .sk-breathe {
 .config-section {
   margin: 0 0 16px;
   padding: 20px;
-  border-radius: 16px;
+  border-radius: 20px;
   /* background: var(--color-surface-container) !important; */
   background: var(--color-surface) !important;
 }
@@ -2618,7 +2618,7 @@ html.dark .merged-section {
 /* ===== 配置面板通用样式 ===== */
 .config-section-panel {
   margin-top: 12px;
-  border-radius: 16px;
+  border-radius: 20px;
   overflow: hidden;
   background: rgba(var(--color-surface-container-rgb, 226, 236, 250), 0.08) !important;
 }
@@ -3061,7 +3061,7 @@ html.dark .config-section-panel {
     flex-shrink: 0;
     margin: 16px 12px 4px;
     padding: 12px;
-    border-radius: 10px;
+    border-radius: 16px;
     position: relative;
     z-index: 10;
     overflow: visible !important;
