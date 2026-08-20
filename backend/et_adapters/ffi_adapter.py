@@ -439,7 +439,7 @@ class FfiAdapter(IEasyTierAdapter):
                 title, text = self._build_notification_text(instance_name, info)
                 mtu = info.get('mtu') or 1400
                 manager.stopVpn()
-                manager.startVpn(ipv4, ipv6, cidrs, dns, title, text, mtu)
+                manager.startVpn(ipv4, ipv6, cidrs, dns, title, text, mtu, instance_name)
                 logger.info(f"Notified Kotlin: startVpn for {instance_name} ipv4={ipv4} ipv6={ipv6}")
         except Exception as e:
             logger.exception(f"Failed to notify Kotlin restartVpn: {e}")

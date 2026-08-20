@@ -83,15 +83,15 @@ class EasyTierVpnService : VpnService() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         AppLogger.info(TAG, "onStartCommand: flags=$flags, startId=$startId")
         val params = intent?.getSerializableExtra("vpn_params") as? VpnParams
-        instanceName = intent?.getStringExtra("instance_name")
 
-        if (params == null || instanceName == null) {
-            AppLogger.error(TAG, "Missing parameters: params=$params, instanceName=$instanceName")
+        if (params == null) {
+            AppLogger.error(TAG, "Missing parameters: params=$params")
             stopSelf()
             return START_NOT_STICKY
         }
 
-        AppLogger.info(TAG, "Starting VPN - IPv4: ${params.ipv4}, IPv6: ${params.ipv6}, Proxy CIDRs: ${params.proxyCidrs}, DNS: ${params.dnsServers}, Instance: $instanceName")
+        instanceName = params.instanceName
+        AppLogger.info(TAG, "Starting VPN - IPv4: ${params.ipv4}, IPv6: ${params.ipv6}, Proxy CIDRs: ${params.proxyCidrs}, DNS: ${params.dnsServers}, MTU: ${params.mtu}, Instance: ${params.instanceName}")
 
         try {
             val pfd = createVpnInterface(params.ipv4, params.ipv6, params.proxyCidrs, params.dnsServers, params.mtu)

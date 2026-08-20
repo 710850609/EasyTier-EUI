@@ -46,10 +46,11 @@ class EasyTierManager(
 
     // ── Python 回调 ──────────────────────────────────────────
 
-    fun startVpn(ipv4: String, ipv6: String, proxyCidrs: Array<String>, dnsServers: Array<String>, notificationTitle: String, notificationText: String, mtu: Int) {
-        AppLogger.info(TAG, "startVpn: ipv4=$ipv4, ipv6=$ipv6, cidrs=${proxyCidrs.size}, dns=${dnsServers.size}, mtu=$mtu")
+    fun startVpn(ipv4: String, ipv6: String, proxyCidrs: Array<String>, dnsServers: Array<String>, notificationTitle: String, notificationText: String, mtu: Int, instanceName: String) {
+        AppLogger.info(TAG, "startVpn: ipv4=$ipv4, ipv6=$ipv6, cidrs=${proxyCidrs.size}, dns=${dnsServers.size}, mtu=$mtu, instanceName=$instanceName")
+        currentInstanceName = instanceName
         stopVpnService()
-        val params = VpnParams(ipv4, ipv6, proxyCidrs.toList(), dnsServers.toList(), notificationTitle, notificationText, mtu)
+        val params = VpnParams(instanceName, ipv4, ipv6, proxyCidrs.toList(), dnsServers.toList(), notificationTitle, notificationText, mtu)
         val prepareIntent = VpnService.prepare(activity)
         if (prepareIntent != null) {
             AppLogger.info(TAG, "startVpn: VPN not authorized, showing dialog")
@@ -100,9 +101,8 @@ class EasyTierManager(
 
             val intent = Intent(activity, EasyTierVpnService::class.java)
             intent.putExtra("vpn_params", params)
-            intent.putExtra("instance_name", currentInstanceName ?: "unknown")
 
-            AppLogger.info(TAG, "startVpnService: calling startService")
+            AppLogger.info(TAG, "startVpnService: calling startService, instanceName=${params.instanceName}")
             activity.startService(intent)
 
             AppLogger.info(TAG, "VPN started: ${params.ipv4}, CIDRs=${params.proxyCidrs.size}, DNS=${params.dnsServers.size}")
