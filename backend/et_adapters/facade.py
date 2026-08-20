@@ -18,8 +18,9 @@ logger = logging.getLogger(__name__)
 class EasyTierFacade(IEasyTierAdapter):
 
     def __init__(self):
-        if run_configs.IS_ANDROID:
-        # if run_configs.IS_ANDROID or sys.platform == "win32":
+        # if run_configs.IS_ANDROID:
+        import sys
+        if run_configs.IS_ANDROID or sys.platform == "win32":
             self._adapter = FfiAdapter()
         else:
             self._adapter = CoreAdapter()
@@ -54,13 +55,6 @@ class EasyTierFacade(IEasyTierAdapter):
         else:
             logger.warning(f"current adapter is not FfiAdapter, cannot set_tun_fd")
             return -1
-
-    def get_route_info(self, instance_name: str) -> Optional[str]:
-        if isinstance(self._adapter, FfiAdapter):
-            return self._adapter.get_route_info(instance_name)
-        else:
-            logger.warning(f"current adapter is not FfiAdapter, cannot get_route_info")
-            return None
 
 
 

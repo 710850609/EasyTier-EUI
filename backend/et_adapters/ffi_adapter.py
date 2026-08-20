@@ -15,6 +15,7 @@ import tomlkit
 
 from utils import run_configs
 from et_adapters.interface import IEasyTierAdapter
+from locales import get_last_lang
 
 logger = logging.getLogger(__name__)
 _FFI_LIB_VERSION = "unknown"
@@ -67,6 +68,18 @@ class FfiAdapter(IEasyTierAdapter):
         self._instance_set: Set[str] = set()
         self._routes_config: Dict[str, List[str]] = {}
         self._start_times: Dict[str, float] = {}
+        self._ffi_cache: Dict[str, Any] = {}
+        self._ffi_cache_time: float = 0.0
+        self._FFI_CACHE_TTL = 1.0
+        self._enable_magic_dns_set: Set[str] = set()
+        self._enable_ipv6_set: Set[str] = set()
+        self._enable_cache = run_configs.IS_ANDROID
+        self._monitor_threads: Dict[str, threading.Thread] = {}
+        self._monitor_states: Dict[str, bool] = {}
+
+    def _invalidate_ffi_cache(self):
+        self._ffi_cache = {}
+        self._ffi_cache_time = 0.0
 
     def _has_symbol(self, name: str) -> bool:
         try:
@@ -114,15 +127,6 @@ class FfiAdapter(IEasyTierAdapter):
     def start_network(self, toml_path: str, instance_name: str) -> None:
         logger.info(f"start_network {instance_name}")
         try:
-            # 避免外部修改配置文件名，导致启动后，找不到组网节点数据
-            with open(toml_path, "r", encoding="utf-8") as f:
-                doc = tomlkit.parse(f.read())
-                if doc['instance_name'] != instance_name:
-                    logger.warning(f"配置中的instance_name参数和实际指定值不一致，已覆盖配置文件中的instance_name参数为指定值【{instance_name}】：{toml_path}")
-                    doc['instance_name'] = instance_name
-                    with open(toml_path, "w", encoding="utf-8") as f:
-                        f.write(tomlkit.dumps(doc))
-
             with open(toml_path, 'r', encoding='utf-8') as f:
                 toml_config = f.read()
             doc = tomlkit.parse(toml_config)
@@ -173,32 +177,36 @@ class FfiAdapter(IEasyTierAdapter):
                     raise RuntimeError(f"run_network_instance failed: {self._get_last_error()}")
             self._instance_set.add(instance_name)
             self._start_times[instance_name] = time.time()
-            # 等待实例分配到虚拟ipv4（这里可等可不等）
-            time.sleep(2.0)
+            # 记录是否开启了魔法DNS
+            accept_dns = doc.get('flags', {}).get('accept_dns')
+            if accept_dns:
+                self._enable_magic_dns_set.add(instance_name)
+            # 记录是否开启了ipv6
+            enable_ipv6 = doc.get('flags', {}).get('enable_ipv6')
+            if enable_ipv6:
+                self._enable_ipv6_set.add(instance_name)
+            self._invalidate_ffi_cache()
             logger.info(f"Instance '{instance_name}' started via FFI")
-            # 触发 Android VPN 授权弹窗并启动 dummy VPN + 监控
-            try:
-                if run_configs.IS_ANDROID:
-                    from java import jclass
-                    MainActivity = jclass(run_configs.ANDROID_MAIN_ACTIVITY)
-                    manager = MainActivity.getEasyTierManager()
-                    if manager is not None:
-                        manager.start(instance_name)
-            except Exception as e:
-                logger.exception(f"fail to start vpn manager for instance '{instance_name}': {e}")
+            self._start_monitor(instance_name)
         except Exception as e:
             logger.exception(f"start_network failed: {e}")
             raise
 
-    def stop_network(self, instance_name: str = None) -> None:
+    def stop_network(self, instance_name: str) -> None:
         logger.info(f"stop_network {instance_name}")
+        self._stop_monitor(instance_name)
         all_instances = self._list_all_instance_names()
         keep = [n for n in all_instances if n != instance_name]
         self._retain_instances(keep)
         if instance_name in self._instance_set:
             self._instance_set.remove(instance_name)
+        if instance_name in self._enable_magic_dns_set:
+            self._enable_magic_dns_set.remove(instance_name)
+        if instance_name in self._enable_ipv6_set:
+            self._enable_ipv6_set.remove(instance_name)
         self._routes_config.pop(instance_name, None)
         self._start_times.pop(instance_name, None)
+        self._invalidate_ffi_cache()
 
         # 停止 Android VPN 监控和服务
         try:
@@ -207,7 +215,7 @@ class FfiAdapter(IEasyTierAdapter):
                 MainActivity = jclass(run_configs.ANDROID_MAIN_ACTIVITY)
                 manager = MainActivity.getEasyTierManager()
                 if manager is not None:
-                    manager.stop()
+                    manager.stopVpn()
         except Exception as e:
             logger.exception(f"fail to stop vpn manager monitor: {e}")
 
@@ -289,49 +297,188 @@ class FfiAdapter(IEasyTierAdapter):
         except Exception as e:
             raise RuntimeError(f"set_tun_fd failed: {e}") from e
 
-    def get_route_info(self, instance_name: str) -> Optional[str]:
+    def _get_route_info_dict(self, instance_name: str) -> Dict[str, Any]:
+        info = {
+            'virtual_ipv4': '',
+            'virtual_ipv6': '',
+            'dns_servers': [],
+            'routes': [],
+            'total_upload': '',
+            'total_download': '',
+        }
+        total_upload = 0
+        total_download = 0
+        raw = self._collect_via_raw_ffi()
+        instance_infos = raw.get(instance_name, {})
+        my_node_info = instance_infos.get('my_node_info', {})
+        virtual_ipv4 = my_node_info.get('virtual_ipv4') or {}
+        addr = (virtual_ipv4.get('address') or {}).get('addr', 0)
+        addr_str = self._addr_to_ipv4(addr)
+        network_len = virtual_ipv4.get('network_length') or '24'
+        if instance_name in self._enable_magic_dns_set:
+            info['dns_servers'] = ['100.100.100.101']
+        if instance_name in self._enable_ipv6_set:
+            info['virtual_ipv6'] = 'fd00::1/128'
+        info['virtual_ipv4'] = f"{addr_str}/{network_len}" if addr_str else ""
+        routes = instance_infos.get('routes') or []
+        for route in routes:
+            cidrs = route.get('proxy_cidrs') or []
+            for cidr in cidrs:
+                info['routes'].append(cidr)
+        manual_routes = self._routes_config.get(instance_name, [])
+        for r in manual_routes:
+            if r not in info['routes']:
+                info['routes'].append(r)
+        for peer in (instance_infos.get('peers') or []):
+            for conn in (peer.get('conns') or []):
+                stats = conn.get('stats') or {}
+                total_download += stats.get('rx_bytes', 0)
+                total_upload += stats.get('tx_bytes', 0)
+        info['total_upload'] = self._humanize_bytes(total_upload, for_short=True)
+        info['total_download'] = self._humanize_bytes(total_download, for_short=True)
+        return info
+
+    # ── 监控线程 ──────────────────────────────────────────────
+
+    def _start_monitor(self, instance_name: str):
+        if self._monitor_states.get(instance_name):
+            logger.warning(f"Monitor already running for {instance_name}")
+            return
+        self._monitor_states[instance_name] = True
+        t = threading.Thread(
+            target=self._monitor_loop,
+            args=(instance_name,),
+            name=f"EasyTierMonitor-{instance_name}",
+            daemon=True,
+        )
+        self._monitor_threads[instance_name] = t
+        t.start()
+        logger.info(f"Monitor started for {instance_name}")
+
+    def _stop_monitor(self, instance_name: str):
+        if not self._monitor_states.get(instance_name):
+            return
+        logger.info(f"Stopping monitor for {instance_name}")
+        self._monitor_states[instance_name] = False
+        t = self._monitor_threads.pop(instance_name, None)
+        if t and t.is_alive():
+            t.join(timeout=2.0)
+            if t.is_alive():
+                logger.warning(f"Monitor thread for {instance_name} did not stop in time")
+
+    def _monitor_loop(self, instance_name: str):
+        logger.info(f"Monitor loop started for {instance_name}")
+        cached_state: Dict[str, Any] = {}
+        last_notify_time = 0.0
+        compare_keys = ['virtual_ipv4', 'virtual_ipv6', 'routes', 'dns_servers']
+
+        while self._monitor_states.get(instance_name, False):
+            try:
+                info = self._get_route_info_dict(instance_name)
+                if not info or not info.get('virtual_ipv4'):
+                    time.sleep(2.0)
+                    continue
+
+                changed = any(info.get(k) != cached_state.get(k) for k in compare_keys)
+
+                if changed or not cached_state:
+                    cached_state = {k: info.get(k) for k in compare_keys}
+                    self._notify_kotlin_restart_vpn(instance_name, info)
+                    last_notify_time = 0.0
+
+                now = time.time()
+                if now - last_notify_time >= 60.0:
+                    last_notify_time = now
+                    self._notify_kotlin_update_notification(instance_name, info)
+
+                time.sleep(5.0)
+
+            except Exception as e:
+                logger.exception(f"Monitor loop error for {instance_name}: {e}")
+
+        logger.info(f"Monitor loop ended for {instance_name}")
+
+    def _notify_kotlin_restart_vpn(self, instance_name: str, info: Dict[str, Any]):
         try:
-            from locales import get_last_lang
-            start_time = self._start_times.get(instance_name)
-            info = {
-                'i18n': get_last_lang(),
-                'uptime': int(time.time() - start_time) if start_time else 0,
-                'virtual_ipv4': '',
-                'dns_servers': ['223.5.5.5', '119.29.29.29', '114.114.114.114', '8.8.8.8'],
-                'routes': [],
-                'total_upload': '',
-                'total_download': '',
-            }
-            total_upload = 0
-            total_download = 0
-            raw = self._collect_via_raw_ffi()
-            instance_infos = raw.get(instance_name, {})
-            my_node_info = instance_infos.get('my_node_info', {})
-            virtual_ipv4 = my_node_info.get('virtual_ipv4') or {}
-            addr = (virtual_ipv4.get('address') or {}).get('addr', 0)
-            addr_str = self._addr_to_ipv4(addr)
-            network_len = virtual_ipv4.get('network_length') or '24'
-            info['virtual_ipv4'] = f"{addr_str}/{network_len}" if addr_str else ""
-            routes = instance_infos.get('routes') or []
-            for route in routes:
-                cidrs = route.get('proxy_cidrs') or []
-                for cidr in cidrs:
-                    info['routes'].append(cidr)
-            # 参考2.6.4官方安卓版本实现逻辑：合并 自定义路由
-            manual_routes = self._routes_config.get(instance_name, [])
-            for r in manual_routes:
-                if r not in info['routes']:
-                    info['routes'].append(r)
-            for peer in (instance_infos.get('peers') or []):
-                for conn in (peer.get('conns') or []):
-                    stats = conn.get('stats') or {}
-                    total_download += stats.get('rx_bytes', 0) # 下载
-                    total_upload += stats.get('tx_bytes', 0) # 上传
-            info['total_upload'] = self._humanize_bytes(total_upload, for_short=True)
-            info['total_download'] = self._humanize_bytes(total_download, for_short=True)
-            return info
+            if not run_configs.IS_ANDROID:
+                return
+            from java import jclass
+            MainActivity = jclass(run_configs.ANDROID_MAIN_ACTIVITY)
+            manager = MainActivity.getEasyTierManager()
+            if manager is not None:
+                ipv4 = info.get('virtual_ipv4', '')
+                ipv6 = info.get('virtual_ipv6', '')
+                cidrs = info.get('routes', [])
+                dns = info.get('dns_servers', [])
+                title, text = self._build_notification_text(instance_name, info)
+                manager.stopVpn()
+                manager.startVpn(ipv4, ipv6, cidrs, dns, title, text)
+                logger.info(f"Notified Kotlin: startVpn for {instance_name} ipv4={ipv4} ipv6={ipv6}")
         except Exception as e:
-            logger.exception(f"get_route_info failed: {e}")
+            logger.exception(f"Failed to notify Kotlin restartVpn: {e}")
+
+    def _notify_kotlin_update_notification(self, instance_name: str, info: Dict[str, Any]):
+        try:
+            if not run_configs.IS_ANDROID:
+                return
+            from java import jclass
+            MainActivity = jclass(run_configs.ANDROID_MAIN_ACTIVITY)
+            manager = MainActivity.getEasyTierManager()
+            if manager is not None:
+                title, text = self._build_notification_text(instance_name, info)
+                manager.updateNotification(title, text)
+        except Exception as e:
+            logger.exception(f"Failed to update notification: {e}")
+
+    def _build_notification_text(self, instance_name: str, info: Dict[str, Any]) -> tuple:
+        i18n = get_last_lang()
+        is_chinese = i18n.startswith('zh')
+        name = instance_name.replace('.toml', '')
+        title = f"易组网 - {name} 运行中" if is_chinese else f"EasyTier-EUI - {name} Running"
+
+        upload = info.get('total_upload', '')
+        download = info.get('total_download', '')
+
+        if not upload and not download:
+            text = "连接中..." if is_chinese else "Connecting..."
+            return title, text
+
+        parts = []
+        if upload:
+            parts.append(f"↑{upload}")
+        if download:
+            if upload:
+                parts.append("  ")
+            parts.append(f"↓{download}")
+        start_time = self._start_times.get(instance_name)
+        uptime_seconds = int(time.time() - start_time) if start_time else 0
+        if uptime_seconds > 0:
+            if upload or download:
+                parts.append("  🕓  ")
+            parts.append(self._format_uptime(uptime_seconds, is_chinese))
+        text = "".join(parts)
+        return title, text
+
+    def _format_uptime(self, seconds: int, is_chinese: bool) -> str:
+        days = seconds // 86400
+        hours = (seconds % 86400) // 3600
+        minutes = (seconds % 3600) // 60
+        if is_chinese:
+            parts = []
+            if days > 0:
+                parts.append(f"{days}天")
+            if hours > 0:
+                parts.append(f"{hours}时")
+            parts.append(f"{minutes}分")
+            return "".join(parts)
+        else:
+            parts = []
+            if days > 0:
+                parts.append(f"{days}d ")
+            if hours > 0:
+                parts.append(f"{hours}h ")
+            parts.append(f"{minutes}m")
+            return "".join(parts)
 
 
 
@@ -380,6 +527,9 @@ class FfiAdapter(IEasyTierAdapter):
         return list(info.keys())
 
     def _collect_via_raw_ffi(self, max_len: int = _MAX_INSTANCE_COUNT) -> Dict[str, Any]:
+        now = time.time()
+        if self._enable_cache and self._ffi_cache and (now - self._ffi_cache_time) < self._FFI_CACHE_TTL:
+            return self._ffi_cache
         try:
             with self._lock:
                 infos = (KeyValuePair * max_len)()
@@ -399,6 +549,9 @@ class FfiAdapter(IEasyTierAdapter):
                             self._lib.free_string(key_ptr)
                         if val_ptr:
                             self._lib.free_string(val_ptr)
+                if self._enable_cache:
+                    self._ffi_cache = result
+                    self._ffi_cache_time = now
                 return result
         except Exception as e:
             logger.exception(f"_collect_via_raw_ffi failed: {e}")

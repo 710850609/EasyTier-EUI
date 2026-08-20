@@ -5,6 +5,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Intent
+import android.net.ConnectivityManager
 import android.net.VpnService
 import android.os.Build
 import android.os.Handler
@@ -67,23 +68,22 @@ class EasyTierVpnService : VpnService() {
         AppLogger.info(TAG, "VPN Service created")
     }
 
+    @Suppress("UNCHECKED_CAST")
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         AppLogger.info(TAG, "onStartCommand: flags=$flags, startId=$startId")
-        val ipv4Address = intent?.getStringExtra("ipv4_address")
-        val proxyCidrs = intent?.getStringArrayListExtra("proxy_cidrs") ?: arrayListOf()
-        val dnsServers = intent?.getStringArrayListExtra("dns_servers") ?: arrayListOf()
+        val params = intent?.getSerializableExtra("vpn_params") as? VpnParams
         instanceName = intent?.getStringExtra("instance_name")
 
-        if (ipv4Address == null || instanceName == null) {
-            AppLogger.error(TAG, "Missing parameters: ipv4Address=$ipv4Address, instanceName=$instanceName")
+        if (params == null || instanceName == null) {
+            AppLogger.error(TAG, "Missing parameters: params=$params, instanceName=$instanceName")
             stopSelf()
             return START_NOT_STICKY
         }
 
-        AppLogger.info(TAG, "Starting VPN - IPv4: $ipv4Address, Proxy CIDRs: $proxyCidrs, DNS: $dnsServers, Instance: $instanceName")
+        AppLogger.info(TAG, "Starting VPN - IPv4: ${params.ipv4}, IPv6: ${params.ipv6}, Proxy CIDRs: ${params.proxyCidrs}, DNS: ${params.dnsServers}, Instance: $instanceName")
 
         try {
-            val pfd = createVpnInterface(ipv4Address, proxyCidrs, dnsServers)
+            val pfd = createVpnInterface(params.ipv4, params.ipv6, params.proxyCidrs, params.dnsServers)
             if (pfd == null) {
                 AppLogger.error(TAG, "Failed to create VPN interface (pfd is null)")
                 stopSelf()
@@ -91,9 +91,7 @@ class EasyTierVpnService : VpnService() {
             }
 
             vpnInterface = pfd
-            val notificationTitle = intent?.getStringExtra("notification_title") ?: "易组网 - ${instanceName?.removeSuffix(".toml")} 运行中"
-            val notificationText = intent?.getStringExtra("notification_text") ?: "网络连接中..."
-            startForeground(NOTIFICATION_ID, buildNotification(notificationTitle, notificationText))
+            startForeground(NOTIFICATION_ID, buildNotification(params.notificationTitle, params.notificationText))
             AppLogger.info(TAG, "VPN interface created, fd=${pfd.fd}")
 
             val name = instanceName!!
@@ -136,24 +134,37 @@ class EasyTierVpnService : VpnService() {
         return START_STICKY
     }
 
-    private fun createVpnInterface(ipv4Address: String, proxyCidrs: List<String>, dnsServers: List<String>): ParcelFileDescriptor? {
-        AppLogger.info(TAG, "createVpnInterface: ipv4=$ipv4Address, cidrs=${proxyCidrs.size}, dns=${dnsServers.size}")
+    private fun createVpnInterface(ipv4Address: String, ipv6Address: String, proxyCidrs: List<String>, dnsServers: List<String>): ParcelFileDescriptor? {
+        AppLogger.info(TAG, "createVpnInterface: ipv4=$ipv4Address, ipv6=$ipv6Address, cidrs=${proxyCidrs.size}, dns=${dnsServers.size}")
         val (ip, networkLength) = parseIpv4Address(ipv4Address)
         AppLogger.debug(TAG, "createVpnInterface: parsed ip=$ip, prefix=$networkLength")
 
         val builder = Builder()
         builder.setSession("EasyTier-EUI VPN")
             .addAddress(ip, networkLength)
+            .also {
+                if (ipv6Address.isNotEmpty()) {
+                    try {
+                        val (ipv6, ipv6Prefix) = parseCidr(ipv6Address)
+                        it.addAddress(ipv6, ipv6Prefix)
+                        AppLogger.info(TAG, "createVpnInterface: added IPv6 address $ipv6/$ipv6Prefix")
+                    } catch (e: Exception) {
+                        AppLogger.warn(TAG, "createVpnInterface: failed to parse IPv6 '$ipv6Address': ${e.message}")
+                    }
+                }
+            }
             .addDisallowedApplication(packageName)
+            .also {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    val cm = getSystemService(ConnectivityManager::class.java)
+                    val isMetered = cm.isActiveNetworkMetered
+                    AppLogger.debug(TAG, "createVpnInterface: active network isMetered=$isMetered")
+                    it.setMetered(isMetered)
+                }
+            }
 
-        if (dnsServers.isEmpty()) {
-            builder.addDnsServer("223.5.5.5")
-                .addDnsServer("119.29.29.29")
-                .addDnsServer("114.114.114.114")
-                .addDnsServer("8.8.8.8")
-        } else {
-            dnsServers.forEach { dns -> builder.addDnsServer(dns) }
-        }
+        AppLogger.debug(TAG, "createVpnInterface: DNS servers=${dnsServers.joinToString()}")
+        dnsServers.forEach { dns -> builder.addDnsServer(dns) }
 
         proxyCidrs.forEach { cidr ->
             try {
@@ -184,8 +195,7 @@ class EasyTierVpnService : VpnService() {
 
     private fun setTunFd(instanceName: String, fd: Int) {
         try {
-            val module = Python.getInstance().getModule("et_adapters.facade")
-            val facade = module.callAttr("get_facade")
+            val facade = EasyTierManager.getFacade()
             if (facade == null) {
                 AppLogger.error(TAG, "TUN fd set: facade is null")
                 return
@@ -236,7 +246,10 @@ class EasyTierVpnService : VpnService() {
             val parts = cidr.split("/")
             when (parts.size) {
                 2 -> Pair(parts[0], parts[1].toInt())
-                1 -> Pair(parts[0], 32)
+                1 -> {
+                    val defaultPrefix = if (parts[0].contains(":")) 128 else 32
+                    Pair(parts[0], defaultPrefix)
+                }
                 else -> throw IllegalArgumentException("Invalid CIDR format: $cidr")
             }
         } catch (e: Exception) {
