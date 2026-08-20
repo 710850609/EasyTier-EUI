@@ -83,7 +83,12 @@ class EasyTierVpnService : VpnService() {
     @Suppress("UNCHECKED_CAST")
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         AppLogger.info(TAG, "onStartCommand: flags=$flags, startId=$startId")
-        val params = intent?.getSerializableExtra("vpn_params") as? VpnParams
+        val params = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            intent?.getSerializableExtra("vpn_params", VpnParams::class.java)
+        } else {
+            @Suppress("DEPRECATION")
+            intent?.getSerializableExtra("vpn_params") as? VpnParams
+        }
 
         if (params == null) {
             AppLogger.error(TAG, "Missing parameters: params=$params")
