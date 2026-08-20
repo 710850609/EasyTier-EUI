@@ -2353,19 +2353,14 @@ html.dark .sk-breathe {
   margin: 0 0 16px;
   padding: 20px;
   border-radius: 20px;
-  /* background: var(--color-surface-container) !important; */
-  background: var(--color-surface) !important;
+  background: var(--color-surface-container-low) !important;
 }
 
 .merged-section {
   display: flex;
   flex-direction: column;
   padding-bottom: 20px;
-  background: rgba(var(--color-surface-container-rgb, 226, 236, 250), 0.08) !important;
-}
-
-html.dark .merged-section {
-  background: rgba(var(--color-surface-container-rgb, 51, 65, 85), 0.1) !important;
+  background: var(--color-surface-container-low) !important;
 }
 
 .section-header {
@@ -2620,11 +2615,7 @@ html.dark .merged-section {
   margin-top: 12px;
   border-radius: 20px;
   overflow: hidden;
-  background: rgba(var(--color-surface-container-rgb, 226, 236, 250), 0.08) !important;
-}
-
-html.dark .config-section-panel {
-  background: rgba(var(--color-surface-container-rgb, 51, 65, 85), 0.1) !important;
+  background: var(--color-surface-container-low) !important;
 }
 
 :deep(.panel-section-inner .var-collapse-item) {
