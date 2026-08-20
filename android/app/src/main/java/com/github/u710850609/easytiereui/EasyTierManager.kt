@@ -9,6 +9,7 @@ import android.provider.Settings
 import androidx.core.content.FileProvider
 import java.io.File
 import com.chaquo.python.Python
+import com.chaquo.python.PyObject
 import java.io.PrintWriter
 import java.io.StringWriter
 
@@ -20,9 +21,9 @@ class EasyTierManager(
         const val VPN_REQUEST_CODE = 1001
 
         @Volatile
-        private var cachedFacade: Any? = null
+        private var cachedFacade: PyObject? = null
 
-        fun getFacade(): Any? {
+        fun getFacade(): PyObject? {
             cachedFacade?.let { return it }
             synchronized(this) {
                 cachedFacade?.let { return it }

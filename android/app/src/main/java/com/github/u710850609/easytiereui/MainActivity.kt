@@ -527,7 +527,7 @@ class MainActivity : AppCompatActivity() {
         pendingPermissionRequest?.deny()
         pendingPermissionRequest = null
         try {
-            easyTierManager?.stop()
+            easyTierManager?.stopVpn()
         } catch (e: Exception) {
             AppLogger.error(TAG,"onDestroy: stop failed", e)
         }
