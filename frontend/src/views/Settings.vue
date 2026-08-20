@@ -205,12 +205,6 @@
       <var-divider />
       <div class="setting-row">
         <span class="setting-label">
-          {{ $t('common.installationPath') }}
-        </span>
-        <var-chip type="primary" size="small" style="word-break: break-all; white-space: normal; text-align: left;">{{ installPath }}</var-chip>
-      </div>
-      <div class="setting-row">
-        <span class="setting-label">
           {{ $t('settings.optionalInitialNodes') }}
         </span>
         <var-select
@@ -254,7 +248,7 @@
         >
         </var-select>
       </div>
-      <div class="setting-row">
+      <div class="setting-row" v-if="platform === 'android'">
         <span class="setting-label">
           {{ $t('settings.startRecovery') }}
           <var-tooltip :offset-x="65">
@@ -289,6 +283,12 @@
         <var-button type="primary" size="small" @click="releaseConfig" auto-loading>
           {{ $t('settings.releaseConfig') }}
         </var-button>
+      </div>
+      <div class="setting-row">
+        <span class="setting-label">
+          {{ $t('common.installationPath') }}
+        </span>
+        <var-chip type="primary" size="small" style="word-break: break-all; white-space: normal; text-align: left;">{{ installPath }}</var-chip>
       </div>
       <div class="setting-row">
         <span class="setting-label">

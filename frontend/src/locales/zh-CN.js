@@ -115,10 +115,10 @@ export default {
     githubDownloadReadClipboard: '读取剪切板地址下载',
     githubDownloadEmpty: '未读取到GitHub下载地址',
     githubDownloadInvalid: '不是有效的GitHub下载地址',
-    startRecovery: '启动回连',
+    startRecovery: '启动重连',
     startRecoveryTip: '自动运行上次未手动关闭的配置',
-    startRecoveryEnabled: '已启用启动回连',
-    startRecoveryDisabled: '已禁用启动回连',
+    startRecoveryEnabled: '已启用启动重连',
+    startRecoveryDisabled: '已禁用启动重连',
     specifyIpPort: '配置IP端口',
     releaseConfig: '释放配置',
 
