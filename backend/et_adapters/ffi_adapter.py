@@ -185,6 +185,7 @@ class FfiAdapter(IEasyTierAdapter):
             self._mtu_config[instance_name] = doc.get('flags', {}).get('mtu') or 1400
             self._invalidate_ffi_cache()
             logger.info(f"Instance '{instance_name}' started via FFI")
+            time.sleep(2.0)
             self._start_monitor(instance_name)
         except Exception as e:
             logger.exception(f"start_network failed: {e}")
@@ -367,6 +368,9 @@ class FfiAdapter(IEasyTierAdapter):
     # ── 监控线程 ──────────────────────────────────────────────
 
     def _start_monitor(self, instance_name: str):
+        if not run_configs.IS_ANDROID:
+            logger.info(f"Monitor not started for {instance_name} on Android platform")
+            return
         if self._monitor_states.get(instance_name):
             logger.warning(f"Monitor already running for {instance_name}")
             return

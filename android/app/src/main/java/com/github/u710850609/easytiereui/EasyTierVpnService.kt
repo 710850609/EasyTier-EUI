@@ -31,6 +31,7 @@ class EasyTierVpnService : VpnService() {
 
         private val DISALLOWED_APPS = listOf(
             "com.android.phone",                     // 电话/VoLTE/VoWiFi 服务
+            "com.android.ims",                       // IMS 服务（VoLTE/VoWiFi 核心）
             "com.android.captiveportallogin",        // 网络认证门户检测
             "com.android.settings",                  // 系统设置
             "com.huawei.android.pushagent",          // 华为推送
