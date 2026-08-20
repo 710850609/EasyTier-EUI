@@ -1,3 +1,18 @@
+##   
+- 新增：安卓版支持应用启动回连，自动运行上次未手动关闭的配置
+- 优化：安卓版VPN支持IPv6、支持魔法DNS、支持MTU、根据物理网络自适应是否计量网络
+- 优化：安卓版VPN排除干扰电话服务、常见推送服务、系统服务。手动强制路由时，尽量保证系统正常运行
+- 修复：安卓版未能显示多个连接协议
+
+<br>
+
+----
+
+- New: Android version now supports app startup recovery, automatically running the last config that was not manually stopped
+- Improved: Android VPN now supports IPv6, Magic DNS, MTU, and adaptive metered network detection based on physical network
+- Improved: Android VPN excludes interference with phone services, common push services, and system services. When manually forcing routes, system operations are preserved as much as possible
+- Fixed: Android version failed to display multiple connection protocols
+
 ##  2.2
 - 新增：【配置】支持二维码分享网络、支持扫描二维码增加配置
   - 仅支持https方式访问才能扫码（浏览器安全限制）

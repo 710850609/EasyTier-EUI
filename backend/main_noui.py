@@ -189,7 +189,6 @@ def _android_async_start_hook():
     def _async_start_vpn():
         try:
             logger.info("async VPN startup begin")
-            time.sleep(0.5)
             run_infos = et_run_info.get_all()
             for info in run_infos.values():
                 if info.running:
