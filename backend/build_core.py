@@ -162,6 +162,7 @@ def build_executable(build_ver:str = None, one_file:bool = True):
         "--hidden-import", "et_adapters.core_adapter",
         "--hidden-import", "et_adapters.core_background_adapter",
         "--hidden-import", "et_adapters.core_foreground_adapter",
+        "--hidden-import", "utils.app_settings",
         "--hidden-import", "utils.check_peers",
         "--hidden-import", "utils.common_util",
         "--hidden-import", "utils.et_run_info",

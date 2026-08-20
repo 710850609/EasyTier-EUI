@@ -292,6 +292,7 @@ export const api = {
     getLogLevel: () => get('/settings/get_log_level', {}, { toastError: false }),
     setLogLevel: (params = {}) => post('/settings/set_log_level', params),
     deleteLog: () => post('/settings/delete_log'),
+    setEnabledStartRecovery: (params = {}) => post('/settings/enabled_start_recovery', params),
   },
   // et app
   etApp: {

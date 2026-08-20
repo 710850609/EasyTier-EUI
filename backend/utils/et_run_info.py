@@ -18,7 +18,7 @@ class EtRunInfo:
     """
     et 运行信息
     """
-    def __init__(self, profile:str, rpc_portal:Optional[str], autostart:bool, use_system_service:bool, log_level:str = _default_log_level):
+    def __init__(self, profile:str, rpc_portal:Optional[str], autostart:bool, use_system_service:bool, log_level:str = _default_log_level, running:bool = False):
         if not profile:
             raise HttpException("profile cannot be None for save")
         self.profile = profile
@@ -26,6 +26,7 @@ class EtRunInfo:
         self.autostart = autostart
         self.use_system_service = use_system_service
         self.log_level = log_level
+        self.running = running
 
 def save(profile:Optional[str], rpc_portal:Optional[str], autostart:Optional[bool], use_system_service:Optional[bool], log_level:str = _default_log_level):
     if not profile:
@@ -84,6 +85,18 @@ def set_log_level(log_level:str = _default_log_level) -> None:
         info.log_level = log_level
     __save_data(cfgs)
     __load_data(reload=True)
+
+def set_running(profile:str, running:bool = False) -> None:
+    if not profile:
+        return
+    data = __load_data() or {}
+    info = data.get(profile)
+    if info is None:
+        return
+    info.running = running
+    __save_data(data)
+    __load_data(reload=True)
+
 
 def __load_data(reload:bool = False) -> Dict[str, EtRunInfo]:
     global __data

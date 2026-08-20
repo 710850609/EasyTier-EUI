@@ -12,7 +12,7 @@ import tomlkit
 from http_dispatcher.dispatcher import HttpException
 from locales import get_message
 from models.peers import PeersCheckResult
-from utils import check_peers as check_util, run_configs
+from utils import check_peers as check_util, run_configs, app_settings
 from utils import github_util
 
 logger = logging.getLogger(__name__)
@@ -103,15 +103,13 @@ def get_eui_peer_source(*args, **kwargs):
 
 
 def get_peer_source(*args, **kwargs):
-    settings = run_configs.get_settings()
-    if 'peer_source' in settings:
-        return settings.get('peer_source', [])
-    return ['_eui']
+    peer_source = app_settings.get('peer_source')
+    return ['_eui'] if peer_source is None else peer_source
 
 def set_peer_source(params: dict, *args, **kwargs):
     params = params or {}
     peer_source = params.get('peer_source') or []
-    run_configs.update_setting('peer_source', peer_source)
+    app_settings.save('peer_source', peer_source)
     Path(run_configs.et_peer_check_result_file()).unlink(missing_ok=True)
     Path(run_configs.et_peer_meta_file()).unlink(missing_ok=True)
     __get_public_peers(refresh=True)

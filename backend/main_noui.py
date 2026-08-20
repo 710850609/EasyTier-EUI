@@ -8,8 +8,9 @@ import threading
 from typing import Optional
 
 from actions import services
+from et_adapters import facade
 from http_dispatcher import http_server
-from utils import run_configs, log_util, permissions_util, ip_util, qrcode_util, et_run_info
+from utils import run_configs, log_util, permissions_util, ip_util, qrcode_util, et_run_info, app_settings
 from utils.permissions_util import ServerHandle
 
 logger = logging.getLogger(__name__)
@@ -174,10 +175,35 @@ def start_android_server(data_dir: str, external_dir: str = "", host: str = "127
             raise RuntimeError("HTTP server start failed")
         actual_port = handle._server.server_address[1]
         py_log(f"HTTP server started on {host}:{actual_port}")
+        _android_async_start_hook()
         return {"port": actual_port, "host": host}
     except Exception as e:
         py_log(f"EXCEPTION: {e}\n{traceback.format_exc()}")
         raise
+
+def _android_async_start_hook():
+    enabled_start_recovery = app_settings.get('enabled_start_recovery', False)
+    if not enabled_start_recovery:
+        logger.info("跳过启动应用恢复组网：未启用功能")
+        return
+    def _async_start_vpn():
+        try:
+            logger.info("async VPN startup begin")
+            time.sleep(0.5)
+            run_infos = et_run_info.get_all()
+            for info in run_infos.values():
+                if info.running:
+                    profile_filename = info.profile
+                    toml_path = run_configs.et_config_file(profile_filename)
+                    if not os.path.exists(toml_path):
+                        logger.warning(f"跳过应用启动恢复上次未关闭的组网：{profile_filename} 配置不存在")
+                        continue
+                    logger.info(f"应用启动恢复上次未关闭的组网：{profile_filename}")
+                    facade.get_facade().start_network(toml_path, profile_filename)
+            logger.info("async VPN startup done")
+        except Exception:
+            logger.exception(f"async VPN startup failed")
+    threading.Thread(target=_async_start_vpn, daemon=True, name='async-vpn-startup').start()
 
 
 def run():
@@ -260,6 +286,7 @@ def start_hook():
     if run_configs.is_docker():
         services.start_all()
     pass
+
 
 if __name__ == '__main__':
     run()

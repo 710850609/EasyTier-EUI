@@ -13,9 +13,9 @@ from typing import Dict, Any, List, Set, Optional
 
 import tomlkit
 
-from utils import run_configs
 from et_adapters.interface import IEasyTierAdapter
 from locales import get_last_lang
+from utils import run_configs, app_settings
 
 logger = logging.getLogger(__name__)
 _FFI_LIB_VERSION = "unknown"
@@ -36,7 +36,7 @@ def set_ffi_version(et_version):
     if not et_version:
         logger.warning("no FFI version value")
         return
-    run_configs.update_setting('ffi_version', et_version)
+    app_settings.save('ffi_version', et_version)
 
 class KeyValuePair(Structure):
     _fields_ = [("key", c_void_p), ("value", c_void_p)]
@@ -117,8 +117,7 @@ class FfiAdapter(IEasyTierAdapter):
 
 
     def get_version(self) -> str:
-        settings = run_configs.get_settings()
-        ffi_version: Optional[str] = settings.get('ffi_version')
+        ffi_version: str = app_settings.get('ffi_version')
         if ffi_version:
             return ffi_version
         else:

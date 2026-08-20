@@ -8,7 +8,7 @@ from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from typing import Optional, Union
 
-from utils import run_configs
+from utils import run_configs, app_settings
 
 # 全局标志，记录日志是否已配置
 _log_setup_done = False
@@ -26,9 +26,8 @@ def setup_log(log_file:Optional[str] = None, log_level:Union[int, str, None] = N
     if _log_setup_done:
         return  # 已配置过，直接返回
 
-    settings = run_configs.get_settings()
     if log_level is None:
-        log_level = settings.get('log_level') or 'WARN'
+        log_level = app_settings.get('log_level', 'WARN')
     log_level = log_level.upper() if isinstance(log_level, str) else log_level
 
     if isinstance(log_level, str):

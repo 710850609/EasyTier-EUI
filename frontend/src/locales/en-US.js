@@ -115,6 +115,10 @@ export default {
     githubDownloadReadClipboard: 'Read Clipboard URL & Download',
     githubDownloadEmpty: 'No GitHub URL found in clipboard',
     githubDownloadInvalid: 'Not a valid GitHub download URL',
+    startRecovery: 'Start Recovery',
+    startRecoveryTip: 'Auto-run the last config that was not manually stopped',
+    startRecoveryEnabled: 'Start recovery enabled',
+    startRecoveryDisabled: 'Start recovery disabled',
     specifyIpPort: 'Configure IP Port',
     releaseConfig: 'Release Config',
 

@@ -7,7 +7,7 @@ import threading
 from typing import Optional
 
 from et_adapters.core_background_adapter import CoreBackgroundAdapter
-from utils import run_configs
+from utils import run_configs, et_run_info
 from .core_adapter import CoreAdapter
 from .ffi_adapter import FfiAdapter
 from .interface import IEasyTierAdapter
@@ -31,9 +31,11 @@ class EasyTierFacade(IEasyTierAdapter):
 
     def start_network(self, toml_path: str, instance_name: str) -> None:
         self._adapter.start_network(toml_path, instance_name)
+        et_run_info.set_running(instance_name, True)
 
     def stop_network(self, instance_name: str) -> None:
         self._adapter.stop_network(instance_name)
+        et_run_info.set_running(instance_name, False)
 
     def status(self, instance_name: str) -> bool:
         return self._adapter.status(instance_name)

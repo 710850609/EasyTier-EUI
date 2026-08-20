@@ -39,7 +39,7 @@
       <var-divider class="divider" />
       <div class="setting-row">
         <span class="setting-label">{{ $t('settings.appearance.glassEffect') }}</span>
-        <var-switch v-model="glassEffectEnabled" @change="toggleGlassEffect" />
+        <var-switch variant v-model="glassEffectEnabled" @change="toggleGlassEffect" />
       </div>
     </var-paper>
 
@@ -139,6 +139,16 @@
       </div>
       <var-divider />
       
+      <div class="setting-row">
+        <div class="version-info-block">
+          <span class="setting-label">{{ $t('settings.currentVersion') }}</span>
+          <span class="version-value">{{ buildVersion }}</span>
+        </div>
+        <var-button type="primary" size="small" @click="getEuiReleaseInfo(true, true)" auto-loading>
+          <var-icon name="refresh" size="18" />
+          {{ $t('settings.checkUpdate') }}
+        </var-button>
+      </div>
       <div class="setting-row" v-if="euiReleaseInfo?.latest_release?.version">
         <div class="version-info-block">
           <span class="setting-label">
@@ -170,16 +180,6 @@
            :disabled="updateProgress.active">
           <var-icon name="download" />
           {{ $t('common.install') }}
-        </var-button>
-      </div>
-      <div class="setting-row">
-        <div class="version-info-block">
-          <span class="setting-label">{{ $t('settings.currentVersion') }}</span>
-          <span class="version-value">{{ buildVersion }}</span>
-        </div>
-        <var-button type="primary" size="small" @click="getEuiReleaseInfo(true, true)" auto-loading>
-          <var-icon name="refresh" size="18" />
-          {{ $t('settings.checkUpdate') }}
         </var-button>
       </div>
       <div class="setting-row" v-if="updateProgress.active" style="flex-direction: column; align-items: stretch;">
@@ -253,6 +253,18 @@
           @change="changeLogLevel"
         >
         </var-select>
+      </div>
+      <div class="setting-row">
+        <span class="setting-label">
+          {{ $t('settings.startRecovery') }}
+          <var-tooltip :offset-x="65">
+            <var-icon name="help-circle-outline" size="16" class="help-icon" />
+            <template #content>
+              <div class="tooltip-multiline">{{ $t('settings.startRecoveryTip') }}</div>
+            </template>
+          </var-tooltip>
+        </span>
+        <var-switch variant v-model="enabledStartRecovery" @change="toggleEnabledStartRecovery" />
       </div>
       <div class="setting-row">
         <span class="setting-label">
@@ -471,6 +483,7 @@ const euiReleaseInfo = ref({})
 const euiRelease = ref({})
 const euiChangeMarkdown = ref('')
 const updateProgress = ref({ current_progress: 0, description: '', status: -1, active: false })
+const enabledStartRecovery = ref(false)
 const showEuiReleaseInfo = ref(false)
 const showEtChangeLog = ref(false)
 const etChangeLog = ref('')
@@ -499,6 +512,14 @@ const changeLanguage = (val) => {
 
 const toggleGlassEffect = (val) => {
   setGlassEffect(val)
+}
+
+const toggleEnabledStartRecovery = (val) => {
+  api.settings.setEnabledStartRecovery({ enabled: val })
+    .then(() => toast.success(t(val ? 'settings.startRecoveryEnabled' : 'settings.startRecoveryDisabled')))
+    .catch(() => {
+      enabledStartRecovery.value = !val
+    })
 }
 
 const startPress = (e) => {
@@ -701,6 +722,7 @@ const getEuiInfo = async () => {
     platform.value = data.platform
     isDocker.value = data.is_docker
     logLevel.value = data.log_level
+    enabledStartRecovery.value = data.enabled_start_recovery || false
   } catch (e) {
     console.error('获取版本号失败:', e)
     buildVersion.value = t('settings.toast.fetchVersionFailed')
