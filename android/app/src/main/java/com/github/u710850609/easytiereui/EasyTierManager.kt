@@ -46,10 +46,10 @@ class EasyTierManager(
 
     // ── Python 回调 ──────────────────────────────────────────
 
-    fun startVpn(ipv4: String, ipv6: String, proxyCidrs: Array<String>, dnsServers: Array<String>, notificationTitle: String, notificationText: String) {
-        AppLogger.info(TAG, "startVpn: ipv4=$ipv4, ipv6=$ipv6, cidrs=${proxyCidrs.size}, dns=${dnsServers.size}")
+    fun startVpn(ipv4: String, ipv6: String, proxyCidrs: Array<String>, dnsServers: Array<String>, notificationTitle: String, notificationText: String, mtu: Int) {
+        AppLogger.info(TAG, "startVpn: ipv4=$ipv4, ipv6=$ipv6, cidrs=${proxyCidrs.size}, dns=${dnsServers.size}, mtu=$mtu")
         stopVpnService()
-        val params = VpnParams(ipv4, ipv6, proxyCidrs.toList(), dnsServers.toList(), notificationTitle, notificationText)
+        val params = VpnParams(ipv4, ipv6, proxyCidrs.toList(), dnsServers.toList(), notificationTitle, notificationText, mtu)
         val prepareIntent = VpnService.prepare(activity)
         if (prepareIntent != null) {
             AppLogger.info(TAG, "startVpn: VPN not authorized, showing dialog")

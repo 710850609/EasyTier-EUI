@@ -29,6 +29,17 @@ class EasyTierVpnService : VpnService() {
         const val CHANNEL_ID = "easytier_eui_vpn_channel"
         const val NOTIFICATION_ID = 1
 
+        private val DISALLOWED_APPS = listOf(
+            "com.android.phone",                     // 电话/VoLTE/VoWiFi 服务
+            "com.android.captiveportallogin",        // 网络认证门户检测
+            "com.android.settings",                  // 系统设置
+            "com.huawei.android.pushagent",          // 华为推送
+            "com.xiaomi.xmsf",                       // 小米推送
+            "com.heytap.mcs",                        // OPPO 推送
+            "com.vivo.push",                         // vivo 推送
+            "com.huawei.genexcloud.speedtest"        // 华为网络加速
+        )
+
         var instance: EasyTierVpnService? = null
             private set
 
@@ -83,7 +94,7 @@ class EasyTierVpnService : VpnService() {
         AppLogger.info(TAG, "Starting VPN - IPv4: ${params.ipv4}, IPv6: ${params.ipv6}, Proxy CIDRs: ${params.proxyCidrs}, DNS: ${params.dnsServers}, Instance: $instanceName")
 
         try {
-            val pfd = createVpnInterface(params.ipv4, params.ipv6, params.proxyCidrs, params.dnsServers)
+            val pfd = createVpnInterface(params.ipv4, params.ipv6, params.proxyCidrs, params.dnsServers, params.mtu)
             if (pfd == null) {
                 AppLogger.error(TAG, "Failed to create VPN interface (pfd is null)")
                 stopSelf()
@@ -134,8 +145,8 @@ class EasyTierVpnService : VpnService() {
         return START_STICKY
     }
 
-    private fun createVpnInterface(ipv4Address: String, ipv6Address: String, proxyCidrs: List<String>, dnsServers: List<String>): ParcelFileDescriptor? {
-        AppLogger.info(TAG, "createVpnInterface: ipv4=$ipv4Address, ipv6=$ipv6Address, cidrs=${proxyCidrs.size}, dns=${dnsServers.size}")
+    private fun createVpnInterface(ipv4Address: String, ipv6Address: String, proxyCidrs: List<String>, dnsServers: List<String>, mtu: Int): ParcelFileDescriptor? {
+        AppLogger.info(TAG, "createVpnInterface: ipv4=$ipv4Address, ipv6=$ipv6Address, cidrs=${proxyCidrs.size}, dns=${dnsServers.size}, mtu=$mtu")
         val (ip, networkLength) = parseIpv4Address(ipv4Address)
         AppLogger.debug(TAG, "createVpnInterface: parsed ip=$ip, prefix=$networkLength")
 
@@ -155,6 +166,9 @@ class EasyTierVpnService : VpnService() {
             }
             .addDisallowedApplication(packageName)
             .also {
+                DISALLOWED_APPS.forEach { app -> it.addDisallowedApplication(app) }
+            }
+            .also {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                     val cm = getSystemService(ConnectivityManager::class.java)
                     val isMetered = cm.isActiveNetworkMetered
@@ -162,6 +176,7 @@ class EasyTierVpnService : VpnService() {
                     it.setMetered(isMetered)
                 }
             }
+            .setMtu(mtu)
 
         AppLogger.debug(TAG, "createVpnInterface: DNS servers=${dnsServers.joinToString()}")
         dnsServers.forEach { dns -> builder.addDnsServer(dns) }

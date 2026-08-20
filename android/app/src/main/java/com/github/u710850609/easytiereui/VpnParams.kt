@@ -6,5 +6,6 @@ data class VpnParams(
     val proxyCidrs: List<String>,
     val dnsServers: List<String>,
     val notificationTitle: String,
-    val notificationText: String
+    val notificationText: String,
+    val mtu: Int = 1400
 ) : java.io.Serializable

@@ -72,7 +72,7 @@ class FfiAdapter(IEasyTierAdapter):
         self._ffi_cache_time: float = 0.0
         self._FFI_CACHE_TTL = 1.0
         self._enable_magic_dns_set: Set[str] = set()
-        self._enable_ipv6_set: Set[str] = set()
+        self._mtu_config: Dict[str, int] = {}
         self._enable_cache = run_configs.IS_ANDROID
         self._monitor_threads: Dict[str, threading.Thread] = {}
         self._monitor_states: Dict[str, bool] = {}
@@ -181,10 +181,8 @@ class FfiAdapter(IEasyTierAdapter):
             accept_dns = doc.get('flags', {}).get('accept_dns')
             if accept_dns:
                 self._enable_magic_dns_set.add(instance_name)
-            # 记录是否开启了ipv6
-            enable_ipv6 = doc.get('flags', {}).get('enable_ipv6')
-            if enable_ipv6:
-                self._enable_ipv6_set.add(instance_name)
+            # 参考 官方安卓 实现，但没参考官方 1500 默认值
+            self._mtu_config[instance_name] = doc.get('flags', {}).get('mtu') or 1400
             self._invalidate_ffi_cache()
             logger.info(f"Instance '{instance_name}' started via FFI")
             self._start_monitor(instance_name)
@@ -202,8 +200,7 @@ class FfiAdapter(IEasyTierAdapter):
             self._instance_set.remove(instance_name)
         if instance_name in self._enable_magic_dns_set:
             self._enable_magic_dns_set.remove(instance_name)
-        if instance_name in self._enable_ipv6_set:
-            self._enable_ipv6_set.remove(instance_name)
+        self._mtu_config.pop(instance_name, None)
         self._routes_config.pop(instance_name, None)
         self._start_times.pop(instance_name, None)
         self._invalidate_ffi_cache()
@@ -250,9 +247,35 @@ class FfiAdapter(IEasyTierAdapter):
             route = pair.get('route') or {}
             peer = pair.get('peer') or {}
             conns = peer.get('conns') or []
+            default_conn_id = peer.get('default_conn_id', '')
             first_conn = conns[0] if conns else {}
-            tunnel = first_conn.get('tunnel') or {}
-            stats = first_conn.get('stats') or {}
+
+            tunnel_types = []
+            latency_us = 9999999
+            rx_bytes_total = 0
+            tx_bytes_total = 0
+            for c in conns:
+                t = (c.get('tunnel') or {}).get('tunnel_type', '')
+                if t and t not in tunnel_types:
+                    tunnel_types.append(t)
+                stats = c.get('stats') or {}
+                if stats.get('latency_us', 0):
+                    conn_id = c.get('conn_id', '')
+                    if conn_id and conn_id == default_conn_id:
+                        latency_us = stats['latency_us']
+                    elif stats['latency_us'] < latency_us:
+                        latency_us = stats['latency_us']
+                rx_bytes_total += stats.get('rx_bytes', 0)
+                tx_bytes_total += stats.get('tx_bytes', 0)
+            tunnel_proto = ', '.join(tunnel_types) if tunnel_types else ''
+
+            cost = route.get('cost', 0)
+            if cost == 1:
+                lat_ms = self._latency_to_ms(latency_us)
+            else:
+                path_lat = route.get('path_latency_latency_first', 0)
+                lat_ms = path_lat if path_lat else self._latency_to_ms(latency_us)
+
             ipv4_addr = route.get('ipv4_addr') or {}
             ipv4 = self._addr_to_ipv4(ipv4_addr.get('address', {}).get('addr', 0))
             cidr = f"{ipv4}/{ipv4_addr.get('network_length', '')}" if ipv4 else ''
@@ -262,12 +285,12 @@ class FfiAdapter(IEasyTierAdapter):
                 'cidr': cidr,
                 'hostname': route.get('hostname') or '',
                 'version': route.get('version') or '',
-                'cost': self._format_cost(route.get('cost', 0)),
-                'tunnel_proto': tunnel.get('tunnel_type') or '',
-                'lat_ms': self._latency_to_ms(stats.get('latency_us', 9999999)),
+                'cost': self._format_cost(cost),
+                'tunnel_proto': tunnel_proto,
+                'lat_ms': lat_ms,
                 'loss_rate': f"{first_conn.get('loss_rate', 0)}%",
-                'rx_bytes': self._humanize_bytes(stats.get('rx_bytes', 0)),
-                'tx_bytes': self._humanize_bytes(stats.get('tx_bytes', 0)),
+                'rx_bytes': self._humanize_bytes(rx_bytes_total),
+                'tx_bytes': self._humanize_bytes(tx_bytes_total),
                 'nat_type': self._format_nat_type(stun.get('udp_nat_type', 0)),
             })
         return peers
@@ -300,15 +323,18 @@ class FfiAdapter(IEasyTierAdapter):
     def _get_route_info_dict(self, instance_name: str) -> Dict[str, Any]:
         info = {
             'virtual_ipv4': '',
-            'virtual_ipv6': '',
+            'virtual_ipv6': 'fd00::1/128',
             'dns_servers': [],
             'routes': [],
             'total_upload': '',
             'total_download': '',
+            'mtu': self._mtu_config.get(instance_name),
         }
         total_upload = 0
         total_download = 0
         raw = self._collect_via_raw_ffi()
+        if not raw:
+            return info
         instance_infos = raw.get(instance_name, {})
         my_node_info = instance_infos.get('my_node_info', {})
         virtual_ipv4 = my_node_info.get('virtual_ipv4') or {}
@@ -317,13 +343,13 @@ class FfiAdapter(IEasyTierAdapter):
         network_len = virtual_ipv4.get('network_length') or '24'
         if instance_name in self._enable_magic_dns_set:
             info['dns_servers'] = ['100.100.100.101']
-        if instance_name in self._enable_ipv6_set:
-            info['virtual_ipv6'] = 'fd00::1/128'
         info['virtual_ipv4'] = f"{addr_str}/{network_len}" if addr_str else ""
         routes = instance_infos.get('routes') or []
         for route in routes:
             cidrs = route.get('proxy_cidrs') or []
             for cidr in cidrs:
+                if '/' not in cidr:
+                    cidr += '/32'
                 info['routes'].append(cidr)
         manual_routes = self._routes_config.get(instance_name, [])
         for r in manual_routes:
@@ -376,7 +402,7 @@ class FfiAdapter(IEasyTierAdapter):
             try:
                 info = self._get_route_info_dict(instance_name)
                 if not info or not info.get('virtual_ipv4'):
-                    time.sleep(2.0)
+                    time.sleep(2.5)
                     continue
 
                 changed = any(info.get(k) != cached_state.get(k) for k in compare_keys)
@@ -411,8 +437,9 @@ class FfiAdapter(IEasyTierAdapter):
                 cidrs = info.get('routes', [])
                 dns = info.get('dns_servers', [])
                 title, text = self._build_notification_text(instance_name, info)
+                mtu = info.get('mtu') or 1400
                 manager.stopVpn()
-                manager.startVpn(ipv4, ipv6, cidrs, dns, title, text)
+                manager.startVpn(ipv4, ipv6, cidrs, dns, title, text, mtu)
                 logger.info(f"Notified Kotlin: startVpn for {instance_name} ipv4={ipv4} ipv6={ipv6}")
         except Exception as e:
             logger.exception(f"Failed to notify Kotlin restartVpn: {e}")
