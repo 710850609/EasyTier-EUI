@@ -264,6 +264,13 @@ def http_handle(base_uri="/", body_data=None, cgi_module=True, accept_language=N
                 logger.warning(f"访问资源不存在: {resource_path}")
                 raise HttpException(status_code=404, message=get_message('error.resource_not_found'))
             response = HttpResponse(file=str(resource_path))
+            # 静态资源缓存策略：Vite 构建产物带 content hash，可长期缓存
+            resource_ext = resource_uri.split('.')[-1].lower() if '.' in resource_uri else ''
+            long_cache_exts = {'js', 'css', 'png', 'jpg', 'jpeg', 'gif', 'svg', 'ico', 'webp', 'woff', 'woff2'}
+            if resource_ext in long_cache_exts:
+                response.headers['Cache-Control'] = 'public, max-age=31536000, immutable'
+            elif resource_ext == 'html':
+                response.headers['Cache-Control'] = 'no-cache'
         else:
             function_params = request.function_params
             # logger.debug(f"request: {request.__dict__}")

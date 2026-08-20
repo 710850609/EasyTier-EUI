@@ -26,8 +26,9 @@
     public *** getEasyTierManager();
 }
 -keep class com.github.u710850609.easytiereui.EasyTierManager {
-    public *** start(...);
-    public *** stop(...);
+    public *** startVpn(...);
+    public *** stopVpn(...);
+    public *** updateNotification(...);
     public *** setLogLevel(...);
     public *** getDeviceName(...);
 }
