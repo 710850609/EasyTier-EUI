@@ -371,4 +371,10 @@ const downloadEui = (arch) => {
   font-size: 13px;
   color: var(--color-on-surface-variant);
 }
+
+@media (max-width: 767px) {
+  .platform-page {
+    padding-bottom: calc(64px + var(--sab, 0px) + 16px);
+  }
+}
 </style>

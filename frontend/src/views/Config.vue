@@ -2339,6 +2339,7 @@ html.dark .sk-breathe {
   padding: 0 16px 10px;
   margin-top: 4px;
   position: relative;
+  padding-bottom: calc(64px + var(--sab, 0px) + 16px);
 }
 
 .config-section {
@@ -2985,6 +2986,7 @@ html.dark .sk-breathe {
     flex-direction: column;
     height: 100%;
     overflow: hidden;
+    /*padding-bottom: calc(64px + var(--sab, 0px) + 16px);*/
   }
 
   .config-else-wrapper {
@@ -3154,6 +3156,7 @@ html.dark .sk-breathe {
   .content-area {
     padding: 8px 12px;
     margin-top: 0;
+    padding-bottom: calc(64px + var(--sab, 0px) + 16px);
   }
 
   .config-section {

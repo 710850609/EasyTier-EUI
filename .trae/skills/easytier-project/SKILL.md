@@ -56,4 +56,4 @@ html.dark .selector {
 
 ## 移动端适配
 
-使用 `@media (max-width: 768px)` 进行移动端适配，移动端专用元素用 `.mobile-only-switch` class，PC 端隐藏用 `.mobile-hidden`。
+使用 `@media (max-width: 767px)` 进行移动端适配，移动端专用元素用 `.mobile-only-switch` class，PC 端隐藏用 `.mobile-hidden`。

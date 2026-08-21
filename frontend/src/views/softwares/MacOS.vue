@@ -376,4 +376,10 @@ const downloadSocoldkiller = async () => {
   background: #007ec6;
   color: #fff;
 }
+
+@media (max-width: 767px) {
+  .platform-page {
+    padding-bottom: calc(64px + var(--sab, 0px) + 16px);
+  }
+}
 </style>

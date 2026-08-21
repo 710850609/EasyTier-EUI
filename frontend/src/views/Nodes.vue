@@ -998,7 +998,12 @@ onUnmounted(() => {
   position: relative;
 }
 
-@media (max-width: 768px) {
+.table-wrapper:has(.data-table) {
+  margin-bottom: calc(var(--sab, 0px) + 16px);
+}
+
+@media (max-width: 767px) {
+
   .stats-bar {
     padding: 10px 12px;
   }
@@ -1014,6 +1019,13 @@ onUnmounted(() => {
   .config-section {
     width: 100%;
     justify-content: space-between;
+  }
+
+  .table-wrapper:has(.mobile-node-list) {
+    padding-bottom: calc(36px + var(--sab, 0px) + 16px);
+  }
+  .table-wrapper:has(.data-table) {
+    margin-bottom: calc(64px + var(--sab, 0px));
   }
 }
 
@@ -1306,7 +1318,7 @@ html.dark .sk-chip {
 .sk-chip-md { width: 76px; }
 .sk-chip-lg { width: 100px; }
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   /* 由 Vue 条件控制显示哪种骨架屏，无需 CSS 强制隐藏 */
 }
 
@@ -1337,7 +1349,7 @@ html.dark .sk-chip {
   color: var(--color-text);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .mobile-only-switch {
     display: block;
   }

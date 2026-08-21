@@ -209,7 +209,11 @@ const downloadEasyTierEui = (platform, arch) => {
 }
 
 /* 移动端响应式优化 */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
+  .platform-page {
+    padding-bottom: calc(64px + var(--sab, 0px) + 16px);
+  }
+
   .eui-opt-desc-table-container {
     overflow-x: auto;
     border-radius: 20px;

@@ -129,4 +129,10 @@ const copyAndOpenLink = () => {
 .item-actions .var-button :deep(.var-button__content) {
   flex-wrap: nowrap !important;
 }
+
+@media (max-width: 767px) {
+  .platform-page {
+    padding-bottom: calc(64px + var(--sab, 0px) + 16px);
+  }
+}
 </style>
