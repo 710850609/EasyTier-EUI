@@ -999,7 +999,7 @@ onUnmounted(() => {
 }
 
 .table-wrapper:has(.data-table) {
-  margin-bottom: calc(var(--sab, 0px) + 16px);
+  margin-bottom: var(--sab, 0px);
 }
 
 @media (max-width: 767px) {
@@ -1024,7 +1024,7 @@ onUnmounted(() => {
   .table-wrapper:has(.mobile-node-list) {
     padding-bottom: calc(36px + var(--sab, 0px) + 16px);
   }
-  .table-wrapper:has(.data-table) {
+  .table-container:has(.data-table) {
     margin-bottom: calc(64px + var(--sab, 0px));
   }
 }
