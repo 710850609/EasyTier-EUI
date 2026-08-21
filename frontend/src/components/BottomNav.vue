@@ -117,10 +117,10 @@ const handleSubMenuClick = (key) => {
   right: 0;
   height: calc(64px + var(--sab, 0px));
   padding-bottom: var(--sab, 0px);
-  background: rgba(var(--color-surface-rgb, 255, 255, 255), 0.55);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-top: 1px solid var(--color-outline-variant);
+  background: rgba(var(--color-surface-rgb, 255, 255, 255), 0.12);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border-top: 0.5px solid rgba(var(--color-outline-variant-rgb, 0, 0, 0), 0.15);
   display: flex;
   justify-content: space-around;
   align-items: center;
@@ -129,7 +129,7 @@ const handleSubMenuClick = (key) => {
 
 /* 深色主题适配 */
 .bottom-nav.dark {
-  background: rgba(var(--color-surface-rgb, 30, 30, 30), 0.55);
+  background: rgba(var(--color-surface-rgb, 30, 30, 30), 0.25);
 }
 
 .nav-item {
