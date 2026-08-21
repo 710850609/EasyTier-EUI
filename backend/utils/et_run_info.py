@@ -28,7 +28,7 @@ class EtRunInfo:
         self.log_level = log_level
         self.running = running
 
-def save(profile:Optional[str], rpc_portal:Optional[str], autostart:Optional[bool], use_system_service:Optional[bool], log_level:str = _default_log_level):
+def save(profile:Optional[str], rpc_portal:Optional[str], autostart:Optional[bool], use_system_service:Optional[bool], log_level:str = _default_log_level, *args, **kwargs):
     if not profile:
         raise HttpException("profile cannot be None for save")
     data = __load_data() or {}

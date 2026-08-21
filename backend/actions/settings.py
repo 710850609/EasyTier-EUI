@@ -10,6 +10,7 @@ from pathlib import Path
 
 import tomlkit
 
+from actions import et_eui
 from http_dispatcher.dispatcher import HttpException
 from locales import get_message
 from utils import run_configs, github_util, log_util, app_settings
@@ -23,6 +24,7 @@ def eui_info(*args, **kwargs):
     # 解析符号链接，获取真实路径
     install_path = install_path.resolve()
     is_docker = run_configs.is_docker()
+    release_info = et_eui.get_release_info({'refresh': 'false', 'no_assets': 'true'}) or {}
     return {
         'build_version': run_configs.build_version(),
         'install_path': str(install_path),
@@ -30,7 +32,8 @@ def eui_info(*args, **kwargs):
         'for_user': run_configs.is_fn_system() and run_configs.DEFAULT_TRIM_APPNAME == 'EasyTier-EUI.User',
         'is_docker': is_docker,
         'log_level': get_log_level(),
-        'enabled_start_recovery': app_settings.get('enabled_start_recovery', False)
+        'enabled_start_recovery': app_settings.get('enabled_start_recovery', False),
+        'release_info': release_info,
     }
 
 def github_mirrors(params:dict, *args, **kwargs):

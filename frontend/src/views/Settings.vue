@@ -4,7 +4,6 @@
     <var-paper class="setting-block" :elevation="0">
       <div class="block-header">
         <svg-icon type="mdi" :path="mdiBrightness6" size="24" color="var(--color-primary)"></svg-icon>
-        <!-- <var-icon name="palette" size="24" color="var(--color-primary)" /> -->
         <span class="block-title">{{ $t('settings.appearance.title') }}</span>
       </div>
       <var-divider />
@@ -39,7 +38,72 @@
       <var-divider class="divider" />
       <div class="setting-row">
         <span class="setting-label">{{ $t('settings.appearance.glassEffect') }}</span>
-        <var-switch variant v-model="glassEffectEnabled" @change="toggleGlassEffect" />
+        <var-switch variant size="20" v-model="glassEffectEnabled" @change="toggleGlassEffect" />
+      </div>
+    </var-paper>
+
+    <!-- 版本 -->
+    <var-paper class="setting-block" :elevation="0">
+      <div class="block-header">
+        <svg-icon type="mdi" :path="mdiMapOutline" size="24" color="var(--color-primary)"></svg-icon>
+        <span class="block-title">{{ $t('settings.version') }}</span>
+      </div>
+      <var-divider />
+      
+      <div class="setting-row">
+        <div class="version-info-block">
+          <span class="setting-label">{{ $t('settings.currentVersion') }}</span>
+          <span class="version-value">{{ buildVersion }}</span>
+        </div>
+        <var-button type="primary" size="small" @click="getEuiReleaseInfo(true, true)" auto-loading>
+          <var-icon name="refresh" size="18" />
+          {{ $t('settings.checkUpdate') }}
+        </var-button>
+      </div>
+      <div class="setting-row" v-if="euiReleaseInfo?.latest_release?.version">
+        <div class="version-info-block">
+          <span class="setting-label">
+            {{ $t('settings.stableVersion') }}
+            <var-icon name="information-outline" size="18" color="var(--color-primary)" 
+            @click="setupShowEuiReleaseInfo('latest_release')" />
+          </span>
+          <span class="version-value">{{ euiReleaseInfo.latest_release.version }}</span>
+        </div>
+        <var-chip type="warning" size="mini" plain v-if="buildVersion < euiReleaseInfo.latest_release.version">{{ $t('common.newVersion') }}</var-chip>
+        <var-button type="primary" size="small" @click="installEuiVersion('release')" auto-loading
+           :disabled="updateProgress.active"
+           v-if="euiReleaseInfo?.latest_release?.version && buildVersion !== euiReleaseInfo.latest_release.version">
+          <var-icon name="download" />
+          {{ $t('common.install') }}
+        </var-button>
+      </div>
+      <div class="setting-row" v-if="euiReleaseInfo?.latest_prerelease?.version">
+        <div class="version-info-block">
+          <span class="setting-label">
+            {{ $t('settings.prereleaseVersion') }}
+            <var-icon name="information-outline" size="18" color="var(--color-primary)" 
+            @click="setupShowEuiReleaseInfo('latest_prerelease')" />
+          </span>          
+          <span class="version-value">{{ euiReleaseInfo.latest_prerelease.version }}</span>
+        </div>
+        <var-chip type="warning" size="mini" plain v-if="buildVersion < euiReleaseInfo.latest_prerelease.version">{{ $t('common.newVersion') }}</var-chip>
+        <var-button type="primary" size="small" @click="installEuiVersion('prerelease')" auto-loading
+           :disabled="updateProgress.active">
+          <var-icon name="download" />
+          {{ $t('common.install') }}
+        </var-button>
+      </div>
+      <div class="setting-row" v-if="updateProgress.active" style="flex-direction: column; align-items: stretch;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+          <span style="font-size: 13px; color: var(--color-text-secondary);">{{ updateProgress.description }}</span>
+          <span style="font-size: 13px; color: var(--color-primary);">{{ updateProgress.current_progress }}%</span>
+        </div>
+        <var-progress 
+          :value="Number(updateProgress.current_progress) || 0" 
+          :color="'var(--color-primary)'"
+          line-width="6"
+          ripple
+        />
       </div>
     </var-paper>
 
@@ -131,71 +195,6 @@
       </div>
     </var-paper>
 
-    <!-- 版本 -->
-    <var-paper class="setting-block" :elevation="0">
-      <div class="block-header">
-        <svg-icon type="mdi" :path="mdiMapOutline" size="24" color="var(--color-primary)"></svg-icon>
-        <span class="block-title">{{ $t('settings.version') }}</span>
-      </div>
-      <var-divider />
-      
-      <div class="setting-row">
-        <div class="version-info-block">
-          <span class="setting-label">{{ $t('settings.currentVersion') }}</span>
-          <span class="version-value">{{ buildVersion }}</span>
-        </div>
-        <var-button type="primary" size="small" @click="getEuiReleaseInfo(true, true)" auto-loading>
-          <var-icon name="refresh" size="18" />
-          {{ $t('settings.checkUpdate') }}
-        </var-button>
-      </div>
-      <div class="setting-row" v-if="euiReleaseInfo?.latest_release?.version">
-        <div class="version-info-block">
-          <span class="setting-label">
-            {{ $t('settings.stableVersion') }}
-            <var-icon name="information-outline" size="18" color="var(--color-primary)" 
-            @click="setupShowEuiReleaseInfo('latest_release')" />
-          </span>
-          <span class="version-value">{{ euiReleaseInfo.latest_release.version }}</span>
-        </div>
-        <var-chip type="warning" size="mini" plain v-if="buildVersion < euiReleaseInfo.latest_release.version">{{ $t('common.newVersion') }}</var-chip>
-        <var-button type="primary" size="small" @click="installEuiVersion('release')" auto-loading
-           :disabled="updateProgress.active"
-           v-if="euiReleaseInfo?.latest_release?.version && buildVersion !== euiReleaseInfo.latest_release.version">
-          <var-icon name="download" />
-          {{ $t('common.install') }}
-        </var-button>
-      </div>
-      <div class="setting-row" v-if="euiReleaseInfo?.latest_prerelease?.version">
-        <div class="version-info-block">
-          <span class="setting-label">
-            {{ $t('settings.prereleaseVersion') }}
-            <var-icon name="information-outline" size="18" color="var(--color-primary)" 
-            @click="setupShowEuiReleaseInfo('latest_prerelease')" />
-          </span>          
-          <span class="version-value">{{ euiReleaseInfo.latest_prerelease.version }}</span>
-        </div>
-        <var-chip type="warning" size="mini" plain v-if="buildVersion < euiReleaseInfo.latest_prerelease.version">{{ $t('common.newVersion') }}</var-chip>
-        <var-button type="primary" size="small" @click="installEuiVersion('prerelease')" auto-loading
-           :disabled="updateProgress.active">
-          <var-icon name="download" />
-          {{ $t('common.install') }}
-        </var-button>
-      </div>
-      <div class="setting-row" v-if="updateProgress.active" style="flex-direction: column; align-items: stretch;">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-          <span style="font-size: 13px; color: var(--color-text-secondary);">{{ updateProgress.description }}</span>
-          <span style="font-size: 13px; color: var(--color-primary);">{{ updateProgress.current_progress }}%</span>
-        </div>
-        <var-progress 
-          :value="Number(updateProgress.current_progress) || 0" 
-          :color="'var(--color-primary)'"
-          line-width="6"
-          ripple
-        />
-      </div>
-    </var-paper>
-
     <!-- 其他 -->
     <var-paper class="setting-block" :elevation="0">
       <div class="block-header">
@@ -252,13 +251,13 @@
         <span class="setting-label">
           {{ $t('settings.startRecovery') }}
           <var-tooltip :offset-x="65">
-            <var-icon name="help-circle-outline" size="16" class="help-icon" />
+            <var-icon name="help-circle-outline" size="16" class="help-icon" color="var(--color-primary)" />
             <template #content>
               <div class="tooltip-multiline">{{ $t('settings.startRecoveryTip') }}</div>
             </template>
           </var-tooltip>
         </span>
-        <var-switch variant v-model="enabledStartRecovery" @change="toggleEnabledStartRecovery" />
+        <var-switch variant size="20" v-model="enabledStartRecovery" @change="toggleEnabledStartRecovery" />
       </div>
       <div class="setting-row">
         <span class="setting-label">
@@ -311,11 +310,11 @@
       <var-divider />
       <div class="setting-row">
         <span class="setting-label">{{ $t('settings.developer.mobileDebug') }}</span>
-        <var-switch v-model="vConsoleEnabled" @change="toggleVConsole" />
+        <var-switch variant size="20" v-model="vConsoleEnabled" @change="toggleVConsole" />
       </div>
       <div class="setting-row">
         <span class="setting-label">{{ $t('settings.developer.testPeers') }}</span>
-        <var-switch v-model="testPeerSourceEnabled" :loading="changingPeerSource" @change="togglePeerSource" />
+        <var-switch variant size="20" v-model="testPeerSourceEnabled" :loading="changingPeerSource" @change="togglePeerSource" />
       </div>
       <div class="setting-row">
         <span class="setting-label">{{ $t('settings.developer.githubMirror') }}</span>
@@ -400,7 +399,7 @@
   </var-dialog>
 
   <!-- 赞赏码 -->
-  <var-popup v-model:show="showRewardCdoe">
+  <var-popup v-model:show="showRewardCdoe" :safe-area="true" :safe-area-top="true">
     <var-result :description="$t('settings.about.rewardDesc')">
       <template #image>
         <img src="../../public/images/reward_code.jpg" style="width: 50%; height: 50%; border-radius: 50%; object-fit: cover;" />
@@ -412,7 +411,7 @@
   </var-popup>
 
   <!-- 弹窗更新说明 -->
-  <var-popup v-model:show="showEuiReleaseInfo">
+  <var-popup v-model:show="showEuiReleaseInfo" :safe-area="true" :safe-area-top="true">
     <var-result type="info">
       <template #image>
          <MarkdownRenderer :content="`${euiChangeMarkdown}`" class="markdown-renderer" />
@@ -424,7 +423,7 @@
   </var-popup>
   
   <!-- ET 版本更新说明 -->
-  <var-popup :default-style="false" v-model:show="showEtChangeLog">
+  <var-popup :default-style="false" v-model:show="showEtChangeLog" :safe-area="true" :safe-area-top="true">
     <var-result type="info">
       <template #image>
         <MarkdownRenderer :content="etChangeLog" class="markdown-renderer" />
@@ -649,6 +648,7 @@ const getEtInfo = async () => {
     etLogLevel.value = data.log_level
     delete data.log_level
     etVersion.value = { ...etVersion.value, ...data }
+
   } catch (e) {
     console.error('获取内核版本失败:', e)
     etVersion.value.raw_version = t('settings.getVersionFailed') + e.message
@@ -662,7 +662,6 @@ const getEtReleaseInfo = async (refresh = false, showTip = true) => {
   try {
     const resp = await api.etCore.getVersionList({'refresh': refresh})
     etVersionList.value = resp.data.versions || []
-    // etVersionList.value = await getLatestVersionWithCache('easyTier/easytier', useCache)
     etVersion.value.latest_version = etVersionList.value[0]?.version || ''
     if (!etVersion.value.selected_version) {
       etVersion.value.selected_version = etVersion.value.latest_version
@@ -723,6 +722,9 @@ const getEuiInfo = async () => {
     isDocker.value = data.is_docker
     logLevel.value = data.log_level
     enabledStartRecovery.value = data.enabled_start_recovery || false
+    if (euiReleaseInfo.value) {
+      euiReleaseInfo.value = data.release_info
+    }
   } catch (e) {
     console.error('获取版本号失败:', e)
     buildVersion.value = t('settings.toast.fetchVersionFailed')
@@ -985,21 +987,22 @@ const formatDate = (date, sep = '-') => {
 }
 
 onMounted(() => {
-  // 从 localStorage 加载 VConsole 开关状态
-  const enabled = localStorage.getItem(VCONSOLE_ENABLED_KEY) === 'true'
-  vConsoleEnabled.value = enabled
-  // 如果之前开启过，自动加载
-  if (enabled) {
-    loadVConsole()
-    loadPeerSource()
-    getGithubMirrors()
+  // VConsole 开发者工具：恢复上次开关状态
+  const vconsoleEnabled = localStorage.getItem(VCONSOLE_ENABLED_KEY) === 'true'
+  vConsoleEnabled.value = vconsoleEnabled
+  if (vconsoleEnabled) {
     showDevContent.value = true
+    Promise.allSettled([loadVConsole(), loadPeerSource(), getGithubMirrors()])
   }
-  loadPeerSourceList()
-  getEtReleaseInfo(true, false)
-  getEuiReleaseInfo(true, false)
-  getEtInfo()
-  getEuiInfo()
+
+  // 并行加载所有初始化数据（互不依赖，任一失败不影响其他）
+  Promise.allSettled([
+    getEuiInfo(),
+    getEtInfo(),
+    loadPeerSourceList(),
+    getEtReleaseInfo(true, false),
+    // getEuiReleaseInfo(true, false),
+  ])
 })
 </script>
 
@@ -1098,7 +1101,7 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  padding: 16px 8px;
+  padding: 12px 8px;
   border-radius: 20px;
   border: 2px solid var(--color-outline);
   cursor: pointer;
@@ -1109,6 +1112,7 @@ onMounted(() => {
 .theme-option:hover {
   border-color: var(--color-primary);
   background: var(--color-surface-container);
+  cursor: pointer;
 }
 
 .theme-option.active {

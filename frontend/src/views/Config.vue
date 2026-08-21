@@ -68,11 +68,7 @@
               <var-button type="primary" size="small" @click="showShareConfigType = true" v-if="showMode === 0">{{ $t('config.shareNetwork') }}</var-button>
               <var-button size="small" type="danger" @click="showDeleteDialog = true" :loading="isDeletingConfig" v-if="showMode === 0">{{ $t('config.delete') }}</var-button>
               <label class="toggle-item" v-if="showMode === 0 && platform !== 'android'">
-                <var-loading v-if="changingAutostart" size="small" />
-                <label class="switch-wrapper" v-if="!changingAutostart">
-                  <input type="checkbox" :checked="currentConfigAutostart" @change="(e) => handleSwitchChange(currentConfigData, 'autostart', e.target.checked)" />
-                  <span class="switch-slider"></span>
-                </label>
+                <var-switch variant size="18" :loading="changingAutostart" v-model="currentConfigAutostart" @change="(val) => handleSwitchChange(currentConfigData, 'autostart', val)" />
               </label>
               <span class="toggle-label" v-if="showMode === 0 && platform !== 'android'">{{ $t('config.autostart') }}</span>
             </div>
@@ -113,11 +109,7 @@
             </var-select>
             <div class="toolbar-mobile-actions" v-if="selectedConfig">
               <label class="toggle-item" v-if="showMode === 0 && platform !== 'android'">
-                <var-loading v-if="changingAutostart" size="small" />
-                <label class="switch-wrapper" v-if="!changingAutostart">
-                  <input type="checkbox" :checked="currentConfigAutostart" @change="(e) => handleSwitchChange(currentConfigData, 'autostart', e.target.checked)" />
-                  <span class="switch-slider"></span>
-                </label>
+                <var-switch variant size="16" :loading="changingAutostart" v-model="currentConfigAutostart" @change="(val) => handleSwitchChange(currentConfigData, 'autostart', val)" />
               </label>
               <span class="toggle-label" v-if="showMode === 0 && platform !== 'android'">{{ $t('config.autostart') }}</span>
               <var-button variant="outlined" size="small" type="danger" @click="exitAddMode()" :loading="isDeletingConfig" v-if="showMode !== 0">
@@ -2822,51 +2814,6 @@ html.dark .sk-breathe {
 }
 
 
-.switch-wrapper {
-  position: relative;
-  display: inline-block;
-  width: 36px;
-  height: 20px;
-  cursor: pointer;
-}
-
-.switch-wrapper input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.switch-slider {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: var(--color-text-disabled);
-  border-radius: 10px;
-  transition: background-color 0.2s;
-}
-
-.switch-slider::before {
-  content: '';
-  position: absolute;
-  height: 16px;
-  width: 16px;
-  left: 2px;
-  bottom: 2px;
-  background-color: #fff;
-  border-radius: 50%;
-  transition: transform 0.2s;
-}
-
-.switch-wrapper input:checked + .switch-slider {
-  background-color: var(--color-primary);
-}
-
-.switch-wrapper input:checked + .switch-slider::before {
-  transform: translateX(16px);
-}
-
 /* ===== 内联样式迁移 ===== */
 .fast-setting-hint {
   font-size: 13px;
@@ -3084,6 +3031,7 @@ html.dark .sk-breathe {
 
   .toolbar-mobile-actions .toggle-item {
     gap: 3px;
+    flex-wrap: nowrap;
   }
 
   .toolbar-mobile-actions .toggle-label {

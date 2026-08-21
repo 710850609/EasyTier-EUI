@@ -139,7 +139,8 @@ def start_android_server(data_dir: str, external_dir: str = "", host: str = "127
     crash_log = os.path.join(external_dir, 'logs', 'easytier_py_crash.log')
     _rotate_file(crash_log)
     try:
-        faulthandler.enable(file=open(crash_log, 'a', buffering=1), all_threads=True)
+        _faulthandler_file = open(crash_log, 'a', buffering=1)
+        faulthandler.enable(file=_faulthandler_file, all_threads=True)
         py_log(f"faulthandler enabled, crash log: {crash_log}")
     except Exception as fe:
         py_log(f"faulthandler enable failed: {fe}")

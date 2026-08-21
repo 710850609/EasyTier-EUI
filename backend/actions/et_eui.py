@@ -180,9 +180,9 @@ def get_release_info(params: dict, *args, **kwargs):
             release_info['total_download'] = total_download
         with open(release_file, "w", encoding="utf-8") as f:
             f.write(json.dumps(release_info, ensure_ascii=False, indent=2))
-        if no_assets:
-            del release_info['latest_release']['assets']
-            del release_info['latest_prerelease']['assets']
+    if no_assets:
+        del release_info['latest_release']['assets']
+        del release_info['latest_prerelease']['assets']
     return release_info
 
 def download_easytier_eui(params: dict, *args, **kwargs):

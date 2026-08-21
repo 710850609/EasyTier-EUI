@@ -244,18 +244,19 @@ html.dark body .var-checkbox-group--vertical .var-checkbox__wrap:not(:last-child
 }
 
 /* var-popup 背景适配 - 磨砂玻璃效果（必须在 var-paper 之前定义） */
+/* 亮色模式：较高不透明度 + 强模糊 + 高饱和 + 清晰边界，避免脏玻璃感和边界模糊 */
 .var-popup__content,
 .var-popup__content[var-popup-cover] {
   overflow: hidden;
-  background: rgba(var(--color-surface-container-rgb, 212, 223, 250), 0.06) !important;
-  backdrop-filter: blur(16px) saturate(110%) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(110%) !important;
+  background: rgba(var(--color-surface-container-rgb, 212, 223, 250), 0.16) !important;
+  backdrop-filter: blur(20px) saturate(130%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(130%) !important;
   will-change: backdrop-filter !important;
   border: none !important;
   box-shadow:
-    0 8px 40px rgba(0, 0, 0, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    inset 0 -2px 0 rgba(255, 255, 255, 0.25) !important;
+    0 4px 24px rgba(0, 0, 0, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -2px 0 rgba(255, 255, 255, 0.35) !important;
 }
 
 html.dark .var-popup__content,
@@ -298,15 +299,25 @@ html.dark .var-popup__content[var-popup-cover] {
 .var-popup__content.var-popup--top::before {
   background: linear-gradient(
     180deg,
-    rgba(0, 0, 0, 0.03) 0%,
-    transparent 50%,
-    rgba(255, 255, 255, 0.35) 100%
+    rgba(0, 0, 0, 0.08) 0%,
+    transparent 45%,
+    rgba(255, 255, 255, 0.40) 100%
   );
 }
 
 .var-button {
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
 }
+
+/* variant 模式未选中时去掉灰色外边框 */
+.var-switch--variant .var-switch__track {
+  border-color: transparent !important;
+}
+
+html.dark .var-switch--variant .var-switch__track {
+  border-color: transparent !important;
+}
+
 
 html.dark .var-popup__content::after {
   background: linear-gradient(
@@ -326,9 +337,9 @@ html.dark .var-popup__content::after {
   padding: 1.5px;
   background: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.35) 0%,
-    transparent 50%,
-    rgba(0, 0, 0, 0.03) 100%
+    rgba(255, 255, 255, 0.40) 0%,
+    transparent 45%,
+    rgba(0, 0, 0, 0.08) 100%
   );
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -517,9 +528,9 @@ html:not(.dark) .var-dialog__overlay {
   background: transparent !important;
   border: none !important;
   box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.15),
-    0 2px 8px rgba(0, 0, 0, 0.08),
-    inset 0 -2px 0 rgba(255, 255, 255, 0.25) !important;
+    0 8px 32px rgba(0, 0, 0, 0.20),
+    0 2px 8px rgba(0, 0, 0, 0.10),
+    inset 0 -2px 0 rgba(255, 255, 255, 0.28) !important;
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
               opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
   animation: dialog-enter 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
@@ -543,9 +554,9 @@ html.dark .var-dialog {
   padding: 1px;
   background: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.25) 0%,
+    rgba(255, 255, 255, 0.30) 0%,
     transparent 40%,
-    rgba(0, 0, 0, 0.05) 100%
+    rgba(0, 0, 0, 0.10) 100%
   );
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -563,31 +574,22 @@ html.dark .var-dialog--box::before {
   );
 }
 
-/* 顶部高光条 */
+/* 顶部 + 底部高光条 */
 .var-dialog--box::after {
   content: '';
   position: absolute;
-  top: 0;
-  left: 12%;
-  right: 12%;
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.35),
-    transparent
-  );
+  inset: 0;
+  background: 
+    linear-gradient(90deg, transparent 12%, rgba(255, 255, 255, 0.35) 30%, rgba(255, 255, 255, 0.35) 70%, transparent 88%) 0 0 / 100% 1px no-repeat,
+    linear-gradient(90deg, transparent 12%, rgba(255, 255, 255, 0.12) 30%, rgba(255, 255, 255, 0.12) 70%, transparent 88%) 0 100% / 100% 1px no-repeat;
   pointer-events: none;
   z-index: 2;
 }
 
 html:not(.dark) .var-dialog--box::after {
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.55),
-    transparent
-  );
+  background: 
+    linear-gradient(90deg, transparent 12%, rgba(255, 255, 255, 0.55) 30%, rgba(255, 255, 255, 0.55) 70%, transparent 88%) 0 0 / 100% 1px no-repeat,
+    linear-gradient(90deg, transparent 12%, rgba(255, 255, 255, 0.30) 30%, rgba(255, 255, 255, 0.30) 70%, transparent 88%) 0 100% / 100% 1px no-repeat;
 }
 
 @keyframes dialog-enter {
