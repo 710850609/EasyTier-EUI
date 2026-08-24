@@ -255,7 +255,7 @@ class FfiAdapter(IEasyTierAdapter):
             rx_bytes_total = 0
             tx_bytes_total = 0
             for c in conns:
-                t = (c.get('tunnel') or {}).get('tunnel_type', '')
+                t = self._format_tunnel_type(c.get('tunnel') or {})
                 if t and t not in tunnel_types:
                     tunnel_types.append(t)
                 stats = c.get('stats') or {}
@@ -586,6 +586,28 @@ class FfiAdapter(IEasyTierAdapter):
         except Exception as e:
             logger.exception(f"_collect_via_raw_ffi failed: {e}")
         return {}
+
+    def _format_tunnel_type(self, tunnel: dict) -> str:
+        tunnel_type = tunnel.get('tunnel_type', '')
+        if not tunnel_type:
+            return ''
+        if self._is_ipv6_tunnel(tunnel_type, tunnel):
+            if tunnel_type.endswith('6'):
+                return tunnel_type
+            return tunnel_type + '6'
+        return tunnel_type
+
+    def _is_ipv6_tunnel(self, tunnel_type: str, tunnel: dict) -> bool:
+        if '://' in tunnel_type:
+            _, rest = tunnel_type.split('://', 1)
+            if rest.startswith('['):
+                return True
+        for addr_key in ('resolved_remote_addr', 'local_addr', 'remote_addr'):
+            addr = tunnel.get(addr_key, {})
+            url = addr.get('url', '') if isinstance(addr, dict) else ''
+            if url and '://[' in url:
+                return True
+        return False
 
     def _addr_to_ipv4(self, addr: int) -> str:
         if not addr:
