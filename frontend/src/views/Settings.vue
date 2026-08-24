@@ -1001,7 +1001,7 @@ onMounted(() => {
     getEtInfo(),
     loadPeerSourceList(),
     getEtReleaseInfo(true, false),
-    // getEuiReleaseInfo(true, false),
+    getEuiReleaseInfo(true, false),
   ])
 })
 </script>

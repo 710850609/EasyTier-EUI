@@ -989,6 +989,7 @@ onUnmounted(() => {
   min-height: 0;
   display: flex;
   flex-direction: column;
+  margin-bottom: var(--sab, 0px);
 }
 
 .table-wrapper {
@@ -998,11 +999,13 @@ onUnmounted(() => {
   position: relative;
 }
 
-.table-wrapper:has(.data-table) {
-  margin-bottom: var(--sab, 0px);
-}
+
 
 @media (max-width: 767px) {
+
+  .nodes-page {
+    padding-bottom: calc(64px + var(--sab, 0px) + 16px);
+  }
 
   .stats-bar {
     padding: 10px 12px;
@@ -1021,11 +1024,8 @@ onUnmounted(() => {
     justify-content: space-between;
   }
 
-  .table-wrapper:has(.mobile-node-list) {
-    padding-bottom: calc(36px + var(--sab, 0px) + 16px);
-  }
-  .table-container:has(.data-table) {
-    margin-bottom: calc(64px + var(--sab, 0px));
+  .mobile-node-list {
+    padding-bottom: 16px;
   }
 }
 

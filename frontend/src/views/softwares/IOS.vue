@@ -25,7 +25,7 @@
           <var-button type="primary" size="normal" block @click="copyAndOpenLink" auto-loading>
             <template #default>
               <var-icon name="share"/>
-              {{ $t('software.goToTestFlight') }}
+              {{ $t('software.goToAppStore') }}
             </template>
           </var-button>
         </var-space>
@@ -38,7 +38,7 @@
 import { copyToClipboard } from '../../utils/clipboard.js'
 
 const copyAndOpenLink = () => {
-  const link = 'https://testflight.apple.com/join/YWnDyJfM';
+  const link = 'https://apps.apple.com/us/app/easytier/id6788989728';
   copyToClipboard(link);
   window.open(link, '_blank');
 }
