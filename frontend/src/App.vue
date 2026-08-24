@@ -479,13 +479,15 @@ html.dark .var-paper::after {
   -webkit-backdrop-filter: blur(2px) !important;
 }
 
-/* 亮色模式遮罩 - 压暗值极低，避免脏玻璃感 */
+/* 亮色模式遮罩 - 适度压暗，突出弹窗玻璃质感 */
 html:not(.dark) .var-popup__overlay {
   background: radial-gradient(
     ellipse 70% 55% at 50% 50%,
-    rgba(0, 0, 0, 0.06) 0%,
+    rgba(0, 0, 0, 0.18) 0%,
     transparent 70%
   ) !important;
+  backdrop-filter: blur(3px) !important;
+  -webkit-backdrop-filter: blur(3px) !important;
 }
 
 /* var-cell 样式适配 */

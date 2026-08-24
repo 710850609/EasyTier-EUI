@@ -61,6 +61,7 @@ export const freshLightTheme = {
   // 边框和轮廓（与容器层级呼应，柔和过渡）
   '--color-outline': '#aebcc8',
   '--color-outline-variant': '#c0cfe5',
+  '--color-outline-variant-rgb': '192, 207, 229',
 
   // Checkbox 样式
   '--checkbox-unchecked-color': '#94a3b8',
@@ -135,6 +136,7 @@ export const freshDarkTheme = {
   // 边框和轮廓
   '--color-outline': '#2d3548',
   '--color-outline-variant': '#1e2433',
+  '--color-outline-variant-rgb': '30, 36, 51',
 
   // Checkbox 样式
   '--checkbox-unchecked-color': 'rgba(255, 255, 255, 0.3)',
