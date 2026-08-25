@@ -124,7 +124,9 @@ export default {
 
     developer: {
       title: '開發者選項',
-      mobileDebug: '行動端頁面除錯',
+      webviewDebug: 'WebView除錯',
+      mobileDebug: 'VConsole除錯',
+      ignoreSslErrors: '忽略SSL證書警告',
       testPeers: '使用測試社群節點',
       githubMirror: '檢視GitHub加速',
       enabled: '已開啟',

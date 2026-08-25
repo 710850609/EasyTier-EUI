@@ -118,7 +118,6 @@ const handleSubMenuClick = (key) => {
   height: calc(64px + var(--sab, 0px));
   padding-bottom: var(--sab, 0px);
   background: transparent;
-  border-top: 0.5px solid rgba(var(--color-outline-variant-rgb, 0, 0, 0), 0.15);
   display: flex;
   justify-content: space-around;
   align-items: center;

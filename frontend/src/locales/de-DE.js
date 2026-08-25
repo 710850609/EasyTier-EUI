@@ -73,7 +73,7 @@ export default {
     startRecoveryDisabled: 'Startwiederherstellung deaktiviert',
     specifyIpPort: 'IP-Port konfigurieren',
     releaseConfig: 'Konfiguration freigeben',
-    developer: { title: 'Entwickler', mobileDebug: 'Mobile Debug (VConsole)', testPeers: 'Test Community-Knoten', githubMirror: 'GitHub Mirror', enabled: 'Aktiviert', disabled: 'Deaktiviert' },
+    developer: { title: 'Entwickler', webviewDebug: 'WebView Debug', mobileDebug: 'VConsole Debug', ignoreSslErrors: 'SSL-Fehler ignorieren', testPeers: 'Test Community-Knoten', githubMirror: 'GitHub Mirror', enabled: 'Aktiviert', disabled: 'Deaktiviert' },
     about: {
       title: 'Über',
       appName: 'EasyTier-EUI',

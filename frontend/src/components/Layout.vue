@@ -1,5 +1,5 @@
 <template>
-  <div class="layout" :class="{ 'dark': isDark, 'menu-collapsed': isMenuCollapsed, 'is-mobile': isMobile }">
+  <div class="layout" :class="{ 'dark': isDark, 'menu-collapsed': isMenuCollapsed, 'is-mobile': isMobile, 'has-submenu-title': isMobile && subMenuLabel }">
       <side-menu
         v-if="!isMobile"
         :active="activeMenu"
@@ -9,7 +9,7 @@
       />
 
       <main class="main-content" :class="{ 'has-bottom-nav': isMobile }">
-        <div class="content-wrapper">
+        <div class="content-wrapper" :class="{ 'has-submenu-title': isMobile && subMenuLabel }">
           <div v-if="isMobile && subMenuLabel" class="mobile-submenu-title">
             <h2>{{ subMenuLabel }}</h2>
           </div>
@@ -159,6 +159,10 @@ onUnmounted(() => {
   z-index: 9999999;
 }
 
+.layout.has-submenu-title::before {
+  background: var(--color-body);
+}
+
 .side-menu {
   flex-shrink: 0;
   border-right: 1px solid var(--color-outline);
@@ -225,6 +229,10 @@ onUnmounted(() => {
   padding-top: var(--sat, 0px);
   flex: 1;
   min-height: 0;
+}
+
+.layout.is-mobile .content-wrapper.has-submenu-title {
+  padding-top: 0;
 }
 
 /* 媒体查询作为后备 */

@@ -50,6 +50,27 @@ class MainActivity : AppCompatActivity() {
         private const val TAG = "EasyTier"
         @JvmStatic
         var easyTierManager: EasyTierManager? = null
+        @JvmStatic
+        var appConfig = AppConfig()
+
+        @JvmStatic
+        fun setWebviewDebug(enabled: Boolean) {
+            appConfig = appConfig.copy(webviewDebug = enabled)
+            WebView.setWebContentsDebuggingEnabled(enabled)
+            AppLogger.info(TAG, "setWebviewDebug: $enabled")
+        }
+
+        @JvmStatic
+        fun setIgnoreSslErrors(enabled: Boolean) {
+            appConfig = appConfig.copy(ignoreSslErrors = enabled)
+            AppLogger.info(TAG, "setIgnoreSslErrors: $enabled")
+        }
+
+        data class AppConfig(
+            val logLevel: String = "warn",
+            val webviewDebug: Boolean = false,
+            val ignoreSslErrors: Boolean = false
+        )
     }
 
     private lateinit var webView: WebView
@@ -63,32 +84,48 @@ class MainActivity : AppCompatActivity() {
     private var splashIconView: View? = null
     private var splashFadeStarted = false
 
-    private fun initLogLevel() {
+    private fun loadAppConfig() {
         try {
             val settingFile = File(filesDir, "data/setting.json")
             if (!settingFile.exists()) {
-                AppLogger.info(TAG, "initLogLevel: setting.json not found, using default WARN")
+                AppLogger.info(TAG, "loadAppConfig: setting.json not found, using defaults")
+                applyConfig()
                 return
             }
             val json = settingFile.readText()
             val root = JSONObject(json)
+
             val levelStr = root.optString("log_level", "warn").lowercase()
-            AppLogger.minLevel = when (levelStr) {
-                "debug" -> AppLogger.Level.DEBUG
-                "info" -> AppLogger.Level.INFO
-                "warn" -> AppLogger.Level.WARN
-                "error" -> AppLogger.Level.ERROR
-                "fatal" -> AppLogger.Level.FATAL
-                "off" -> AppLogger.Level.OFF
-                else -> {
-                    AppLogger.warn(TAG, "initLogLevel: unknown level '$levelStr', using WARN")
-                    AppLogger.Level.WARN
-                }
-            }
-            AppLogger.info(TAG, "initLogLevel: set to ${AppLogger.minLevel}")
+            val webviewDebug = root.optBoolean("webview_debug", false)
+            val ignoreSslErrors = root.optBoolean("ignore_ssl_errors", false)
+
+            appConfig = AppConfig(
+                logLevel = levelStr,
+                webviewDebug = webviewDebug,
+                ignoreSslErrors = ignoreSslErrors
+            )
+            AppLogger.info(TAG, "loadAppConfig: logLevel=$levelStr, webviewDebug=$webviewDebug, ignoreSslErrors=$ignoreSslErrors")
+            applyConfig()
         } catch (e: Exception) {
-            AppLogger.error(TAG, "initLogLevel: failed to read setting.json: ${e.message}")
+            AppLogger.error(TAG, "loadAppConfig: failed to read setting.json: ${e.message}")
+            applyConfig()
         }
+    }
+
+    private fun applyConfig() {
+        AppLogger.minLevel = when (appConfig.logLevel) {
+            "debug" -> AppLogger.Level.DEBUG
+            "info" -> AppLogger.Level.INFO
+            "warn" -> AppLogger.Level.WARN
+            "error" -> AppLogger.Level.ERROR
+            "fatal" -> AppLogger.Level.FATAL
+            "off" -> AppLogger.Level.OFF
+            else -> {
+                AppLogger.warn(TAG, "applyConfig: unknown logLevel '${appConfig.logLevel}', using WARN")
+                AppLogger.Level.WARN
+            }
+        }
+        AppLogger.info(TAG, "applyConfig: minLevel=${AppLogger.minLevel}, webviewDebug=${appConfig.webviewDebug}, ignoreSslErrors=${appConfig.ignoreSslErrors}")
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -140,7 +177,7 @@ class MainActivity : AppCompatActivity() {
         AppLogger.logDir = File(getExternalFilesDir(null), "logs")
         AppLogger.logDir?.mkdirs()
 
-        initLogLevel()
+        loadAppConfig()
 
         Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
             val sw = StringWriter()
@@ -166,7 +203,7 @@ class MainActivity : AppCompatActivity() {
                     AppLogger.warn(TAG, "WebView.setDataDirectorySuffix failed (already initialized): ${e.message}")
                 }
             }
-            if (BuildConfig.DEBUG) {
+            if (appConfig.webviewDebug) {
                 // 调试地址 chrome://inspect
                 WebView.setWebContentsDebuggingEnabled(true)
                 AppLogger.info(TAG, "WebView remote debugging enabled")
@@ -295,11 +332,12 @@ class MainActivity : AppCompatActivity() {
                         tryStartFade()
                     }
                     override fun onReceivedSslError(view: WebView?, handler: android.webkit.SslErrorHandler?, error: android.net.http.SslError?) {
-                        val host = Uri.parse(error?.url).host ?: ""
-                        val isLocal = host == "127.0.0.1" || host == "localhost"
-                            || host.startsWith("192.168.") || host.startsWith("10.")
-                        AppLogger.info(TAG, "onReceivedSslError: url=${error?.url}, host=$host, isLocal=$isLocal, error=${error?.primaryError}")
-                        if (isLocal) {
+                        // val host = Uri.parse(error?.url).host ?: ""
+                        // val isLocal = host == "127.0.0.1" || host == "localhost"
+                        //     || host.startsWith("192.168.") || host.startsWith("10.")
+                        // AppLogger.info(TAG, "onReceivedSslError: url=${error?.url}, host=$host, isLocal=$isLocal, ignoreSslErrors=${appConfig.ignoreSslErrors}, error=${error?.primaryError}")
+                        // if (appConfig.ignoreSslErrors || isLocal) {
+                        if (appConfig.ignoreSslErrors) {
                             handler?.proceed()
                         } else {
                             handler?.cancel()

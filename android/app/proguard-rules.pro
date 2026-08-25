@@ -24,6 +24,8 @@
 # Keep classes/methods called from Python via jclass reflection
 -keep class com.github.u710850609.easytiereui.MainActivity {
     public *** getEasyTierManager();
+    public *** setWebviewDebug(...);
+    public *** setIgnoreSslErrors(...);
 }
 -keep class com.github.u710850609.easytiereui.EasyTierManager {
     public *** startVpn(...);

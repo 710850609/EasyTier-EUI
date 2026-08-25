@@ -303,14 +303,21 @@
     <!-- 开发者选项 -->
     <var-paper class="setting-block" :elevation="0" v-if="showDevContent">
       <div class="block-header">
-        <!-- <var-icon name="wrench" size="24" color="var(--color-primary)" /> -->
         <svg-icon type="mdi" :path="mdiDevTo" size="24" color="var(--color-primary)"></svg-icon>
         <span class="block-title">{{ $t('settings.developer.title') }}</span>
       </div>      
       <var-divider />
+      <div class="setting-row" v-if="platform === 'android'">
+        <span class="setting-label">{{ $t('settings.developer.webviewDebug') }}</span>
+        <var-switch variant size="20" v-model="webviewDebugEnabled" @change="toggleWebviewDebug" />
+      </div>
       <div class="setting-row">
         <span class="setting-label">{{ $t('settings.developer.mobileDebug') }}</span>
         <var-switch variant size="20" v-model="vConsoleEnabled" @change="toggleVConsole" />
+      </div>
+      <div class="setting-row" v-if="platform === 'android'">
+        <span class="setting-label">{{ $t('settings.developer.ignoreSslErrors') }}</span>
+        <var-switch variant size="20" v-model="ignoreSslErrors" @change="toggleIgnoreSslErrors" />
       </div>
       <div class="setting-row">
         <span class="setting-label">{{ $t('settings.developer.testPeers') }}</span>
@@ -459,6 +466,8 @@ const peerSource = ref([])
 const customPeerSource = ref('')
 const showDevContent = ref(false)
 const vConsoleEnabled = ref(false)
+const webviewDebugEnabled = ref(false)
+const ignoreSslErrors = ref(false)
 const changingPeerSource = ref(false)
 const testPeerSourceEnabled = ref(false)
 const vConsoleInstance = ref(null)
@@ -580,6 +589,24 @@ const toggleVConsole = async (val) => {
       vConsoleInstance.value = null
     }
     toast.success(t('settings.toast.vconsoleDisabled'))
+  }
+}
+
+const toggleWebviewDebug = async (val) => {
+  try {
+    await api.settings.setWebviewDebug({ enabled: val })
+  } catch (e) {
+    webviewDebugEnabled.value = !val
+    console.error('toggleWebviewDebug failed:', e)
+  }
+}
+
+const toggleIgnoreSslErrors = async (val) => {
+  try {
+    await api.settings.setIgnoreSslErrors({ enabled: val })
+  } catch (e) {
+    ignoreSslErrors.value = !val
+    console.error('toggleIgnoreSslErrors failed:', e)
   }
 }
 
@@ -722,6 +749,8 @@ const getEuiInfo = async () => {
     isDocker.value = data.is_docker
     logLevel.value = data.log_level
     enabledStartRecovery.value = data.enabled_start_recovery || false
+    webviewDebugEnabled.value = data.webview_debug || false
+    ignoreSslErrors.value = data.ignore_ssl_errors || false
     if (euiReleaseInfo.value) {
       euiReleaseInfo.value = data.release_info
     }
@@ -874,8 +903,6 @@ const getEuiReleaseInfo = (refresh=false, showTip = true) => {
   return new Promise((resolve, reject) => {
     api.etEui.getReleaseInfo({'refresh': refresh, 'no_assets': true }).then((data) => {
       euiReleaseInfo.value = data.data
-      // euiRelease.value = data.data.latest_release
-      // euiPreRelease.value = data.data.latest_prerelease
       if (refresh && showTip) {
         toast.success(t('settings.versionRefreshed', {update_time: formatDate(data.data.update_time)}))
       }
@@ -990,6 +1017,7 @@ onMounted(() => {
   // VConsole 开发者工具：恢复上次开关状态
   const vconsoleEnabled = localStorage.getItem(VCONSOLE_ENABLED_KEY) === 'true'
   vConsoleEnabled.value = vconsoleEnabled
+
   if (vconsoleEnabled) {
     showDevContent.value = true
     Promise.allSettled([loadVConsole(), loadPeerSource(), getGithubMirrors()])

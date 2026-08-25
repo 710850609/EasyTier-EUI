@@ -33,6 +33,8 @@ def eui_info(*args, **kwargs):
         'is_docker': is_docker,
         'log_level': get_log_level(),
         'enabled_start_recovery': app_settings.get('enabled_start_recovery', False),
+        'webview_debug': app_settings.get('webview_debug', False),
+        'ignore_ssl_errors': app_settings.get('ignore_ssl_errors', False),
         'release_info': release_info,
     }
 
@@ -138,6 +140,30 @@ def set_log_level(params=None, *args, **kwargs):
     # docker 环境下，不修改 console 日志输出，方便控制台定位问题
     log_util.set_log_level(log_level, None, excluded_console)
     app_settings.save('log_level', log_level.lower())
+
+def set_webview_debug(params=None, *args, **kwargs):
+    params = params or {}
+    enabled = params.get('enabled', False)
+    app_settings.save('webview_debug', enabled)
+    try:
+        if run_configs.IS_ANDROID:
+            from java import jclass
+            MainActivity = jclass(run_configs.ANDROID_MAIN_ACTIVITY)
+            MainActivity.setWebviewDebug(enabled)
+    except Exception as e:
+        logger.exception(f"fail to set android webview debug: {e}")
+
+def set_ignore_ssl_errors(params=None, *args, **kwargs):
+    params = params or {}
+    enabled = params.get('enabled', False)
+    app_settings.save('ignore_ssl_errors', enabled)
+    try:
+        if run_configs.IS_ANDROID:
+            from java import jclass
+            MainActivity = jclass(run_configs.ANDROID_MAIN_ACTIVITY)
+            MainActivity.setIgnoreSslErrors(enabled)
+    except Exception as e:
+        logger.exception(f"fail to set android ignore ssl errors: {e}")
 
 def enabled_start_recovery(params=None, *args, **kwargs):
     params = params or {}

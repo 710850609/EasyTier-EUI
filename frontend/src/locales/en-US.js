@@ -124,7 +124,9 @@ export default {
 
     developer: {
       title: 'Developer',
-      mobileDebug: 'Mobile Debug (VConsole)',
+      webviewDebug: 'WebView Debug',
+      mobileDebug: 'VConsole Debug',
+      ignoreSslErrors: 'Ignore SSL Errors',
       testPeers: 'Use Test Community Nodes',
       githubMirror: 'GitHub Mirror',
       enabled: 'Enabled',
