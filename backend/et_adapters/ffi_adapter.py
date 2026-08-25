@@ -175,7 +175,6 @@ class FfiAdapter(IEasyTierAdapter):
                 if ret != 0:
                     raise RuntimeError(f"run_network_instance failed: {self._get_last_error()}")
             self._instance_set.add(instance_name)
-            self._start_times[instance_name] = time.time()
             # 记录是否开启了魔法DNS
             accept_dns = doc.get('flags', {}).get('accept_dns')
             if accept_dns:
@@ -478,16 +477,12 @@ class FfiAdapter(IEasyTierAdapter):
         if upload:
             parts.append(f"↑{upload}")
         if download:
-            if upload:
-                parts.append("  ")
             parts.append(f"↓{download}")
         start_time = self._start_times.get(instance_name)
         uptime_seconds = int(time.time() - start_time) if start_time else 0
-        if uptime_seconds > 0:
-            if upload or download:
-                parts.append("  🕓  ")
-            parts.append(self._format_uptime(uptime_seconds, is_chinese))
-        text = "".join(parts)
+        parts.append("🕓")
+        parts.append(self._format_uptime(uptime_seconds, is_chinese))
+        text = "  ".join(parts)
         return title, text
 
     def _format_uptime(self, seconds: int, is_chinese: bool) -> str:
