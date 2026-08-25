@@ -250,7 +250,7 @@ const downloadEui = (arch) => {
 
 <style scoped>
 .platform-page {
-  padding: 16px;
+  padding: 0px 16px;
   max-width: 900px;
   margin: 0 auto;
 }

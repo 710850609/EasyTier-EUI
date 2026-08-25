@@ -72,7 +72,7 @@ const isDark = inject('isDark', ref(false))
 
 // 获取父菜单key
 const getParentMenuKey = (key) => {
-  if (key?.startsWith('software-') && key !== 'software') {
+  if (key?.startsWith('softwares-') && key !== 'software') {
     return 'software'
   }
   return key

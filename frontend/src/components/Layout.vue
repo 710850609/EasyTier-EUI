@@ -10,6 +10,9 @@
 
       <main class="main-content" :class="{ 'has-bottom-nav': isMobile }">
         <div class="content-wrapper">
+          <div v-if="isMobile && subMenuLabel" class="mobile-submenu-title">
+            <h2>{{ subMenuLabel }}</h2>
+          </div>
           <component :is="currentComponent" />
         </div>
       </main>
@@ -25,7 +28,7 @@
 <script setup>
 import SideMenu from './SideMenu.vue'
 import BottomNav from './BottomNav.vue'
-import { componentMap } from '../config/menu.js'
+import { componentMap, menuTree } from '../config/menu.js'
 import { isDark } from '../config/theme.js'
 import { VCONSOLE_ENABLED_KEY } from '../config/storage-keys.js'
 import { useI18n } from 'vue-i18n'
@@ -69,6 +72,29 @@ const currentComponent = computed(() => {
   }
   // 核心页面同步组件直接使用
   return component
+})
+
+// 扁平化菜单树，用于按 key 查找菜单项
+const flattenMenu = (items) => {
+  const result = []
+  items.forEach(item => {
+    result.push(item)
+    if (item.children) {
+      result.push(...flattenMenu(item.children))
+    }
+  })
+  return result
+}
+const flatMenus = flattenMenu(menuTree)
+
+// 二级菜单的顶级 key 集合
+const topLevelKeys = new Set(menuTree.map(m => m.key))
+
+// 移动端二级菜单标题（仅二级菜单时显示）
+const subMenuLabel = computed(() => {
+  if (topLevelKeys.has(activeMenu.value)) return ''
+  const menu = flatMenus.find(m => m.key === activeMenu.value)
+  return menu ? t(menu.label) : ''
 })
 
 // 从 localStorage 加载 VConsole（动态导入）
@@ -176,6 +202,21 @@ onUnmounted(() => {
 .layout.is-mobile .main-content {
   width: 100%;
   margin-left: 0;
+}
+
+.mobile-submenu-title {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding: 16px;
+  padding-top: calc(var(--sat, 0px) + 16px);
+  text-align: center;
+  background: linear-gradient(to bottom, var(--color-body) 0%, var(--color-body) 60%, transparent 100%);
+}
+
+.mobile-submenu-title h2 {
+  margin: 0;
+  color: var(--color-on-surface);
 }
 
 .layout.is-mobile .content-wrapper {
