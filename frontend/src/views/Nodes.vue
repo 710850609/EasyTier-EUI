@@ -1,5 +1,5 @@
 <template>
-  <div class="nodes-page">
+  <div class="nodes-page" :class="{ 'card-mode': isMobile && useMobileList }">
     <!-- 统计标题栏 -->
     <var-paper class="stats-bar" :elevation="1">
       <div class="stats-content">
@@ -854,6 +854,19 @@ onUnmounted(() => {
   flex-direction: column;
 }
 
+.nodes-page.card-mode {
+  padding-bottom: var(--sab, 0px);
+}
+
+.nodes-page.card-mode .table-container {
+  flex: 1;
+  background: transparent !important;
+}
+
+.nodes-page.card-mode .mobile-node-list {
+  padding-bottom: 64px;
+}
+
 .stats-bar {
   padding: 16px 20px;
   margin-bottom: 16px;
@@ -1024,8 +1037,12 @@ onUnmounted(() => {
     justify-content: space-between;
   }
 
-  .mobile-node-list {
-    padding-bottom: 16px;
+  .mobile-only-switch {
+    display: block;
+  }
+
+  .mobile-hidden {
+    display: none !important;
   }
 }
 
@@ -1318,10 +1335,6 @@ html.dark .sk-chip {
 .sk-chip-md { width: 76px; }
 .sk-chip-lg { width: 100px; }
 
-@media (max-width: 767px) {
-  /* 由 Vue 条件控制显示哪种骨架屏，无需 CSS 强制隐藏 */
-}
-
 @media (min-width: 769px) {
   .skeleton-mobile {
     display: none !important;
@@ -1347,16 +1360,6 @@ html.dark .sk-chip {
   justify-content: space-between;
   font-size: 14px;
   color: var(--color-text);
-}
-
-@media (max-width: 767px) {
-  .mobile-only-switch {
-    display: block;
-  }
-  
-  .mobile-hidden {
-    display: none !important;
-  }
 }
 
 /* ========== 移动端卡片列表样式（全尺寸可用） ========== */

@@ -117,9 +117,7 @@ const handleSubMenuClick = (key) => {
   right: 0;
   height: calc(64px + var(--sab, 0px));
   padding-bottom: var(--sab, 0px);
-  background: rgba(var(--color-surface-rgb, 255, 255, 255), 0.12);
-  backdrop-filter: blur(28px);
-  -webkit-backdrop-filter: blur(28px);
+  background: transparent;
   border-top: 0.5px solid rgba(var(--color-outline-variant-rgb, 0, 0, 0), 0.15);
   display: flex;
   justify-content: space-around;
@@ -127,8 +125,34 @@ const handleSubMenuClick = (key) => {
   z-index: 100;
 }
 
+/* 毛玻璃渐变层 - 从下到上逐渐透明，不影响图标文字 */
+.bottom-nav::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: rgba(var(--color-surface-rgb, 255, 255, 255), 0.12);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  -webkit-mask-image: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 1) 66%,
+    rgba(0, 0, 0, 0) 100%
+  );
+  mask-image: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 1) 66%,
+    rgba(0, 0, 0, 0) 100%
+  );
+}
+
 /* 深色主题适配 */
 .bottom-nav.dark {
+  background: transparent;
+}
+.bottom-nav.dark::before {
   background: rgba(var(--color-surface-rgb, 30, 30, 30), 0.25);
 }
 
