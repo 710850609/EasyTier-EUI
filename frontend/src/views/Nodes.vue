@@ -1014,6 +1014,11 @@ onUnmounted(() => {
 
 
 
+/* 移动端列表开关 - 默认隐藏 */
+.mobile-only-switch {
+  display: none;
+}
+
 @media (max-width: 767px) {
 
   .nodes-page {
@@ -1344,7 +1349,6 @@ html.dark .sk-chip {
 /* ========== 移动端卡片列表样式 ========== */
 /* 移动端列表开关 - 仅移动端可见 */
 .mobile-only-switch {
-  display: none;
   margin-top: 12px;
 }
 

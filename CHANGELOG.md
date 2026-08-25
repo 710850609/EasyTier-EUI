@@ -1,11 +1,17 @@
-##   
+##  2.1
 - 新增：安卓版支持应用启动重连，自动运行上次未手动关闭的配置 ([Feature #9](https://github.com/710850609/EasyTier-EUI/issues/9))
 - 优化：安卓版VPN支持IPv6、支持魔法DNS、支持MTU、根据物理网络自适应是否计量网络
 - 优化：安卓版VPN排除干扰电话服务、常见推送服务、系统服务。手动强制路由时，尽量保证系统正常运行
 - 修复：安卓版未能显示多个连接协议
 ----
 - 优化：【设置】页面响应，各个页面亮模式视觉优化、安全区域适配、底部菜单栏毛玻璃效果
-
+----
+- 废弃：【应用】-IOS TestFlight 废弃
+- 新增：【应用】-IOS 支持跳转App Store正式版下载
+- 优化：小屏幕底部菜单、二级菜单及其页面显示
+- 修复：【节点】页面底部安全区域适配
+- 修复：ffi模式下，【节点】页面没显示ipv6相关协议，如：tcp6，udp6
+- 
 <br>
 
 ----
@@ -16,7 +22,12 @@
 - Fixed: Android version failed to display multiple connection protocols
 ----
 - Optimized: [Settings] page responsiveness, light mode visual refinements across all pages, safe area adaptation, bottom navigation bar frosted glass effect
-
+----
+- Deprecated: [App] - iOS TestFlight deprecated
+- New: [App] - iOS supports redirecting to App Store for official release download
+- Improved: Small screen bottom menu, sub-menu and page display
+- Fixed: [Nodes] page bottom safe area adaptation
+- Fixed: Under FFI mode, [Nodes] page did not display IPv6-related protocols, such as tcp6, udp6
 
 ##  2.2
 - 新增：【配置】支持二维码分享网络、支持扫描二维码增加配置
