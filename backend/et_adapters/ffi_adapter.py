@@ -412,6 +412,7 @@ class FfiAdapter(IEasyTierAdapter):
 
                 if changed or not cached_state:
                     cached_state = {k: info.get(k) for k in compare_keys}
+                    self._start_times[instance_name] = time.time()
                     self._notify_kotlin_restart_vpn(instance_name, info)
                     last_notify_time = 0.0
 
@@ -655,7 +656,6 @@ class FfiAdapter(IEasyTierAdapter):
         """
         if isinstance(size, str):
             size = int(size)
-        # unit_names = ["B", "K", "M", "G", "T"] if for_short else ["B", "KB", "MB", "GB", "TB"]
         unit_names = ["B", "KB", "MB", "GB", "TB"]
         for unit in unit_names:
             if abs(size) < 1024:
@@ -663,18 +663,4 @@ class FfiAdapter(IEasyTierAdapter):
                     return f"{int(size)} {unit}"
                 return f"{size:.2f} {unit}"
             size /= 1024
-        # return f"{size:.2f} PB" if for_short else f"{size:.2f} P"
         return f"{size:.2f} PB"
-
-    # def get_network_infos(self, max_length: int = 10) -> Dict[str, NetworkInstanceInfo]:
-    #     raw = self._collect_via_raw_ffi(max_length)
-    #     if not raw:
-    #         return {}
-    #
-    #     result = {}
-    #     for instance_name, json_data in raw.items():
-    #         result[instance_name] = NetworkInstanceInfo.from_dict(json_data) if json_data else NetworkInstanceInfo()
-    #     return result
-
-    # def get_network_infos_raw(self, max_length: int = 10) -> Dict[str, Any]:
-    #     return self._collect_via_raw_ffi(max_length)
