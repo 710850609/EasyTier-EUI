@@ -415,17 +415,13 @@ class MainActivity : AppCompatActivity() {
                 return
             }
 
-            // 判断是否是手势导航：三键导航栏高度通常为 48dp，手势条通常为 8~20dp
-            val gestureHeight = insets?.getInsets(WindowInsetsCompat.Type.mandatorySystemGestures())?.bottom ?: 0
-            val isGestureNav = gestureHeight > 0 && sab < 30 * resources.displayMetrics.density
-
             // 前端需要的是 CSS 像素（逻辑像素）。需要物理像素 除以 DPR
             val density = resources.displayMetrics.density
             val satDp = sat / density
-            val sabDp = if (isGestureNav) sab / density else 0f  // 三键导航栏不预留底部安全区域
+            val sabDp = sab / density
             val sarDp = sar / density
             val salDp = sal / density
-            AppLogger.debug(TAG, "injectSafeArea: sat=$sat, sab=$sab, isGestureNav=$isGestureNav, density=$density, satDp=${satDp}px, sabDp=${sabDp}px, sarDp=${sarDp}px, salDp=${salDp}px")
+            AppLogger.debug(TAG, "injectSafeArea: sat=$sat, sab=$sab, density=$density, satDp=${satDp}px, sabDp=${sabDp}px, sarDp=${sarDp}px, salDp=${salDp}px")
 
             val js = """
                 (function() {

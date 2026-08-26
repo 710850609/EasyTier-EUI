@@ -1002,7 +1002,7 @@ onUnmounted(() => {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  margin-bottom: var(--sab, 0px);
+  /*margin-bottom: var(--sab, 0px);*/
 }
 
 .table-wrapper {
