@@ -190,6 +190,14 @@ def __install_et_core(et_version, arch, sys_platform):
         services.start({'profile': profile})
 
 def __install_android(et_version, arch):
+    services.stop_all()
+    logger.info(f"停止所有服务")
+    ffi_dir = run_configs.core_dir()
+    build_in_vers = ffi_adapter.get_built_in_version()
+    if build_in_vers == et_version:
+        shutil.rmtree(ffi_dir)
+        logger.info(f'选择内置FFI版本：{et_version}，无需下载，已删除旧FFI文件')
+        return
     ffi_url = f"https://github.com/710850609/easytier-ffi/releases/download/{et_version}/easytier-ffi-android-{arch}-{et_version}.tar.gz"
     logger.info(f"FFI 下载地址: {ffi_url}")
     download_file = os.path.join(run_configs.data_dir(), "download", f"easytier-ffi-android.tar.gz")
@@ -201,7 +209,6 @@ def __install_android(et_version, arch):
         raise HttpException(get_message('download.download_failed'))
 
     ffi_lib_name = ffi_adapter.get_ffi_lib_name()
-    ffi_dir = run_configs.core_dir()
     os.makedirs(ffi_dir, exist_ok=True)
     ffi_path = os.path.join(ffi_dir, ffi_lib_name)
     logger.info(f"FFI 保存路径: {ffi_path}")

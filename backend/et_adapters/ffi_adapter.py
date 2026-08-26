@@ -21,6 +21,9 @@ logger = logging.getLogger(__name__)
 _FFI_LIB_VERSION = "unknown"
 _MAX_INSTANCE_COUNT = 20
 
+def get_built_in_version() -> str:
+    return _FFI_LIB_VERSION
+
 def get_ffi_lib_name() -> str:
     if sys.platform == 'linux':
         return 'libeasytier_ffi.so'
