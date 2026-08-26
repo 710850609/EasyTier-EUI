@@ -344,7 +344,9 @@ class FfiAdapter(IEasyTierAdapter):
         addr_str = self._addr_to_ipv4(addr)
         network_len = virtual_ipv4.get('network_length') or '24'
         if instance_name in self._enable_magic_dns_set:
-            info['dns_servers'] = ['100.100.100.101']
+            magic_dns = "100.100.100.101"
+            info['dns_servers'].append(magic_dns)
+            info['routes'].append(magic_dns)
         info['virtual_ipv4'] = f"{addr_str}/{network_len}" if addr_str else ""
         routes = instance_infos.get('routes') or []
         for route in routes:
