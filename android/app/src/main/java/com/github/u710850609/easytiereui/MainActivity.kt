@@ -31,6 +31,7 @@ import androidx.core.splashscreen.SplashScreenViewProvider
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.ViewCompat
 import androidx.webkit.WebSettingsCompat
 import androidx.webkit.WebViewFeature
 import com.chaquo.python.Python
@@ -404,22 +405,27 @@ class MainActivity : AppCompatActivity() {
 
     private fun injectSafeArea() {
         try {
-            val insets = WindowInsetsCompat.toWindowInsetsCompat(window.decorView.rootWindowInsets)
-            val sat = insets.getInsetsIgnoringVisibility(WindowInsetsCompat.Type.statusBars()).top
-            val sab = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
-            val sar = insets.getInsets(WindowInsetsCompat.Type.systemBars()).right
-            val sal = insets.getInsets(WindowInsetsCompat.Type.systemBars()).left
+            val insets = ViewCompat.getRootWindowInsets(window.decorView)
+            val sat = insets?.getInsetsIgnoringVisibility(WindowInsetsCompat.Type.statusBars())?.top ?: 0
+            val sab = insets?.getInsets(WindowInsetsCompat.Type.navigationBars())?.bottom ?: 0
+            val sar = insets?.getInsets(WindowInsetsCompat.Type.systemBars())?.right ?: 0
+            val sal = insets?.getInsets(WindowInsetsCompat.Type.systemBars())?.left ?: 0
 
             if (sat == 0 && sab == 0) {
                 return
             }
+
+            // 判断是否是手势导航：三键导航栏高度通常为 48dp，手势条通常为 8~20dp
+            val gestureHeight = insets?.getInsets(WindowInsetsCompat.Type.mandatorySystemGestures())?.bottom ?: 0
+            val isGestureNav = gestureHeight > 0 && sab < 30 * resources.displayMetrics.density
+
             // 前端需要的是 CSS 像素（逻辑像素）。需要物理像素 除以 DPR
             val density = resources.displayMetrics.density
             val satDp = sat / density
-            val sabDp = sab / density
+            val sabDp = if (isGestureNav) sab / density else 0f  // 三键导航栏不预留底部安全区域
             val sarDp = sar / density
             val salDp = sal / density
-            AppLogger.debug(TAG, "injectSafeArea: sat=$sat, sab=$sab, sar=$sar, sal=$sal, density=$density, satDp=${satDp}px, sabDp=${sabDp}px, sarDp=${sarDp}px, salDp=${salDp}px}")
+            AppLogger.debug(TAG, "injectSafeArea: sat=$sat, sab=$sab, isGestureNav=$isGestureNav, density=$density, satDp=${satDp}px, sabDp=${sabDp}px, sarDp=${sarDp}px, salDp=${salDp}px")
 
             val js = """
                 (function() {
