@@ -263,6 +263,8 @@ export default {
     serviceStopFailed: '服务停止失败',
     noConfigGoCreate: '当前没有网络配置，请创建网络配置后再查看节点数据',
     loadConfigListFailed: '加载配置列表失败，请检查网络连接或服务状态',
+    tableSettings: '显示设置',
+    resetDefault: '重置为默认',
     columns: {
       sid: '节点ID',
       cidr: '网段',

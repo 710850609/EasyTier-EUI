@@ -263,6 +263,8 @@ export default {
     serviceStopFailed: '服務停止失敗',
     noConfigGoCreate: '目前沒有網路設定，請建立網路設定後再檢視節點資料',
     loadConfigListFailed: '載入設定列表失敗，請檢查網路連線或服務狀態',
+    tableSettings: '顯示設定',
+    resetDefault: '重設為預設',
     columns: {
       sid: '節點ID',
       cidr: '網段',

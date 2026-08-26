@@ -191,6 +191,8 @@ export default {
     serviceStopFailed: 'Dienst-Stopp fehlgeschlagen',
     noConfigGoCreate: 'Noch keine Netzwerkkonfiguration. Bitte erstellen Sie zuerst eine.',
     loadConfigListFailed: 'Konfigurationsliste konnte nicht geladen werden.',
+    tableSettings: 'Anzeigeeinstellungen',
+    resetDefault: 'Zurücksetzen',
     columns: { sid: 'Knoten-ID', cidr: 'Subnetz', hostname: 'Hostname', cost: 'Verbindung', tunnel_proto: 'Protokoll', lat_ms: 'Latenz', loss_rate: 'Verlustrate', rx_bytes: 'Download', tx_bytes: 'Upload', nat_type: 'NAT-Typ', version: 'Kernel-Version' }
   },
   config: {

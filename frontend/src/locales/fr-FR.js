@@ -191,6 +191,8 @@ export default {
     serviceStopFailed: 'Échec arrêt service',
     noConfigGoCreate: 'Aucune configuration réseau. Veuillez d\'abord en créer une.',
     loadConfigListFailed: 'Échec chargement liste config. Vérifiez réseau/service.',
+    tableSettings: 'Paramètres d\'affichage',
+    resetDefault: 'Réinitialiser',
     columns: { sid: 'ID Nœud', cidr: 'Sous-réseau', hostname: 'Nom d\'hôte', cost: 'Connexion', tunnel_proto: 'Protocole', lat_ms: 'Latence', loss_rate: 'Perte', rx_bytes: 'Download', tx_bytes: 'Upload', nat_type: 'Type NAT', version: 'Version Kernel' }
   },
   config: {

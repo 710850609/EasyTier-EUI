@@ -263,6 +263,8 @@ export default {
     serviceStopFailed: 'Service stop failed',
     noConfigGoCreate: 'No network config yet. Please create one first.',
     loadConfigListFailed: 'Failed to load config list. Check network or service status.',
+    tableSettings: 'Display Settings',
+    resetDefault: 'Reset to Default',
     columns: {
       sid: 'Node ID',
       cidr: 'Subnet',

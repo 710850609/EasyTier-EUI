@@ -74,73 +74,82 @@
       </div>
     </var-paper>
 
-    <!-- 筛选菜单 popup -->
-    <var-popup v-model:show="showFilterMenu" position="top">
-      <var-paper class="filter-menu">
-        <var-tabs v-model:active="activeTab" @change="handleTabChange">
-          <var-tab name="columnsFilter">
-            <div class="tab-label">
-              <span>{{ $t('nodes.dataSelect') }}</span>
-            </div>
-          </var-tab>
-          <var-tab name="rowFilter">
-            <div class="tab-label">
-              <span>{{ $t('nodes.rowSelect') }}</span>
-            </div>
-          </var-tab>
-          <var-tab name="refreshSpeed">
-            <div class="tab-label">
-              <span>{{ $t('nodes.refreshSpeed') }}</span>
-            </div>
-          </var-tab>
-        </var-tabs>
-        
-        <!-- 列选择内容 -->
-        <div v-if="activeTab === 'columnsFilter'" class="tab-content">
-          <var-checkbox-group v-model="selectedColumns" direction="vertical">
-            <var-checkbox 
-              v-for="col in allColumns" 
-              :key="col.key"
-              :checked-value="col.key"
-              :disabled="col.key === 'ipv4'"
-            >
-              {{ col.label }}
-            </var-checkbox>
-          </var-checkbox-group>
+    <!-- 表格设置面板 -->
+    <var-popup v-model:show="showFilterMenu" :position="isMobile ? 'bottom' : 'right'">
+      <var-paper class="settings-panel">
+        <div class="panel-header">
+          <span class="panel-title">{{ $t('nodes.tableSettings') }}</span>
+          <var-button text round class="panel-close-btn" @click="showFilterMenu = false">
+            <var-icon name="close" size="20" />
+          </var-button>
         </div>
-        
-        <!-- 节点筛选内容 -->
-        <div v-if="activeTab === 'rowFilter'" class="tab-content">
-          <div class="filter-subtitle">{{ $t('nodes.nodeType') }}</div>
-          <var-checkbox-group v-model="selectedNodeTypes" direction="vertical">
-            <var-checkbox checked-value="normal">
-              <div class="type-option">
-                <var-icon name="server" size="18" color="var(--color-primary)" />
-                <span>{{ $t('nodes.normalNodes') }}</span>
-              </div>
-            </var-checkbox>
-            <var-checkbox checked-value="server">
-              <div class="type-option">
-                <var-icon name="cloud" size="18" color="var(--color-success)" />
-                <span>{{ $t('nodes.serverNodes') }}</span>
-              </div>
-            </var-checkbox>
-          </var-checkbox-group>
-          <div class="mobile-only-switch">
-            <div class="filter-divider"></div>
-            <div class="filter-subtitle">{{ $t('nodes.displayMode') }}</div>
+        <div class="panel-body">
+          <!-- 显示列 -->
+          <div class="settings-section">
+            <div class="section-title">{{ $t('nodes.dataSelect') }}</div>
+            <div class="checkbox-grid">
+              <var-checkbox
+                v-for="col in allColumns"
+                :key="col.key"
+                :model-value="selectedColumns.includes(col.key)"
+                :disabled="col.key === 'ipv4'"
+                @change="(val) => toggleColumn(col.key, val)"
+              >
+                {{ col.label }}
+              </var-checkbox>
+            </div>
+          </div>
+
+          <var-divider />
+
+          <!-- 节点类型 -->
+          <div class="settings-section">
+            <div class="section-title">{{ $t('nodes.nodeType') }}</div>
+            <var-checkbox-group v-model="selectedNodeTypes" direction="horizontal">
+              <var-checkbox checked-value="normal">
+                <div class="type-option">
+                  <var-icon name="server" size="18" color="var(--color-primary)" />
+                  <span>{{ $t('nodes.normalNodes') }}</span>
+                </div>
+              </var-checkbox>
+              <var-checkbox checked-value="server">
+                <div class="type-option">
+                  <var-icon name="cloud" size="18" color="var(--color-success)" />
+                  <span>{{ $t('nodes.serverNodes') }}</span>
+                </div>
+              </var-checkbox>
+            </var-checkbox-group>
+          </div>
+
+          <var-divider />
+
+          <!-- 刷新速度 -->
+          <div class="settings-section">
+            <div class="section-title">{{ $t('nodes.refreshSpeed') }}</div>
+            <var-select variant="outlined" :placeholder="$t('nodes.refreshSpeedPlaceholder')" v-model="refreshStep" size="small" blur-color="var(--field-decorator-focus-color)">
+              <var-option v-for="item in refreshStepList" :label="item.label" :value="item.key" />
+            </var-select>
+          </div>
+
+          <var-divider />
+
+          <!-- 显示模式 - 移动端时显示 -->
+          <div v-if="isMobile" class="settings-section">
+            <div class="section-title">{{ $t('nodes.displayMode') }}</div>
             <div class="switch-row">
               <span>{{ $t('nodes.mobileCardList') }}</span>
               <var-checkbox :model-value="useMobileList" @change="toggleMobileList" />
             </div>
           </div>
-        </div>
 
-        <!-- 刷新速度内容 -->
-        <div v-if="activeTab === 'refreshSpeed'" class="tab-content">
-          <var-select variant="outlined" :placeholder="$t('nodes.refreshSpeedPlaceholder')" v-model="refreshStep" size="small" blur-color="var(--field-decorator-focus-color)">
-            <var-option v-for="item in refreshStepList" :label="item.label" :value="item.key" />
-          </var-select>
+          <var-divider />
+
+          <!-- 重置 -->
+          <div class="settings-section reset-section">
+            <var-button text block @click="resetSettings">
+              {{ $t('nodes.resetDefault') }}
+            </var-button>
+          </div>
         </div>
       </var-paper>
     </var-popup>  
@@ -338,14 +347,13 @@ const isFirstLoadConfigs = ref(true)
 const showFilterMenu = ref(false)
 const dataLoading = ref(false)
 const isUnmounted = ref(false)
-const activeTab = ref('columnsFilter')
 // 加载骨架屏
 const loadingSkeleton = ref(true)
 
 // PC 模式默认选中的列
 const PC_DEFAULT_COLUMNS = ['ipv4', 'hostname', 'cost', 'tunnel_proto', 'lat_ms', 'loss_rate', 'rx_bytes', 'tx_bytes', 'nat_type']
 // 移动端模式默认选中的列
-const MOBILE_DEFAULT_COLUMNS = ['ipv4', 'hostname', 'cost', 'tunnel_proto', 'lat_ms', 'loss_rate']
+const MOBILE_DEFAULT_COLUMNS = ['ipv4', 'hostname', 'cost', 'tunnel_proto', 'lat_ms', 'loss_rate', 'rx_bytes', 'tx_bytes', 'nat_type']
 
 // 根据当前屏幕宽度判断是否为移动端
 const isMobile = ref(window.innerWidth <= 768)
@@ -477,14 +485,30 @@ const filteredNodes = computed(() => {
   return allNodes.value.filter(node => selectedNodeTypes.value.includes(node.type))
 })
 
-// 处理 tab 切换
-const handleTabChange = (tab) => {
-  activeTab.value = tab
-}
-
 // 切换移动端列表模式
 const toggleMobileList = (val) => {
   useMobileList.value = val
+}
+
+// 重置为默认设置
+const resetSettings = () => {
+  selectedColumns.value = getDefaultColumns()
+  selectedNodeTypes.value = ['normal']
+  refreshStep.value = 3
+  if (isMobile.value) {
+    useMobileList.value = isMobile.value
+  }
+}
+
+const toggleColumn = (key, val) => {
+  const arr = [...selectedColumns.value]
+  if (val) {
+    if (!arr.includes(key)) arr.push(key)
+  } else {
+    const idx = arr.indexOf(key)
+    if (idx > -1) arr.splice(idx, 1)
+  }
+  selectedColumns.value = arr
 }
 
 // 防止重复点击
@@ -952,40 +976,107 @@ onUnmounted(() => {
   margin-left: auto;
 }
 
-.filter-menu {
-  padding: 16px;
-  max-height: 500px;
+/* ========== 设置面板 ========== */
+.settings-panel {
   display: flex;
   flex-direction: column;
+  height: 100%;
+  overflow: hidden;
 }
 
-.filter-menu :deep(.var-tabs) {
+.settings-panel .panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 12px;
   flex-shrink: 0;
 }
 
-.filter-menu .tab-content {
-  overflow-y: auto;
-  max-height: 400px;
+.settings-panel .panel-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--color-on-surface);
 }
 
-.tab-label {
+.settings-panel .panel-close-btn {
+  margin-right: -8px;
+}
+
+.settings-panel .panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 20px 20px;
+}
+
+.settings-section {
+  padding: 8px 0;
+}
+
+.section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-on-surface-variant);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.checkbox-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 8px;
+}
+
+.checkbox-grid :deep(.var-checkbox) {
+  margin: 0;
+}
+
+.reset-section {
+  padding-top: 4px;
+}
+
+.reset-section .var-button {
+  color: var(--color-on-surface-variant);
+  font-size: 13px;
+}
+
+.switch-row {
   display: flex;
   align-items: center;
-  gap: 6px;
-  color: var(--color-text);
-  font-size: 15px;
-  font-weight: 700;
-}
-
-.tab-content {
-  padding: 16px 0;
-}
-
-.filter-subtitle {
+  justify-content: space-between;
   font-size: 14px;
-  font-weight: 600;
   color: var(--color-text);
-  margin-bottom: 12px;
+}
+
+/* PC 端右侧面板宽度 */
+@media (min-width: 768px) {
+  .settings-panel {
+    width: 320px;
+  }
+}
+
+/* 移动端底部面板 */
+@media (max-width: 767px) {
+  .settings-panel {
+    max-height: 70vh;
+    border-radius: 16px 16px 0 0;
+  }
+
+  .settings-panel .panel-header {
+    padding: 12px 16px 10px;
+  }
+
+  .settings-panel .panel-body {
+    padding: 0 16px 16px;
+  }
+
+  .section-title {
+    font-size: 12px;
+  }
+
+  .checkbox-grid {
+    gap: 2px 6px;
+  }
 }
 
 .type-option {
@@ -1012,13 +1103,6 @@ onUnmounted(() => {
   position: relative;
 }
 
-
-
-/* 移动端列表开关 - 默认隐藏 */
-.mobile-only-switch {
-  display: none;
-}
-
 @media (max-width: 767px) {
 
   .nodes-page {
@@ -1040,10 +1124,6 @@ onUnmounted(() => {
   .config-section {
     width: 100%;
     justify-content: space-between;
-  }
-
-  .mobile-only-switch {
-    display: block;
   }
 
   .mobile-hidden {
@@ -1344,26 +1424,6 @@ html.dark .sk-chip {
   .skeleton-mobile {
     display: none !important;
   }
-}
-
-/* ========== 移动端卡片列表样式 ========== */
-/* 移动端列表开关 - 仅移动端可见 */
-.mobile-only-switch {
-  margin-top: 12px;
-}
-
-.filter-divider {
-  height: 1px;
-  background: var(--color-outline-variant);
-  margin: 8px 0 12px;
-}
-
-.switch-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 14px;
-  color: var(--color-text);
 }
 
 /* ========== 移动端卡片列表样式（全尺寸可用） ========== */
