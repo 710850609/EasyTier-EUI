@@ -39,55 +39,8 @@
 
     <div v-else class="config-else-wrapper">
       <var-paper class="toolbar" :elevation="1" v-if="!fastSettingMode">
-        <!-- 桌面端布局 -->
-        <div class="toolbar-row toolbar-desktop">
-          <div class="toolbar-group toolbar-main">
-            <var-select
-              class="config-switcher"
-              v-model="selectedConfig"
-              :placeholder="$t('config.selectConfig')"
-              variant="outlined"
-              size="small"
-              @change="onConfigSwitch"
-            >
-              <var-option
-                v-for="cfg in configList"
-                :key="cfg.profile"
-                :label="cfg.name"
-                :value="cfg.profile"
-              >
-                <div class="config-option">
-                  <span>{{ cfg.name }}</span>                
-                </div>
-              </var-option>
-            </var-select>
-
-            <div class="config-actions-group" v-if="selectedConfig">
-              <var-button size="small" type="primary" @click="showCreateDialog = true; showMode = 1;" v-if="showMode === 0">{{ $t('config.add') }}</var-button>
-              <var-button size="small" type="primary" @click="startEditName" :loading="isRenaming" v-if="showMode === 0">{{ $t('config.rename') }}</var-button>
-              <var-button type="primary" size="small" @click="showShareConfigType = true" v-if="showMode === 0">{{ $t('config.shareNetwork') }}</var-button>
-              <var-button size="small" type="danger" @click="showDeleteDialog = true" :loading="isDeletingConfig" v-if="showMode === 0">{{ $t('config.delete') }}</var-button>
-              <label class="toggle-item" v-if="showMode === 0 && platform !== 'android'">
-                <var-switch variant size="18" :loading="changingAutostart" v-model="currentConfigAutostart" @change="(val) => handleSwitchChange(currentConfigData, 'autostart', val)" />
-              </label>
-              <span class="toggle-label" v-if="showMode === 0 && platform !== 'android'">{{ $t('config.autostart') }}</span>
-            </div>
-          </div>
-          <var-divider class="toolbar-divider" />
-          <div class="toolbar-group toolbar-status" v-if="selectedConfig">
-            <div class="toolbar-toggles">
-              <div class="toggle-item">
-                <var-button size="small" type="danger" @click="exitAddMode()" :loading="isDeletingConfig" v-if="showMode !== 0">{{ $t('config.exitAdd') }}</var-button>
-                <var-button type="primary" size="small" @click="saveConfig" auto-loading>{{ $t('config.saveConfig') }}</var-button>
-                <var-button type="primary" size="small" @click="openCodePage" auto-loading v-if="showMode === 0">{{ $t('config.editFile') }}</var-button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 移动端布局 -->
-        <div class="toolbar-mobile">
-          <div class="toolbar-mobile-top">
+        <div class="toolbar-row">
+          <div class="toolbar-left">
             <var-select
               class="config-switcher"
               v-model="selectedConfig"
@@ -107,54 +60,50 @@
                 </div>
               </var-option>
             </var-select>
-            <div class="toolbar-mobile-actions" v-if="selectedConfig">
+
+            <div class="config-actions-group" v-if="selectedConfig">
               <label class="toggle-item" v-if="showMode === 0 && platform !== 'android'">
-                <var-switch variant size="16" :loading="changingAutostart" v-model="currentConfigAutostart" @change="(val) => handleSwitchChange(currentConfigData, 'autostart', val)" />
+                <var-switch variant size="18" :loading="changingAutostart" v-model="currentConfigAutostart" @change="(val) => handleSwitchChange(currentConfigData, 'autostart', val)" />
               </label>
               <span class="toggle-label" v-if="showMode === 0 && platform !== 'android'">{{ $t('config.autostart') }}</span>
-              <var-button variant="outlined" size="small" type="danger" @click="exitAddMode()" :loading="isDeletingConfig" v-if="showMode !== 0">
-                <var-icon name="close" :size="16" />
-                {{ $t('config.exitAdd') }}
-              </var-button>
-              <var-button type="primary" size="small" @click="saveConfig" auto-loading>{{ $t('config.save') }}</var-button>
-              <var-button size="small" icon round text @click="toggleToolbarMore" v-if="showMode === 0">
-                <var-icon :name="toolbarMoreOpen.length ? 'menu-open' : 'menu'" :size="20" />
-              </var-button>
             </div>
           </div>
-          <Transition name="panel">
-          <div class="toolbar-more-panel" v-if="toolbarMoreOpen.length && selectedConfig">
-            <div class="toolbar-more-content">
-              <div class="toolbar-more-row">
-                <var-button variant="outlined" size="small" type="primary" @click="showCreateDialog = true; showMode = 1;toggleToolbarMore()" v-if="showMode === 0">
-                  {{ $t('config.add') }}
-                </var-button>
-                <var-button variant="outlined" size="small" type="primary" @click="startEditName();toggleToolbarMore()" :loading="isRenaming" v-if="showMode === 0">
-                  <var-icon name="pencil-outline" :size="16" />
-                  {{ $t('config.rename') }}
-                </var-button>
-                <var-button variant="outlined" size="small" type="danger" @click="showDeleteDialog = true;toggleToolbarMore()" :loading="isDeletingConfig" v-if="showMode === 0">
-                  <var-icon name="delete-outline" :size="16" />
-                  {{ $t('config.delete') }}
-                </var-button>
-              </div>
-              <div class="toolbar-more-row">
-                <var-button variant="outlined" size="small" type="primary" @click="showShareConfigType = true;toggleToolbarMore()" v-if="showMode === 0">
-                  <var-icon name="share-variant-outline" :size="16" />
-                  {{ $t('config.shareNetwork') }}
-                </var-button>
-                <var-button variant="outlined" size="small" type="primary" @click="openCodePage();toggleToolbarMore()" auto-loading v-if="showMode === 0">
-                  <var-icon name="file-edit-outline" :size="16" />
-                  {{ $t('config.editFile') }}
-                </var-button>
-              </div>
-            </div>
+          <div class="toolbar-right" v-if="selectedConfig">
+            <var-button size="small" type="danger" @click="exitAddMode()" :loading="isDeletingConfig" v-if="showMode !== 0">{{ $t('config.exitAdd') }}</var-button>
+            <var-button type="primary" size="small" @click="saveConfig" auto-loading>{{ $t('config.save') }}</var-button>
+            <var-menu v-model:show="showMoreMenu" trigger="manual" placement="bottom-end" :offset-y="10" :offset-x="12" v-if="showMode === 0" popover-class="more-menu-popover">
+              <var-button text round class="column-btn" @click="showMoreMenu = !showMoreMenu">
+                <var-icon name="menu" size="20" color="var(--color-on-surface)" />
+              </var-button>
+              <template #menu>
+                <div class="more-menu">
+                  <var-button text block @click="showCreateDialog = true; showMode = 1; showMoreMenu = false">
+                    <svg-icon type="mdi" :path="mdiPlus" class="menu-icon"></svg-icon>
+                    <span>{{ $t('config.add') }}</span>
+                  </var-button>
+                  <var-button text block @click="startEditName(); showMoreMenu = false" :loading="isRenaming">
+                    <svg-icon type="mdi" :path="mdiSquareEditOutline" class="menu-icon"></svg-icon>
+                    <span>{{ $t('config.rename') }}</span>
+                  </var-button>
+                  <var-button text block @click="showShareConfigType = true; showMoreMenu = false">
+                    <svg-icon type="mdi" :path="mdiShareOutline" class="menu-icon"></svg-icon>
+                    <span>{{ $t('config.shareNetwork') }}</span>
+                  </var-button>
+                  <var-button text block @click="openCodePage(); showMoreMenu = false" auto-loading>
+                    <svg-icon type="mdi" :path="mdiDrawPen" class="menu-icon"></svg-icon>
+                    <span>{{ $t('config.editFile') }}</span>
+                  </var-button>
+                  <var-divider class="menu-divider" />
+                  <var-button text block @click="showDeleteDialog = true; showMoreMenu = false" :loading="isDeletingConfig" class="delete-btn">
+                    <svg-icon type="mdi" :path="mdiTrashCanOutline" class="menu-icon"></svg-icon>
+                    <span>{{ $t('config.delete') }}</span>
+                  </var-button>
+                </div>
+              </template>
+            </var-menu>
           </div>
-        </Transition>
         </div>
       </var-paper>
-
-      <div class="toolbar-more-backdrop" v-show="toolbarMoreOpen.length" @click="toolbarMoreOpen = ''"></div>
 
       <div class="content-area" v-if="selectedConfig || fastSettingMode">
         <var-form ref="form">
@@ -968,13 +917,13 @@
 import { copyToClipboard, readFromClipboard } from '../utils/clipboard.js'
 import { openDownloadUrl } from '../utils/download.js'
 import { validateIP, validateIPPort } from '../utils/validate.js'
-import { ref, computed, inject, onMounted, nextTick, watch } from 'vue'
+import { ref, computed, inject, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import toast from '../components/toast.js'
 import { api } from '../utils/api.js'
 import CodeEditor from '../components/CodeEditor.vue'
 import SvgIcon from '@jamescoyle/vue-icon'
-import { mdiEye, mdiEyeOff, mdiHomeEdit, mdiRouterNetwork, mdiMonitor, mdiLanConnect, mdiTuneVariant } from '@mdi/js'
+import { mdiEye, mdiEyeOff, mdiHomeEdit, mdiRouterNetwork, mdiMonitor, mdiLanConnect, mdiTuneVariant, mdiPlus, mdiDrawPen, mdiShareOutline, mdiSquareEditOutline, mdiTrashCanOutline  } from '@mdi/js'
 import { mdilPencil, mdilAccount, mdilLock } from '@mdi/light-js'
 import { Html5Qrcode } from 'html5-qrcode'
 import QRCode from 'qrcode'
@@ -1025,10 +974,7 @@ const isRenaming = ref(false)
 const showDeleteDialog = ref(false)
 const isDeletingConfig = ref(false)
 const showPublicPeerTip = ref(false)
-const toolbarMoreOpen = ref([])
-const toggleToolbarMore = () => {
-  toolbarMoreOpen.value = toolbarMoreOpen.value.length ? [] : ['more']
-}
+const showMoreMenu = ref(false)
 const lanIps = ref([])
 const platform = ref('android')
 const configList = ref([])
@@ -2234,58 +2180,28 @@ html.dark .sk-breathe {
   background: var(--color-surface-container) !important;
 }
 
-.toolbar-desktop {
-  display: flex;
-}
-
-.toolbar-mobile {
-  display: none;
-}
-
-.toolbar-divider {
-  display: none;
-}
-
 .toolbar-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
-.toolbar-group {
+.toolbar-left {
   display: flex;
   align-items: center;
-  gap: 6px;
-}
-
-.toolbar-main {
-  flex: 1;
-  flex-wrap: wrap;
   gap: 8px;
+  flex: 1;
+  flex-wrap: nowrap;
   min-width: 0;
 }
 
-.toolbar-status {
-  margin-left: auto;
-  gap: 12px;
-  flex-shrink: 0;
-}
-
-.toolbar-actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
-  padding-top: 8px;
-  margin-top: 8px;
-}
-
-.toolbar-toggles {
+.toolbar-right {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-shrink: 0;
 }
 
 .config-actions-group {
@@ -2298,6 +2214,10 @@ html.dark .sk-breathe {
 .config-actions-group .var-button {
   margin-left: 3px;
   margin-right: 3px;
+}
+
+.column-btn {
+  margin-left: auto;
 }
 
 .config-switcher {
@@ -3007,140 +2927,15 @@ html.dark .sk-breathe {
     overflow: visible !important;
   }
 
-  .toolbar-desktop {
-    display: none;
-  }
-
-  .toolbar-mobile {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .toolbar-mobile-top {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    width: 100%;
-  }
-
-  .toolbar-mobile-actions {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-left: auto;
-    min-width: 0;
-  }
-
-  .toolbar-mobile-actions .toggle-item {
-    gap: 3px;
-    flex-wrap: nowrap;
-  }
-
-  .toolbar-mobile-actions .toggle-label {
-    font-size: 11px;
-  }
-
-  .toolbar-more-panel {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    margin-top: 6px;
-    background: rgba(var(--color-surface-container-rgb, 255, 255, 255), 0.85);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border-radius: 16px;
-    box-shadow:
-      0 8px 32px rgba(0, 0, 0, 0.15),
-      inset 0 1px 0 rgba(255, 255, 255, 0.2);
-    padding: 12px 14px 14px;
-    z-index: 11;
-    border: none;
-    overflow: hidden;
-  }
-
-  .toolbar-more-panel::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 20%;
-    right: 20%;
-    height: 1px;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(255, 255, 255, 0.35),
-      transparent
-    );
-    pointer-events: none;
-    z-index: 1;
-  }
-
-  .toolbar-more-content {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-  }
-
-  .toolbar-more-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 14px;
-  }
-
-  .toolbar-more-row .var-button {
-    flex: 1;
-    min-width: 0;
-    font-size: 14px;
-    justify-content: center;
-    border-radius: 10px;
-    padding: 10px 12px;
-  }
-
-  .panel-enter-active,
-  .panel-leave-active {
-    transition: all 0.25s ease;
-  }
-  .panel-enter-from,
-  .panel-leave-to {
-    opacity: 0;
-    transform: translateY(-6px);
-  }
-
-  .toolbar-divider {
-    display: flex;
-  }
-
-  .toolbar-more-backdrop {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: radial-gradient(
-      ellipse 70% 55% at 50% 15%,
-      rgba(0, 0, 0, 0.15) 0%,
-      transparent 70%
-    );
-    backdrop-filter: blur(2px);
-    -webkit-backdrop-filter: blur(2px);
-    z-index: 9;
-  }
   .toolbar-row {
-    gap: 8px;
+    gap: 6px;
   }
 
-  .toolbar-main {
-    width: 100%;
+  .toolbar-left {
+    flex: 0 1 auto;
   }
 
-  .toolbar-status {
-    margin-left: 0;
-    width: 100%;
-    justify-content: space-between;
-  }
-
-  .toolbar-toggles {
+  .toolbar-right {
     margin-left: auto;
   }
 
@@ -3479,5 +3274,66 @@ html.dark .port-forward-row {
   .var-select-dropdown .peer-status-area {
     gap: 4px;
   }
+}
+
+/* ========== 更多菜单弹出层 ========== */
+.more-menu {
+  min-width: 170px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: transparent !important;
+  border-left: 1px solid transparent;
+  border-right: 1px solid transparent;
+  border-image: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.5), transparent) 1;
+}
+
+.more-menu .var-button {
+  display: inline-flex !important;
+  justify-content: flex-start;
+  padding: 10px 14px;
+  font-size: 14px;
+  border-radius: 10px;
+  gap: 98px;
+  color: var(--color-on-surface);
+  min-height: 44px;
+  background: transparent !important;
+}
+
+.more-menu .var-button:hover {
+  background: rgba(128, 128, 128, 0.15) !important;
+}
+
+.more-menu .menu-icon {
+  width: 24px;
+  height: 24px;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.more-menu .menu-divider {
+  margin: 4px 0;
+}
+
+.more-menu .delete-btn {
+  color: var(--color-danger) !important;
+}
+
+/* 更多菜单弹出层毛玻璃 */
+.more-menu-popover,
+.more-menu-popover .var-popover__content {
+  background: rgba(var(--color-surface-container-rgb, 226, 236, 250), 0.25) !important;
+  backdrop-filter: blur(24px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(160%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
+}
+
+html.dark .more-menu-popover,
+html.dark .more-menu-popover .var-popover__content {
+  background: rgba(var(--color-surface-container-rgb, 51, 65, 85), 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
 }
 </style>

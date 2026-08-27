@@ -159,6 +159,7 @@ export default {
     refreshSpeed: 'Actualisation',
     nodeType: 'Type de nœud',
     displayMode: 'Mode d\'affichage',
+    relayPath: 'Chemin de relais',
     mobileCardList: 'Liste en cartes sur petit écran',
     refreshSpeedPlaceholder: 'Choisir la fréquence',
     second: 's',
@@ -197,6 +198,7 @@ export default {
   },
   config: {
     selectConfig: 'Choisir config',
+    moreOptions: 'Plus d\'options',
     noConfig: 'Aucune config',
     noConfigHint: 'Créez votre première configuration',
     quickAdd: 'Ajout rapide',

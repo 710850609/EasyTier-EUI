@@ -231,6 +231,7 @@ export default {
     refreshSpeed: '重新整理',
     nodeType: '節點類型',
     displayMode: '顯示模式',
+    relayPath: '中繼路徑',
     mobileCardList: '小螢幕使用卡片列表',
     refreshSpeedPlaceholder: '請選擇更新頻率',
     second: '秒',
@@ -281,6 +282,7 @@ export default {
   },
   config: {
     selectConfig: '選擇設定',
+    moreOptions: '更多操作',
     noConfig: '暫無設定',
     noConfigHint: '建立第一個設定開始使用 EasyTier',
     quickAdd: '快速新增',

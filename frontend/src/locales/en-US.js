@@ -231,6 +231,7 @@ export default {
     refreshSpeed: 'Refresh',
     nodeType: 'Node Type',
     displayMode: 'Display Mode',
+    relayPath: 'Relay Path',
     mobileCardList: 'Use card list on small screen',
     refreshSpeedPlaceholder: 'Select refresh rate',
     second: 's',
@@ -281,6 +282,7 @@ export default {
   },
   config: {
     selectConfig: 'Select Config',
+    moreOptions: 'More Options',
     noConfig: 'No Config',
     noConfigHint: 'Create your first config to start using EasyTier',
     quickAdd: 'Quick Add',

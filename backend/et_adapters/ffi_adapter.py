@@ -221,7 +221,7 @@ class FfiAdapter(IEasyTierAdapter):
     def status(self, instance_name: str) -> bool:
         return instance_name in self._instance_set
 
-    def get_peers(self, instance_name: str) -> list[dict]:
+    def get_peers(self, instance_name: str, relay_path: bool = False) -> list[dict]:
         raw = self._collect_via_raw_ffi()
         instance_infos = raw.get(instance_name, {})
         peers = []
@@ -343,10 +343,6 @@ class FfiAdapter(IEasyTierAdapter):
         addr = (virtual_ipv4.get('address') or {}).get('addr', 0)
         addr_str = self._addr_to_ipv4(addr)
         network_len = virtual_ipv4.get('network_length') or '24'
-        if instance_name in self._enable_magic_dns_set:
-            magic_dns = "100.100.100.101"
-            info['dns_servers'].append(magic_dns)
-            info['routes'].append(magic_dns)
         info['virtual_ipv4'] = f"{addr_str}/{network_len}" if addr_str else ""
         routes = instance_infos.get('routes') or []
         for route in routes:
@@ -359,6 +355,10 @@ class FfiAdapter(IEasyTierAdapter):
         for r in manual_routes:
             if r not in info['routes']:
                 info['routes'].append(r)
+        if instance_name in self._enable_magic_dns_set:
+            magic_dns = "100.100.100.101/32"
+            info['dns_servers'].append(magic_dns)
+            info['routes'].append(magic_dns)
         for peer in (instance_infos.get('peers') or []):
             for conn in (peer.get('conns') or []):
                 stats = conn.get('stats') or {}

@@ -51,8 +51,8 @@ class CoreAdapter(IEasyTierAdapter):
         else:
             return self._foreground.status(instance_name)
 
-    def get_peers(self, instance_name: str) -> list[dict]:
-        return self._foreground.get_peers(instance_name)
+    def get_peers(self, instance_name: str, relay_path: bool = False) -> list[dict]:
+        return self._foreground.get_peers(instance_name, relay_path)
 
 
     def change_log_level(self, log_level: str, **kwargs) -> None:

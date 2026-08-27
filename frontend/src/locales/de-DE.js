@@ -159,6 +159,7 @@ export default {
     refreshSpeed: 'Aktualisierung',
     nodeType: 'Knotentyp',
     displayMode: 'Anzeigemodus',
+    relayPath: 'Relaispfad',
     mobileCardList: 'Kartenliste auf kleinem Bildschirm',
     refreshSpeedPlaceholder: 'Aktualisierungsrate wählen',
     second: 's',
@@ -197,6 +198,7 @@ export default {
   },
   config: {
     selectConfig: 'Konfig wählen',
+    moreOptions: 'Mehr Optionen',
     noConfig: 'Keine Konfig',
     noConfigHint: 'Erstellen Sie Ihre erste Konfiguration',
     quickAdd: 'Schnell hinzufügen',

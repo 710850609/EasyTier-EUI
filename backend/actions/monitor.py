@@ -13,4 +13,6 @@ def list(params, *args, **kwargs):
     """
     profile, _ = Validator.not_empty(params, 'profile', 'validate.profile_required')
     profile = Validator.check_profile(profile)
-    return get_facade().get_peers(profile)
+    relay_path = params.get('relay_path', 'false')
+    relay_path = relay_path.lower() == 'true'
+    return get_facade().get_peers(profile, relay_path)

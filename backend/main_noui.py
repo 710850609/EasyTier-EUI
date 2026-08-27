@@ -64,7 +64,7 @@ def stop_server(handle: ServerHandle, port: int):
     except KeyboardInterrupt:
         pass
     except Exception as e:
-        logger.warning(f"HTTP 关闭请求失败: {e}")
+        logger.exception(f"HTTP 关闭请求失败: {e}")
     finally:
         if handle._server is not None:
             try:
@@ -277,7 +277,7 @@ def run():
         # 恢复原始信号处理器
         signal.signal(signal.SIGINT, original_sigint)
         try:
-            stop_server(handle, args.port)
+            stop_server(handle, port)
         except KeyboardInterrupt:
             pass
 

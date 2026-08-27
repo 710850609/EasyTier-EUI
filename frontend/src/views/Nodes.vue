@@ -74,86 +74,6 @@
       </div>
     </var-paper>
 
-    <!-- 表格设置面板 -->
-    <var-popup v-model:show="showFilterMenu" :position="isMobile ? 'bottom' : 'right'">
-      <var-paper class="settings-panel">
-        <div class="panel-header">
-          <span class="panel-title">{{ $t('nodes.tableSettings') }}</span>
-          <var-button text round class="panel-close-btn" @click="showFilterMenu = false">
-            <var-icon name="close" size="20" />
-          </var-button>
-        </div>
-        <div class="panel-body">
-          <!-- 显示列 -->
-          <div class="settings-section">
-            <div class="section-title">{{ $t('nodes.dataSelect') }}</div>
-            <div class="checkbox-grid">
-              <var-checkbox
-                v-for="col in allColumns"
-                :key="col.key"
-                :model-value="selectedColumns.includes(col.key)"
-                :disabled="col.key === 'ipv4'"
-                @change="(val) => toggleColumn(col.key, val)"
-              >
-                {{ col.label }}
-              </var-checkbox>
-            </div>
-          </div>
-
-          <var-divider />
-
-          <!-- 节点类型 -->
-          <div class="settings-section">
-            <div class="section-title">{{ $t('nodes.nodeType') }}</div>
-            <var-checkbox-group v-model="selectedNodeTypes" direction="horizontal">
-              <var-checkbox checked-value="normal">
-                <div class="type-option">
-                  <var-icon name="server" size="18" color="var(--color-primary)" />
-                  <span>{{ $t('nodes.normalNodes') }}</span>
-                </div>
-              </var-checkbox>
-              <var-checkbox checked-value="server">
-                <div class="type-option">
-                  <var-icon name="cloud" size="18" color="var(--color-success)" />
-                  <span>{{ $t('nodes.serverNodes') }}</span>
-                </div>
-              </var-checkbox>
-            </var-checkbox-group>
-          </div>
-
-          <var-divider />
-
-          <!-- 刷新速度 -->
-          <div class="settings-section">
-            <div class="section-title">{{ $t('nodes.refreshSpeed') }}</div>
-            <var-select variant="outlined" :placeholder="$t('nodes.refreshSpeedPlaceholder')" v-model="refreshStep" size="small" blur-color="var(--field-decorator-focus-color)">
-              <var-option v-for="item in refreshStepList" :label="item.label" :value="item.key" />
-            </var-select>
-          </div>
-
-          <var-divider />
-
-          <!-- 显示模式 - 移动端时显示 -->
-          <div v-if="isMobile" class="settings-section">
-            <div class="section-title">{{ $t('nodes.displayMode') }}</div>
-            <div class="switch-row">
-              <span>{{ $t('nodes.mobileCardList') }}</span>
-              <var-checkbox :model-value="useMobileList" @change="toggleMobileList" />
-            </div>
-          </div>
-
-          <var-divider />
-
-          <!-- 重置 -->
-          <div class="settings-section reset-section">
-            <var-button text block @click="resetSettings">
-              {{ $t('nodes.resetDefault') }}
-            </var-button>
-          </div>
-        </div>
-      </var-paper>
-    </var-popup>  
-
     <!-- 数据表格 -->
     <var-paper class="table-container" :elevation="0">
       <div class="table-wrapper" ref="tableWrapper">
@@ -210,14 +130,27 @@
             <tr v-if="topSpacerHeight > 0" aria-hidden="true">
               <td :colspan="visibleColumns.length" :style="{ height: topSpacerHeight + 'px', padding: 0, border: 'none' }"></td>
             </tr>
-            <tr v-for="node in virtualFilteredNodes" :key="node.id">
+            <template v-for="node in virtualFilteredNodes" :key="node.id">
+            <tr :class="{ 'has-relay': node.relay && node.relay.length && expandedRelayNodes.has(node.id) }">
               <td 
                 v-for="(col, index) in visibleColumns" 
                 :key="col.key"
                 :class="{ 'fixed-col': index === 0 }"
               >
                 <template v-if="col.key === 'cost'">
+                  <span 
+                    v-if="node.relay && node.relay.length" 
+                    class="relay-toggle" 
+                    @click="toggleRelay(node.id)"
+                  >
+                    <var-badge 
+                      :type="node.cost === 'Local' ? 'info' : (node.cost === 'p2p' ? 'success' : 'primary')" 
+                      :value="parseNode(node, col.key)"
+                    />
+                    <span class="relay-arrow">{{ expandedRelayNodes.has(node.id) ? '▾' : '▸' }}</span>
+                  </span>
                   <var-badge 
+                    v-else
                     :type="node.cost === 'Local' ? 'info' : (node.cost === 'p2p' ? 'success' : 'primary')" 
                     :value="parseNode(node, col.key)"
                   />
@@ -238,6 +171,22 @@
                 </template>
               </td>
             </tr>
+            <tr v-if="node.relay && node.relay.length && expandedRelayNodes.has(node.id)" class="relay-row">
+              <td></td>
+              <td :colspan="visibleColumns.length - 1">
+                <div class="relay-hop">
+                  <span class="relay-connector"></span>
+                  <span class="relay-hop-name">Local</span>
+                </div>
+                <div v-for="(hop, i) in node.relay" :key="i" class="relay-hop" :style="{ paddingLeft: (i + 1) * 16 + 'px' }">
+                  <span class="relay-connector">{{ i === node.relay.length - 1 ? '└' : '├' }}</span>
+                  <span class="relay-hop-name">{{ hop.hostname || '?' }}</span>
+                  <span v-if="hop.lat_ms !== null && hop.lat_ms !== undefined && hop.lat_ms !== '-'" class="relay-hop-info">{{ hop.lat_ms }}ms</span>
+                  <span v-if="hop.remote_addrs && hop.remote_addrs.length" class="relay-hop-info">{{ hop.remote_addrs[0] }}</span>
+                </div>
+              </td>
+            </tr>
+          </template>
             <tr v-if="bottomSpacerHeight > 0" aria-hidden="true">
               <td :colspan="visibleColumns.length" :style="{ height: bottomSpacerHeight + 'px', padding: 0, border: 'none' }"></td>
             </tr>
@@ -266,8 +215,19 @@
               </div>
             </div>
             <div class="node-card-info">
+              <span 
+                v-if="visibleColumnsMap.cost && node.relay && node.relay.length"
+                class="relay-toggle" 
+                @click="toggleRelay(node.id)"
+              >
+                <var-badge 
+                  :type="node.cost === 'Local' ? 'info' : (node.cost === 'p2p' ? 'success' : 'primary')" 
+                  :value="parseNode(node, 'cost')"
+                />
+                <span class="relay-arrow">{{ expandedRelayNodes.has(node.id) ? '▾' : '▸' }}</span>
+              </span>
               <var-badge 
-                v-if="visibleColumnsMap.cost"
+                v-else-if="visibleColumnsMap.cost"
                 :type="node.cost === 'Local' ? 'info' : (node.cost === 'p2p' ? 'success' : 'primary')" 
                 :value="parseNode(node, 'cost')"
               />
@@ -280,6 +240,18 @@
               <span v-if="visibleColumnsMap.tunnel_proto && node.tunnel_proto && node.tunnel_proto !== '-'" class="info-chip">
                 {{ node.tunnel_proto }}
               </span>
+              <div v-if="node.relay && node.relay.length && expandedRelayNodes.has(node.id)" class="relay-path-mobile">
+                <div class="relay-hop">
+                  <span class="relay-connector"></span>
+                  <span class="relay-hop-name">Local</span>
+                </div>
+                <div v-for="(hop, i) in node.relay" :key="i" class="relay-hop" :style="{ paddingLeft: (i + 1) * 16 + 'px' }">
+                  <span class="relay-connector">{{ i === node.relay.length - 1 ? '└' : '├' }}</span>
+                  <span class="relay-hop-name">{{ hop.hostname || '?' }}</span>
+                  <span v-if="hop.lat_ms !== null && hop.lat_ms !== undefined && hop.lat_ms !== '-'" class="relay-hop-info">{{ hop.lat_ms }}ms</span>
+                  <span v-if="hop.remote_addrs && hop.remote_addrs.length" class="relay-hop-info">{{ hop.remote_addrs[0] }}</span>
+                </div>
+              </div>
             </div>
             <div v-if="visibleColumnsMap.nat_type || visibleColumnsMap.rx_bytes || visibleColumnsMap.tx_bytes || !node.ipv4" class="node-card-meta">
               <span v-if="visibleColumnsMap.nat_type && node.nat_type" class="info-chip nat-chip">
@@ -311,6 +283,89 @@
         </div>
       </div>
     </var-paper>
+
+    <!-- 表格设置面板 -->
+    <var-popup v-model:show="showFilterMenu" :position="isMobile ? 'bottom' : 'right'">
+      <var-paper class="settings-panel">
+        <div class="panel-header">
+          <span class="panel-title">{{ $t('nodes.tableSettings') }}</span>
+          <var-button text round class="panel-close-btn" @click="showFilterMenu = false">
+            <var-icon name="close" size="20" />
+          </var-button>
+        </div>
+        <div class="panel-body">
+          <!-- 显示列 -->
+          <div class="settings-section">
+            <div class="section-title">{{ $t('nodes.dataSelect') }}</div>
+            <div class="checkbox-grid">
+              <var-checkbox
+                v-for="col in allColumns"
+                :key="col.key"
+                :model-value="selectedColumns.includes(col.key)"
+                :disabled="col.key === 'ipv4'"
+                @change="(val) => toggleColumn(col.key, val)"
+              >
+                {{ col.label }}
+              </var-checkbox>
+              <var-checkbox class="relay-path-checkbox" v-model="showRelayPath">
+                {{ $t('nodes.relayPath') }}
+              </var-checkbox>
+            </div>
+          </div>
+
+          <var-divider />
+
+          <!-- 节点类型 -->
+          <div class="settings-section">
+            <div class="section-title">{{ $t('nodes.nodeType') }}</div>
+            <var-checkbox-group v-model="selectedNodeTypes" direction="horizontal">
+              <var-checkbox checked-value="normal">
+                <div class="type-option">
+                  <var-icon name="server" size="18" color="var(--color-primary)" />
+                  <span>{{ $t('nodes.normalNodes') }}</span>
+                </div>
+              </var-checkbox>
+              <var-checkbox checked-value="server">
+                <div class="type-option">
+                  <var-icon name="cloud" size="18" color="var(--color-success)" />
+                  <span>{{ $t('nodes.serverNodes') }}</span>
+                </div>
+              </var-checkbox>
+            </var-checkbox-group>
+          </div>
+
+          <var-divider />
+
+          <!-- 刷新速度 -->
+          <div class="settings-section">
+            <div class="section-title">{{ $t('nodes.refreshSpeed') }}</div>
+            <var-select variant="outlined" :placeholder="$t('nodes.refreshSpeedPlaceholder')" v-model="refreshStep" size="small" blur-color="var(--field-decorator-focus-color)">
+              <var-option v-for="item in refreshStepList" :label="item.label" :value="item.key" />
+            </var-select>
+          </div>
+
+          <var-divider />
+
+          <!-- 显示模式 - 移动端时显示 -->
+          <div v-if="isMobile" class="settings-section">
+            <div class="section-title">{{ $t('nodes.displayMode') }}</div>
+            <div class="switch-row">
+              <span>{{ $t('nodes.mobileCardList') }}</span>
+              <var-checkbox :model-value="useMobileList" @change="toggleMobileList" />
+            </div>
+          </div>
+
+          <var-divider v-if="isMobile" />
+
+          <!-- 重置 -->
+          <div class="settings-section reset-section">
+            <var-button text block @click="resetSettings">
+              {{ $t('nodes.resetDefault') }}
+            </var-button>
+          </div>
+        </div>
+      </var-paper>
+    </var-popup>
 
     <var-dialog v-model:show="showFastSettingTip" :close-on-click-overlay="false" 
       @confirm="openConfigView(true)" @cancel="openConfigView(false)"
@@ -367,6 +422,8 @@ const getDefaultColumns = () => {
 const selectedColumns = ref(getDefaultColumns())
 // 默认选中的节点类型
 const selectedNodeTypes = ref(['normal'])
+// 是否显示中继路径
+const showRelayPath = ref(false)
 // 刷新速度
 const refreshStep = ref(3)
 // 移动端列表模式（仅移动端有效，PC 端强制为 false）
@@ -382,6 +439,17 @@ const selectedConfig = ref('')
 const serviceRunning = ref(false)
 const serviceOperating = ref(false)
 const pendingAction = ref('')
+const expandedRelayNodes = ref(new Set())
+
+const toggleRelay = (nodeId) => {
+  const s = expandedRelayNodes.value
+  if (s.has(nodeId)) {
+    s.delete(nodeId)
+  } else {
+    s.add(nodeId)
+  }
+  expandedRelayNodes.value = new Set(s)
+}
 
 // 获取当前模式对应的存储 key
 const getSettingsKey = () => {
@@ -400,6 +468,7 @@ const loadSettings = () => {
 
   selectedColumns.value = settings.columns || getDefaultColumns()
   selectedNodeTypes.value = settings.nodeTypes || ['normal']
+  showRelayPath.value = settings.relayPath || false
   refreshStep.value = settings.refreshStep || 3
   useMobileList.value = isMobile.value ? (settings.cardList ?? isMobile.value) : false
   settingsLoaded.value = true
@@ -411,6 +480,7 @@ watchEffect(() => {
   const settings = {
     columns: selectedColumns.value,
     nodeTypes: selectedNodeTypes.value,
+    relayPath: showRelayPath.value,
     refreshStep: refreshStep.value,
   }
   if (isMobile.value) {
@@ -494,6 +564,7 @@ const toggleMobileList = (val) => {
 const resetSettings = () => {
   selectedColumns.value = getDefaultColumns()
   selectedNodeTypes.value = ['normal']
+  showRelayPath.value = false
   refreshStep.value = 3
   if (isMobile.value) {
     useMobileList.value = isMobile.value
@@ -644,6 +715,9 @@ const fetchNodes = async () => {
     if (selectedConfig.value) {
       params.profile = selectedConfig.value
     }
+    if (showRelayPath.value) {
+      params.relay_path = true
+    }
     const data = await api.monitor.getList(params);
     if (isUnmounted.value) return
     let peersData = []
@@ -655,12 +729,15 @@ const fetchNodes = async () => {
       console.error('Unexpected response format:', data)
     }
     peersData.sort((a, b) => {
+      if (a.cost === 'Local' && b.cost !== 'Local') return -1
+      if (a.cost !== 'Local' && b.cost === 'Local') return 1
       const hasIpA = a.ipv4 && a.ipv4.trim() !== ''
       const hasIpB = b.ipv4 && b.ipv4.trim() !== ''
-      if (!hasIpA && !hasIpB) return 0
-      if (!hasIpA) return 1
-      if (!hasIpB) return -1
-      return a.ipv4 > b.ipv4
+      if (hasIpA && !hasIpB) return -1
+      if (!hasIpA && hasIpB) return 1
+      const ipCmp = a.ipv4.localeCompare(b.ipv4, undefined, { numeric: true })
+      if (ipCmp !== 0) return ipCmp
+      return (a.hostname || '').localeCompare(b.hostname || '')
     })
     allNodes.value = peersData
     peersData.forEach(peer => {
@@ -982,14 +1059,17 @@ onUnmounted(() => {
   flex-direction: column;
   height: 100%;
   overflow: hidden;
+  background: var(--color-surface-container-highest);
+  border-radius: 16px 0 0 16px;
 }
 
 .settings-panel .panel-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   padding: 16px 20px 12px;
   flex-shrink: 0;
+  position: relative;
 }
 
 .settings-panel .panel-title {
@@ -999,7 +1079,8 @@ onUnmounted(() => {
 }
 
 .settings-panel .panel-close-btn {
-  margin-right: -8px;
+  position: absolute;
+  right: 12px;
 }
 
 .settings-panel .panel-body {
@@ -1009,16 +1090,14 @@ onUnmounted(() => {
 }
 
 .settings-section {
-  padding: 8px 0;
+  padding: 8px 8px;
 }
 
 .section-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--color-on-surface-variant);
-  margin-bottom: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-on-surface);
+  margin-bottom: 12px;
 }
 
 .checkbox-grid {
@@ -1031,6 +1110,10 @@ onUnmounted(() => {
   margin: 0;
 }
 
+.relay-path-checkbox {
+  margin-top: 8px;
+}
+
 .reset-section {
   padding-top: 4px;
 }
@@ -1038,6 +1121,12 @@ onUnmounted(() => {
 .reset-section .var-button {
   color: var(--color-on-surface-variant);
   font-size: 13px;
+  background: var(--color-surface-container-highest);
+  border-radius: 8px;
+  margin-top: 4px;
+}
+.reset-section .var-button:hover {
+  background: var(--color-surface-container-high);
 }
 
 .switch-row {
@@ -1067,11 +1156,11 @@ onUnmounted(() => {
   }
 
   .settings-panel .panel-body {
-    padding: 0 16px 16px;
+    padding: 16px 16px 20px;
   }
 
   .section-title {
-    font-size: 12px;
+    font-size: 15px;
   }
 
   .checkbox-grid {
@@ -1201,6 +1290,77 @@ td {
 
 .cell-text.loss-high {
   color: var(--color-danger);
+}
+
+.relay-toggle {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  user-select: none;
+}
+
+.relay-toggle:hover {
+  opacity: 0.8;
+}
+
+.relay-arrow {
+  font-size: 15px;
+  color: var(--color-text-tertiary, #999);
+}
+
+.relay-row td {
+  border: none;
+  border-bottom: 1px solid var(--color-outline-variant);
+  padding: 4px 12px 6px 12px;
+  background: var(--color-surface-container-low, #f5f5f5);
+}
+
+.has-relay td {
+  border-bottom: none;
+}
+
+.relay-hop {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--color-text-secondary, #666);
+}
+
+.relay-connector {
+  width: 14px;
+  text-align: center;
+  color: var(--color-text-tertiary, #bbb);
+  flex-shrink: 0;
+}
+
+.relay-hop-name {
+  font-weight: 500;
+  color: var(--color-text-primary, #333);
+  min-width: 0;
+}
+
+.relay-hop-info {
+  color: var(--color-text-tertiary, #999);
+  white-space: nowrap;
+}
+
+html.dark .relay-row td {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+html.dark .relay-hop-name {
+  color: #ddd;
+}
+
+html.dark .relay-hop-info {
+  color: #888;
+}
+
+html.dark .relay-connector {
+  color: #555;
 }
 
 html.dark .cell-text.lat-medium {
@@ -1486,6 +1646,17 @@ html.dark .sk-chip {
   flex-shrink: 0;
   font-size: 11px;
   padding: 2px 8px;
+}
+
+.relay-path-mobile {
+  width: 100%;
+  padding-top: 4px;
+  border-top: 1px dashed var(--color-outline-variant);
+}
+
+.relay-path-mobile .relay-hop {
+  font-size: 11px;
+  line-height: 1.5;
 }
 
 .info-chip {

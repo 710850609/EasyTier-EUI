@@ -286,6 +286,15 @@ html.dark .var-popup__content[var-popup-cover] {
   z-index: 1;
 }
 
+/* var-popup left/right 安全区域适配 */
+.var-popup__content.var-popup--left,
+.var-popup__content.var-popup--right {
+  padding-top: var(--sat, 0px);
+  padding-bottom: var(--sab, 0px);
+}
+.var-popup__content.var-popup--bottom {
+  padding-bottom: var(--sab, 0px);
+}
 /* 顶部弹出层：高光条移到底部，发光边框渐变反转，视觉聚焦在屏幕中间 */
 .var-popup__content.var-popup--top {
   padding-top: var(--sat, 0px);
