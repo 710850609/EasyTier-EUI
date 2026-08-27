@@ -251,16 +251,20 @@
                   <span class="relay-connector"></span>
                   <span class="relay-hop-name">Local</span>
                 </div>
-                <div v-for="(hop, i) in node.relay" :key="i" class="relay-hop" :style="{ paddingLeft: (i + 1) * 16 + 'px' }">
-                  <span class="relay-connector">{{ i === node.relay.length - 1 ? '└' : '├' }}</span>
-                  <span class="relay-hop-name">{{ hop.hostname || '?' }}</span>
-                  <span
-                    v-if="hop.lat_ms !== null && hop.lat_ms !== undefined && hop.lat_ms !== '-'"
-                    class="relay-hop-latency"
-                    :class="relayLatencyClass(hop.lat_ms)"
-                  >{{ hop.lat_ms }}ms</span>
+                <div v-for="(hop, i) in node.relay" :key="i" class="relay-hop">
+                  <div class="relay-hop-line">
+                    <span class="relay-connector">{{ i === node.relay.length - 1 ? '└' : '├' }}</span>
+                    <span class="relay-hop-name">{{ hop.hostname || '?' }}</span>
+                    <span
+                      v-if="hop.lat_ms !== null && hop.lat_ms !== undefined && hop.lat_ms !== '-'"
+                      class="relay-hop-latency"
+                      :class="relayLatencyClass(hop.lat_ms)"
+                    >{{ hop.lat_ms }}ms</span>
+                  </div>
                   <var-tooltip v-if="hop.remote_addrs && hop.remote_addrs.length" :content="hop.remote_addrs[0]">
-                    <span class="relay-hop-url">{{ formatRelayUrl(hop.remote_addrs[0]) }}</span>
+                    <div class="relay-hop-url-line">
+                      <span class="relay-hop-url">{{ formatRelayUrl(hop.remote_addrs[0]) }}</span>
+                    </div>
                   </var-tooltip>
                 </div>
               </div>
@@ -1732,6 +1736,32 @@ html.dark .sk-chip {
 .relay-path-mobile .relay-hop {
   font-size: 11px;
   line-height: 1.5;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  gap: 4px;
+}
+
+.relay-path-mobile .relay-connector {
+  width: 10px;
+}
+
+.relay-path-mobile .relay-hop:has(.relay-hop-line) {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding-left: 20px;
+}
+
+.relay-path-mobile .relay-hop-line {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.relay-path-mobile .relay-hop-url-line {
+  display: flex;
+  padding-left: 14px;
 }
 
 .info-chip {
