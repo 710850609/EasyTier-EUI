@@ -181,8 +181,14 @@
                 <div v-for="(hop, i) in node.relay" :key="i" class="relay-hop" :style="{ paddingLeft: (i + 1) * 16 + 'px' }">
                   <span class="relay-connector">{{ i === node.relay.length - 1 ? '└' : '├' }}</span>
                   <span class="relay-hop-name">{{ hop.hostname || '?' }}</span>
-                  <span v-if="hop.lat_ms !== null && hop.lat_ms !== undefined && hop.lat_ms !== '-'" class="relay-hop-info">{{ hop.lat_ms }}ms</span>
-                  <span v-if="hop.remote_addrs && hop.remote_addrs.length" class="relay-hop-info">{{ hop.remote_addrs[0] }}</span>
+                  <span
+                    v-if="hop.lat_ms !== null && hop.lat_ms !== undefined && hop.lat_ms !== '-'"
+                    class="relay-hop-latency"
+                    :class="relayLatencyClass(hop.lat_ms)"
+                  >{{ hop.lat_ms }}ms</span>
+                  <var-tooltip v-if="hop.remote_addrs && hop.remote_addrs.length" :content="hop.remote_addrs[0]">
+                    <span class="relay-hop-url">{{ formatRelayUrl(hop.remote_addrs[0]) }}</span>
+                  </var-tooltip>
                 </div>
               </td>
             </tr>
@@ -248,8 +254,14 @@
                 <div v-for="(hop, i) in node.relay" :key="i" class="relay-hop" :style="{ paddingLeft: (i + 1) * 16 + 'px' }">
                   <span class="relay-connector">{{ i === node.relay.length - 1 ? '└' : '├' }}</span>
                   <span class="relay-hop-name">{{ hop.hostname || '?' }}</span>
-                  <span v-if="hop.lat_ms !== null && hop.lat_ms !== undefined && hop.lat_ms !== '-'" class="relay-hop-info">{{ hop.lat_ms }}ms</span>
-                  <span v-if="hop.remote_addrs && hop.remote_addrs.length" class="relay-hop-info">{{ hop.remote_addrs[0] }}</span>
+                  <span
+                    v-if="hop.lat_ms !== null && hop.lat_ms !== undefined && hop.lat_ms !== '-'"
+                    class="relay-hop-latency"
+                    :class="relayLatencyClass(hop.lat_ms)"
+                  >{{ hop.lat_ms }}ms</span>
+                  <var-tooltip v-if="hop.remote_addrs && hop.remote_addrs.length" :content="hop.remote_addrs[0]">
+                    <span class="relay-hop-url">{{ formatRelayUrl(hop.remote_addrs[0]) }}</span>
+                  </var-tooltip>
                 </div>
               </div>
             </div>
@@ -449,6 +461,19 @@ const toggleRelay = (nodeId) => {
     s.add(nodeId)
   }
   expandedRelayNodes.value = new Set(s)
+}
+
+const relayLatencyClass = (latMs) => {
+  const val = parseFloat(latMs)
+  if (isNaN(val) || val <= 0) return ''
+  if (val < 60) return 'lat-low'
+  if (val <= 150) return 'lat-medium'
+  return 'lat-high'
+}
+
+const formatRelayUrl = (url) => {
+  if (!url) return ''
+  return url
 }
 
 // 获取当前模式对应的存储 key
@@ -1342,9 +1367,44 @@ td {
   min-width: 0;
 }
 
-.relay-hop-info {
+.relay-hop-latency {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 5px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.6;
+  white-space: nowrap;
+  flex-shrink: 0;
+  background: rgba(76, 175, 80, 0.1);
+  color: #388e3c;
+}
+
+.relay-hop-latency.lat-low {
+  background: rgba(76, 175, 80, 0.1);
+  color: #388e3c;
+}
+
+.relay-hop-latency.lat-medium {
+  background: rgba(255, 152, 0, 0.1);
+  color: #e65100;
+}
+
+.relay-hop-latency.lat-high {
+  background: rgba(244, 67, 54, 0.1);
+  color: #c62828;
+}
+
+.relay-hop-url {
+  font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+  font-size: 10px;
   color: var(--color-text-tertiary, #999);
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+  flex-shrink: 1;
 }
 
 html.dark .relay-row td {
@@ -1355,8 +1415,23 @@ html.dark .relay-hop-name {
   color: #ddd;
 }
 
-html.dark .relay-hop-info {
-  color: #888;
+html.dark .relay-hop-latency.lat-low {
+  background: rgba(76, 175, 80, 0.15);
+  color: #81c784;
+}
+
+html.dark .relay-hop-latency.lat-medium {
+  background: rgba(255, 152, 0, 0.15);
+  color: #ffb74d;
+}
+
+html.dark .relay-hop-latency.lat-high {
+  background: rgba(244, 67, 54, 0.15);
+  color: #ef9a9a;
+}
+
+html.dark .relay-hop-url {
+  color: #777;
 }
 
 html.dark .relay-connector {

@@ -232,6 +232,7 @@ class FfiAdapter(IEasyTierAdapter):
             ipv4 = self._addr_to_ipv4(addr)
             network_len = ipv4_addr.get('network_length') or ''
             cidr = f"{ipv4}/{network_len}" if ipv4 else ''
+            stun = my_node_info.get('stun_info', {})
             peers.append({
                 'ipv4': ipv4,
                 'cidr': cidr,
@@ -239,62 +240,91 @@ class FfiAdapter(IEasyTierAdapter):
                 'version': my_node_info.get('version') or '',
                 'cost': 'Local',
                 'tunnel_proto': '-',
-                'lat_ms': "-",
-                'loss_rate': "-",
-                'rx_bytes': self._humanize_bytes(0),
-                'tx_bytes': self._humanize_bytes(0),
-                'nat_type': self._format_nat_type(my_node_info.get('stun_info', {}).get('udp_nat_type', 0)),
+                'lat_ms': '-',
+                'loss_rate': '-',
+                'rx_bytes': '-',
+                'tx_bytes': '-',
+                'nat_type': self._format_nat_type(stun.get('udp_nat_type', 0)),
+                'id': str(my_node_info.get('peer_id', '')),
             })
+
+        seen = set()
+        peer_route_map = {}
         for pair in instance_infos.get('peer_route_pairs', []):
             route = pair.get('route') or {}
             peer = pair.get('peer') or {}
-            conns = peer.get('conns') or []
-            default_conn_id = peer.get('default_conn_id', '')
-            first_conn = conns[0] if conns else {}
+            if not route:
+                continue
+            pid = peer.get('peer_id') or route.get('peer_id')
+            if pid is None:
+                continue
+            peer_route_map[pid] = (pair, peer, route)
 
-            tunnel_types = []
-            latency_us = 9999999
-            rx_bytes_total = 0
-            tx_bytes_total = 0
-            for c in conns:
-                t = self._format_tunnel_type(c.get('tunnel') or {})
-                if t and t not in tunnel_types:
-                    tunnel_types.append(t)
-                stats = c.get('stats') or {}
-                if stats.get('latency_us', 0):
-                    conn_id = c.get('conn_id', '')
-                    if conn_id and conn_id == default_conn_id:
-                        latency_us = stats['latency_us']
-                    elif stats['latency_us'] < latency_us:
-                        latency_us = stats['latency_us']
-                rx_bytes_total += stats.get('rx_bytes', 0)
-                tx_bytes_total += stats.get('tx_bytes', 0)
-            tunnel_proto = ', '.join(tunnel_types) if tunnel_types else ''
-
-            cost = route.get('cost', 0)
-            if cost == 1:
-                lat_ms = self._latency_to_ms(latency_us)
-            else:
-                path_lat = route.get('path_latency_latency_first', 0)
-                lat_ms = path_lat if path_lat else self._latency_to_ms(latency_us)
-
+        for pid, (pair, peer, route) in peer_route_map.items():
+            if pid in seen:
+                continue
+            seen.add(pid)
             ipv4_addr = route.get('ipv4_addr') or {}
             ipv4 = self._addr_to_ipv4(ipv4_addr.get('address', {}).get('addr', 0))
             cidr = f"{ipv4}/{ipv4_addr.get('network_length', '')}" if ipv4 else ''
             stun = route.get('stun_info') or {}
+            cost = route.get('cost', 0)
+
+            if cost == 1:
+                lat_ms = self._get_latency_ms(peer)
+            else:
+                lat_first = route.get('path_latency_latency_first')
+                lat_ms = f'{float(lat_first):.2f}' if lat_first is not None else '-'
+
+            has_peer = bool(pair.get('peer'))
+
+            relay = None
+            if relay_path and cost > 1:
+                relay = []
+                cur_pid = pid
+                while cur_pid is not None and len(relay) < cost:
+                    entry = peer_route_map.get(cur_pid)
+                    if not entry:
+                        break
+                    _, cur_peer_info, cur_route = entry
+                    next_hop = cur_route.get('next_hop_peer_id')
+                    is_first_hop = cur_route.get('cost', 0) == 1
+                    cur_ipv4_inet = cur_route.get('ipv4_addr')
+                    relay.append({
+                        'peer_id': str(cur_route.get('peer_id', '')),
+                        'hostname': cur_route.get('hostname', ''),
+                        'ipv4': self._addr_to_ipv4(
+                            cur_ipv4_inet.get('address', {}).get('addr', 0) if cur_ipv4_inet else 0
+                        ),
+                        'remote_addrs': self._get_remote_addrs(cur_peer_info),
+                        'lat_ms': self._get_latency_ms(cur_peer_info)
+                        if is_first_hop else None,
+                    })
+                    if next_hop == cur_pid or next_hop is None:
+                        break
+                    cur_pid = next_hop
+                relay.reverse()
+
             peers.append({
                 'ipv4': ipv4,
                 'cidr': cidr,
                 'hostname': route.get('hostname') or '',
                 'version': route.get('version') or '',
                 'cost': self._format_cost(cost),
-                'tunnel_proto': tunnel_proto,
+                'tunnel_proto': self._get_conn_protos(peer) if has_peer else '',
                 'lat_ms': lat_ms,
-                'loss_rate': f"{first_conn.get('loss_rate', 0)}%",
-                'rx_bytes': self._humanize_bytes(rx_bytes_total),
-                'tx_bytes': self._humanize_bytes(tx_bytes_total),
+                'loss_rate': self._get_loss_rate(peer) if has_peer else '0.0%',
+                'rx_bytes': self._get_rx_bytes(peer) if has_peer else '0 B',
+                'tx_bytes': self._get_tx_bytes(peer) if has_peer else '0 B',
                 'nat_type': self._format_nat_type(stun.get('udp_nat_type', 0)),
+                'id': str(route.get('peer_id', '')),
+                'relay': relay,
             })
+
+        peers.sort(key=lambda x: (
+            0 if x['cost'] == 'Local' else 1,
+            x['ipv4'] if x['ipv4'] else '255.255.255.255',
+        ))
         return peers
 
 
@@ -633,6 +663,8 @@ class FfiAdapter(IEasyTierAdapter):
             5: "PortRestricted",
             6: "Symmetric",
             7: "SymUdpFirewall",
+            8: "SymEasyInc",
+            9: "SymEasyDec",
         }
         if isinstance(nat_type, str):
             try:
@@ -646,7 +678,76 @@ class FfiAdapter(IEasyTierAdapter):
             return "Local"
         if cost == 1:
             return "p2p"
-        return f"relay{cost}"
+        return f"relay({cost})"
+
+    def _get_latency_ms(self, peer_info: dict) -> str:
+        conns = peer_info.get('conns', [])
+        default_conn_id = peer_info.get('default_conn_id', '')
+        best = None
+        for conn in conns:
+            stats = conn.get('stats')
+            if not stats:
+                continue
+            if default_conn_id and conn.get('conn_id', '') == default_conn_id:
+                return f'{stats.get("latency_us", 0) / 1000.0:.2f}'
+            lat = stats.get('latency_us', 0)
+            if best is None or lat < best:
+                best = lat
+        if best is not None:
+            return f'{best / 1000.0:.2f}'
+        return '-'
+
+    def _get_loss_rate(self, peer_info: dict) -> str:
+        default_conn_id = peer_info.get('default_conn_id', '')
+        best = None
+        for conn in peer_info.get('conns', []):
+            lr = conn.get('loss_rate', 0.0)
+            if default_conn_id and conn.get('conn_id', '') == default_conn_id:
+                return f'{lr * 100.0:.1f}%'
+            if best is None:
+                best = lr
+        if best is not None:
+            return f'{best * 100.0:.1f}%'
+        return '-'
+
+    def _get_rx_bytes(self, peer_info: dict) -> str:
+        total = 0
+        for conn in peer_info.get('conns', []):
+            stats = conn.get('stats')
+            if stats:
+                total += stats.get('rx_bytes', 0)
+        return self._humanize_bytes(total) if total else '-'
+
+    def _get_tx_bytes(self, peer_info: dict) -> str:
+        total = 0
+        for conn in peer_info.get('conns', []):
+            stats = conn.get('stats')
+            if stats:
+                total += stats.get('tx_bytes', 0)
+        return self._humanize_bytes(total) if total else '-'
+
+    def _get_conn_protos(self, peer_info: dict) -> str:
+        protos = []
+        for conn in peer_info.get('conns', []):
+            tunnel = conn.get('tunnel')
+            if not tunnel:
+                continue
+            tt = self._format_tunnel_type(tunnel)
+            if tt and tt not in protos:
+                protos.append(tt)
+        return ','.join(protos) if protos else '-'
+
+    def _get_remote_addrs(self, peer_info: dict) -> list[str]:
+        addrs = []
+        for conn in peer_info.get('conns', []):
+            tunnel = conn.get('tunnel')
+            if not tunnel:
+                continue
+            url = tunnel.get('resolved_remote_addr', {}).get('url', '') \
+                or tunnel.get('remote_addr', {}).get('url', '')
+            if url and url not in addrs:
+                addrs.append(url)
+        return addrs
 
     def _humanize_bytes(self, size: int, for_short: bool = False) -> str:
         """将字节数转为可读格式。

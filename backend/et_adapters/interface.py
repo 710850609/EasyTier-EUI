@@ -24,7 +24,7 @@ class IEasyTierAdapter(ABC):
         """Check if a network instance is running."""
 
     @abstractmethod
-    def get_peers(self, instance_name: str) -> list[dict]:
+    def get_peers(self, instance_name: str, relay_path: bool = False) -> list[dict]:
         """Collect network information for a specific instance."""
 
     @abstractmethod
