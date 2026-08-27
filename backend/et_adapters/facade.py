@@ -18,9 +18,9 @@ logger = logging.getLogger(__name__)
 class EasyTierFacade(IEasyTierAdapter):
 
     def __init__(self):
-        # if run_configs.IS_ANDROID:
-        import sys
-        if run_configs.IS_ANDROID or sys.platform == "win32":
+        if run_configs.IS_ANDROID:
+        # import sys
+        # if run_configs.IS_ANDROID or sys.platform == "win32":
             self._adapter = FfiAdapter()
         else:
             self._adapter = CoreAdapter()
