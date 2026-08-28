@@ -194,8 +194,9 @@ def __install_android(et_version, arch):
     logger.info(f"停止所有服务")
     ffi_dir = run_configs.core_dir()
     build_in_vers = ffi_adapter.get_built_in_version()
-    if build_in_vers == et_version:
+    if f"v{build_in_vers}".startswith(et_version):
         shutil.rmtree(ffi_dir)
+        ffi_adapter.set_ffi_version(None)
         logger.info(f'选择内置FFI版本：{et_version}，无需下载，已删除旧FFI文件。重启后生效')
         return
     ffi_url = f"https://github.com/710850609/easytier-ffi/releases/download/{et_version}/easytier-ffi-android-{arch}-{et_version}.tar.gz"

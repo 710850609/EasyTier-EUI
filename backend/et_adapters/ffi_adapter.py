@@ -18,6 +18,7 @@ from locales import get_last_lang
 from utils import run_configs, app_settings
 
 logger = logging.getLogger(__name__)
+# github action 注入版本号，格式 2.6.4-8428a89d
 _FFI_LIB_VERSION = "unknown"
 _MAX_INSTANCE_COUNT = 20
 
@@ -35,6 +36,10 @@ def get_ffi_lib_name() -> str:
 
 def set_ffi_version(et_version):
     """设置FFI版本"""
+    if et_version is None:
+        app_settings.save('ffi_version', None)
+        logger.info("FFI version set to None")
+        return
     et_version: Optional[str] = et_version.replace('v', '') if et_version else None
     if not et_version:
         logger.warning("no FFI version value")
