@@ -133,7 +133,7 @@ const copyAndOpenLink = () => {
 
 @media (max-width: 767px) {
   .platform-page {
-    padding-bottom: calc(64px + var(--sab, 0px));
+    padding-bottom: calc(64px + var(--safe-area-inset-bottom, 0px));
   }
 }
 </style>

@@ -331,7 +331,7 @@ class FfiAdapter(IEasyTierAdapter):
                 'tx_bytes': self._get_tx_bytes(peer) if has_peer else '0 B',
                 'nat_type': self._format_nat_type(stun.get('udp_nat_type', 0)),
                 'id': str(route.get('peer_id', '')),
-                'relay': relay,
+                'relay_path': relay,
             })
 
         peers.sort(key=lambda x: (

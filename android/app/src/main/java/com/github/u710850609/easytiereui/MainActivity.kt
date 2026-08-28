@@ -426,11 +426,11 @@ class MainActivity : AppCompatActivity() {
             val js = """
                 (function() {
                     if (!document.documentElement) return;
-                    document.documentElement.style.setProperty('--sat', '${satDp}px');
-                    document.documentElement.style.setProperty('--sab', '${sabDp}px');
-                    document.documentElement.style.setProperty('--sar', '${sarDp}px');
-                    document.documentElement.style.setProperty('--sal', '${salDp}px');
-                    console.log('[SafeArea] --sat=${satDp}px, --sab=${sabDp}px, --sar=${sarDp}px, --sal=${salDp}px');
+                    document.documentElement.style.setProperty('--safe-area-inset-top', '${satDp}px');
+                    document.documentElement.style.setProperty('--safe-area-inset-bottom', '${sabDp}px');
+                    document.documentElement.style.setProperty('--safe-area-inset-right', '${sarDp}px');
+                    document.documentElement.style.setProperty('--safe-area-inset-left', '${salDp}px');
+                    console.log('[SafeArea] --safe-area-inset-top=${satDp}px, --safe-area-inset-bottom=${sabDp}px, --safe-area-inset-right=${sarDp}px, --safe-area-inset-left=${salDp}px');
                 })();
             """.trimIndent()
             webView.evaluateJavascript(js, null)

@@ -144,7 +144,7 @@ onUnmounted(() => {
   display: flex;
   height: 100vh;
   background: var(--color-body);
-  padding: var(--sat, 0px) var(--sar, 0px) var(--sab, 0px) var(--sal, 0px);
+  padding: var(--safe-area-inset-top, 0px) var(--safe-area-inset-right, 0px) var(--safe-area-inset-bottom, 0px) var(--safe-area-inset-left, 0px);
 }
 
 .layout::before {
@@ -153,7 +153,7 @@ onUnmounted(() => {
   top: 0;
   left: 0;
   right: 0;
-  height: var(--sat, 0px);
+  height: var(--safe-area-inset-top, 0px);
   background: linear-gradient(to bottom, var(--color-body) 60%, transparent 100%);
   pointer-events: none;
   z-index: 9999999;
@@ -167,9 +167,9 @@ onUnmounted(() => {
   flex-shrink: 0;
   border-right: 1px solid var(--color-outline);
   position: fixed;
-  left: var(--sal, 0px);
-  top: var(--sat, 0px);
-  height: calc(100vh - var(--sat, 0px) - var(--sab, 0px));
+  left: var(--safe-area-inset-left, 0px);
+  top: var(--safe-area-inset-top, 0px);
+  height: calc(100vh - var(--safe-area-inset-top, 0px) - var(--safe-area-inset-bottom, 0px));
   z-index: 100;
 }
 
@@ -213,7 +213,7 @@ onUnmounted(() => {
   top: 0;
   z-index: 10;
   padding: 16px;
-  padding-top: calc(var(--sat, 0px) + 16px);
+  padding-top: calc(var(--safe-area-inset-top, 0px) + 16px);
   text-align: center;
   background: linear-gradient(to bottom, var(--color-body) 0%, var(--color-body) 65%, transparent 100%);
 }
@@ -226,7 +226,7 @@ onUnmounted(() => {
 .layout.is-mobile .content-wrapper {
   overflow-y: auto;
   padding: 0;
-  padding-top: var(--sat, 0px);
+  padding-top: var(--safe-area-inset-top, 0px);
   flex: 1;
   min-height: 0;
 }
@@ -257,7 +257,7 @@ onUnmounted(() => {
   .content-wrapper {
     overflow-y: auto;
     padding: 0;
-    padding-top: var(--sat, 0px);
+    padding-top: var(--safe-area-inset-top, 0px);
     flex: 1;
     min-height: 0;
   }

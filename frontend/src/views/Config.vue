@@ -822,7 +822,7 @@
     </div>
 
     <!-- 编辑配置弹窗 -->
-    <var-popup v-model:show="showCodePage" class="code-editor-popup" :close-on-click-overlay="false" :style="{ width: '100vw', height: '100vh', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, margin: 0, padding: 'var(--sat, 0px) 0 0 0', maxWidth: 'none', maxHeight: 'none' }">
+    <var-popup v-model:show="showCodePage" class="code-editor-popup" :close-on-click-overlay="false" :style="{ width: '100vw', height: '100vh', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, margin: 0, padding: 'var(--safe-area-inset-top, 0px) 0 0 0', maxWidth: 'none', maxHeight: 'none' }">
       <div class="code-editor-wrapper">
         <div class="code-editor-header">
           <span class="editor-title">{{ $t('config.editConfigTitle', { name: currentConfigData.name }) }}</span>
@@ -2279,7 +2279,7 @@ html.dark .sk-breathe {
   padding: 0 16px 10px;
   margin-top: 4px;
   position: relative;
-  padding-bottom: calc(64px + var(--sab, 0px) + 16px);
+  padding-bottom: calc(64px + var(--safe-area-inset-bottom, 0px) + 16px);
 }
 
 .config-section {
@@ -2926,7 +2926,7 @@ html.dark .sk-breathe {
     flex-direction: column;
     height: 100%;
     overflow: hidden;
-    /*padding-bottom: calc(64px + var(--sab, 0px) + 16px);*/
+    /*padding-bottom: calc(64px + var(--safe-area-inset-bottom, 0px) + 16px);*/
   }
 
   .config-else-wrapper {
@@ -2971,7 +2971,7 @@ html.dark .sk-breathe {
   .content-area {
     padding: 8px 12px;
     margin-top: 0;
-    padding-bottom: calc(64px + var(--sab, 0px) + 16px);
+    padding-bottom: calc(64px + var(--safe-area-inset-bottom, 0px) + 16px);
   }
 
   .config-section {

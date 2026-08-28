@@ -130,8 +130,8 @@
             <tr v-if="topSpacerHeight > 0" aria-hidden="true">
               <td :colspan="visibleColumns.length" :style="{ height: topSpacerHeight + 'px', padding: 0, border: 'none' }"></td>
             </tr>
-            <template v-for="node in virtualFilteredNodes" :key="node.id">
-            <tr :class="{ 'has-relay': node.relay && node.relay.length && expandedRelayNodes.has(node.id) }">
+            <template v-for="node in virtualFilteredNodes" :key="node.id" >
+            <tr :class="{ 'has-relay': node.relay_path && node.relay_path.length && expandedRelayNodes.has(node.id) }">
               <td 
                 v-for="(col, index) in visibleColumns" 
                 :key="col.key"
@@ -139,7 +139,7 @@
               >
                 <template v-if="col.key === 'cost'">
                   <span 
-                    v-if="node.relay && node.relay.length" 
+                    v-if="node.relay_path && node.relay_path.length"
                     class="relay-toggle" 
                     @click="toggleRelay(node.id)"
                   >
@@ -171,15 +171,15 @@
                 </template>
               </td>
             </tr>
-            <tr v-if="node.relay && node.relay.length && expandedRelayNodes.has(node.id)" class="relay-row">
+            <tr v-if="showRelayPath && node.relay_path && node.relay_path.length && expandedRelayNodes.has(node.id)" class="relay-row">
               <td></td>
               <td :colspan="visibleColumns.length - 1">
                 <div class="relay-hop">
                   <span class="relay-connector"></span>
                   <span class="relay-hop-name">Local</span>
                 </div>
-                <div v-for="(hop, i) in node.relay" :key="i" class="relay-hop" :style="{ paddingLeft: (i + 1) * 16 + 'px' }">
-                  <span class="relay-connector">{{ i === node.relay.length - 1 ? '└' : '├' }}</span>
+                <div v-for="(hop, i) in node.relay_path" :key="i" class="relay-hop" :style="{ paddingLeft: (i + 1) * 16 + 'px' }">
+                  <span class="relay-connector">{{ i === node.relay_path.length - 1 ? '└' : '├' }}</span>
                   <span class="relay-hop-name">{{ hop.hostname || '?' }}</span>
                   <span
                     v-if="hop.lat_ms !== null && hop.lat_ms !== undefined && hop.lat_ms !== '-'"
@@ -222,7 +222,7 @@
             </div>
             <div class="node-card-info">
               <span 
-                v-if="visibleColumnsMap.cost && node.relay && node.relay.length"
+                v-if="visibleColumnsMap.cost && node.relay_path && node.relay_path.length"
                 class="relay-toggle" 
                 @click="toggleRelay(node.id)"
               >
@@ -246,14 +246,14 @@
               <span v-if="visibleColumnsMap.tunnel_proto && node.tunnel_proto && node.tunnel_proto !== '-'" class="info-chip">
                 {{ node.tunnel_proto }}
               </span>
-              <div v-if="node.relay && node.relay.length && expandedRelayNodes.has(node.id)" class="relay-path-mobile">
+              <div v-if="node.relay_path && node.relay_path.length && expandedRelayNodes.has(node.id)" class="relay-path-mobile">
                 <div class="relay-hop">
                   <span class="relay-connector"></span>
                   <span class="relay-hop-name">Local</span>
                 </div>
-                <div v-for="(hop, i) in node.relay" :key="i" class="relay-hop">
+                <div v-for="(hop, i) in node.relay_path" :key="i" class="relay-hop">
                   <div class="relay-hop-line">
-                    <span class="relay-connector">{{ i === node.relay.length - 1 ? '└' : '├' }}</span>
+                    <span class="relay-connector">{{ i === node.relay_path.length - 1 ? '└' : '├' }}</span>
                     <span class="relay-hop-name">{{ hop.hostname || '?' }}</span>
                     <span
                       v-if="hop.lat_ms !== null && hop.lat_ms !== undefined && hop.lat_ms !== '-'"
@@ -439,7 +439,7 @@ const selectedColumns = ref(getDefaultColumns())
 // 默认选中的节点类型
 const selectedNodeTypes = ref(['normal'])
 // 是否显示中继路径
-const showRelayPath = ref(false)
+const showRelayPath = ref(true)
 // 刷新速度
 const refreshStep = ref(3)
 // 移动端列表模式（仅移动端有效，PC 端强制为 false）
@@ -497,7 +497,7 @@ const loadSettings = () => {
 
   selectedColumns.value = settings.columns || getDefaultColumns()
   selectedNodeTypes.value = settings.nodeTypes || ['normal']
-  showRelayPath.value = settings.relayPath || false
+  showRelayPath.value = settings.relayPath ?? true
   refreshStep.value = settings.refreshStep || 3
   useMobileList.value = isMobile.value ? (settings.cardList ?? isMobile.value) : false
   settingsLoaded.value = true
@@ -593,7 +593,7 @@ const toggleMobileList = (val) => {
 const resetSettings = () => {
   selectedColumns.value = getDefaultColumns()
   selectedNodeTypes.value = ['normal']
-  showRelayPath.value = false
+  showRelayPath.value = true
   refreshStep.value = 3
   if (isMobile.value) {
     useMobileList.value = isMobile.value
@@ -985,7 +985,7 @@ onUnmounted(() => {
 }
 
 .nodes-page.card-mode {
-  padding-bottom: var(--sab, 0px);
+  padding-bottom: var(--safe-area-inset-bottom, 0px);
 }
 
 .nodes-page.card-mode .table-container {
@@ -1210,7 +1210,7 @@ onUnmounted(() => {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  /*margin-bottom: var(--sab, 0px);*/
+  /*margin-bottom: var(--safe-area-inset-bottom, 0px);*/
 }
 
 .table-wrapper {
@@ -1223,7 +1223,7 @@ onUnmounted(() => {
 @media (max-width: 767px) {
 
   .nodes-page {
-    padding-bottom: calc(64px + var(--sab, 0px) + 16px);
+    padding-bottom: calc(64px + var(--safe-area-inset-bottom, 0px) + 16px);
   }
 
   .stats-bar {

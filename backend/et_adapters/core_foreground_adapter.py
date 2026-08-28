@@ -366,7 +366,7 @@ class CoreForegroundAdapter(IEasyTierAdapter):
                     'nat_type': self._nat_type_str(stun.get('udp_nat_type')) if stun else 'Unknown',
                     'id': str(route.get('peer_id', '')),
                     'version': route.get('version', '') or 'unknown',
-                    'relay': relay,
+                    'relay_path': relay,
                 })
 
             items.sort(key=lambda x: (

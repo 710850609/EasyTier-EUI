@@ -115,8 +115,8 @@ const handleSubMenuClick = (key) => {
   bottom: 0;
   left: 0;
   right: 0;
-  height: calc(64px + var(--sab, 0px));
-  padding-bottom: var(--sab, 0px);
+  height: calc(64px + var(--safe-area-inset-bottom, 0px));
+  padding-bottom: var(--safe-area-inset-bottom, 0px);
   background: transparent;
   display: flex;
   justify-content: space-around;
