@@ -3,22 +3,54 @@
     <div v-if="isLoadingConfigList" class="config-skeleton">
       <div class="sk-toolbar">
         <div class="sk-pill sk-pill-select"><div class="sk-breathe"></div></div>
-        <div class="sk-pill sk-pill-btn"><div class="sk-breathe"></div></div>
-        <div class="sk-pill sk-pill-btn"><div class="sk-breathe"></div></div>
-        <div class="sk-pill sk-pill-btn"><div class="sk-breathe"></div></div>
-        <div class="sk-pill sk-pill-btn sk-pill-btn-sm"><div class="sk-breathe"></div></div>
+        <div class="sk-toolbar-right">
+          <div class="sk-pill sk-pill-btn"><div class="sk-breathe"></div></div>
+          <div class="sk-pill sk-pill-btn sk-pill-btn-sm"><div class="sk-breathe"></div></div>
+        </div>
       </div>
       <div class="sk-content">
-        <div class="sk-section" v-for="section in 5" :key="section" :style="{ animationDelay: `${section * 0.08}s` }">
-          <div class="sk-section-title" :class="{ 'sk-section-title--only': section > 1 }">
+        <div class="sk-section" v-for="(section, idx) in skSections" :key="idx" :style="{ animationDelay: `${idx * 0.06}s` }">
+          <div class="sk-collapse-title" v-if="section.collapsible">
+            <div class="sk-pill sk-pill-icon"><div class="sk-breathe"></div></div>
             <div class="sk-pill sk-pill-title"><div class="sk-breathe"></div></div>
           </div>
-          <div class="sk-fields" v-if="section === 1">
-            <div class="sk-field" v-for="field in 5" :key="field">
-              <div class="sk-pill sk-pill-label"><div class="sk-breathe"></div></div>
-              <div class="sk-pill sk-pill-input"><div class="sk-breathe"></div></div>
-            </div>
+          <div class="sk-section-title" v-else>
+            <div class="sk-pill sk-pill-title"><div class="sk-breathe"></div></div>
           </div>
+          <template v-if="section.inputRow">
+            <div class="sk-input-row">
+              <div class="sk-field-half">
+                <div class="sk-pill sk-pill-label"><div class="sk-breathe"></div></div>
+                <div class="sk-pill sk-pill-input"><div class="sk-breathe"></div></div>
+              </div>
+              <div class="sk-field-half">
+                <div class="sk-pill sk-pill-label"><div class="sk-breathe"></div></div>
+                <div class="sk-pill sk-pill-input"><div class="sk-breathe"></div></div>
+              </div>
+            </div>
+          </template>
+          <template v-if="section.chipSelect">
+            <div class="sk-chip-select">
+              <div class="sk-pill sk-pill-input sk-pill-chip"><div class="sk-breathe"></div></div>
+            </div>
+          </template>
+          <template v-if="!section.collapsible && section.featureGrid">
+            <div class="sk-feature-grid">
+              <div class="sk-feature-item" v-for="i in section.featureGrid" :key="i">
+                <div class="sk-pill sk-pill-check"><div class="sk-breathe"></div></div>
+                <div class="sk-pill sk-pill-feature-label"><div class="sk-breathe"></div></div>
+              </div>
+            </div>
+            <div class="sk-divider"></div>
+          </template>
+          <template v-if="!section.collapsible && section.inputs && section.inputs.length">
+            <div class="sk-input-row" v-for="(row, ri) in section.inputs" :key="ri">
+              <div class="sk-field-half" v-for="(col, ci) in row" :key="ci">
+                <div class="sk-pill sk-pill-label"><div class="sk-breathe"></div></div>
+                <div class="sk-pill sk-pill-input" :class="{ 'sk-pill-select-input': col === 'select' }"><div class="sk-breathe"></div></div>
+              </div>
+            </div>
+          </template>
         </div>
       </div>
     </div>
@@ -982,6 +1014,15 @@ const shareQrDataUrl = ref('')
 const showCodePage = ref(false)
 const isLoadingConfig = ref(false)
 const isLoadingConfigList = ref(true)
+
+const skSections = [
+  { inputRow: true, chipSelect: true },
+  { collapsible: true },
+  { collapsible: true },
+  { collapsible: true },
+  { collapsible: true }
+]
+
 const configToml = ref('')
 const isRefreshingPublicPeerOptions = ref(false)
 const showPassword = ref(false)
@@ -2009,8 +2050,14 @@ onUnmounted(() => {
   background: var(--color-surface-container);
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 10px;
-  flex-wrap: wrap;
+}
+
+.sk-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 /* 通用圆角条 */
@@ -2032,13 +2079,20 @@ html.dark .sk-pill {
 }
 
 .sk-pill-btn {
-  height: 28px;
-  width: 56px;
-  border-radius: 6px;
+  height: 32px;
+  width: 64px;
+  border-radius: 8px;
 }
 
 .sk-pill-btn-sm {
-  width: 40px;
+  width: 36px;
+}
+
+.sk-pill-icon {
+  height: 24px;
+  width: 24px;
+  border-radius: 6px;
+  flex-shrink: 0;
 }
 
 /* 呼吸微光 */
@@ -2085,12 +2139,12 @@ html.dark .sk-breathe {
 }
 
 .sk-section {
-  padding: 12px 16px;
-  border-radius: 14px;
+  padding: 14px 18px;
+  border-radius: 16px;
   background: var(--color-surface-container);
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
   animation: sk-slideUp 0.4s ease both;
 }
 
@@ -2104,9 +2158,11 @@ html.dark .sk-breathe {
   border-bottom: 1px solid var(--color-outline-variant);
 }
 
-.sk-section-title--only {
-  padding-bottom: 0;
-  border-bottom: none;
+.sk-collapse-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 4px;
 }
 
 .sk-pill-title {
@@ -2115,29 +2171,78 @@ html.dark .sk-breathe {
   border-radius: 9px;
 }
 
-.sk-fields {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.sk-field {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
 .sk-pill-label {
   height: 12px;
-  width: 64px;
+  width: 72px;
   border-radius: 6px;
 }
 
 .sk-pill-input {
-  height: 28px;
+  height: 32px;
   width: 100%;
-  max-width: 420px;
   border-radius: 8px;
+}
+
+.sk-pill-select-input {
+  height: 32px;
+}
+
+/* 并排输入行 */
+.sk-input-row {
+  display: flex;
+  gap: 12px;
+}
+
+.sk-field-half {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* chip 多选 */
+.sk-chip-select {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sk-pill-chip {
+  height: 40px;
+  border-radius: 10px;
+}
+
+/* 复选框网格 */
+.sk-feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 8px 16px;
+}
+
+.sk-feature-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sk-pill-check {
+  height: 16px;
+  width: 16px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.sk-pill-feature-label {
+  height: 14px;
+  width: 80px;
+  border-radius: 7px;
+}
+
+.sk-divider {
+  height: 1px;
+  background: var(--color-outline-variant);
+  margin: 4px 0;
 }
 
 /* ── 骨架屏遮罩层（切换配置时） ── */
