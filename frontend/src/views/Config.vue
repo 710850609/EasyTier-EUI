@@ -3345,26 +3345,9 @@ html.dark .port-forward-row {
   color: var(--color-danger) !important;
 }
 
-/* 更多菜单弹出层毛玻璃 */
-.more-menu-popover,
-.more-menu-popover .var-popover__content {
-  background: rgba(var(--color-surface-container-rgb, 226, 236, 250), 0.12) !important;
-  backdrop-filter: blur(16px) saturate(140%) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(140%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.25) !important;
-  border-radius: 14px !important;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08) !important;
-}
-
 .menu-click-outside {
   position: fixed;
   inset: 0;
   z-index: 1;
-}
-
-html.dark .more-menu-popover,
-html.dark .more-menu-popover .var-popover__content {
-  background: rgba(var(--color-surface-container-rgb, 51, 65, 85), 0.08) !important;
-  border-color: rgba(255, 255, 255, 0.08) !important;
 }
 </style>

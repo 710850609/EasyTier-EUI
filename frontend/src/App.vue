@@ -509,6 +509,24 @@ html:not(.dark) .var-popup__overlay {
   -webkit-backdrop-filter: blur(3px) !important;
 }
 
+/* 非中心弹出方向（上/下/左/右）使用全屏半透明遮罩 */
+/* 渐变晕团仅适用于中心弹出，非中心弹出时晕团与弹窗位置错位，视觉脏 */
+.var-popup--bottom .var-popup__overlay,
+.var-popup--top .var-popup__overlay,
+.var-popup--left .var-popup__overlay,
+.var-popup--right .var-popup__overlay {
+  background: rgba(0, 0, 0, 0.35) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+html:not(.dark) .var-popup--bottom .var-popup__overlay,
+html:not(.dark) .var-popup--top .var-popup__overlay,
+html:not(.dark) .var-popup--left .var-popup__overlay,
+html:not(.dark) .var-popup--right .var-popup__overlay {
+  background: rgba(0, 0, 0, 0.25) !important;
+}
+
 /* var-cell 样式适配 */
 .var-cell {
   color: var(--color-on-surface) !important;
@@ -631,7 +649,7 @@ html:not(.dark) .var-dialog--box::after {
 /* ========== 全局毛玻璃面板样式 ========== */
 
 /* 下拉框菜单毛玻璃 */
-.var-menu.var--box.var-select__menu {
+.var-menu__menu.var--box.var-select__menu {
   background: rgba(var(--color-surface-container-rgb, 226, 236, 250), 0.08) !important;
   backdrop-filter: blur(20px) saturate(140%) !important;
   -webkit-backdrop-filter: blur(20px) saturate(140%) !important;
@@ -641,11 +659,44 @@ html:not(.dark) .var-dialog--box::after {
   border-radius: 12px !important;
 }
 
-html.dark .var-menu.var--box.var-select__menu {
+html.dark .var-menu__menu.var--box.var-select__menu {
   background: rgba(var(--color-surface-container-rgb, 51, 65, 85), 0.18) !important;
   border-color: rgba(255, 255, 255, 0.08) !important;
   border-left-color: rgba(255, 255, 255, 0.12) !important;
   border-right-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+/* 通用 var-menu 毛玻璃（非 select，如更多菜单等） */
+html body .var-menu__menu.var--box:not(.var-select__menu),
+html body .var-menu__menu.var--box.var-menu--menu-background-color:not(.var-select__menu) {
+  --menu-background-color: transparent !important;
+  background-image: none !important;
+  background: rgba(var(--color-surface-container-rgb, 234, 240, 248), 0.08) !important;
+  background-color: rgba(var(--color-surface-container-rgb, 234, 240, 248), 0.08) !important;
+  backdrop-filter: blur(20px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(140%) !important;
+  will-change: backdrop-filter !important;
+  border: none !important;
+  border-left: 2px solid rgba(255, 255, 255, 0.25) !important;
+  border-right: 2px solid rgba(255, 255, 255, 0.25) !important;
+  border-radius: 12px !important;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+}
+
+html.dark body .var-menu__menu.var--box:not(.var-select__menu),
+html.dark body .var-menu__menu.var--box.var-menu--menu-background-color:not(.var-select__menu) {
+  background: rgba(var(--color-surface-container-rgb, 30, 36, 53), 0.25) !important;
+  background-color: rgba(var(--color-surface-container-rgb, 30, 36, 53), 0.25) !important;
+  backdrop-filter: blur(20px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(140%) !important;
+  will-change: backdrop-filter !important;
+  border-left: 1px solid rgba(255, 255, 255, 0.25) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.25) !important;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
 }
 
 /* 折叠面板样式 - 移除高光，更柔和 */
@@ -694,7 +745,7 @@ html.no-glass .var-popup__content[var-popup-cover] {
   background: var(--color-surface-container) !important;
 }
 
-html.no-glass .var-menu.var--box.var-select__menu {
+html.no-glass .var-menu__menu.var--box.var-select__menu {
   background: var(--color-surface-container) !important;
 }
 
@@ -732,6 +783,27 @@ html.no-glass .bottom-nav {
 
 html.no-glass.dark .bottom-nav {
   background: var(--color-surface) !important;
+}
+
+/* 关闭毛玻璃后，popover 使用实色背景 */
+html.no-glass .var-popover,
+html.no-glass .var-popover__content {
+  background: var(--color-surface-container) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+html.no-glass .var-menu__menu.var--box:not(.var-select__menu),
+html.no-glass .var-menu__menu.var--box.var-menu--menu-background-color:not(.var-select__menu) {
+  background: var(--color-surface-container) !important;
+  background-color: var(--color-surface-container) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: 1px solid var(--color-outline-variant) !important;
+  border-radius: 12px !important;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
 }
 
 /* 关闭毛玻璃后，底部导航子菜单使用实色背景 */
