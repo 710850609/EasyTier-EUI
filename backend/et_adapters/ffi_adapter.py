@@ -132,22 +132,33 @@ class FfiAdapter(IEasyTierAdapter):
             with open(toml_path, 'r', encoding='utf-8') as f:
                 toml_config = f.read()
             doc = tomlkit.parse(toml_config)
-            flags = doc.get('flags', {})
-            rebuild_toml = False
-            if 'compression' in flags:
-                compression = flags['compression']
-                if compression:
-                    flags['data_compress_algo'] = compression.capitalize()
-                del flags['compression']
-                doc['flags'] = flags
-                rebuild_toml = True
+            # flags = doc.get('flags', {})
+            # rebuild_toml = False
+            # if 'compression' in flags:
+            #     compression = flags['compression']
+            #     if compression:
+            #         flags['data_compress_algo'] = compression.capitalize()
+            #     del flags['compression']
+            #     doc['flags'] = flags
+            #     rebuild_toml = True
             # 避免外部修改配置文件名，导致启动后，找不到组网节点数据
             if doc['instance_name'] != instance_name:
                 logger.warning(f"配置中的instance_name参数和实际指定值不一致，已覆盖为指定值【{instance_name}】")
                 doc['instance_name'] = instance_name
                 rebuild_toml = True
-            # 安卓系统下，如果hostname为空，使用设备名称
+            # 自适应 mtu 。根据AI识别：ffi模式下，没根据是否加密自适应 mtu
+            mtu = doc.get('flags', {}).get('mtu')
+            if mtu is None:
+                if doc.get('flags', {}).get('enable_encryption'):
+                    mtu = 1360
+                else:
+                    mtu = 1380
+                rebuild_toml =True
             if run_configs.IS_ANDROID:
+                # 参考官方安卓实现，固定 1300
+                mtu = 1300
+                rebuild_toml =True
+                # 安卓系统下，如果hostname为空，使用设备名称
                 hostname = doc.get('hostname')
                 if not hostname:
                     try:
@@ -183,7 +194,7 @@ class FfiAdapter(IEasyTierAdapter):
             if accept_dns:
                 self._enable_magic_dns_set.add(instance_name)
             # 参考 官方安卓 实现，但没参考官方 1500 默认值
-            self._mtu_config[instance_name] = doc.get('flags', {}).get('mtu') or 1400
+            self._mtu_config[instance_name] = mtu
             self._invalidate_ffi_cache()
             logger.info(f"Instance '{instance_name}' started via FFI")
             time.sleep(2.0)
