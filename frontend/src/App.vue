@@ -1,4 +1,4 @@
-﻿﻿﻿﻿<template>
+﻿<template>
   <Layout />
 </template>
 
@@ -7,6 +7,13 @@ import Layout from './components/Layout.vue'
 </script>
 
 <style>
+:root {
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-inset-right: env(safe-area-inset-right, 0px);
+  --safe-area-inset-left: env(safe-area-inset-left, 0px);
+}
+
 * {
   margin: 0;
   padding: 0;
