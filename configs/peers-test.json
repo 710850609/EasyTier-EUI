@@ -50,6 +50,13 @@
       "owner": "小徐",
       "dynamic": false
     },
+    "wss://et0.303302.xyz": {
+      "status": 1,
+      "updateTime": 1787923566,
+      "uri": "wss://et0.303302.xyz",
+      "owner": "佚名",
+      "dynamic": false
+    },
     "txt://1.ethub1.v6.army": {
       "status": 1,
       "updateTime": 1783405048,
