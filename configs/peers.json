@@ -36,6 +36,13 @@
       "uri": "txt://net.qicwken.top",
       "owner": "Qicwken",
       "dynamic": false
+    },
+    "udp://net.vpspersonxu.xyz:11010": {
+      "status": 1,
+      "updateTime": 1787923566,
+      "uri": "udp://net.vpspersonxu.xyz:11010",
+      "owner": "小徐",
+      "dynamic": false
     }
   }
 }

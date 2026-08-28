@@ -43,6 +43,13 @@
       "uri": "tcp://48358fc41fb646b191767b8180b8e429.20091222.xyz:11010",
       "owner": "Qicwken"
     },
+    "udp://net.vpspersonxu.xyz:11010": {
+      "status": 1,
+      "updateTime": 1787923566,
+      "uri": "udp://net.vpspersonxu.xyz:11010",
+      "owner": "小徐",
+      "dynamic": false
+    },
     "txt://1.ethub1.v6.army": {
       "status": 1,
       "updateTime": 1783405048,
