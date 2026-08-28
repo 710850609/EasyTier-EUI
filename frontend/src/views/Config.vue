@@ -338,10 +338,24 @@
                       />
                     </div>
                   </div>
+
+                  <div class="input-row">
+                    <div class="input-section">
+                      <var-tooltip trigger="click">
+                        <div class="section-subtitle">{{ $t('config.tldDnsZone') }}
+                          <var-icon name="help-circle-outline" size="16" class="help-icon" />
+                        </div>
+                        <template #content>
+                          <div class="tooltip-multiline">{{ $t('config.tldDnsZoneHint') }}</div>
+                        </template>
+                      </var-tooltip>
+                      <var-input v-model="config.flags.tld_dns_zone" :placeholder="$t('config.tldDnsZonePlaceholder')" :rules="(v) => (v === '' || v.endsWith('.')) || $t('config.tldDnsZoneError')" variant="outlined" size="small" />
+                    </div>
+                  </div>
               </div>
             </var-collapse-item>
           </var-collapse>
-          </var-paper>
+        </var-paper>
 
           <!-- 连接方式 -->
           <var-paper v-if="!fastSettingMode" :elevation="0" class="config-section-panel">
@@ -1015,6 +1029,7 @@ const config = ref({
     private_mode: true,
     multi_thread: true,
     latency_first: true,
+    tld_dns_zone: '',
   },
 })
 
@@ -1264,7 +1279,7 @@ const saveConfig = () => {
       delete data.flags.instance_recv_bps_limit
     }
     // 删除 flags 中 空 字段
-    ['dev_name', 'encryption_algorithm', 'default_protocol', 'compression', 'relay_network_whitelist'].forEach(key => {
+    ['dev_name', 'encryption_algorithm', 'default_protocol', 'compression', 'relay_network_whitelist', 'tld_dns_zone'].forEach(key => {
       if (config.value.flags[key] == null || config.value.flags[key].trim() === '') {
         data.flags[key] = null
       }
