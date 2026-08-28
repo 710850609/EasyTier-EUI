@@ -132,8 +132,8 @@ class FfiAdapter(IEasyTierAdapter):
             with open(toml_path, 'r', encoding='utf-8') as f:
                 toml_config = f.read()
             doc = tomlkit.parse(toml_config)
+            rebuild_toml = False
             # flags = doc.get('flags', {})
-            # rebuild_toml = False
             # if 'compression' in flags:
             #     compression = flags['compression']
             #     if compression:
