@@ -38,6 +38,7 @@
     </div>
 
     <div v-else class="config-else-wrapper">
+<!--      工具栏 -->
       <var-paper class="toolbar" :elevation="1" v-if="!fastSettingMode">
         <div class="toolbar-row">
           <div class="toolbar-left">
@@ -71,30 +72,32 @@
           <div class="toolbar-right" v-if="selectedConfig">
             <var-button size="small" type="danger" @click="exitAddMode()" :loading="isDeletingConfig" v-if="showMode !== 0">{{ $t('config.exitAdd') }}</var-button>
             <var-button type="primary" size="small" @click="saveConfig" auto-loading>{{ $t('config.save') }}</var-button>
+            <!-- 弹出菜单遮罩层，用于关闭菜单 -->
+            <div v-if="showMoreMenu" class="menu-click-outside" @click="showMoreMenu = false"></div>
             <var-menu v-model:show="showMoreMenu" trigger="manual" placement="bottom-end" :offset-y="10" :offset-x="12" v-if="showMode === 0" popover-class="more-menu-popover">
               <var-button text round class="column-btn" @click="showMoreMenu = !showMoreMenu">
                 <var-icon name="menu" size="20" color="var(--color-on-surface)" />
               </var-button>
               <template #menu>
                 <div class="more-menu">
-                  <var-button text block @click="showCreateDialog = true; showMode = 1; showMoreMenu = false">
+                  <var-button text block class="menu-item-btn" @click="showCreateDialog = true; showMode = 1; showMoreMenu = false">
                     <svg-icon type="mdi" :path="mdiPlus" class="menu-icon"></svg-icon>
                     <span>{{ $t('config.add') }}</span>
                   </var-button>
-                  <var-button text block @click="startEditName(); showMoreMenu = false" :loading="isRenaming">
+                  <var-button text block class="menu-item-btn" @click="startEditName(); showMoreMenu = false" :loading="isRenaming">
                     <svg-icon type="mdi" :path="mdiSquareEditOutline" class="menu-icon"></svg-icon>
                     <span>{{ $t('config.rename') }}</span>
                   </var-button>
-                  <var-button text block @click="showShareConfigType = true; showMoreMenu = false">
+                  <var-button text block class="menu-item-btn" @click="showShareConfigType = true; showMoreMenu = false">
                     <svg-icon type="mdi" :path="mdiShareOutline" class="menu-icon"></svg-icon>
                     <span>{{ $t('config.shareNetwork') }}</span>
                   </var-button>
-                  <var-button text block @click="openCodePage(); showMoreMenu = false" auto-loading>
+                  <var-button text block class="menu-item-btn" @click="openCodePage(); showMoreMenu = false" auto-loading>
                     <svg-icon type="mdi" :path="mdiDrawPen" class="menu-icon"></svg-icon>
                     <span>{{ $t('config.editFile') }}</span>
                   </var-button>
                   <var-divider class="menu-divider" />
-                  <var-button text block @click="showDeleteDialog = true; showMoreMenu = false" :loading="isDeletingConfig" class="delete-btn">
+                  <var-button text block class="menu-item-btn delete-btn" @click="showDeleteDialog = true; showMoreMenu = false" :loading="isDeletingConfig">
                     <svg-icon type="mdi" :path="mdiTrashCanOutline" class="menu-icon"></svg-icon>
                     <span>{{ $t('config.delete') }}</span>
                   </var-button>
@@ -2202,6 +2205,8 @@ html.dark .sk-breathe {
   align-items: center;
   gap: 10px;
   flex-shrink: 0;
+  position: relative;
+  z-index: 2;
 }
 
 .config-actions-group {
@@ -3294,9 +3299,10 @@ html.dark .port-forward-row {
   justify-content: flex-start;
   padding: 10px 14px;
   font-size: 14px;
+  font-weight: 500;
   border-radius: 10px;
   gap: 98px;
-  color: var(--color-on-surface);
+  /*color: var(--color-on-surface);*/
   min-height: 44px;
   background: transparent !important;
 }
@@ -3316,6 +3322,10 @@ html.dark .port-forward-row {
   margin: 4px 0;
 }
 
+.more-menu .menu-item-btn {
+  color: var(--color-primary) !important;
+}
+
 .more-menu .delete-btn {
   color: var(--color-danger) !important;
 }
@@ -3323,17 +3333,23 @@ html.dark .port-forward-row {
 /* 更多菜单弹出层毛玻璃 */
 .more-menu-popover,
 .more-menu-popover .var-popover__content {
-  background: rgba(var(--color-surface-container-rgb, 226, 236, 250), 0.25) !important;
-  backdrop-filter: blur(24px) saturate(160%) !important;
-  -webkit-backdrop-filter: blur(24px) saturate(160%) !important;
+  background: rgba(var(--color-surface-container-rgb, 226, 236, 250), 0.12) !important;
+  backdrop-filter: blur(16px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(140%) !important;
   border: 1px solid rgba(255, 255, 255, 0.25) !important;
   border-radius: 14px !important;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08) !important;
+}
+
+.menu-click-outside {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
 }
 
 html.dark .more-menu-popover,
 html.dark .more-menu-popover .var-popover__content {
-  background: rgba(var(--color-surface-container-rgb, 51, 65, 85), 0.05) !important;
-  border-color: rgba(255, 255, 255, 0.06) !important;
+  background: rgba(var(--color-surface-container-rgb, 51, 65, 85), 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
 }
 </style>

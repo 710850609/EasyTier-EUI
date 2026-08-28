@@ -1089,7 +1089,6 @@ onUnmounted(() => {
   height: 100%;
   overflow: hidden;
   background: var(--color-surface-container-highest);
-  border-radius: 16px 0 0 16px;
 }
 
 .settings-panel .panel-header {
@@ -1327,6 +1326,7 @@ td {
   align-items: center;
   gap: 2px;
   user-select: none;
+  white-space: nowrap;
 }
 
 .relay-toggle:hover {
@@ -1761,7 +1761,19 @@ html.dark .sk-chip {
 
 .relay-path-mobile .relay-hop-url-line {
   display: flex;
-  padding-left: 14px;
+  padding-left: 1px;
+  gap: 4px;
+  color: var(--color-text-tertiary, #999);
+  font-size: 10px;
+}
+
+.relay-path-mobile .relay-hop-url-line::before {
+  content: '│';
+  flex-shrink: 0;
+}
+
+.relay-path-mobile .relay-hop-url {
+  max-width: 280px;
 }
 
 .info-chip {

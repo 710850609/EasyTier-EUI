@@ -385,6 +385,16 @@ html.dark .var-popup__content.var-popup--top::before {
   border-radius: 0 0 20px 20px !important;
 }
 
+/* 左侧弹出层圆角 */
+.var-popup--left {
+  border-radius: 0 20px 20px 0 !important;
+}
+
+/* 右侧弹出层圆角 */
+.var-popup--right {
+  border-radius: 20px 0 0 20px !important;
+}
+
 .var-popup--top .var-popup__content {
   padding-top: var(--sat, 0px) !important;
 }

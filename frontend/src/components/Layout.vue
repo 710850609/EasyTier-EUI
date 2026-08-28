@@ -215,7 +215,7 @@ onUnmounted(() => {
   padding: 16px;
   padding-top: calc(var(--sat, 0px) + 16px);
   text-align: center;
-  background: linear-gradient(to bottom, var(--color-body) 0%, var(--color-body) 60%, transparent 100%);
+  background: linear-gradient(to bottom, var(--color-body) 0%, var(--color-body) 65%, transparent 100%);
 }
 
 .mobile-submenu-title h2 {

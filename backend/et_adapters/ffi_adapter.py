@@ -386,9 +386,9 @@ class FfiAdapter(IEasyTierAdapter):
             if r not in info['routes']:
                 info['routes'].append(r)
         if instance_name in self._enable_magic_dns_set:
-            magic_dns = "100.100.100.101/32"
+            magic_dns = "100.100.100.101"
             info['dns_servers'].append(magic_dns)
-            info['routes'].append(magic_dns)
+            info['routes'].append(f"{magic_dns}/32")
         for peer in (instance_infos.get('peers') or []):
             for conn in (peer.get('conns') or []):
                 stats = conn.get('stats') or {}
