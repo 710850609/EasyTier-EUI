@@ -315,9 +315,61 @@ html.dark .var-popup__content[var-popup-cover] {
   bottom: 0;
 }
 
+/* 右侧弹出层：高光条移到左边，改为纵向暗-亮-暗渐变 */
+.var-popup__content.var-popup--right::after {
+  top: 20%;
+  bottom: 20%;
+  left: 0;
+  right: auto;
+  width: 1px;
+  height: auto;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    rgba(255, 255, 255, 0.45),
+    transparent
+  );
+}
+
+/* 左侧弹出层：高光条移到右边 */
+.var-popup__content.var-popup--left::after {
+  top: 20%;
+  bottom: 20%;
+  left: auto;
+  right: 0;
+  width: 1px;
+  height: auto;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    rgba(255, 255, 255, 0.45),
+    transparent
+  );
+}
+
 .var-popup__content.var-popup--top::before {
   background: linear-gradient(
     180deg,
+    rgba(0, 0, 0, 0.08) 0%,
+    transparent 45%,
+    rgba(255, 255, 255, 0.40) 100%
+  );
+}
+
+/* 右侧弹出层：内发光边框左侧更亮，模拟玻璃边缘 */
+.var-popup__content.var-popup--right::before {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.40) 0%,
+    transparent 45%,
+    rgba(0, 0, 0, 0.08) 100%
+  );
+}
+
+/* 左侧弹出层：内发光边框右侧更亮 */
+.var-popup__content.var-popup--left::before {
+  background: linear-gradient(
+    90deg,
     rgba(0, 0, 0, 0.08) 0%,
     transparent 45%,
     rgba(255, 255, 255, 0.40) 100%
@@ -341,6 +393,24 @@ html.dark .var-switch--variant .var-switch__track {
 html.dark .var-popup__content::after {
   background: linear-gradient(
     90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+}
+
+html.dark .var-popup__content.var-popup--right::after {
+  background: linear-gradient(
+    180deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+}
+
+html.dark .var-popup__content.var-popup--left::after {
+  background: linear-gradient(
+    180deg,
     transparent,
     rgba(255, 255, 255, 0.2),
     transparent
@@ -379,6 +449,24 @@ html.dark .var-popup__content::before {
 html.dark .var-popup__content.var-popup--top::before {
   background: linear-gradient(
     180deg,
+    rgba(255, 255, 255, 0.02) 0%,
+    transparent 50%,
+    rgba(255, 255, 255, 0.18) 100%
+  );
+}
+
+html.dark .var-popup__content.var-popup--right::before {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.18) 0%,
+    transparent 50%,
+    rgba(255, 255, 255, 0.02) 100%
+  );
+}
+
+html.dark .var-popup__content.var-popup--left::before {
+  background: linear-gradient(
+    90deg,
     rgba(255, 255, 255, 0.02) 0%,
     transparent 50%,
     rgba(255, 255, 255, 0.18) 100%
@@ -558,7 +646,7 @@ html:not(.dark) .var-popup:has(.var-popup--left) .var-popup__overlay {
 }
 
 html:not(.dark) .var-popup:has(.var-popup--bottom) .var-popup__overlay {
-  background: linear-gradient(to top, transparent 20%, rgba(0, 0, 0, 0.12) 40%, rgba(0, 0, 0, 0.12) 80%, transparent 100%) !important;
+  background: linear-gradient(to bottom, transparent 15%, rgba(0, 0, 0, 0.15) 40%, rgba(0, 0, 0, 0.1) 60%, rgba(0, 0, 0, 0.05) 100%) !important;
 }
 
 html:not(.dark) .var-popup:has(.var-popup--top) .var-popup__overlay {
