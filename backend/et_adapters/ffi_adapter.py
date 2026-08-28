@@ -148,16 +148,11 @@ class FfiAdapter(IEasyTierAdapter):
                 rebuild_toml = True
             # 自适应 mtu 。根据AI识别：ffi模式下，没根据是否加密自适应 mtu
             mtu = doc.get('flags', {}).get('mtu')
-            if mtu is None:
-                if doc.get('flags', {}).get('enable_encryption'):
-                    mtu = 1360
-                else:
-                    mtu = 1380
-                rebuild_toml =True
             if run_configs.IS_ANDROID:
-                # 参考官方安卓实现，固定 1300
-                mtu = 1300
-                rebuild_toml =True
+                if mtu is None:
+                    # 参考官方安卓实现，默认 1300
+                    mtu = 1300
+                    rebuild_toml =True
                 # 安卓系统下，如果hostname为空，使用设备名称
                 hostname = doc.get('hostname')
                 if not hostname:
@@ -171,6 +166,13 @@ class FfiAdapter(IEasyTierAdapter):
                         logger.info(f"安卓设备名称为空，已使用设备名称替代: {doc['hostname']}")
                     except Exception as e:
                         logger.warning(f"获取安卓设备名称失败: {e}")
+
+            if mtu is None:
+                if doc.get('flags', {}).get('enable_encryption'):
+                    mtu = 1360
+                else:
+                    mtu = 1380
+                rebuild_toml =True
             if rebuild_toml:
                 toml_config = tomlkit.dumps(doc)
                 logger.info(f"Rebuilt toml config for run_network_instance: \n{toml_config}")
