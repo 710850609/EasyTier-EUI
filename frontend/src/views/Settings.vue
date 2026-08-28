@@ -217,7 +217,7 @@
         >
           <var-cell>
             <template #icon>
-              <svg-icon type="mdi" :path="mdilPencil" color="var(--color-primary)" />
+              <svg-icon type="mdi" :path="mdiDraw" color="var(--color-primary)" />
             </template>
             <template #description>
               <var-input :placeholder="$t('settings.initialNodes.placeholder')" size="small" v-model="customPeerSource" blur-color="var(--color-primary)" />
@@ -454,8 +454,7 @@ import { openDownloadUrl } from '../utils/download.js'
 import { setLanguage, getLanguage } from '../locales/index.js'
 import { useI18n } from 'vue-i18n'
 import SvgIcon from '@jamescoyle/vue-icon'
-import { mdilPencil } from '@mdi/light-js'
-import { mdiBrightness6, mdiAccessPointNetwork, mdiDevTo, mdiShieldLock, mdiMapOutline, mdiInformation, mdiTextBoxOutline } from '@mdi/js'
+import { mdiBrightness6, mdiAccessPointNetwork, mdiDevTo, mdiShieldLock, mdiMapOutline, mdiInformation, mdiTextBoxOutline, mdiDraw } from '@mdi/js'
 
 const dev_toggle_timer = ref(null);
 const { t } = useI18n()

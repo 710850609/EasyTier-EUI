@@ -188,7 +188,7 @@
                 >
                   <template #default>
                     <div class="peer-custom-input" :key="selectInputRenderKey.peer">
-                      <svg-icon type="mdi" :path="mdilPencil" color="var(--color-primary)" size="20" />
+                      <svg-icon type="mdi" :path="mdiDraw" color="var(--color-primary)" size="20" />
                       <var-input 
                         :placeholder="$t('config.customNodePlaceholder')" 
                         size="small" 
@@ -425,7 +425,7 @@
                     >
                       <var-cell :key="selectInputRenderKey.listener">
                         <template #icon>
-                          <svg-icon type="mdi" :path="mdilPencil" color="var(--color-primary)" />
+                          <svg-icon type="mdi" :path="mdiDraw" color="var(--color-primary)" />
                         </template>
                         <template #description>
                           <var-input :placeholder="$t('config.customListenerPlaceholder')" size="small" v-model="customListener" blur-color="var(--color-primary)" />
@@ -645,7 +645,7 @@
                         >
                           <var-cell :key="selectInputRenderKey.exitNode">
                             <template #icon>
-                              <svg-icon type="mdi" :path="mdilPencil" color="var(--color-primary)" />
+                              <svg-icon type="mdi" :path="mdiDraw" color="var(--color-primary)" />
                             </template>
                             <template #description>
                               <var-input :placeholder="$t('config.customExitNodePlaceholder')" size="small" v-model="customExitNode" blur-color="var(--color-primary)" />
@@ -674,7 +674,7 @@
                         >
                           <var-cell :key="selectInputRenderKey.route">
                             <template #icon>
-                              <svg-icon type="mdi" :path="mdilPencil" color="var(--color-primary)" />
+                              <svg-icon type="mdi" :path="mdiDraw" color="var(--color-primary)" />
                             </template>
                             <template #description>
                               <var-input :placeholder="$t('config.customRoutePlaceholder')" size="small" v-model="customRoute" blur-color="var(--color-primary)" />
@@ -940,8 +940,8 @@ import toast from '../components/toast.js'
 import { api } from '../utils/api.js'
 import CodeEditor from '../components/CodeEditor.vue'
 import SvgIcon from '@jamescoyle/vue-icon'
-import { mdiEye, mdiEyeOff, mdiHomeEdit, mdiRouterNetwork, mdiMonitor, mdiLanConnect, mdiTuneVariant, mdiPlus, mdiDrawPen, mdiShareOutline, mdiSquareEditOutline, mdiTrashCanOutline  } from '@mdi/js'
-import { mdilPencil, mdilAccount, mdilLock } from '@mdi/light-js'
+import { mdiEye, mdiEyeOff, mdiHomeEdit, mdiRouterNetwork, mdiMonitor, mdiLanConnect, mdiTuneVariant, mdiPlus, mdiDrawPen, mdiShareOutline, mdiSquareEditOutline, mdiTrashCanOutline, mdiDraw  } from '@mdi/js'
+import { mdilAccount, mdilLock } from '@mdi/light-js'
 import { Html5Qrcode } from 'html5-qrcode'
 import QRCode from 'qrcode'
 
@@ -3327,8 +3327,8 @@ html.dark .port-forward-row {
 }
 
 .more-menu .menu-icon {
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   margin-right: 12px;
   flex-shrink: 0;
 }

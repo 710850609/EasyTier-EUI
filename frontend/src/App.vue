@@ -1,4 +1,4 @@
-﻿<template>
+﻿﻿﻿﻿<template>
   <Layout />
 </template>
 
@@ -114,22 +114,23 @@ html.dark {
   background: var(--color-surface-container-high) !important;
 }
 
-/* var-select 下拉框毛玻璃效果 */
+/* var-select 下拉框毛玻璃效果 — 内层只做毛玻璃，不带阴影 */
 html body .var-select__scroller,
 html body .var-select__scroller.var-elevation--3 {
   --select-scroller-background: rgba(var(--color-surface-container-rgb, 234, 240, 248), 0.02) !important;
   background: rgba(var(--color-surface-container-rgb, 234, 240, 248), 0.02) !important;
   background-color: rgba(var(--color-surface-container-rgb, 234, 240, 248), 0.02) !important;
-  backdrop-filter: blur(10px) saturate(120%) !important;
-  -webkit-backdrop-filter: blur(10px) saturate(120%) !important;
+  backdrop-filter: blur(20px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(140%) !important;
   will-change: backdrop-filter !important;
   border: none !important;
   border-left: 2px solid rgba(255, 255, 255, 0.25) !important;
   border-right: 2px solid rgba(255, 255, 255, 0.25) !important;
   border-radius: 12px !important;
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+  box-shadow: none !important;
+  --shadow-key-umbra-opacity: transparent !important;
+  --shadow-key-penumbra-opacity: transparent !important;
+  --shadow-key-ambient-opacity: transparent !important;
 }
 
 html.dark body .var-select__scroller,
@@ -139,9 +140,10 @@ html.dark body .var-select__scroller.var-elevation--3 {
   background-color: rgba(var(--color-surface-container-rgb, 30, 36, 53), 0.18) !important;
   border-left: 1px solid rgba(255, 255, 255, 0.25) !important;
   border-right: 1px solid rgba(255, 255, 255, 0.25) !important;
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+  box-shadow: none !important;
+  --shadow-key-umbra-opacity: transparent !important;
+  --shadow-key-penumbra-opacity: transparent !important;
+  --shadow-key-ambient-opacity: transparent !important;
 }
 
 /* 关闭毛玻璃效果时，var-select 下拉框使用实色背景 */
@@ -375,6 +377,10 @@ html.dark .var-popup__content.var-popup--top::before {
   );
 }
 
+/* var-select 框圆角 */
+.var-select__menu {
+  border-radius: 12px;
+}
 /* 底部弹出层圆角 */
 .var-popup--bottom {
   border-radius: 20px 20px 0 0 !important;
@@ -487,7 +493,7 @@ html.dark .var-paper::after {
   display: none;
 }
 
-/* popup 遮罩层 - 渐变暗角聚焦（替代纯色半透明） */
+/* popup 遮罩层 - 中心弹出：径向渐变暗角 */
 .var-popup__overlay {
   background: radial-gradient(
     ellipse 70% 55% at 50% 50%,
@@ -498,7 +504,6 @@ html.dark .var-paper::after {
   -webkit-backdrop-filter: blur(2px) !important;
 }
 
-/* 亮色模式遮罩 - 适度压暗，突出弹窗玻璃质感 */
 html:not(.dark) .var-popup__overlay {
   background: radial-gradient(
     ellipse 70% 55% at 50% 50%,
@@ -509,22 +514,47 @@ html:not(.dark) .var-popup__overlay {
   -webkit-backdrop-filter: blur(3px) !important;
 }
 
-/* 非中心弹出方向（上/下/左/右）使用全屏半透明遮罩 */
-/* 渐变晕团仅适用于中心弹出，非中心弹出时晕团与弹窗位置错位，视觉脏 */
-.var-popup--bottom .var-popup__overlay,
-.var-popup--top .var-popup__overlay,
-.var-popup--left .var-popup__overlay,
-.var-popup--right .var-popup__overlay {
-  background: rgba(0, 0, 0, 0.35) !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
+/* 左右弹窗：Y轴暗带 */
+.var-popup:has(.var-popup--right) .var-popup__overlay {
+  background: linear-gradient(to right, transparent 50%, rgba(0, 0, 0, 0.12) 70%, rgba(0, 0, 0, 0.12) 70%, transparent 100%) !important;
+  backdrop-filter: blur(2px) !important;
+  -webkit-backdrop-filter: blur(2px) !important;
 }
 
-html:not(.dark) .var-popup--bottom .var-popup__overlay,
-html:not(.dark) .var-popup--top .var-popup__overlay,
-html:not(.dark) .var-popup--left .var-popup__overlay,
-html:not(.dark) .var-popup--right .var-popup__overlay {
-  background: rgba(0, 0, 0, 0.25) !important;
+.var-popup:has(.var-popup--left) .var-popup__overlay {
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.30) 0%, transparent 70%) !important;
+  backdrop-filter: blur(2px) !important;
+  -webkit-backdrop-filter: blur(2px) !important;
+}
+
+/* 上下弹窗：X轴暗带 */
+.var-popup:has(.var-popup--bottom) .var-popup__overlay {
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.30) 0%, transparent 70%) !important;
+  backdrop-filter: blur(2px) !important;
+  -webkit-backdrop-filter: blur(2px) !important;
+}
+
+.var-popup:has(.var-popup--top) .var-popup__overlay {
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.30) 0%, transparent 70%) !important;
+  backdrop-filter: blur(2px) !important;
+  -webkit-backdrop-filter: blur(2px) !important;
+}
+
+/* 亮色模式方向适配 */
+html:not(.dark) .var-popup:has(.var-popup--right) .var-popup__overlay {
+  background: linear-gradient(to left, rgba(0, 0, 0, 0.20) 0%, transparent 70%) !important;
+}
+
+html:not(.dark) .var-popup:has(.var-popup--left) .var-popup__overlay {
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.20) 0%, transparent 70%) !important;
+}
+
+html:not(.dark) .var-popup:has(.var-popup--bottom) .var-popup__overlay {
+  background: linear-gradient(to top, transparent 20%, rgba(0, 0, 0, 0.12) 40%, rgba(0, 0, 0, 0.12) 80%, transparent 100%) !important;
+}
+
+html:not(.dark) .var-popup:has(.var-popup--top) .var-popup__overlay {
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.20) 0%, transparent 70%) !important;
 }
 
 /* var-cell 样式适配 */
@@ -655,8 +685,11 @@ html:not(.dark) .var-dialog--box::after {
   -webkit-backdrop-filter: blur(20px) saturate(140%) !important;
   will-change: backdrop-filter !important;
   border: 1px solid rgba(0, 0, 0, 0.05) !important;
-  /* 下拉框菜单圆角。解决灰色边框问题。 */
   border-radius: 12px !important;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.10),
+    0 8px 24px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
 }
 
 html.dark .var-menu__menu.var--box.var-select__menu {
@@ -664,6 +697,10 @@ html.dark .var-menu__menu.var--box.var-select__menu {
   border-color: rgba(255, 255, 255, 0.08) !important;
   border-left-color: rgba(255, 255, 255, 0.12) !important;
   border-right-color: rgba(255, 255, 255, 0.12) !important;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.18),
+    0 8px 24px rgba(0, 0, 0, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
 }
 
 /* 通用 var-menu 毛玻璃（非 select，如更多菜单等） */
@@ -681,7 +718,9 @@ html body .var-menu__menu.var--box.var-menu--menu-background-color:not(.var-sele
   border-right: 2px solid rgba(255, 255, 255, 0.25) !important;
   border-radius: 12px !important;
   box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.1),
+    0 2px 4px rgba(0, 0, 0, 0.32),
+    0 8px 24px rgba(0, 0, 0, 0.22),
+    0 16px 48px rgba(0, 0, 0, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
 }
 
@@ -695,7 +734,9 @@ html.dark body .var-menu__menu.var--box.var-menu--menu-background-color:not(.var
   border-left: 1px solid rgba(255, 255, 255, 0.25) !important;
   border-right: 1px solid rgba(255, 255, 255, 0.25) !important;
   box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.35),
+    0 2px 4px rgba(0, 0, 0, 0.12),
+    0 8px 24px rgba(0, 0, 0, 0.12),
+    0 16px 48px rgba(0, 0, 0, 0.20),
     inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
 }
 
@@ -747,6 +788,7 @@ html.no-glass .var-popup__content[var-popup-cover] {
 
 html.no-glass .var-menu__menu.var--box.var-select__menu {
   background: var(--color-surface-container) !important;
+  box-shadow: none !important;
 }
 
 html.no-glass .var-popup__overlay {
@@ -776,12 +818,34 @@ html.no-glass.dark .submenu-popup-content {
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
 }
 
-/* 关闭毛玻璃后，底部导航栏使用实色背景 */
+/* 关闭毛玻璃后，底部导航栏保留渐变透明效果，只去掉 blur */
 html.no-glass .bottom-nav {
+  background: transparent !important;
+}
+
+html.no-glass .bottom-nav::before {
   background: var(--color-surface) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  -webkit-mask-image: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 1) 66%,
+    rgba(0, 0, 0, 0) 100%
+  );
+  mask-image: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 1) 66%,
+    rgba(0, 0, 0, 0) 100%
+  );
 }
 
 html.no-glass.dark .bottom-nav {
+  background: transparent !important;
+}
+
+html.no-glass.dark .bottom-nav::before {
   background: var(--color-surface) !important;
 }
 
@@ -802,8 +866,9 @@ html.no-glass .var-menu__menu.var--box.var-menu--menu-background-color:not(.var-
   border: 1px solid var(--color-outline-variant) !important;
   border-radius: 12px !important;
   box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.10),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+    0 2px 4px rgba(0, 0, 0, 0.08),
+    0 8px 24px rgba(0, 0, 0, 0.08),
+    0 16px 48px rgba(0, 0, 0, 0.05) !important;
 }
 
 /* 关闭毛玻璃后，底部导航子菜单使用实色背景 */
