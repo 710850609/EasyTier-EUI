@@ -1,3 +1,26 @@
+##  
+- 新增：【节点】页面支持查看中继路径（默认开启）
+- 新增：【配置】页面支持自定义魔法DNS顶级域名
+- 优化：安卓版本默认MTU为1300（参考官方安卓2.6.4版本固定值）
+- 优化：ffi模式选择内置版本时，跳过下载内核
+- 优化：【节点】页面更多菜单显示，优化节点排序
+- 优化：【配置】页面统一更多按钮菜单
+- 修复：适配安卓、飞牛App导航栏、全面屏（有手势线）、全面屏（无手势线）
+- 修复：开启魔法DNS后，无法通过魔法DNS域名访问
+
+<br>
+
+----
+
+- New: [Nodes] page now supports viewing relay paths (enabled by default)
+- New: [Config] page now supports custom Magic DNS top-level domain
+- Improved: Android default MTU set to 1300 (reference from official Android 2.6.4 fixed value)
+- Improved: FFI mode skips kernel download when selecting built-in version
+- Improved: [Nodes] page more menu display and node sorting
+- Improved: [Config] page unified more button menu
+- Fixed: Adapted navigation bar and full-screen display for Android and FnOS (with/without gesture line)
+- Fixed: Magic DNS domain not accessible when Magic DNS is enabled
+
 ##  2.3
 - 新增：安卓版支持应用启动重连，自动运行上次未手动关闭的配置 ([Feature #9](https://github.com/710850609/EasyTier-EUI/issues/9))
 - 优化：安卓版VPN支持IPv6、支持魔法DNS、支持MTU、根据物理网络自适应是否计量网络
