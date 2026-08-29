@@ -50,6 +50,20 @@
       "uri": "wss://et0.303302.xyz",
       "owner": "佚名",
       "dynamic": false
+    },
+    "wss://et.0612.fun:443": {
+      "status": 1,
+      "updateTime": 1787985162,
+      "uri": "wss://et.0612.fun:443",
+      "owner": "罐头",
+      "dynamic": false
+    },
+    "tcp://et.basd1.de:11010": {
+      "status": 1,
+      "updateTime": 1787985162,
+      "uri": "tcp://et.basd1.de:11010",
+      "owner": "宇智波希(神の节点)",
+      "dynamic": false
     }
   }
 }
