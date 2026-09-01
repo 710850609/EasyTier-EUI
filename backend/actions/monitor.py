@@ -15,4 +15,6 @@ def list(params, *args, **kwargs):
     profile = Validator.check_profile(profile)
     relay_path = params.get('relay_path', 'false')
     relay_path = relay_path.lower() == 'true'
-    return get_facade().get_peers(profile, relay_path)
+    proxy_info = params.get('proxy_info', 'true')
+    proxy_info = proxy_info.lower() == 'true'
+    return get_facade().get_peers(profile, relay_path, proxy_info)

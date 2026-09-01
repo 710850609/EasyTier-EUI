@@ -239,7 +239,7 @@ class FfiAdapter(IEasyTierAdapter):
     def status(self, instance_name: str) -> bool:
         return instance_name in self._instance_set
 
-    def get_peers(self, instance_name: str, relay_path: bool = False) -> list[dict]:
+    def get_peers(self, instance_name: str, relay_path: bool = False, proxy_info: bool = True) -> list[dict]:
         raw = self._collect_via_raw_ffi()
         instance_infos = raw.get(instance_name, {})
         peers = []
@@ -322,6 +322,7 @@ class FfiAdapter(IEasyTierAdapter):
                         break
                     cur_pid = next_hop
                 relay.reverse()
+                relay = relay[:1]
 
             peers.append({
                 'ipv4': ipv4,
@@ -337,6 +338,8 @@ class FfiAdapter(IEasyTierAdapter):
                 'nat_type': self._format_nat_type(stun.get('udp_nat_type', 0)),
                 'id': str(route.get('peer_id', '')),
                 'relay_path': relay,
+                'proxy_cidrs': list(route.get('proxy_cidrs') or []),
+                'proxy_info': [],
             })
 
         peers.sort(key=lambda x: (

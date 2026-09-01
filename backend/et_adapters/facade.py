@@ -40,8 +40,8 @@ class EasyTierFacade(IEasyTierAdapter):
     def status(self, instance_name: str) -> bool:
         return self._adapter.status(instance_name)
 
-    def get_peers(self, instance_name: str, relay_path: bool = False) -> list[dict]:
-        return self._adapter.get_peers(instance_name, relay_path)
+    def get_peers(self, instance_name: str, relay_path: bool = False, proxy_info: bool = True) -> list[dict]:
+        return self._adapter.get_peers(instance_name, relay_path, proxy_info)
 
     def change_log_level(self, log_level: str, **kwargs) -> None:
         self._adapter.change_log_level(log_level, **kwargs)

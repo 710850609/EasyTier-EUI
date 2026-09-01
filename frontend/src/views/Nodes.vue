@@ -131,7 +131,7 @@
               <td :colspan="visibleColumns.length" :style="{ height: topSpacerHeight + 'px', padding: 0, border: 'none' }"></td>
             </tr>
             <template v-for="node in virtualFilteredNodes" :key="node.id" >
-            <tr :class="{ 'has-relay': node.relay_path && node.relay_path.length && expandedRelayNodes.has(node.id) }">
+            <tr :class="{ 'has-info': (showRelayPath && node.relay_path && node.relay_path.length && expandedRelayNodes.has(node.id)) || (showProxyInfo && node.proxy_cidrs && node.proxy_cidrs.length && expandedProxyNodes.has(node.id)) }">
               <td 
                 v-for="(col, index) in visibleColumns" 
                 :key="col.key"
@@ -155,6 +155,20 @@
                     :value="parseNode(node, col.key)"
                   />
                 </template>
+                <template v-else-if="col.key === 'ipv4'">
+                  <div class="ipv4-cell">
+                    <span class="cell-text" @click="handleClickCell(node, col.key)">{{ parseNode(node, col.key) }}</span>
+                    <span
+                      v-if="showProxyInfo && node.proxy_cidrs && node.proxy_cidrs.length"
+                      class="proxy-toggle"
+                      @click="toggleProxy(node.id)"
+                    >
+                      <svg-icon size="12" type="mdi" :path="mdiArrowDecisionOutline" />
+                      <span class="proxy-count">{{ node.proxy_cidrs.length }}</span>
+                      <span class="proxy-arrow">{{ expandedProxyNodes.has(node.id) ? '▾' : '▸' }}</span>
+                    </span>
+                  </div>
+                </template>
                 <template v-else-if="col.key === 'lat_ms'">
                   <span class="cell-text" :class="{ 'lat-medium': node.lat_ms >= 60 && node.lat_ms <= 150, 'lat-high': node.lat_ms > 150 }" @click="handleClickCell(node, col.key)">{{ parseNode(node, col.key) }}</span>
                 </template>
@@ -171,24 +185,55 @@
                 </template>
               </td>
             </tr>
-            <tr v-if="showRelayPath && node.relay_path && node.relay_path.length && expandedRelayNodes.has(node.id)" class="relay-row">
+            <tr v-if="(showRelayPath && node.relay_path && node.relay_path.length && expandedRelayNodes.has(node.id)) || (showProxyInfo && node.proxy_cidrs && node.proxy_cidrs.length && expandedProxyNodes.has(node.id))" class="info-row">
               <td></td>
               <td :colspan="visibleColumns.length - 1">
-                <div class="relay-hop">
-                  <span class="relay-connector"></span>
-                  <span class="relay-hop-name">Local</span>
-                </div>
-                <div v-for="(hop, i) in node.relay_path" :key="i" class="relay-hop" :style="{ paddingLeft: (i + 1) * 16 + 'px' }">
-                  <span class="relay-connector">{{ i === node.relay_path.length - 1 ? '└' : '├' }}</span>
-                  <span class="relay-hop-name">{{ hop.hostname || '?' }}</span>
-                  <span
-                    v-if="hop.lat_ms !== null && hop.lat_ms !== undefined && hop.lat_ms !== '-'"
-                    class="relay-hop-latency"
-                    :class="relayLatencyClass(hop.lat_ms)"
-                  >{{ hop.lat_ms }}ms</span>
-                  <var-tooltip v-if="hop.remote_addrs && hop.remote_addrs.length" :content="hop.remote_addrs[0]">
-                    <span class="relay-hop-url">{{ formatRelayUrl(hop.remote_addrs[0]) }}</span>
-                  </var-tooltip>
+                <div class="info-section">
+                  <div v-if="showRelayPath && node.relay_path && node.relay_path.length && expandedRelayNodes.has(node.id)" class="relay-section">
+                    <div class="relay-section-header">
+                      <span class="relay-section-title">{{ $t('nodes.nextRelayHop') }}</span>
+                      <span class="relay-connector">→</span>
+                      <var-tooltip :content="node.relay_path[0]?.hostname || ''">
+                        <span class="relay-hop-name">{{ node.relay_path[0]?.hostname || '?' }}</span>
+                      </var-tooltip>
+                      <var-tooltip v-if="node.relay_path[0]?.remote_addrs?.length" :content="node.relay_path[0].remote_addrs[0]">
+                        <span class="relay-hop-url relay-hop-url-single">{{ formatRelayUrl(node.relay_path[0].remote_addrs[0]) }}</span>
+                      </var-tooltip>
+                    </div>
+                  </div>
+                  <div v-if="showProxyInfo && node.proxy_cidrs && node.proxy_cidrs.length && expandedProxyNodes.has(node.id)" class="proxy-section">
+                    <div class="proxy-section-header">
+                      <span class="proxy-section-title"><svg-icon type="mdi" :path="mdiVectorLink" size="10"></svg-icon> {{ $t('nodes.proxyInfo') }}</span>
+                      <span v-if="node.proxy_info && node.proxy_info.length" class="proxy-section-summary">
+                        {{ node.proxy_info.length }} {{ $t('nodes.proxyActive') }}
+                      </span>
+                      <span v-else class="proxy-section-summary">
+                        0 {{ $t('nodes.proxyActive') }}
+                      </span>
+                    </div>
+                    <div class="proxy-cidr-list">
+                      <div class="proxy-cidr-row" v-for="cidr in node.proxy_cidrs" :key="cidr">
+                        <span
+                          class="proxy-status-dot"
+                          :class="node.proxy_info && node.proxy_info.some(p => proxyIpMatchesCidr(p.proxy_ip, cidr)) ? 'dot-active' : 'dot-inactive'"
+                        ></span>
+                        <span class="proxy-cidr-ip" @click="handleClickCell({ipv4: cidr}, 'ipv4')">{{ cidr }}</span>
+                        <span class="proxy-cidr-ports">
+                          <template v-if="node.proxy_info && node.proxy_info.some(p => proxyIpMatchesCidr(p.proxy_ip, cidr))">
+                            <template v-for="(p, pi) in node.proxy_info.filter(p => proxyIpMatchesCidr(p.proxy_ip, cidr))" :key="pi">
+                              <span class="proxy-ip-text" @click="handleClickCell({ipv4: p.proxy_ip}, 'ipv4')">{{ p.proxy_ip }}</span>
+                              <span
+                                v-for="(t, ti) in p.transport_type"
+                                :key="pi + '-' + ti"
+                                class="proxy-port-tag"
+                              >{{ t }}</span>
+                            </template>
+                          </template>
+                          <span v-else class="proxy-no-traffic">-</span>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </td>
             </tr>
@@ -217,6 +262,15 @@
                 <span class="node-ip" @click="handleClickCell(node, 'ipv4')">{{ node.ipv4 || '' }}</span>
                 <span v-if="visibleColumnsMap.hostname && node.hostname && node.ipv4" class="info-chip host-chip">
                   {{ node.hostname }}
+                </span>
+                <span
+                  v-if="showProxyInfo && node.proxy_cidrs && node.proxy_cidrs.length"
+                  class="proxy-toggle proxy-toggle-mobile"
+                  @click="toggleProxy(node.id)"
+                >
+                  <svg-icon size="12" type="mdi" :path="mdiArrowDecisionOutline" />
+                  <span class="proxy-count">{{ node.proxy_cidrs.length }}</span>
+                  <span class="proxy-arrow">{{ expandedProxyNodes.has(node.id) ? '▾' : '▸' }}</span>
                 </span>
               </div>
             </div>
@@ -247,25 +301,45 @@
                 {{ node.tunnel_proto }}
               </span>
               <div v-if="node.relay_path && node.relay_path.length && expandedRelayNodes.has(node.id)" class="relay-path-mobile">
-                <div class="relay-hop">
-                  <span class="relay-connector"></span>
-                  <span class="relay-hop-name">Local</span>
-                </div>
-                <div v-for="(hop, i) in node.relay_path" :key="i" class="relay-hop">
-                  <div class="relay-hop-line">
-                    <span class="relay-connector">{{ i === node.relay_path.length - 1 ? '└' : '├' }}</span>
-                    <span class="relay-hop-name">{{ hop.hostname || '?' }}</span>
-                    <span
-                      v-if="hop.lat_ms !== null && hop.lat_ms !== undefined && hop.lat_ms !== '-'"
-                      class="relay-hop-latency"
-                      :class="relayLatencyClass(hop.lat_ms)"
-                    >{{ hop.lat_ms }}ms</span>
+                <div class="relay-section relay-section-mobile">
+                  <div class="relay-section-header">
+                    <span class="relay-section-title">{{ $t('nodes.nextRelayHop') }}</span>
                   </div>
-                  <var-tooltip v-if="hop.remote_addrs && hop.remote_addrs.length" :content="hop.remote_addrs[0]">
-                    <div class="relay-hop-url-line">
-                      <span class="relay-hop-url">{{ formatRelayUrl(hop.remote_addrs[0]) }}</span>
-                    </div>
-                  </var-tooltip>
+                  <div class="relay-hop relay-hop-single">
+                    <span class="relay-connector">→</span>
+                    <span class="relay-hop-name">{{ node.relay_path[0]?.hostname || '?' }}</span>
+                    <var-tooltip v-if="node.relay_path[0]?.remote_addrs?.length" :content="node.relay_path[0].remote_addrs[0]">
+                      <span class="relay-hop-url">{{ formatRelayUrl(node.relay_path[0].remote_addrs[0]) }}</span>
+                    </var-tooltip>
+                  </div>
+                </div>
+              </div>
+              <div v-if="showProxyInfo && node.proxy_cidrs && node.proxy_cidrs.length && expandedProxyNodes.has(node.id)" class="proxy-section-mobile">
+                <div class="proxy-mobile-header">
+                  <span class="proxy-mobile-title"><svg-icon type="mdi" :path="mdiVectorLink" size="10"></svg-icon> {{ $t('nodes.proxyInfo') }} ({{ node.proxy_cidrs.length }})</span>
+                  <span class="proxy-mobile-summary">
+                    {{ (node.proxy_info || []).length }} {{ $t('nodes.proxyActive') }}
+                  </span>
+                </div>
+                <div class="proxy-mobile-item" v-for="cidr in node.proxy_cidrs" :key="cidr">
+                  <span
+                    class="proxy-status-dot"
+                    :class="node.proxy_info && node.proxy_info.some(p => proxyIpMatchesCidr(p.proxy_ip, cidr)) ? 'dot-active' : 'dot-inactive'"
+                  ></span>
+                  <span class="proxy-mobile-cidr" @click="handleClickCell({ipv4: cidr}, 'ipv4')">{{ cidr }}</span>
+                  <span class="proxy-mobile-ports">
+                    <template v-if="node.proxy_info && node.proxy_info.some(p => proxyIpMatchesCidr(p.proxy_ip, cidr))">
+                      <template v-for="(p, pi) in node.proxy_info.filter(p => proxyIpMatchesCidr(p.proxy_ip, cidr))" :key="pi">
+                        <span class="proxy-mobile-ip" @click="handleClickCell({ipv4: p.proxy_ip}, 'ipv4')">{{ p.proxy_ip }}</span>
+                        <span
+                          v-for="(t, ti) in p.transport_type"
+                          :key="pi + '-' + ti"
+                          class="proxy-port-tag proxy-port-tag-mobile"
+                        >{{ t }}</span>
+                      </template>
+                    </template>
+                    <span v-else class="proxy-no-traffic proxy-no-traffic-mobile">{{ $t('nodes.proxyNoTraffic') }}</span>
+                  </span>
                 </div>
               </div>
             </div>
@@ -300,7 +374,7 @@
       </div>
     </var-paper>
 
-    <!-- 表格设置面板 -->
+    <!-- 弹窗 表格设置面板 -->
     <var-popup v-model:show="showFilterMenu" :position="isMobile ? 'bottom' : 'right'">
       <var-paper class="settings-panel">
         <div class="panel-header">
@@ -323,8 +397,11 @@
               >
                 {{ col.label }}
               </var-checkbox>
-              <var-checkbox class="relay-path-checkbox" v-model="showRelayPath">
+              <var-checkbox v-model="showRelayPath">
                 {{ $t('nodes.relayPath') }}
+              </var-checkbox>
+              <var-checkbox v-model="showProxyInfo">
+                {{ $t('nodes.proxyInfo') }}
               </var-checkbox>
             </div>
           </div>
@@ -403,7 +480,7 @@ import { api, cancelAllRequests } from '../utils/api.js'
 import toast from '../components/toast.js'
 import { Poller } from '../utils/poller.js'
 import { NODES_SETTINGS_PC_KEY, NODES_SETTINGS_MOBILE_KEY } from '../config/storage-keys.js'
-import { mdiCircle } from '@mdi/js'
+import { mdiCircle, mdiArrowDecisionOutline, mdiVectorLink } from '@mdi/js'
 import { mdilArrowDown, mdilArrowUp } from '@mdi/light-js'
 import SvgIcon from '@jamescoyle/vue-icon'
 
@@ -440,6 +517,9 @@ const selectedColumns = ref(getDefaultColumns())
 const selectedNodeTypes = ref(['normal'])
 // 是否显示中继路径
 const showRelayPath = ref(true)
+
+// 是否显示代理信息
+const showProxyInfo = ref(true)
 // 刷新速度
 const refreshStep = ref(3)
 // 移动端列表模式（仅移动端有效，PC 端强制为 false）
@@ -456,6 +536,7 @@ const serviceRunning = ref(false)
 const serviceOperating = ref(false)
 const pendingAction = ref('')
 const expandedRelayNodes = ref(new Set())
+const expandedProxyNodes = ref(new Set())
 
 const toggleRelay = (nodeId) => {
   const s = expandedRelayNodes.value
@@ -465,6 +546,39 @@ const toggleRelay = (nodeId) => {
     s.add(nodeId)
   }
   expandedRelayNodes.value = new Set(s)
+}
+
+const toggleProxy = (nodeId) => {
+  const s = expandedProxyNodes.value
+  if (s.has(nodeId)) {
+    s.delete(nodeId)
+  } else {
+    s.add(nodeId)
+  }
+  expandedProxyNodes.value = new Set(s)
+}
+
+const _ipV4ToInt = (ip) => {
+  const parts = ip.split('.').map(Number)
+  if (parts.length !== 4 || parts.some(n => isNaN(n) || n < 0 || n > 255)) return -1
+  return ((parts[0] << 24) | (parts[1] << 16) | (parts[2] << 8) | parts[3]) >>> 0
+}
+
+const proxyIpMatchesCidr = (proxyIp, cidrOrIp) => {
+  if (!proxyIp || !cidrOrIp) return false
+  const ip = _ipV4ToInt(proxyIp)
+  if (ip < 0) return false
+  const slash = cidrOrIp.indexOf('/')
+  if (slash < 0) {
+    return proxyIp === cidrOrIp || proxyIp.startsWith(cidrOrIp + '.')
+  }
+  const network = cidrOrIp.substring(0, slash)
+  const prefix = parseInt(cidrOrIp.substring(slash + 1), 10)
+  if (isNaN(prefix) || prefix < 0 || prefix > 32) return false
+  const netInt = _ipV4ToInt(network)
+  if (netInt < 0) return false
+  const mask = prefix === 0 ? 0 : (0xffffffff << (32 - prefix)) >>> 0
+  return (ip & mask) === (netInt & mask)
 }
 
 const relayLatencyClass = (latMs) => {
@@ -498,6 +612,7 @@ const loadSettings = () => {
   selectedColumns.value = settings.columns || getDefaultColumns()
   selectedNodeTypes.value = settings.nodeTypes || ['normal']
   showRelayPath.value = settings.relayPath ?? true
+  showProxyInfo.value = settings.proxyInfo ?? true
   refreshStep.value = settings.refreshStep || 3
   useMobileList.value = isMobile.value ? (settings.cardList ?? isMobile.value) : false
   settingsLoaded.value = true
@@ -510,6 +625,7 @@ watchEffect(() => {
     columns: selectedColumns.value,
     nodeTypes: selectedNodeTypes.value,
     relayPath: showRelayPath.value,
+    proxyInfo: showProxyInfo.value,
     refreshStep: refreshStep.value,
   }
   if (isMobile.value) {
@@ -594,6 +710,7 @@ const resetSettings = () => {
   selectedColumns.value = getDefaultColumns()
   selectedNodeTypes.value = ['normal']
   showRelayPath.value = true
+  showProxyInfo.value = true
   refreshStep.value = 3
   if (isMobile.value) {
     useMobileList.value = isMobile.value
@@ -746,6 +863,9 @@ const fetchNodes = async () => {
     }
     if (showRelayPath.value) {
       params.relay_path = true
+    }
+    if (showProxyInfo.value) {
+      params.proxy_info = true
     }
     const data = await api.monitor.getList(params);
     if (isUnmounted.value) return
@@ -1138,10 +1258,6 @@ onUnmounted(() => {
   margin: 0;
 }
 
-.relay-path-checkbox {
-  margin-top: 8px;
-}
-
 .reset-section {
   padding-top: 4px;
 }
@@ -1338,14 +1454,53 @@ td {
   color: var(--color-text-tertiary, #999);
 }
 
-.relay-row td {
+.info-row td {
   border: none;
   border-bottom: 1px solid var(--color-outline-variant);
   padding: 4px 12px 6px 12px;
   background: var(--color-surface-container-low, #f5f5f5);
 }
 
-.has-relay td {
+.info-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.relay-section,
+.proxy-section {
+  border: 1px solid var(--color-outline-variant, #e0e0e0);
+  border-radius: 8px;
+  padding: 8px 12px;
+  background: var(--color-surface, #fff);
+}
+
+.relay-section-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--color-text-secondary, #666);
+}
+
+.relay-section-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-secondary, #666);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+.relay-section-mobile {
+  padding: 8px 10px;
+  margin-top: 6px;
+  background: var(--color-surface-container, #fafafa);
+  border: 1px solid var(--color-outline-variant, #e0e0e0);
+  border-radius: 8px;
+}
+
+.has-info td {
   border-bottom: none;
 }
 
@@ -1411,8 +1566,23 @@ td {
   flex-shrink: 1;
 }
 
-html.dark .relay-row td {
+html.dark .info-row td {
   background: rgba(255, 255, 255, 0.03);
+}
+
+html.dark .relay-section,
+html.dark .proxy-section {
+  background: rgba(30, 30, 30, 0.6);
+  border-color: #444;
+}
+
+html.dark .relay-section-title {
+  color: #aaa;
+}
+
+html.dark .relay-section-mobile {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: #444;
 }
 
 html.dark .relay-hop-name {
@@ -1456,6 +1626,316 @@ html.dark .cell-text.loss-medium {
 
 html.dark .cell-text.loss-high {
   color: var(--color-danger);
+}
+
+.ipv4-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.proxy-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 1px 5px;
+  border-radius: 10px;
+  background: rgba(156, 39, 176, 0.1);
+  color: var(--color-secondary, #9c27b0);
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+
+.proxy-toggle:hover {
+  background: rgba(156, 39, 176, 0.2);
+}
+
+.proxy-count {
+  font-size: 10px;
+}
+
+.proxy-arrow {
+  font-size: 11px;
+  color: var(--color-text-tertiary, #999);
+  margin-left: 1px;
+}
+
+.proxy-toggle-mobile {
+  padding: 1px 4px;
+  margin-left: 4px;
+}
+
+.relay-hop-single {
+  font-size: 12px;
+  gap: 8px;
+}
+
+.relay-hop-url-single {
+  max-width: 200px;
+}
+
+.proxy-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--color-outline-variant, #eee);
+}
+
+.proxy-section-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-primary, #333);
+}
+
+.proxy-section-summary {
+  font-size: 10px;
+  color: var(--color-text-secondary, #666);
+}
+
+.proxy-cidr-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.proxy-cidr-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  line-height: 1.6;
+  transition: background 0.1s;
+}
+
+.proxy-cidr-row:hover {
+  background: var(--color-surface-container-high, #f0f0f0);
+}
+
+.proxy-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.proxy-status-dot.dot-active {
+  background: #4caf50;
+  box-shadow: 0 0 4px rgba(76, 175, 80, 0.5);
+}
+
+.proxy-status-dot.dot-inactive {
+  background: #ccc;
+}
+
+.proxy-cidr-ip {
+  flex: 0 0 160px;
+  font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+  color: var(--color-text-primary, #333);
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.proxy-cidr-ports {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  align-items: center;
+  min-width: 0;
+}
+
+.proxy-port-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+  background: rgba(156, 39, 176, 0.12);
+  color: var(--color-secondary, #9c27b0);
+  cursor: pointer;
+  transition: background 0.1s;
+  white-space: nowrap;
+}
+
+.proxy-port-tag:hover {
+  background: rgba(156, 39, 176, 0.25);
+}
+
+.proxy-ip-text {
+  display: inline-block;
+  font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+  font-size: 11px;
+  color: var(--color-primary, #1976d2);
+  cursor: pointer;
+  padding: 0 4px 0 2px;
+  white-space: nowrap;
+}
+
+.proxy-ip-text:hover {
+  text-decoration: underline;
+}
+
+.proxy-no-traffic {
+  font-size: 11px;
+  color: var(--color-text-tertiary, #bbb);
+  font-style: italic;
+}
+
+.proxy-section-mobile {
+  margin-top: 8px;
+  padding: 10px;
+  border-radius: 8px;
+  background: var(--color-surface-container, #fafafa);
+  border: 1px solid var(--color-outline-variant, #e0e0e0);
+}
+
+.proxy-mobile-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.proxy-mobile-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-primary, #333);
+}
+
+.proxy-mobile-summary {
+  font-size: 11px;
+  color: var(--color-text-secondary, #666);
+}
+
+.proxy-mobile-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.proxy-mobile-cidr {
+  flex: 0 0 auto;
+  font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+  color: var(--color-text-primary, #333);
+  cursor: pointer;
+}
+
+.proxy-mobile-ip {
+  font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+  font-size: 11px;
+  color: var(--color-primary, #1976d2);
+  cursor: pointer;
+  padding: 0 3px;
+}
+
+.proxy-mobile-ip:hover {
+  text-decoration: underline;
+}
+
+.proxy-mobile-ports {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.proxy-port-tag-mobile {
+  padding: 1px 5px;
+  font-size: 10px;
+}
+
+.proxy-no-traffic-mobile {
+  font-size: 11px;
+  color: var(--color-text-tertiary, #bbb);
+}
+
+html.dark .ipv4-cell .proxy-toggle {
+  background: rgba(186, 104, 200, 0.15);
+  color: #ba68c8;
+}
+
+html.dark .ipv4-cell .proxy-toggle:hover {
+  background: rgba(186, 104, 200, 0.28);
+}
+
+html.dark .proxy-section-title {
+  color: #eee;
+}
+
+html.dark .proxy-section-summary {
+  color: #aaa;
+}
+
+html.dark .proxy-cidr-row {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+html.dark .proxy-cidr-row:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+html.dark .proxy-cidr-ip,
+html.dark .proxy-mobile-cidr {
+  color: #ddd;
+}
+
+html.dark .proxy-port-tag {
+  background: rgba(186, 104, 200, 0.18);
+  color: #ce93d8;
+}
+
+html.dark .proxy-port-tag:hover {
+  background: rgba(186, 104, 200, 0.32);
+}
+
+html.dark .proxy-ip-text {
+  color: #64b5f6;
+}
+
+html.dark .proxy-mobile-ip {
+  color: #64b5f6;
+}
+
+html.dark .proxy-status-dot.dot-active {
+  box-shadow: 0 0 5px rgba(129, 199, 132, 0.6);
+}
+
+html.dark .proxy-status-dot.dot-inactive {
+  background: #555;
+}
+
+html.dark .proxy-no-traffic,
+html.dark .proxy-no-traffic-mobile {
+  color: #666;
+}
+
+html.dark .proxy-section-mobile {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: #444;
+}
+
+html.dark .proxy-mobile-title {
+  color: #eee;
+}
+
+html.dark .proxy-mobile-summary {
+  color: #aaa;
 }
 
 tr:hover td {

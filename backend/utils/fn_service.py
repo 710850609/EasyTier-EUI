@@ -79,7 +79,7 @@ def _fix_remove_sys_service():
     """
     修复：移除2.0版本错误引入系统服务
     """
-    if str(__file__).index('/EasyTier-EUI/') > 0:
+    if '/EasyTier-EUI/' in str(__file__):
         # 仅处理 EasyTier-EUI 版本。用户版不需要处理
         return
     logger.info("开始检查和修复系统服务...")

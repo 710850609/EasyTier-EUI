@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """CoreCliAdapter — CLI subprocess adapter for EasyTier Core"""
+import ipaddress
 import json
 import logging
 import threading
@@ -82,9 +83,9 @@ class CoreForegroundAdapter(IEasyTierAdapter):
         pm = _get_process_manager(instance_name)
         return pm.status()
 
-    def get_peers(self, instance_name: str, relay_path: bool = False) -> list[dict]:
-        if relay_path:
-            return self._get_peers_by_route(instance_name, relay_path)
+    def get_peers(self, instance_name: str, relay_path: bool = False, proxy_info: bool = True) -> list[dict]:
+        if relay_path or proxy_info:
+            return self._get_peers_by_route(instance_name, relay_path, proxy_info)
         info = et_run_info.get(instance_name)
         if not info:
             logger.debug(f"未找到配置元数据：{instance_name}")
@@ -95,13 +96,72 @@ class CoreForegroundAdapter(IEasyTierAdapter):
         cmd = f"{self._cli_path} -o json --rpc-portal {info.rpc_portal} peer"
         try:
             result = common_util.run_cmd(cmd)
-            peer_list = json.loads(result)
-            return peer_list
+            return json.loads(result)
         except Exception as e:
             if str(e).find('failed to connect to server') > 0:
                 logger.debug(str(e))
                 return []
             raise e
+
+    def _fetch_proxy_info(self, instance_name: str) -> dict:
+        info = et_run_info.get(instance_name)
+        if not info or not info.rpc_portal:
+            return {}
+        cmd = f"{self._cli_path} -o json --rpc-portal {info.rpc_portal} proxy"
+        try:
+            result = common_util.run_cmd(cmd)
+            data = json.loads(result)
+        except Exception as e:
+            logger.debug(f"获取proxy信息失败: {e}")
+            return {}
+        grouped = {}
+        if isinstance(data, list):
+            items = data
+        else:
+            return {}
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            dst_raw = item.get('dst') or ''
+            dst_ip = dst_raw.split(':')[0] if dst_raw else ''
+            transport_type = item.get('transport_type')
+            if dst_ip and transport_type:
+                grouped.setdefault(dst_ip, set()).add(transport_type)
+        return grouped
+
+    @staticmethod
+    def _match_proxy_for_node(proxy_map: dict, node_ipv4: str, proxy_cidrs: list) -> list:
+        matched_ips = set()
+
+        if node_ipv4 and node_ipv4 in proxy_map:
+            matched_ips.add(node_ipv4)
+
+        networks = []
+        for cidr in proxy_cidrs or []:
+            try:
+                networks.append(ipaddress.ip_network(cidr, strict=False))
+            except ValueError:
+                pass
+
+        if networks:
+            for dst_ip in proxy_map.keys():
+                try:
+                    ip = ipaddress.ip_address(dst_ip)
+                    for net in networks:
+                        if ip in net:
+                            matched_ips.add(dst_ip)
+                            break
+                except ValueError:
+                    pass
+
+        result = []
+        for dst_ip in sorted(matched_ips):
+            types_set = proxy_map.get(dst_ip, set())
+            result.append({
+                'proxy_ip': dst_ip,
+                'transport_type': sorted(types_set),
+            })
+        return result
 
     _NAT_TYPE_NAMES = {
         0: 'Unknown', 1: 'OpenInternet', 2: 'NoPAT', 3: 'FullCone',
@@ -262,7 +322,7 @@ class CoreForegroundAdapter(IEasyTierAdapter):
                 addrs.append(url)
         return addrs
 
-    def _get_peers_by_route(self, instance_name: str, relay_path: bool = False) -> list[dict]:
+    def _get_peers_by_route(self, instance_name: str, relay_path: bool = False, proxy_info: bool = True) -> list[dict]:
         info = et_run_info.get(instance_name)
         if not info:
             logger.debug(f"未找到配置元数据：{instance_name}")
@@ -294,6 +354,7 @@ class CoreForegroundAdapter(IEasyTierAdapter):
                     'nat_type': self._nat_type_str(stun.get('udp_nat_type')) if stun else 'Unknown',
                     'id': str(node_info.get('peer_id', '')),
                     'version': node_info.get('version', ''),
+                    'proxy_cidrs': node_info.get('proxy_cidrs') or [],
                 })
 
             seen = set()
@@ -339,19 +400,20 @@ class CoreForegroundAdapter(IEasyTierAdapter):
                         is_first_hop = cur_route.get('cost', 0) == 1
                         cur_ipv4_inet = cur_route.get('ipv4_addr')
                         relay.append({
-                            'peer_id': str(cur_route.get('peer_id', '')),
+                            # 'peer_id': str(cur_route.get('peer_id', '')),
                             'hostname': cur_route.get('hostname', ''),
-                            'ipv4': self._ipv4_addr_to_str(
-                                cur_ipv4_inet.get('address') if cur_ipv4_inet else None
-                            ),
+                            # 'ipv4': self._ipv4_addr_to_str(
+                            #     cur_ipv4_inet.get('address') if cur_ipv4_inet else None
+                            # ),
                             'remote_addrs': self._get_remote_addrs(cur_peer_info),
-                            'lat_ms': self._get_latency_ms(cur_peer_info)
-                            if is_first_hop else None,
+                            # 'lat_ms': self._get_latency_ms(cur_peer_info)
+                            # if is_first_hop else None,
                         })
                         if next_hop == cur_pid or next_hop is None:
                             break
                         cur_pid = next_hop
                     relay.reverse()
+                    relay = relay[:1]
 
                 items.append({
                     'cidr': ipv4_cidr,
@@ -367,12 +429,36 @@ class CoreForegroundAdapter(IEasyTierAdapter):
                     'id': str(route.get('peer_id', '')),
                     'version': route.get('version', '') or 'unknown',
                     'relay_path': relay,
+                    'proxy_cidrs': route.get('proxy_cidrs') or [],
                 })
 
             items.sort(key=lambda x: (
                 0 if x['cost'] == 'Local' else 1,
                 x['ipv4'] if x['ipv4'] else '255.255.255.255',
             ))
+            if proxy_info:
+                proxy_map = self._fetch_proxy_info(instance_name)
+                for item in items:
+                    node_ipv4 = item.get('ipv4') or ''
+                    node_proxy_cidrs = list(item.get('proxy_cidrs') or [])
+                    item['proxy_info'] = self._match_proxy_for_node(proxy_map, node_ipv4, node_proxy_cidrs)
+                    for p in item['proxy_info']:
+                        p_ip = p['proxy_ip']
+                        matched = False
+                        try:
+                            pip = ipaddress.ip_address(p_ip)
+                            for c in node_proxy_cidrs:
+                                try:
+                                    if pip in ipaddress.ip_network(c, strict=False):
+                                        matched = True
+                                        break
+                                except ValueError:
+                                    pass
+                        except ValueError:
+                            pass
+                        if not matched:
+                            node_proxy_cidrs.insert(0, p_ip)
+                    item['proxy_cidrs'] = node_proxy_cidrs
             return items
         except Exception as e:
             if str(e).find('failed to connect to server') > 0:
