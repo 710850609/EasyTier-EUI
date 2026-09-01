@@ -260,9 +260,6 @@
                   :color="node.type === 'server' ? 'var(--color-success)' : 'var(--color-primary)'" 
                 />
                 <span class="node-ip" @click="handleClickCell(node, 'ipv4')">{{ node.ipv4 || '' }}</span>
-                <span v-if="visibleColumnsMap.hostname && node.hostname && node.ipv4" class="info-chip host-chip">
-                  {{ node.hostname }}
-                </span>
                 <span
                   v-if="showProxyInfo && node.proxy_cidrs && node.proxy_cidrs.length"
                   class="proxy-toggle proxy-toggle-mobile"
@@ -271,6 +268,9 @@
                   <svg-icon size="12" type="mdi" :path="mdiArrowDecisionOutline" />
                   <span class="proxy-count">{{ node.proxy_cidrs.length }}</span>
                   <span class="proxy-arrow">{{ expandedProxyNodes.has(node.id) ? '▾' : '▸' }}</span>
+                </span>
+                <span v-if="visibleColumnsMap.hostname && node.hostname && node.ipv4" class="info-chip host-chip">
+                  {{ node.hostname }}
                 </span>
               </div>
             </div>
@@ -308,7 +308,9 @@
                   <div class="relay-hop relay-hop-single">
                     <span class="relay-connector">→</span>
                     <span class="relay-hop-name">{{ node.relay_path[0]?.hostname || '?' }}</span>
-                    <var-tooltip v-if="node.relay_path[0]?.remote_addrs?.length" :content="node.relay_path[0].remote_addrs[0]">
+                  </div>
+                  <div v-if="node.relay_path[0]?.remote_addrs?.length" class="relay-hop-url-line">
+                    <var-tooltip :content="node.relay_path[0].remote_addrs[0]">
                       <span class="relay-hop-url">{{ formatRelayUrl(node.relay_path[0].remote_addrs[0]) }}</span>
                     </var-tooltip>
                   </div>
@@ -1472,7 +1474,7 @@ td {
   border: 1px solid var(--color-outline-variant, #e0e0e0);
   border-radius: 8px;
   padding: 8px 12px;
-  background: var(--color-surface, #fff);
+  background: var(--color-surface-container, #fafafa);
 }
 
 .relay-section-header {
@@ -1572,7 +1574,7 @@ html.dark .info-row td {
 
 html.dark .relay-section,
 html.dark .proxy-section {
-  background: rgba(30, 30, 30, 0.6);
+  background: rgba(255, 255, 255, 0.04);
   border-color: #444;
 }
 
@@ -1581,6 +1583,11 @@ html.dark .relay-section-title {
 }
 
 html.dark .relay-section-mobile {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: #444;
+}
+
+html.dark .proxy-section-mobile {
   background: rgba(255, 255, 255, 0.04);
   border-color: #444;
 }
@@ -1793,11 +1800,12 @@ html.dark .cell-text.loss-high {
 }
 
 .proxy-section-mobile {
-  margin-top: 8px;
-  padding: 10px;
-  border-radius: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  margin-top: 6px;
   background: var(--color-surface-container, #fafafa);
   border: 1px solid var(--color-outline-variant, #e0e0e0);
+  border-radius: 8px;
 }
 
 .proxy-mobile-header {
@@ -1923,11 +1931,6 @@ html.dark .proxy-status-dot.dot-inactive {
 html.dark .proxy-no-traffic,
 html.dark .proxy-no-traffic-mobile {
   color: #666;
-}
-
-html.dark .proxy-section-mobile {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: #444;
 }
 
 html.dark .proxy-mobile-title {
