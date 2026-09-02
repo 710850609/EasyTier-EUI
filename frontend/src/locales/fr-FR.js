@@ -161,7 +161,7 @@ export default {
     displayMode: 'Mode d\'affichage',
     relayPath: 'Nœud de relais',
     nextRelayHop: 'Nœud de relais suivant',
-    proxyInfo: 'Proxy / Protocole',
+    proxyInfo: 'Routage de sous-réseau',
     proxyActive: 'IP actives',
     proxyActivePorts: 'IP actives / Transport',
     proxyNoTraffic: 'Aucun trafic',

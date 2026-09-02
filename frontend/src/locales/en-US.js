@@ -233,7 +233,7 @@ export default {
     displayMode: 'Display Mode',
     relayPath: 'Relay Node',
     nextRelayHop: 'Next relay hop',
-    proxyInfo: 'Proxy / Protocol',
+    proxyInfo: 'Subnet Routing',
     proxyActive: 'active IPs',
     proxyActivePorts: 'Active IP / Transport',
     proxyNoTraffic: 'No traffic',
