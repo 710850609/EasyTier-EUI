@@ -30,7 +30,7 @@
             <div class="step-content">
               <p class="step-title">{{ $t('software.dockerStep1Title') }}</p>
               <p class="step-desc">{{ $t('software.dockerStep1Desc') }}</p>
-              <code class="step-code">wget https://raw.githubusercontent.com/710850609/EasyTier-EUI/main/docker-compose.yml</code>
+              <code class="step-code">wget https://raw.githubusercontent.com/710850609/EasyTier-EUI/main/docker-compose.yml && docker compose up -d --pull always</code>
             </div>
           </var-paper>
           <var-paper class="step-item" :elevation="0">
@@ -38,14 +38,6 @@
             <div class="step-content">
               <p class="step-title">{{ $t('software.dockerStep2Title') }}</p>
               <p class="step-desc">{{ $t('software.dockerStep2Desc') }}</p>
-              <code class="step-code">docker compose up -d</code>
-            </div>
-          </var-paper>
-          <var-paper class="step-item" :elevation="0">
-            <div class="step-number">3</div>
-            <div class="step-content">
-              <p class="step-title">{{ $t('software.dockerStep3Title') }}</p>
-              <p class="step-desc">{{ $t('software.dockerStep3Desc') }}</p>
               <code class="step-code">http://{{ $t('software.dockerHostIP') }}:15666</code>
             </div>
           </var-paper>

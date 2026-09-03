@@ -106,7 +106,7 @@
             <var-button type="primary" size="small" @click="saveConfig" auto-loading>{{ $t('config.save') }}</var-button>
             <!-- 弹出菜单遮罩层，用于关闭菜单 -->
             <div v-if="showMoreMenu" class="menu-click-outside" @click="showMoreMenu = false"></div>
-            <var-menu v-model:show="showMoreMenu" trigger="manual" placement="bottom-end" :offset-y="10" :offset-x="12" v-if="showMode === 0" popover-class="more-menu-popover">
+            <var-menu v-model:show="showMoreMenu" trigger="manual" placement="bottom-end" :offset-y="10" :offset-x="12" v-if="showMode === 0">
               <var-button text round class="column-btn" @click="showMoreMenu = !showMoreMenu">
                 <var-icon name="menu" size="20" color="var(--color-on-surface)" />
               </var-button>
@@ -858,7 +858,7 @@
       <div class="code-editor-wrapper">
         <div class="code-editor-header">
           <span class="editor-title">{{ $t('config.editConfigTitle', { name: currentConfigData.name }) }}</span>
-          <var-space>
+          <var-space :size="[10, 20]">
             <var-button type="primary" size="mini" round @click="saveToml" auto-loading>
               <var-icon name="check"/>
             </var-button>
@@ -3425,6 +3425,8 @@ html.dark .port-forward-row {
   /*color: var(--color-on-surface);*/
   min-height: 44px;
   background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 .more-menu .var-button:hover {
