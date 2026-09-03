@@ -381,7 +381,7 @@
                           <div class="tooltip-multiline">{{ $t('config.tldDnsZoneHint') }}</div>
                         </template>
                       </var-tooltip>
-                      <var-input v-model="config.flags.tld_dns_zone" :placeholder="$t('config.tldDnsZonePlaceholder')" :rules="(v) => (v === '' || v.endsWith('.')) || $t('config.tldDnsZoneError')" variant="outlined" size="small" />
+                      <var-input v-model="config.flags.tld_dns_zone" :placeholder="$t('config.tldDnsZonePlaceholder')" :rules="(v) => (v == null || v === '' || v.endsWith('.')) || $t('config.tldDnsZoneError')" variant="outlined" size="small" />
                     </div>
                   </div>
               </div>
@@ -1520,7 +1520,6 @@ const loadConfigs = async () => {
     if (res && res.data) {
       await nextTick()
       configList.value = res.data
-      console.log("configList.value:", configList.value)
     } else {
       configList.value = []
     }

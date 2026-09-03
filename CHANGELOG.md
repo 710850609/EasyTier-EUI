@@ -40,7 +40,7 @@
 - Improved: [Nodes] page Proxy/Protocol renamed to Subnet Routing to avoid ambiguity
 - Improved: [App] - Docker merged and optimized startup command
 - Improved: [Config] New config defaults to not enabling system forwarding, avoiding subnet proxy being unavailable when firewall is enabled on certain devices
-- Fixed: FnOS user edition, changed legacy "crippled version" naming to unified "user edition"
+- Fixed: FnOS user edition, changed legacy 'crippled version' naming to unified 'user edition'
 - Fixed: In certain scenarios, cross-config modification caused configuration parameter pollution
 
 ##  2.3
