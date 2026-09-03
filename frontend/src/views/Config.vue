@@ -1469,37 +1469,43 @@ const checkPeers = () => {
 
 const formatBackendConfigToConfig = (json) => {
   json.peer = (json.peer || []).map(e => e.uri)
-    json.proxy_network = (json.proxy_network || []).map(e => ({
-      subnet_cidr: e.cidr || '',
-      mapped_cidr: e.mapped_cidr || ''
-    }))
-    if (json.socks5_proxy) {
-      json.socks5_proxy = json.socks5_proxy.replace('socks5://0.0.0.0:', '')
+  // 如果peer元素不在publicPeerOptions中，直接添加到publicPeerOptions中
+  json.peer.forEach(peer => {
+    if (!publicPeerOptions.value.some(o => o.uri === peer)) {
+      publicPeerOptions.value.unshift({ uri: peer, src_uri: peer, latency: -1, status: -1 })
     }
-    if (json.listeners) {
-      json.listeners.forEach(e => {
-        if (!listenerOptions.value.includes(e)) listenerOptions.value.unshift(e)
-      })
+  })
+  json.proxy_network = (json.proxy_network || []).map(e => ({
+    subnet_cidr: e.cidr || '',
+    mapped_cidr: e.mapped_cidr || ''
+  }))
+  if (json.socks5_proxy) {
+    json.socks5_proxy = json.socks5_proxy.replace('socks5://0.0.0.0:', '')
+  }
+  if (json.listeners) {
+    json.listeners.forEach(e => {
+      if (!listenerOptions.value.includes(e)) listenerOptions.value.unshift(e)
+    })
+  }
+  if (json.flags?.mtu) json.flags.mtu = ensureInt(json.flags.mtu)
+  if (json.flags?.multi_thread_count) json.flags.multi_thread_count = ensureInt(json.flags.multi_thread_count)
+  if (json.flags?.instance_recv_bps_limit) json.flags.instance_recv_bps_limit = ensureInt(json.flags.instance_recv_bps_limit)
+  return  {
+    ...json,
+    hostname: json.hostname ?? '',
+    ipv4: json.ipv4 ?? '',
+    routes: json.routes || [],
+    listeners: json.listeners || [],
+    exit_nodes: json.exit_nodes || [],
+    port_forward: json.port_forward || [],
+    peer: json.peer || [],
+    socks5_proxy: json.socks5_proxy ?? null,
+    flags: {
+      ...json.flags,
+      mtu: json.flags?.mtu ?? undefined,
+      multi_thread_count: json.flags?.multi_thread_count ?? undefined,
     }
-    if (json.flags?.mtu) json.flags.mtu = ensureInt(json.flags.mtu)
-    if (json.flags?.multi_thread_count) json.flags.multi_thread_count = ensureInt(json.flags.multi_thread_count)
-    if (json.flags?.instance_recv_bps_limit) json.flags.instance_recv_bps_limit = ensureInt(json.flags.instance_recv_bps_limit)
-    return  {
-      ...json,
-      hostname: json.hostname ?? '',
-      ipv4: json.ipv4 ?? '',
-      routes: json.routes || [],
-      listeners: json.listeners || [],
-      exit_nodes: json.exit_nodes || [],
-      port_forward: json.port_forward || [],
-      peer: json.peer || [],
-      socks5_proxy: json.socks5_proxy ?? null,
-      flags: {
-        ...json.flags,
-        mtu: json.flags?.mtu ?? undefined,
-        multi_thread_count: json.flags?.multi_thread_count ?? undefined,
-      }
-    }
+  }
 }
 
 const loadConfig = (profile) => {
