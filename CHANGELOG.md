@@ -11,6 +11,11 @@
 - 新增：【节点】页面支持查看 代理/协议，可查看节点代理CIDR，或是激活的KCP/QUIC代理协议（受限于et内核，安卓版不支持）
 - 优化：【节点】页面的 中继路径 改为 中继节点（受限于et内核支持，不显示完整路径）
 - 修复：飞牛用户版启动失败问题
+----
+- 新增：【节点】页面支持查看 EasyTier 日志
+- 优化：【节点】页面的 代理/协议 改名 子网路由，避免歧义
+- 优化：【应用】-Docker 合并优化启动命令
+- 修复：飞牛用户版统，改遗留的残血版名称，统一用户版
 
 <br>
 
@@ -28,6 +33,11 @@
 - New: [Nodes] page now supports viewing Proxy/Protocol, allowing you to view node proxy CIDRs or active KCP/QUIC proxy protocols (limited by ET kernel, Android version not supported)
 - Improved: [Nodes] page relay path renamed to relay node (limited by ET kernel support, full path not displayed)
 - Fixed: FnOS user edition startup failure issue
+----
+- New: [Nodes] page now supports viewing EasyTier logs
+- Improved: [Nodes] page Proxy/Protocol renamed to Subnet Routing to avoid ambiguity
+- Improved: [App] - Docker merged and optimized startup command
+- Fixed: FnOS user edition, changed legacy "crippled version" naming to unified "user edition"
 
 ##  2.3
 - 新增：安卓版支持应用启动重连，自动运行上次未手动关闭的配置 ([Feature #9](https://github.com/710850609/EasyTier-EUI/issues/9))

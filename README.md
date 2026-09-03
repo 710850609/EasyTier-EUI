@@ -46,11 +46,8 @@
 使用 `docker-compose.yml` 一键启动：
 
 ```bash
-# 下载 docker-compose.yml
-wget https://raw.githubusercontent.com/710850609/EasyTier-EUI/main/docker-compose.yml
-
-# 启动容器
-docker compose up -d
+# 一键下载配置并启动
+wget https://raw.githubusercontent.com/710850609/EasyTier-EUI/main/docker-compose.yml && docker compose up -d --pull always
 ```
 
 配置文件和数据将保存在当前目录下的 `config` 和 `logs` 目录中。

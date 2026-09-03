@@ -170,9 +170,6 @@ def data_dir() -> str:
 def log_dir() -> str:
     return LOG_DIR
 
-def et_log_dir() -> str:
-    return os.path.join(log_dir(), 'easytier')
-
 def et_config_file(file_name=None) -> str:
     file_name = 'default.toml' if file_name is None else file_name
     return os.path.join(config_dir(), file_name)

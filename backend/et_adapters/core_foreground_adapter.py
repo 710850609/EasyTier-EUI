@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Union
 
 from http_dispatcher.dispatcher import HttpException
+from utils.log_reader import LogFileReader
 from utils import run_configs, process_util, et_run_info, check_peers, common_util
 from utils.process_util import ProcessManager
 from .interface import IEasyTierAdapter
@@ -482,73 +483,10 @@ class CoreForegroundAdapter(IEasyTierAdapter):
         logger.info(f"设置日志级别命令： {cmd}")
         common_util.run_cmd(cmd)
 
-    _MAX_TAIL_BYTES = 256 * 1024
-    _BLOCK_SIZE = 4096
-
     def get_logs(self, params: dict) -> dict:
         params = params or {}
-        max_lines = min(int(params.get('lines', 100)), 500)
+        max_lines = min(int(params.get('lines', 20)), 1000)
         offset = int(params.get('offset', 0))
-        log_type = params.get('log_type', 'easytier')
-        log_dir = Path(run_configs.log_dir())
-        if not log_dir.exists():
-            return {'lines': '', 'offset': 0, 'appending': False}
-        log_file = Path(log_dir, f"{log_type}.log")
-        if not log_file.exists():
-            return {'lines': '', 'offset': 0, 'appending': False}
-        try:
-            file_size = log_file.stat().st_size
-            if 0 < offset <= file_size:
-                with open(log_file, 'rb') as f:
-                    f.seek(offset)
-                    raw = f.read(self._MAX_TAIL_BYTES)
-                if not raw:
-                    return {'lines': '', 'offset': offset, 'appending': True}
-                text = raw.decode('utf-8', errors='replace')
-                new_lines = text.splitlines(True)
-                return {
-                    'lines': ''.join(new_lines),
-                    'offset': min(file_size, offset + len(raw)),
-                    'appending': True
-                }
-            else:
-                lines = self._tail_lines_seek(log_file, max_lines)
-                return {
-                    'lines': ''.join(lines),
-                    'offset': file_size,
-                    'appending': False
-                }
-        except (OSError, PermissionError) as e:
-            logger.warning(f"读取日志文件失败: {e}")
-            return {'lines': '', 'offset': 0, 'appending': False}
 
-    @classmethod
-    def _tail_lines_seek(cls, filepath, max_lines):
-        with open(filepath, 'rb') as f:
-            f.seek(0, 2)
-            file_size = f.tell()
-            if file_size == 0:
-                return []
-
-            pos = file_size
-            blocks = []
-            lines_found = 0
-            total_bytes = 0
-
-            while pos > 0 and lines_found < max_lines and total_bytes < cls._MAX_TAIL_BYTES:
-                read_size = min(cls._BLOCK_SIZE, pos)
-                pos -= read_size
-                f.seek(pos)
-                block = f.read(read_size)
-                blocks.insert(0, block)
-                total_bytes += read_size
-                lines_found += block.count(b'\n')
-
-            raw = b''.join(blocks)
-            text = raw.decode('utf-8', errors='replace')
-            if pos > 0:
-                first_nl = text.find('\n')
-                if first_nl >= 0:
-                    text = text[first_nl + 1:]
-            lines = text.splitlines(True)
-            return lines[-max_lines:] if len(lines) > max_lines else lines
+        log_file = Path(run_configs.log_dir()) / f"easytier.log"
+        return LogFileReader.read(log_file, offset=offset, max_lines=max_lines, max_bytes=128 * 1024)

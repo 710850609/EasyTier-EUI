@@ -198,7 +198,7 @@ const destroyLogEditor = () => {
 const fetchLogs = async () => {
   if (logPaused.value) return
   try {
-    const resp = await api.monitor.getLogs({ lines: 500, offset: logOffset.value, log_type: 'easytier' })
+    const resp = await api.monitor.getLogs({ lines: 100, offset: logOffset.value, log_type: 'easytier' })
     const result = resp.data || resp
     if (result && typeof result === 'object' && logEditorView.value) {
       const newLines = result.lines || ''
