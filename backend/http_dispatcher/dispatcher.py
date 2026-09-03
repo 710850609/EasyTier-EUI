@@ -227,6 +227,8 @@ def get_request(base_uri="", body_data=None, cgi_module=True, accept_language=No
 
 def http_handle(base_uri="/", body_data=None, cgi_module=True, accept_language=None) -> HttpResponse:
     response = HttpResponse()
+    module_name = None
+    function_name = None
     try:
         # 首先处理 OPTIONS 请求（CORS 预检）
         method = os.environ.get('REQUEST_METHOD', '') if cgi_module else None
