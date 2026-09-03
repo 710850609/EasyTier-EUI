@@ -1065,7 +1065,7 @@ const config = ref({
   flags: {
     bind_device: true,
     enable_ipv6: true,
-    proxy_forward_by_system: true,
+    // proxy_forward_by_system: false,
     enable_encryption: true,
     private_mode: true,
     multi_thread: true,
@@ -1495,7 +1495,6 @@ const formatBackendConfigToConfig = (json) => {
       peer: json.peer || [],
       socks5_proxy: json.socks5_proxy ?? null,
       flags: {
-        ...config.value.flags,
         ...json.flags,
         mtu: json.flags?.mtu ?? undefined,
         multi_thread_count: json.flags?.multi_thread_count ?? undefined,
@@ -1796,7 +1795,7 @@ const confirmCreateConfig = () => {
   config.value.flags = {
     bind_device: true,
     enable_ipv6: true,
-    proxy_forward_by_system: true,
+    // proxy_forward_by_system: false,
     enable_encryption: true,
     private_mode: true,
     multi_thread: true,

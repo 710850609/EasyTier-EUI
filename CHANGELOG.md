@@ -1,4 +1,4 @@
-##  
+##  2.4
 - 新增：【节点】页面支持查看中继路径（默认开启）
 - 新增：【配置】页面支持自定义魔法DNS顶级域名
 - 优化：安卓版本默认MTU为1300（参考官方安卓2.6.4版本固定值）
@@ -15,7 +15,9 @@
 - 新增：【节点】页面支持查看 EasyTier 日志
 - 优化：【节点】页面的 代理/协议 改名 子网路由，避免歧义
 - 优化：【应用】-Docker 合并优化启动命令
+- 优化：【配置】新增配置，默认不启用 系统转发，避免某些设备开启防火墙导致子网代理不可用
 - 修复：飞牛用户版统，改遗留的残血版名称，统一用户版
+- 修复：某些场景下，跨配置修改导致配置参数污染问题
 
 <br>
 
@@ -37,7 +39,9 @@
 - New: [Nodes] page now supports viewing EasyTier logs
 - Improved: [Nodes] page Proxy/Protocol renamed to Subnet Routing to avoid ambiguity
 - Improved: [App] - Docker merged and optimized startup command
+- Improved: [Config] New config defaults to not enabling system forwarding, avoiding subnet proxy being unavailable when firewall is enabled on certain devices
 - Fixed: FnOS user edition, changed legacy "crippled version" naming to unified "user edition"
+- Fixed: In certain scenarios, cross-config modification caused configuration parameter pollution
 
 ##  2.3
 - 新增：安卓版支持应用启动重连，自动运行上次未手动关闭的配置 ([Feature #9](https://github.com/710850609/EasyTier-EUI/issues/9))
