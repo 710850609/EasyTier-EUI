@@ -302,8 +302,11 @@ def http_handle(base_uri="/", body_data=None, cgi_module=True, accept_language=N
         resp_msg = ''
         # resp_msg = f"Status Code: {response.status_code}"
         # resp_msg += '' if not response.headers else '\nHeaders: ' + json.dumps(response.headers)
-        resp_msg += '' if not response.json else 'Response JSON: ' + json.dumps(response.json, ensure_ascii=False)
-        resp_msg += '' if not response.file else 'Download File: ' + response.file
+        if module_name == 'actions.monitor' and function_name == 'get_logs':
+            resp_msg += f'Response {module_name}.{function_name}...'
+        else:
+            resp_msg += '' if not response.json else 'Response JSON: ' + json.dumps(response.json, ensure_ascii=False)
+            resp_msg += '' if not response.file else 'Download File: ' + response.file
         logger.debug(f"{resp_msg}")
         if cgi_module:
             response.output_cgi()

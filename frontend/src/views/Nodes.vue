@@ -32,6 +32,14 @@
             </var-option>
           </var-select>
           <div class="service-actions">
+            <var-button
+              type="primary"
+              size="small"
+              @click="showLogViewer = true"
+            >
+              <svg-icon type="mdi" :path="mdiTextBoxSearchOutline" size="17"></svg-icon>
+              日志
+            </var-button>
             <var-loading type="circle" v-if="serviceOperating" />
             <var-button
               type="primary"
@@ -45,7 +53,7 @@
             <var-button
               type="danger"
               size="small"
-              auto-loading            
+              auto-loading
               @click="stopService"
               v-if="serviceRunning && !serviceOperating"
             >
@@ -62,7 +70,7 @@
           <span class="stat-label">{{ $t('nodes.serverNodes') }}</span>
           <span class="stat-value">{{ serverNodes.length }}</span>
         </div>
-        
+
         <var-button
           text
           round
@@ -462,6 +470,8 @@
       </var-paper>
     </var-popup>
 
+    <LogViewer v-model:show="showLogViewer" />
+
     <var-dialog v-model:show="showFastSettingTip" :close-on-click-overlay="false" 
       @confirm="openConfigView(true)" @cancel="openConfigView(false)"
       :confirmButtonText="$t('nodes.need')" :cancelButtonText="$t('nodes.noNeed')">
@@ -476,15 +486,17 @@
 </template>
 
 <script setup>
+import { ref, reactive, computed, watch, onMounted, onUnmounted, inject } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { copyToClipboard } from '../utils/clipboard.js'
 import { api, cancelAllRequests } from '../utils/api.js'
 import toast from '../components/toast.js'
 import { Poller } from '../utils/poller.js'
 import { NODES_SETTINGS_PC_KEY, NODES_SETTINGS_MOBILE_KEY } from '../config/storage-keys.js'
-import { mdiCircle, mdiArrowDecisionOutline, mdiVectorLink } from '@mdi/js'
+import { mdiCircle, mdiArrowDecisionOutline, mdiVectorLink, mdiTextBoxSearchOutline } from '@mdi/js'
 import { mdilArrowDown, mdilArrowUp } from '@mdi/light-js'
 import SvgIcon from '@jamescoyle/vue-icon'
+import LogViewer from '../components/LogViewer.vue'
 
 const { t } = useI18n()
 
@@ -495,6 +507,7 @@ const showFastSettingTip = ref(false)
 const isFirstLoadConfigs = ref(true)
 
 const showFilterMenu = ref(false)
+const showLogViewer = ref(false)
 const dataLoading = ref(false)
 const isUnmounted = ref(false)
 // 加载骨架屏

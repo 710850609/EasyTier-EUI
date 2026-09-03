@@ -128,6 +128,7 @@ export default {
     }
   },
   logs: { title: 'Affichage des logs', continue: 'Continuer', pause: 'Pause', clear: 'Effacer', all: 'Tous', info: 'Info', warning: 'Avertissement', error: 'Erreur', total: '{count} logs au total' },
+  logViewer: { title: 'Voir les logs', pause: 'Pause', resume: 'Continuer', clear: 'Effacer', copy: 'Copier', loading: 'Chargement...', noLogs: 'Aucun log', wrap: 'Retour ligne', noWrap: 'Sans retour' },
   empty: { page_missing: 'Où est ma page {menu} ?' },
   nodes: {
     selectConfig: 'Choisir config',

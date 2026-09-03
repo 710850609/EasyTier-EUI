@@ -30,3 +30,9 @@ class IEasyTierAdapter(ABC):
     @abstractmethod
     def change_log_level(self, log_level: str, **kwargs) -> None:
         """Change log level."""
+
+    @abstractmethod
+    def get_logs(self, params: dict) -> dict:
+        """Get logs.
+        Returns {'lines': str, 'offset': int, 'appending': bool}
+        """

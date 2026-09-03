@@ -106,9 +106,16 @@ def delete_log(params=None, *args, **kwargs):
             if entry.is_file():
                 try:
                     total_bytes += entry.stat().st_size
-                    entry.write_text('', encoding='utf-8')
+                    if entry.suffix == '.log':
+                        entry.write_text('', encoding='utf-8')
+                    else:
+                        entry.unlink()
                 except (OSError, PermissionError):
-                    pass
+                    if entry.suffix == '.log':
+                        try:
+                            entry.write_text('', encoding='utf-8')
+                        except (OSError, PermissionError):
+                            pass
     if total_bytes == 0:
         return get_message('settings.logDeleted')
     units = ["B", "KB", "MB", "GB", "TB"]

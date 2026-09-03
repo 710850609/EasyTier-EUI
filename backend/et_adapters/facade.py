@@ -7,7 +7,7 @@ import threading
 from typing import Optional
 
 from et_adapters.core_background_adapter import CoreBackgroundAdapter
-from utils import run_configs, et_run_info
+from utils import run_configs, et_run_info, app_settings
 from .core_adapter import CoreAdapter
 from .ffi_adapter import FfiAdapter
 from .interface import IEasyTierAdapter
@@ -18,9 +18,9 @@ logger = logging.getLogger(__name__)
 class EasyTierFacade(IEasyTierAdapter):
 
     def __init__(self):
-        if run_configs.IS_ANDROID:
-        # import sys
-        # if run_configs.IS_ANDROID or sys.platform == "win32":
+        default_mode = 'ffi' if run_configs.IS_ANDROID else 'core'
+        et_mode = app_settings.get('et_mode', default_mode)
+        if et_mode == 'ffi':
             self._adapter = FfiAdapter()
         else:
             self._adapter = CoreAdapter()
@@ -45,6 +45,9 @@ class EasyTierFacade(IEasyTierAdapter):
 
     def change_log_level(self, log_level: str, **kwargs) -> None:
         self._adapter.change_log_level(log_level, **kwargs)
+
+    def get_logs(self, params: dict) -> dict:
+        return self._adapter.get_logs(params)
 
     def get_service_adapter(self) -> Optional[CoreBackgroundAdapter]:
         if isinstance(self._adapter, CoreAdapter):

@@ -198,6 +198,17 @@ export default {
     error: '错误',
     total: '共 {count} 条日志'
   },
+  logViewer: {
+    title: '查看日志',
+    pause: '暂停',
+    resume: '继续',
+    clear: '清空',
+    copy: '复制',
+    loading: '加载中...',
+    noLogs: '暂无日志',
+    wrap: '自动换行',
+    noWrap: '不换行',
+  },
   empty: {
     page_missing: '我的 {menu} 页面哪里去了'
   },

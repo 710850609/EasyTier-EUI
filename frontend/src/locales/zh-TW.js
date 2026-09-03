@@ -198,6 +198,17 @@ export default {
     error: '錯誤',
     total: '共 {count} 條日誌'
   },
+  logViewer: {
+    title: '檢視日誌',
+    pause: '暫停',
+    resume: '繼續',
+    clear: '清除',
+    copy: '複製',
+    loading: '載入中...',
+    noLogs: '暫無日誌',
+    wrap: '自動換行',
+    noWrap: '不換行',
+  },
   empty: {
     page_missing: '我的 {menu} 頁面哪裡去了'
   },

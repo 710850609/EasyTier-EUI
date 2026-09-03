@@ -355,6 +355,23 @@ class FfiAdapter(IEasyTierAdapter):
         """
         pass
 
+    def get_logs(self, params: dict) -> dict:
+        raw = self._collect_via_raw_ffi()
+        events = []
+        for instance_name, info in raw.items():
+            inst_events = info.get('events', []) or []
+            for item in inst_events:
+                item = json.loads(item)
+                msg = f"{item.get('time', '')[11:22]}"
+                for e_key, e_value in item.get('event', {}).items():
+                    msg += f' {e_key} {str(e_value)}'
+                events.insert(0, msg)
+        return {
+            'lines': '\n'.join(events) + ('\n' if events else ''),
+            'offset': 0,
+            'appending': False
+        }
+
     def set_tun_fd(self, instance_name: str, fd: int) -> int:
         logger.info(f"set_tun_fd {instance_name} {fd}")
         if not self._has_symbol('set_tun_fd'):

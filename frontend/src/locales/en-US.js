@@ -198,6 +198,17 @@ export default {
     error: 'Error',
     total: '{count} logs total'
   },
+  logViewer: {
+    title: 'View Logs',
+    pause: 'Pause',
+    resume: 'Resume',
+    clear: 'Clear',
+    copy: 'Copy',
+    loading: 'Loading...',
+    noLogs: 'No logs',
+    wrap: 'Word Wrap',
+    noWrap: 'No Wrap',
+  },
   empty: {
     page_missing: 'Where is my {menu} page?'
   },

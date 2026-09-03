@@ -26,14 +26,26 @@ const pendingControllers = new Map()
 function cleanupTimeout() {
   const now = Date.now()
   for (const [key, { timestamp, controller }] of pendingControllers) {
-    if (now - timestamp > 60000) { // 超过60秒的自动清理
+    if (now - timestamp > 60000) {
+      controller.abort()
       pendingControllers.delete(key)
     }
   }
 }
 
-// 定期清理
-setInterval(cleanupTimeout, 30000)
+// 定期清理，保存引用以便在 HMR 时清除
+const cleanupInterval = setInterval(cleanupTimeout, 30000)
+
+// HMR 热更新时清除旧定时器
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => {
+    clearInterval(cleanupInterval)
+    for (const [, { controller }] of pendingControllers) {
+      controller.abort()
+    }
+    pendingControllers.clear()
+  })
+}
 
 function getFullUrl(url, data) {
   url = url.startsWith('http') ? url : `${window.location.origin}${API_BASE}${url}`
@@ -66,10 +78,11 @@ export function cancelRequest(requestId) {
  * 取消所有活跃请求
  */
 export function cancelAllRequests() {
-  for (const [, { controller }] of pendingControllers) {
+  const entries = [...pendingControllers]
+  pendingControllers.clear()
+  for (const [, { controller }] of entries) {
     controller.abort()
   }
-  pendingControllers.clear()
   console.log('All requests cancelled')
 }
 
@@ -219,6 +232,7 @@ export const api = {
   // 节点相关
   monitor: {
     getList: (params = {}) => get('/monitor/list', params, {toastError: false}),
+    getLogs: (params = {}) => get('/monitor/get_logs', params, { toastError: false }),
   },
   
   // 配置相关
@@ -291,6 +305,7 @@ export const api = {
     releaseConfig: () => post('/settings/release_eui_config'),
     getLogLevel: () => get('/settings/get_log_level', {}, { toastError: false }),
     setLogLevel: (params = {}) => post('/settings/set_log_level', params),
+    getLogs: (params = {}) => get('/settings/get_logs', params, { toastError: false }),
     deleteLog: () => post('/settings/delete_log'),
     setEnabledStartRecovery: (params = {}) => post('/settings/enabled_start_recovery', params),
     setWebviewDebug: (params = {}) => post('/settings/set_webview_debug', params),

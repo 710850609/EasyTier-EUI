@@ -18,3 +18,7 @@ def list(params, *args, **kwargs):
     proxy_info = params.get('proxy_info', 'true')
     proxy_info = proxy_info.lower() == 'true'
     return get_facade().get_peers(profile, relay_path, proxy_info)
+
+
+def get_logs(params, *args, **kwargs):
+    return get_facade().get_logs(params or {})

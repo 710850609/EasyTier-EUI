@@ -85,6 +85,8 @@ class CoreAdapter(IEasyTierAdapter):
             if info.rpc_portal is not None:
                 self._foreground.change_log_level(log_level, rpc_portal=info.rpc_portal)
 
+    def get_logs(self, params: dict) -> dict:
+        return self._foreground.get_logs(params)
 
     def get_service_adapter(self) -> Optional[CoreBackgroundAdapter]:
         """
