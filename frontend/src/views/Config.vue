@@ -128,7 +128,6 @@
                     <svg-icon type="mdi" :path="mdiDrawPen" class="menu-icon"></svg-icon>
                     <span>{{ $t('config.editFile') }}</span>
                   </var-button>
-                  <var-divider class="menu-divider" />
                   <var-button text block class="menu-item-btn delete-btn" @click="showDeleteDialog = true; showMoreMenu = false" :loading="isDeletingConfig">
                     <svg-icon type="mdi" :path="mdiTrashCanOutline" class="menu-icon"></svg-icon>
                     <span>{{ $t('config.delete') }}</span>
@@ -2998,6 +2997,10 @@ html.dark .sk-breathe {
   color: var(--color-text);
 }
 
+:deep(.var-select__menu) {
+  background-color: var(--color-surface-container-low) !important;
+}
+
 .code-editor-content::-webkit-scrollbar {
   width: 10px;
   height: 10px;
@@ -3454,6 +3457,22 @@ html.dark .port-forward-row {
 
 .more-menu .delete-btn {
   color: var(--color-danger) !important;
+}
+
+/* 按钮间渐变分割线 */
+.more-menu .menu-item-btn:not(.delete-btn) {
+  position: relative;
+}
+
+.more-menu .menu-item-btn:not(.delete-btn)::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 12px;
+  right: 12px;
+  height: 1px;
+  background: var(--divider-gradient);
+  pointer-events: none;
 }
 
 .menu-click-outside {

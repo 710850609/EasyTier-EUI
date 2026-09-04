@@ -8,11 +8,30 @@ import Layout from './components/Layout.vue'
 
 <style>
 :root {
-  /* 避免其它App webview是非全面屏，导致多了空白区域 */
-  /*--safe-area-inset-top: env(safe-area-inset-top, 0px);*/
   --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
   --safe-area-inset-right: env(safe-area-inset-right, 0px);
   --safe-area-inset-left: env(safe-area-inset-left, 0px);
+  --app-primary: var(--color-primary);
+  --button-border-radius: 10px;
+  --field-decorator-line-border-radius: 10px;
+  --snackbar-border-radius: 10px;
+  --color-surface-rgb: 253, 253, 254;
+  --color-surface-container-rgb: 234, 240, 248;
+  /* 渐变分割线 */
+  --divider-gradient: linear-gradient(90deg, transparent, rgba(0,0,0,0.08) 20%, rgba(0,0,0,0.08) 80%, transparent);
+  /* 玻璃高光条 */
+  --glass-highlight: linear-gradient(90deg, transparent, rgba(255,255,255,0.45), transparent);
+  --glass-highlight-vertical: linear-gradient(180deg, transparent, rgba(255,255,255,0.45), transparent);
+  /* 玻璃模糊 */
+  --glass-blur: blur(20px) saturate(140%);
+}
+
+html.dark {
+  --color-surface-rgb: 22, 27, 36;
+  --color-surface-container-rgb: 30, 36, 53;
+  --divider-gradient: linear-gradient(90deg, transparent, rgba(255,255,255,0.1) 20%, rgba(255,255,255,0.1) 80%, transparent);
+  --glass-highlight: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  --glass-highlight-vertical: linear-gradient(180deg, transparent, rgba(255,255,255,0.2), transparent);
 }
 
 * {
@@ -46,25 +65,6 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-on-surface-variant);
-}
-
-:root {
-  --app-primary: var(--color-primary);
-  /* 按钮圆角 */
-  --button-border-radius: 10px;
-  /* 输入框圆角 */
-  --field-decorator-line-border-radius: 10px;
-  /* Toast 圆角 */
-  --snackbar-border-radius: 10px;
-  /* RGB 变量用于 rgba() */
-  --color-surface-rgb: 253, 253, 254;
-  --color-surface-container-rgb: 234, 240, 248;
-}
-
-/* 暗色主题 RGB 变量 - 使用 html.dark 提高优先级 */
-html.dark {
-  --color-surface-rgb: 22, 27, 36;
-  --color-surface-container-rgb: 30, 36, 53;
 }
 
 /* 隐藏 Snackbar 图标 */
@@ -156,11 +156,7 @@ html.dark body .var-select__scroller.var-elevation--3 {
 
 /* 关闭毛玻璃效果时，var-select 下拉框使用实色背景 */
 html.no-glass body .var-select__scroller,
-html.no-glass body .var-select__scroller.var-elevation--3 {
-  background: var(--color-surface-container) !important;
-  background-color: var(--color-surface-container) !important;
-}
-
+html.no-glass body .var-select__scroller.var-elevation--3,
 html.no-glass.dark body .var-select__scroller,
 html.no-glass.dark body .var-select__scroller.var-elevation--3 {
   background: var(--color-surface-container) !important;
@@ -175,24 +171,8 @@ html body .var-select__scroller .var-option:not(:last-child)::after {
   left: 12px;
   right: 12px;
   height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(0, 0, 0, 0.08) 20%,
-    rgba(0, 0, 0, 0.08) 80%,
-    transparent
-  );
+  background: var(--divider-gradient);
   pointer-events: none;
-}
-
-html.dark body .var-select__scroller .var-option:not(:last-child)::after {
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.1) 20%,
-    rgba(255, 255, 255, 0.1) 80%,
-    transparent
-  );
 }
 
 /* 竖排 var-checkbox 渐变分割线 */
@@ -207,24 +187,8 @@ html body .var-checkbox-group--vertical .var-checkbox__wrap:not(:last-child)::af
   left: 36px;
   right: 12px;
   height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(0, 0, 0, 0.08) 20%,
-    rgba(0, 0, 0, 0.08) 80%,
-    transparent
-  );
+  background: var(--divider-gradient);
   pointer-events: none;
-}
-
-html.dark body .var-checkbox-group--vertical .var-checkbox__wrap:not(:last-child)::after {
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.1) 20%,
-    rgba(255, 255, 255, 0.1) 80%,
-    transparent
-  );
 }
 
 /* var-tabs 样式适配 */
@@ -286,12 +250,7 @@ html.dark .var-popup__content[var-popup-cover] {
   left: 20%;
   right: 20%;
   height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.45),
-    transparent
-  );
+  background: var(--glass-highlight);
   pointer-events: none;
   z-index: 1;
 }
@@ -323,12 +282,7 @@ html.dark .var-popup__content[var-popup-cover] {
   right: auto;
   width: 1px;
   height: auto;
-  background: linear-gradient(
-    180deg,
-    transparent,
-    rgba(255, 255, 255, 0.45),
-    transparent
-  );
+  background: var(--glass-highlight-vertical);
 }
 
 /* 左侧弹出层：高光条移到右边 */
@@ -339,12 +293,7 @@ html.dark .var-popup__content[var-popup-cover] {
   right: 0;
   width: 1px;
   height: auto;
-  background: linear-gradient(
-    180deg,
-    transparent,
-    rgba(255, 255, 255, 0.45),
-    transparent
-  );
+  background: var(--glass-highlight-vertical);
 }
 
 .var-popup__content.var-popup--top::before {
@@ -387,34 +336,6 @@ html.dark .var-popup__content[var-popup-cover] {
 
 html.dark .var-switch--variant .var-switch__track {
   border-color: transparent !important;
-}
-
-
-html.dark .var-popup__content::after {
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.2),
-    transparent
-  );
-}
-
-html.dark .var-popup__content.var-popup--right::after {
-  background: linear-gradient(
-    180deg,
-    transparent,
-    rgba(255, 255, 255, 0.2),
-    transparent
-  );
-}
-
-html.dark .var-popup__content.var-popup--left::after {
-  background: linear-gradient(
-    180deg,
-    transparent,
-    rgba(255, 255, 255, 0.2),
-    transparent
-  );
 }
 
 /* 弹窗内发光边框 —— 替代生硬 border，让边缘"呼吸" */
@@ -552,24 +473,9 @@ html.dark .var-paper::before {
   left: 10%;
   right: 10%;
   height: 1.5px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.45),
-    transparent
-  );
+  background: var(--glass-highlight);
   pointer-events: none;
   z-index: 2;
-}
-
-/* 暗色模式 - 高光条 */
-html.dark .var-paper::after {
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.2),
-    transparent
-  );
 }
 
 /* popup 内的 paper 保持透明，去掉玻璃效果 */
@@ -908,18 +814,18 @@ html.no-glass .submenu-popup-content {
   background: var(--color-surface-container) !important;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15) !important;
 }
-
-html.no-glass.dark .submenu-popup-content {
-  background: var(--color-surface-container) !important;
+html.dark.no-glass .submenu-popup-content {
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
 }
 
 /* 关闭毛玻璃后，底部导航栏保留渐变透明效果，只去掉 blur */
-html.no-glass .bottom-nav {
+html.no-glass .bottom-nav,
+html.no-glass.dark .bottom-nav {
   background: transparent !important;
 }
 
-html.no-glass .bottom-nav::before {
+html.no-glass .bottom-nav::before,
+html.no-glass.dark .bottom-nav::before {
   background: var(--color-surface) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
@@ -935,14 +841,6 @@ html.no-glass .bottom-nav::before {
     rgba(0, 0, 0, 1) 66%,
     rgba(0, 0, 0, 0) 100%
   );
-}
-
-html.no-glass.dark .bottom-nav {
-  background: transparent !important;
-}
-
-html.no-glass.dark .bottom-nav::before {
-  background: var(--color-surface) !important;
 }
 
 /* 关闭毛玻璃后，popover 使用实色背景 */
@@ -968,10 +866,7 @@ html.no-glass .var-menu__menu.var--box.var-menu--menu-background-color:not(.var-
 }
 
 /* 关闭毛玻璃后，底部导航子菜单使用实色背景 */
-html.no-glass .submenu-popup {
-  background: var(--color-surface-container) !important;
-}
-
+html.no-glass .submenu-popup,
 html.no-glass.dark .submenu-popup {
   background: var(--color-surface-container) !important;
 }

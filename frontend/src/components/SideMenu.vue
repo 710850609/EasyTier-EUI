@@ -545,24 +545,8 @@ html.dark .submenu-popup-item:hover {
   left: 12px;
   right: 12px;
   height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(0, 0, 0, 0.08) 20%,
-    rgba(0, 0, 0, 0.08) 80%,
-    transparent
-  );
+  background: var(--divider-gradient);
   pointer-events: none;
-}
-
-html.dark .submenu-popup-item:not(:last-child)::after {
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.1) 20%,
-    rgba(255, 255, 255, 0.1) 80%,
-    transparent
-  );
 }
 
 /* 触摸按压反馈 */
