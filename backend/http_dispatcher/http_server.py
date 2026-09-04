@@ -161,7 +161,11 @@ def _acquire_instance_lock() -> bool:
                 # 判断是否是同一个实例
                 is_same_instance = False
                 if run_configs.is_docker():
-                    is_same_instance = True
+                    is_same_instance = (existing_pid == os.getpid())
+                    if not is_same_instance and 'EasyTier-EUI' not in cmdline:
+                        # PID 不同且 cmdline 不包含 EasyTier-EUI，说明旧进程已被 kill 且 PID 被其他进程回收
+                        logging.warning(f"PID {existing_pid} 已被其他进程回收（cmdline={cmdline}），清理旧锁文件")
+                        os.remove(pid_file)
                 elif run_configs.IS_ANDROID:
                     is_same_instance = (existing_pid == os.getpid())
                     if not is_same_instance and 'easytiereui' not in cmdline.lower():

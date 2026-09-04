@@ -1,3 +1,14 @@
+##  
+- 优化：【配置】页面统一下拉输入框显示背景
+- 修复：尝试修复docker版本自更新需要更新2次才成功
+
+<br>
+
+----
+
+- Optimized: [Config] page unified dropdown input box background display
+- Fixed: Docker version self-update required two update attempts to succeed
+
 ##  2.4
 - 新增：【节点】页面支持查看中继路径（默认开启）
 - 新增：【配置】页面支持自定义魔法DNS顶级域名

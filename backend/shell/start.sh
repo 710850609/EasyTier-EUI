@@ -33,9 +33,15 @@ chmod +x "$EXECUTABLE"
 if [ -f "$PID_FILE" ]; then
     PID=$(cat "$PID_FILE")
     if sudo kill -0 "$PID" 2>/dev/null; then
-        log "EasyTier-EUI 已在运行 (PID: $PID)"
-        [ -t 0 ] && read -p "按 Enter 退出..."
-        exit 1
+        # 进一步检查进程名，防止 PID 被其他进程回收导致误判
+        PROC_NAME=$(sudo ps -p "$PID" -o comm= 2>/dev/null || echo "")
+        if [ "$PROC_NAME" = "$APP_NAME" ] || [ "$PROC_NAME" = "./$APP_NAME" ]; then
+            log "EasyTier-EUI 已在运行 (PID: $PID)"
+            [ -t 0 ] && read -p "按 Enter 退出..."
+            exit 1
+        else
+            log "PID $PID 已被其他进程回收（进程名=$PROC_NAME），清理旧锁文件"
+        fi
     fi
     sudo rm -f "$PID_FILE"
 fi
