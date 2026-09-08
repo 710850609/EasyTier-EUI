@@ -1725,13 +1725,14 @@ const onMenuClipboardAdd = () => {
 
 const onStartScan = async () => {
   if (isScanning.value) {
-    stopQrScanner()
+    await exitAddMode()
     return
   }
   try {
     const hasCamera = await QrScanner.hasCamera()
     if (!hasCamera) {
       toast.error(t('config.cameraNotSupported'))
+      await exitAddMode()
       return
     }
     showQrScanner.value = true
@@ -1739,7 +1740,7 @@ const onStartScan = async () => {
     await nextTick()
     const videoEl = document.getElementById('qr-reader')
     if (!videoEl) {
-      stopQrScanner()
+      await exitAddMode()
       return
     }
     const scanner = new QrScanner(
