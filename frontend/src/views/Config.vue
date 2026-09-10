@@ -1812,7 +1812,6 @@ const onClipboardAdd = async () => {
     const text = await readFromClipboard()
     if (!text || !text.trim()) {
       toast.warning(t('config.clipboardEmpty'))
-      await exitAddMode()
       return
     }
     await processTomlConfig(text.trim())
@@ -1822,6 +1821,8 @@ const onClipboardAdd = async () => {
     } else {
       toast.error(t('config.clipboardReadFailed'))
     }
+  } finally {
+    await exitAddMode()
   }
 }
 
