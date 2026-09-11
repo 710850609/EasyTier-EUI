@@ -121,7 +121,7 @@ def setup_env():
     _is_inited_evn = True
 
 
-BUILD_VERSION = "1.4.020604-20260713130029"
+BUILD_VERSION = "2.4.020604-20260911182200"
 
 
 def is_musl_sys():

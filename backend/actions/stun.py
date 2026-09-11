@@ -12,6 +12,7 @@ import time
 import uuid
 import zipfile
 from ipaddress import ip_address
+from pathlib import Path
 
 from http_dispatcher.dispatcher import HttpException
 from locales import get_message
@@ -103,7 +104,9 @@ def natmap_install(params=None, *args, **kwargs):
                 zf.extractall(tmp_dir)
             shutil.move(os.path.join(tmp_dir, 'natmap'), run_configs.core_dir())
         else:
-            shutil.move(download_path, os.path.join(run_configs.core_dir(), 'natmap', 'natmap'))
+            natmap_dir = os.path.join(run_configs.core_dir(), 'natmap')
+            Path(natmap_dir).mkdir(parents=True, exist_ok=True)
+            shutil.move(download_path, os.path.join(natmap_dir, 'natmap'))
 
         target_path = _get_natmap_binary()
         if not target_path:
@@ -285,6 +288,7 @@ def _build_launcher_script(config_id: str, natmap_cmd: list[str]) -> tuple[str, 
         with open(script_path, 'w', encoding='utf-8') as f:
             f.write(script_content)
         os.chmod(script_path, 0o755)
+        logger.info(f'生成 natmap 启动器脚本: {script_path}')
         return script_path, script_content
 
     with open(script_path, 'w', encoding='utf-8') as f:
