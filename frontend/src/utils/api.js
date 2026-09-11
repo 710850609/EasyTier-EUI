@@ -316,6 +316,17 @@ export const api = {
     getDownloadUrl: (params = {}) => get('/et_app/get_download_url', params),
     getAppInfo: (params = {}) => get('/et_app/get_app_info', params),
   },
+  // STUN 穿透相关
+  stun: {
+    getNatmapVersion: () => get('/stun/natmap_version', {}, { toastError: false }),
+    installNatmap: () => post('/stun/natmap_install'),
+    startStun: (config) => post('/stun/start_stun', config),
+    stopStun: (id) => post('/stun/stop_stun', { id }),
+    listStun: () => get('/stun/list_stun', {}, { toastError: false }),
+    saveStun: (id, config) => post('/stun/save_stun', { id, config }),
+    deleteStun: (id) => post('/stun/delete_stun', { id }),
+    testPushTxtRecord: (config) => post('/stun/test_push_txt', config),
+  },
 }
 
 // 导出基础配置

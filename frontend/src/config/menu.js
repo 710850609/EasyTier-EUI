@@ -19,6 +19,7 @@ const lazyModules = import.meta.glob('../views/**/*.vue')
 export const menuTree = [
   { key: 'nodes', label: 'menu.nodes.label', icon: 'format-list-checkbox', title: 'menu.nodes.title', component: 'Nodes' },
   { key: 'config', label: 'menu.config.label', icon: 'bookmark-outline', title: 'menu.config.title', component: 'Config' },
+  { key: 'stun', label: 'menu.stun.label', icon: { type: 'mdi', name: 'mdiAccessPointNetwork' }, title: 'menu.stun.title', component: 'Stun' },
   { key: 'software', label: 'menu.software.label', icon: 'shopping-outline', title: 'menu.software.title',
     children: [
       { key: 'softwares-windows', label: 'menu.software.windows', icon: { type: 'mdi', name: 'mdiMicrosoftWindows' }, component: 'softwares/Windows' },
