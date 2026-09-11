@@ -131,15 +131,15 @@ class ProcessManager:
                     stdin=subprocess.DEVNULL,
                     encoding='utf-8',
                     errors='replace',
-                    creationflags=subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.DETACHED_PROCESS,
+                    # creationflags=subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.CREATE_NO_WINDOW | subprocess.DETACHED_PROCESS,
+                    creationflags=subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.CREATE_NO_WINDOW,
                     startupinfo=startupinfo,
                 )
             else:
                 # Linux/macOS: 使用 bash -c
                 # 改用 sh 命令 兼容 alpine Linux 无 bash 环境
-                bash_cmd = ["sh", "-c", "exec " + " ".join(shlex.quote(x) for x in start_cmd)]
+                bash_cmd = ["sh", "exec " + " ".join(shlex.quote(x) for x in start_cmd)]
                 process = subprocess.Popen(
-                    # ["bash", "-c", *start_cmd],
                     bash_cmd,
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.PIPE,
@@ -176,7 +176,7 @@ class ProcessManager:
             raise RuntimeError(f"Failed to start: {e}") from e
 
 
-    def stop(self) -> int:
+    def stop(self, timeout: int = 5) -> int:
         """
         停止进程
         """
@@ -208,35 +208,40 @@ class ProcessManager:
         logging.info(f"send TERM signal to PID:{pid}...")
         try:
             if sys.platform == 'win32':
-                # Windows: 使用 taskkill 发送信号
-
-                subprocess.run(['taskkill', '/PID', str(pid)], capture_output=True,
-                               creationflags=subprocess.CREATE_NO_WINDOW) # 禁止创建窗口
+                # Windows: 使用 taskkill /T 终止整个进程树
+                subprocess.run(['taskkill', '/T', '/PID', str(pid)], capture_output=True,
+                               creationflags=subprocess.CREATE_NO_WINDOW)
             else:
-                # Linux/macOS: 使用 SIGTERM
-                os.kill(pid, signal.SIGTERM)
+                # Linux/macOS: 使用 SIGTERM 发送到进程组
+                try:
+                    os.killpg(os.getpgid(pid), signal.SIGTERM)
+                except (ProcessLookupError, OSError):
+                    os.kill(pid, signal.SIGTERM)
         except OSError as e:
             logging.info(f"Failed to send TERM: {e}")
             return 1
         
         # 等待进程退出（最多 10 秒）
         count = 0
-        while self.__check_process(pid) and count < 5:
+        while self.__check_process(pid) and count < timeout:
             time.sleep(1)
             count += 1
-            logging.info(f"waiting process terminal... ({count}s/5s)")
+            logging.info(f"waiting process terminal... ({count}s/{timeout}s)")
         
         # 如果还在，强制终止
         if self.__check_process(pid):
             logging.info(f"send KILL signal to PID:{pid}...")
             try:
                 if sys.platform == 'win32':
-                    # Windows: 使用 taskkill /F 强制终止
-                    subprocess.run(['taskkill', '/F', '/PID', str(pid)], capture_output=True,
-                               creationflags=subprocess.CREATE_NO_WINDOW) # 禁止创建窗口
+                    # Windows: 使用 taskkill /F /T 强制终止整个进程树
+                    subprocess.run(['taskkill', '/F', '/T', '/PID', str(pid)], capture_output=True,
+                               creationflags=subprocess.CREATE_NO_WINDOW)
                 else:
-                    # Linux/macOS: 使用 SIGKILL
-                    os.kill(pid, signal.SIGKILL)
+                    # Linux/macOS: 使用 SIGKILL 发送到进程组
+                    try:
+                        os.killpg(os.getpgid(pid), signal.SIGKILL)
+                    except (ProcessLookupError, OSError):
+                        os.kill(pid, signal.SIGKILL)
             except OSError as e:
                 logging.info(f"Failed to send KILL: {e}")
             

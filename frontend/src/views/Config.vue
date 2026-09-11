@@ -3041,22 +3041,6 @@ html.dark .sk-breathe {
   /* gap: 16px; */
 }
 
-:deep(.var-input__input) {
-  color: var(--color-text);
-}
-
-:deep(.var-input__placeholder) {
-  color: var(--color-text-disabled);
-}
-
-:deep(.var-input__label) {
-  color: var(--color-text);
-}
-
-:deep(.var-select__label) {
-  color: var(--color-text);
-}
-
 :deep(.var-select__placeholder) {
   color: var(--color-text-disabled);
 }

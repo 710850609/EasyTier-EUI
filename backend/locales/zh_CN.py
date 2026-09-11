@@ -153,4 +153,12 @@ MESSAGES = {
         "chunk_download_progress": "分片下载进度: {percent}%",
         "single_download_progress": "单线程下载进度: {percent}%",
     },
+    "stun": {
+        "natmapBinaryNotFound": "在下载包中未找到 natmap 可执行文件",
+        "natmapInstallFailed": "natmap 安装失败: {error}",
+        "idRequired": "配置ID不能为空",
+        "configRequired": "配置内容不能为空",
+        "configNotFound": "配置不存在",
+        "duplicateProtocolBindPort": "协议和绑定端口组合已存在，请使用不同的协议或端口",
+    },
 }

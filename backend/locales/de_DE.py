@@ -151,4 +151,7 @@ MESSAGES = {
         "chunk_download_progress": "Chunk-Download-Fortschritt: {percent}%",
         "single_download_progress": "Einzelthread-Download-Fortschritt: {percent}%",
     },
+    "stun": {
+        "configsRequired": "Konfigurationsdaten sind erforderlich",
+    },
 }

@@ -79,7 +79,7 @@ class CoreForegroundAdapter(IEasyTierAdapter):
     def stop_network(self, instance_name: str) -> None:
         logging.info(f"停止ET配置: {instance_name}")
         pm = _get_process_manager(instance_name)
-        pm.stop()
+        pm.stop(timeout=0)
 
     def status(self, instance_name: str) -> bool:
         pm = _get_process_manager(instance_name)

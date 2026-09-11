@@ -151,4 +151,7 @@ MESSAGES = {
         "chunk_download_progress": "分片下載進度: {percent}%",
         "single_download_progress": "單執行緒下載進度: {percent}%",
     },
+    "stun": {
+        "configsRequired": "配置資料不能為空",
+    },
 }

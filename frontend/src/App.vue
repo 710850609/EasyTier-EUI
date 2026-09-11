@@ -192,6 +192,16 @@ html body .var-checkbox-group--vertical .var-checkbox__wrap:not(:last-child)::af
   pointer-events: none;
 }
 
+/* var-input / var-select 输入框文字颜色适配 */
+.var-input__input,
+.var-input__label {
+  color: var(--color-text) !important;
+}
+
+.var-input__placeholder {
+  color: var(--color-text-disabled) !important;
+}
+
 /* var-tabs 样式适配 */
 .var-tabs {
   background: transparent !important;

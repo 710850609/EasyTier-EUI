@@ -153,4 +153,12 @@ MESSAGES = {
         "chunk_download_progress": "Chunk download progress: {percent}%",
         "single_download_progress": "Single-thread download progress: {percent}%",
     },
+    "stun": {
+        "natmapBinaryNotFound": "natmap binary not found in downloaded package",
+        "natmapInstallFailed": "natmap installation failed: {error}",
+        "idRequired": "Configuration ID is required",
+        "configRequired": "Configuration content is required",
+        "configNotFound": "Configuration not found",
+        "duplicateProtocolBindPort": "Protocol and bind port combination already exists, please use a different protocol or port",
+    },
 }

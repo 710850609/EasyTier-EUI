@@ -8,7 +8,7 @@ import sys
 
 logger = logging.getLogger(__name__)
 
-def run_cmd(command, *args, shell=False) -> str:
+def run_cmd(command, *args, shell=False, check_result=True) -> str | tuple[int, str, str]:
     """
     执行命令并返回 JSON 格式结果
     
@@ -55,7 +55,10 @@ def run_cmd(command, *args, shell=False) -> str:
     if result.returncode == 0:
         return result.stdout.strip() if result.stdout else ""
     error_msg = result.stderr.strip() if result.stderr else ""
-    raise Exception(f"{error_msg}")
+    if check_result:
+        raise Exception(f"{error_msg}")
+    else:
+        return (result.returncode, result.stdout, result.stderr)
 
 
 def move(src_path, dst_path):
