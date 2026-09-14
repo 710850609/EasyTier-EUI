@@ -310,9 +310,9 @@ const dnsProviderMeta = {
   dynv6: {
     website: 'https://dynv6.com',
     fields: [
-      { key: 'zoneName', tip: '主域名，一般是三级域名', required: true },
+      { key: 'zoneName', tip: 'zone', required: true },
       { key: 'httpToken', tip: 'HTTP token', required: true },
-      { key: 'subDomain', tip: '子域名', required: false },
+      { key: 'subDomain', tip: 'sub domain prefix', required: false },
     ]
   }
 }
@@ -588,7 +588,7 @@ async function saveCurrentConfig() {
   // 变更推送必填校验（根据 DNS 服务商元数据）
   for (const field of currentProviderFields.value) {
     if (field.required && !profileToSave.changeConfig?.[field.key]) {
-      toast.error(t('common.required', { label: field.tip }))
+      toast.error(t('validate.required', { label: field.tip }))
       return
     }
   }

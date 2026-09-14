@@ -16,7 +16,7 @@
     </div>
 
     <div class="menu-list">
-      <template v-for="menu in menuTree" :key="menu.key">
+      <template v-for="menu in filteredMenuTree" :key="menu.key">
         <!-- 有子菜单的项 -->
         <div v-if="menu.children" class="menu-group">
           <div
@@ -137,7 +137,7 @@
 </template>
 
 <script setup>
-import { menuTree } from '../config/menu.js'
+import { filteredMenuTree } from '../config/menu.js'
 import { SIDEBAR_COLLAPSED_KEY } from '../config/storage-keys.js'
 import SvgIcon from '@jamescoyle/vue-icon'
 import { isVarletIcon, isImageIcon, isSvgIcon, getIconPath } from '../utils/iconHelper.js'

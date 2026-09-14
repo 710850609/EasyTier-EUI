@@ -7,7 +7,14 @@
  * 2. @mdi/js 图标: icon: { type: 'mdi', name: 'mdiHome' } - name 为库的导出名称
  * 3. @mdi/light-js 图标: icon: { type: 'mdil/light', name: 'mdilPencil' } - name 为库的导出名称
  * 4. 图片路径: icon: './images/windows.svg'
+ * 
+ * platforms 字段（可选）：限定菜单在哪些系统上显示
+ *  - 未设置或为空数组：所有系统都显示
+ *  - 设置为 ['win32', 'linux', 'trim']：仅在指定系统上显示
+ *  - 平台值来自后端 /settings/eui_info 接口返回的 platform 字段
  */
+
+import { ref, computed } from 'vue'
 
 // 核心页面（Nodes、Config）同步加载，确保首屏速度
 const coreModules = import.meta.glob('../views/{Nodes,Config}.vue', { eager: true })
@@ -15,11 +22,18 @@ const coreModules = import.meta.glob('../views/{Nodes,Config}.vue', { eager: tru
 // 非核心页面延迟加载，减少首屏 bundle 体积
 const lazyModules = import.meta.glob('../views/**/*.vue')
 
+// 当前系统平台（由 Layout 启动时调用 setCurrentPlatform 设置）
+export const currentPlatform = ref('')
+
+export function setCurrentPlatform(platform) {
+  currentPlatform.value = platform
+}
+
 // 菜单树结构（每个节点单行）
 export const menuTree = [
   { key: 'nodes', label: 'menu.nodes.label', icon: 'format-list-checkbox', title: 'menu.nodes.title', component: 'Nodes' },
   { key: 'config', label: 'menu.config.label', icon: 'bookmark-outline', title: 'menu.config.title', component: 'Config' },
-  { key: 'stun', label: 'menu.stun.label', icon: { type: 'mdi', name: 'mdiAccessPointNetwork' }, title: 'menu.stun.title', component: 'Stun' },
+  { key: 'stun', label: 'menu.stun.label', icon: { type: 'mdi', name: 'mdiAccessPointNetwork' }, title: 'menu.stun.title', component: 'Stun', platforms: ['win32', 'linux', 'trim'] },
   { key: 'software', label: 'menu.software.label', icon: 'shopping-outline', title: 'menu.software.title',
     children: [
       { key: 'softwares-windows', label: 'menu.software.windows', icon: { type: 'mdi', name: 'mdiMicrosoftWindows' }, component: 'softwares/Windows' },
@@ -67,6 +81,27 @@ const buildComponentMap = () => {
   })
   return map
 }
+
+// 根据当前平台过滤菜单树
+const filterByPlatform = (items) => {
+  return items.filter(item => {
+    if (!item.platforms || item.platforms.length === 0) return true
+    return item.platforms.includes(currentPlatform.value)
+  }).map(item => {
+    if (item.children) {
+      const filteredChildren = filterByPlatform(item.children)
+      if (filteredChildren.length === 0) return null
+      return { ...item, children: filteredChildren }
+    }
+    return item
+  }).filter(Boolean)
+}
+
+export const filteredMenuTree = computed(() => {
+  const platform = currentPlatform.value
+  if (!platform) return menuTree
+  return filterByPlatform(menuTree)
+})
 
 export const componentMap = buildComponentMap()
 

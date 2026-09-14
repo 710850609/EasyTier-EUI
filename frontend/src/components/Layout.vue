@@ -28,11 +28,12 @@
 <script setup>
 import SideMenu from './SideMenu.vue'
 import BottomNav from './BottomNav.vue'
-import { componentMap, menuTree } from '../config/menu.js'
+import { componentMap, filteredMenuTree, setCurrentPlatform } from '../config/menu.js'
 import { isDark } from '../config/theme.js'
 import { VCONSOLE_ENABLED_KEY } from '../config/storage-keys.js'
 import { useI18n } from 'vue-i18n'
 import toast from './toast.js'
+import api from '../utils/api.js'
 
 const { t } = useI18n()
 
@@ -85,15 +86,14 @@ const flattenMenu = (items) => {
   })
   return result
 }
-const flatMenus = flattenMenu(menuTree)
+const flatMenus = computed(() => flattenMenu(filteredMenuTree.value))
 
-// 二级菜单的顶级 key 集合
-const topLevelKeys = new Set(menuTree.map(m => m.key))
+const topLevelKeys = computed(() => new Set(filteredMenuTree.value.map(m => m.key)))
 
 // 移动端二级菜单标题（仅二级菜单时显示）
 const subMenuLabel = computed(() => {
-  if (topLevelKeys.has(activeMenu.value)) return ''
-  const menu = flatMenus.find(m => m.key === activeMenu.value)
+  if (topLevelKeys.value.has(activeMenu.value)) return ''
+  const menu = flatMenus.value.find(m => m.key === activeMenu.value)
   return menu ? t(menu.label) : ''
 })
 
@@ -127,10 +127,13 @@ const handleResizeDebounced = () => {
 
 onMounted(() => {
   window.addEventListener('resize', handleResizeDebounced)
-  // 初始化时执行一次，确保状态正确
   handleResize()
-  // 加载 VConsole（如果之前开启过）
   loadVConsole()
+  api.settings.getEuiInfo().then(res => {
+    if (res?.data?.platform) {
+      setCurrentPlatform(res.data.platform)
+    }
+  }).catch(() => {})
 })
 
 onUnmounted(() => {

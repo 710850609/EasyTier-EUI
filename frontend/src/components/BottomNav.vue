@@ -1,7 +1,7 @@
 <template>
   <div class="bottom-nav" :class="{ 'dark': isDark }">
     <div 
-      v-for="item in menuTree" 
+      v-for="item in filteredMenuTree" 
       :key="item.key"
       class="nav-item"
       :class="{ active: currentActive === item.key }"
@@ -57,7 +57,7 @@
 </template>
 
 <script setup>
-import { menuTree } from '../config/menu.js'
+import { filteredMenuTree } from '../config/menu.js'
 import SvgIcon from '@jamescoyle/vue-icon'
 import { isVarletIcon, isImageIcon, isSvgIcon, getIconPath } from '../utils/iconHelper.js'
 
