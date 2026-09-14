@@ -326,6 +326,7 @@ export const api = {
     saveStun: (id, config) => post('/stun/save_stun', { id, config }),
     deleteStun: (id) => post('/stun/delete_stun', { id }),
     testPushTxtRecord: (config) => post('/stun/test_push_txt', config),
+    natCheck: () => get('/stun/nat_check', {}, { toastError: false }),
   },
 }
 

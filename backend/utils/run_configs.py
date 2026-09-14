@@ -75,6 +75,7 @@ def setup_env():
         DATA_DIR = os.getenv('DATA_DIR', f"{TRIM_PKGVAR}")
         LOG_DIR = os.getenv('LOG_DIR', f"{TRIM_PKGVAR}/logs")
         FRONTEND_PATH = os.path.join(TRIM_APPDEST, 'frontend')
+        UPGRADE_SCRIPT_PATH = os.path.join(TRIM_APPDEST, 'backend', 'assets')
         _run_mode = 2
     elif getattr(sys, 'frozen', False):
         # _MEIPASS 是 PyInstaller 解压资源的临时目录
@@ -121,7 +122,7 @@ def setup_env():
     _is_inited_evn = True
 
 
-BUILD_VERSION = "2.4.020604-20260911182200"
+BUILD_VERSION = "2.4.020604-20260914173239"
 
 
 def is_musl_sys():
@@ -234,3 +235,9 @@ def upgrade_script_path() -> str:
         return os.path.join(UPGRADE_SCRIPT_PATH, 'upgrade.bat')
     else:
         return os.path.join(UPGRADE_SCRIPT_PATH, 'upgrade.sh')
+
+def dns_callback_script_path() -> str:
+    if sys.platform == 'win32':
+        return os.path.join(UPGRADE_SCRIPT_PATH, 'update_dns_dynv6.bat')
+    else:
+        return os.path.join(UPGRADE_SCRIPT_PATH, 'update_dns_dynv6.sh')

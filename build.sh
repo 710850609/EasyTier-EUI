@@ -132,6 +132,8 @@ build_backend() {
     --exclude='shell' \
     --exclude='*.sh' \
     backend/ "${app_script_path}/"
+    # 复制 assets/update_dns_dynv6.sh 到 backend 目录
+    rsync backend/assets/update_dns_dynv6.sh "${app_script_path}/assets/"
 }
 
 build_frontend() {

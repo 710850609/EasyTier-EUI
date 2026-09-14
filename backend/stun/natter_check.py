@@ -494,13 +494,23 @@ class Check(object):
         return status, info
 
 
+def get_nat_type():
+    check = Check()
+    result = {'tcp': 'unknown', 'udp': 'unknown'}
+    try:
+        status, info = check._check_tcp_nat()
+        result['tcp'] = info.replace('NAT Type: ', '').replace('-1', 'unknown')
+        status, info = check._check_udp_nat()
+        result['udp'] = info.replace('NAT Type: ', '').replace('-1', 'unknown')
+    finally:
+        return result
+
 def main():
     fix_codecs()
     check_docker_network()
     print("> NatterCheck v%s\n" % __version__)
     check = Check()
     check.do_check()
-
 
 if __name__ == "__main__":
     main()

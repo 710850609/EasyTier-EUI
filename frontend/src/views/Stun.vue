@@ -39,6 +39,30 @@
           {{ $t('stun.checkVersion') }}
         </var-button>
       </div>
+      <div class="setting-row">
+        <div class="version-info-block">
+          <span class="setting-label" v-if="!natTypeResult">{{ $t('stun.natType') }}</span>
+          <template v-if="natTypeResult">
+            <span class="nat-protocol-label">TCP</span>
+            <var-chip :type="getNatTypeChipType(natTypeResult.tcp)" size="mini" plain>
+              {{ getNatTypeName(natTypeResult.tcp) }}
+            </var-chip>
+            <span class="nat-protocol-label">UDP</span>
+            <var-chip :type="getNatTypeChipType(natTypeResult.udp)" size="mini" plain>
+              {{ getNatTypeName(natTypeResult.udp) }}
+            </var-chip>
+          </template>
+          <span v-else class="version-value" style="color: var(--color-text-disabled);">{{ $t('stun.notChecked') }}</span>
+        </div>
+        <var-button type="primary" size="small" @click="checkNatType" auto-loading>
+          <var-icon name="refresh" />
+          {{ $t('stun.checkNatType') }}
+        </var-button>
+      </div>
+
+      <div v-if="natTypeResult" class="setting-row nat-hint-row" :class="isNatGood ? 'nat-hint--success' : 'nat-hint--warning'">
+        <span>{{ isNatGood ? $t('stun.natGoodHint') : $t('stun.natBadHint') }}</span>
+      </div>
     </var-paper>
 
     <!-- 3.1 Nat 穿透 -->
@@ -76,22 +100,28 @@
               class="status-dot"
               :style="{ background: p.running ? 'var(--color-success)' : 'var(--color-text-disabled)' }"
             />
-            <span class="profile-row-name">{{ p.name }}</span>
-            <var-chip size="mini" plain :type="p.stunConfig.protocol === 'tcp' ? 'primary' : 'warning'">
-              {{ p.stunConfig.protocol.toUpperCase() }}
-            </var-chip>
-            <span class="profile-row-port" v-if="p.stunConfig.bindPort">
-              {{ p.stunConfig.bindPort }}
-            </span>
-            <span class="profile-row-port" v-if="p.running && p.mapping">
-               →
-            </span>
-            <span class="profile-row-mapping" v-if="p.running && p.mapping" @click.stop="copyText(`${p.mapping.protocol}://${p.mapping.public_addr}:${p.mapping.public_port}`)">
-               {{ p.mapping.protocol }}://{{ p.mapping.public_addr }}:{{ p.mapping.public_port }}
-            </span>
-            <span class="profile-row-error" v-if="p.running && p.error_msg" @click.stop="copyText(p.error_msg)">
-              {{ p.error_msg }}
-            </span>
+            <div class="profile-row-info">
+              <div class="profile-row-line">
+                <span class="profile-row-name">{{ p.name }}</span>
+                <var-chip size="mini" plain type="info">
+                  {{ p.stunConfig.protocol }}
+                </var-chip>
+                <var-chip size="mini" plain :type="getProtocolChipType(p.stunConfig.listenProtocol)">
+                  <template v-if="p.stunConfig.listenProtocol">
+                    {{ p.stunConfig.listenProtocol }}:{{ p.stunConfig.listenPort }}
+                  </template>
+                </var-chip>
+              </div>
+              <div class="profile-row-line" v-if="p.running && p.mapping">
+                <span class="profile-row-arrow">→</span>
+                <span class="profile-row-mapping" @click.stop="copyText(`${p.stunConfig.listenProtocol}://${p.mapping.public_addr}:${p.mapping.public_port}`)">
+                  {{ p.stunConfig.listenProtocol }}://{{ p.mapping.public_addr }}:{{ p.mapping.public_port }}
+                </span>
+              </div>
+              <div class="profile-row-line" v-if="p.running && p.error_msg">
+                <span class="profile-row-error" @click.stop="copyText(p.error_msg)">{{ p.error_msg }}</span>
+              </div>
+            </div>
           </div>
           <div class="profile-row-right" @click.stop>
             <var-button
@@ -143,74 +173,31 @@
         </div>
 
         <div class="form-row">
-          <label class="form-label">{{ $t('stun.protocol') }}</label>
+          <label class="form-label">{{ $t('stun.listenProtocol') }}</label>
           <var-select
             variant="outlined"
             size="small"
-            v-model="activeProfile.stunConfig.protocol"
+            v-model="activeProfile.stunConfig.listenProtocol"
+            @change="onListenProtocolChange"
           >
-            <var-option :label="$t('stun.protocolTcp')" value="tcp" />
-            <var-option :label="$t('stun.protocolUdp')" value="udp" />
+            <var-option label="tcp" value="tcp" />
+            <var-option label="udp" value="udp" />
+            <var-option label="quic" value="quic" />
+            <var-option label="wg" value="wg" />
+            <var-option label="ws" value="ws" />
+            <var-option label="wss" value="wss" />
+            <var-option label="faketcp" value="faketcp" />
           </var-select>
         </div>
 
         <div class="form-row">
-          <label class="form-label">{{ $t('stun.bindPort') }}</label>
+          <label class="form-label">{{ $t('stun.listenPort') }}</label>
           <var-input
             variant="outlined"
             size="small"
-            v-model="activeProfile.stunConfig.bindPort"
+            v-model="activeProfile.stunConfig.listenPort"
           />
         </div>
-
-<!--        <div class="form-row">-->
-<!--          <label class="form-label">{{ $t('stun.interface') }}</label>-->
-<!--          <var-input-->
-<!--            variant="outlined"-->
-<!--            size="small"-->
-<!--            v-model="activeProfile.stunConfig.interface"-->
-<!--            :placeholder="$t('stun.interfacePlaceholder')"-->
-<!--          />-->
-<!--        </div>-->
-
-<!--        <div class="form-row">-->
-<!--          <label class="form-label">{{ $t('stun.keepaliveInterval') }}</label>-->
-<!--          <var-input-->
-<!--            variant="outlined"-->
-<!--            size="small"-->
-<!--            v-model="activeProfile.stunConfig.keepaliveInterval"-->
-<!--            type="number"-->
-<!--          />-->
-<!--        </div>-->
-
-<!--        <div class="form-row">-->
-<!--          <label class="form-label">UDP STUN 检测周期</label>-->
-<!--          <var-input-->
-<!--            variant="outlined"-->
-<!--            size="small"-->
-<!--            v-model="activeProfile.stunConfig.checkCycle"-->
-<!--            type="number"-->
-<!--          />-->
-<!--        </div>-->
-
-<!--        <div class="form-row">-->
-<!--          <label class="form-label">{{ $t('stun.stunServer') }}</label>-->
-<!--          <var-input-->
-<!--            variant="outlined"-->
-<!--            size="small"-->
-<!--            v-model="activeProfile.stunConfig.stunServer"-->
-<!--          />-->
-<!--        </div>-->
-
-<!--        <div class="form-row">-->
-<!--          <label class="form-label">{{ $t('stun.httpServer') }}</label>-->
-<!--          <var-input-->
-<!--            variant="outlined"-->
-<!--            size="small"-->
-<!--            v-model="activeProfile.stunConfig.httpServer"-->
-<!--            placeholder="TCP协议时，必填"-->
-<!--          />-->
-<!--        </div>-->
       </div>
 
       <var-divider />
@@ -218,51 +205,32 @@
       <!-- 公网IP/端口变更推送 -->
       <div class="section-label">
         {{ $t('stun.changePushLabel') }}
-        <span v-if="activeProfile?.changeConfig?.domainName"> → </span>
-        <span v-if="activeProfile?.changeConfig?.domainName" class="profile-row-mapping" @click="copyText(`txt://${activeProfile.changeConfig.domainName}`)">txt://{{ activeProfile.changeConfig.domainName }}</span>
+        <span v-if="activeProfile?.changeConfig?.zoneName"> → </span>
+        <span v-if="activeProfile?.changeConfig?.zoneName" class="profile-row-mapping" @click="copyText(`txt://${activeProfile.changeConfig.subDomain ? activeProfile.changeConfig.subDomain + '.' : ''}${activeProfile.changeConfig.zoneName}`)">txt://{{ activeProfile.changeConfig.subDomain ? activeProfile.changeConfig.subDomain + '.' : '' }}{{ activeProfile.changeConfig.zoneName }}</span>
       </div>
       <div class="form-grid">
         <div class="form-row">
-          <label class="form-label">{{ $t('stun.dnsProvider') }}</label>
+          <label class="form-label">{{ $t('stun.dnsProvider') }}
+            <a v-if="currentProviderWebsite" :href="currentProviderWebsite" target="_blank" class="provider-link">
+              &#x2197; {{ $t('stun.website') }}
+            </a>
+          </label>
           <var-select
             variant="outlined"
             size="small"
             v-model="activeProfile.changeConfig.dnsProvider"
           >
             <var-option label="dynv6" value="dynv6" />
-<!--          <var-option :label="$t('stun.providerAliyun')" value="aliyun" />-->
-<!--          <var-option :label="$t('stun.providerCloudflare')" value="cloudflare" />-->
-<!--          <var-option :label="$t('stun.providerTencent')" value="tencent" />-->
-<!--          <var-option :label="$t('stun.providerCustom')" value="custom" />-->
           </var-select>
         </div>
 
-        <div class="form-row">
-          <label class="form-label">{{ $t('stun.domainName') }}</label>
+        <div class="form-row" v-for="field in currentProviderFields" :key="field.key">
+          <label class="form-label">{{ field.tip }}</label>
           <var-input
             variant="outlined"
             size="small"
-            v-model="activeProfile.changeConfig.domainName"
-          />
-        </div>
-
-        <div class="form-row">
-          <label class="form-label">{{ $t('stun.apiKey') }}</label>
-          <var-input
-            variant="outlined"
-            size="small"
-            v-model="activeProfile.changeConfig.apiKey"
-            type="text"
-          />
-        </div>
-
-        <div class="form-row">
-          <label class="form-label">{{ $t('stun.apiSecret') }}</label>
-          <var-input
-            variant="outlined"
-            size="small"
-            v-model="activeProfile.changeConfig.apiSecret"
-            type="text"
+            v-model="activeProfile.changeConfig[field.key]"
+            :placeholder="field.tip"
           />
         </div>
       </div>
@@ -272,10 +240,10 @@
           <var-icon name="content-save" />
           {{ $t('common.save') }}
         </var-button>
-        <var-button @click="testPushTxtRecord" auto-loading>
-          <var-icon name="send" />
-          {{ $t('stun.testPush') }}
-        </var-button>
+<!--        <var-button @click="testPushTxtRecord" auto-loading>-->
+<!--          <var-icon name="send" />-->
+<!--          {{ $t('stun.testPush') }}-->
+<!--        </var-button>-->
       </div>
     </var-paper>
 
@@ -303,6 +271,16 @@ import api from '../utils/api.js'
 
 const { t } = useI18n()
 
+const listenPortDefaults = {
+  tcp: '11010',
+  udp: '11010',
+  wg: '11011',
+  ws: '11011',
+  wss: '11012',
+  quic: '11012',
+  faketcp: '11013'
+}
+
 function createDefaultProfile(item, index) {
   return reactive({
     id: item.id,
@@ -311,28 +289,64 @@ function createDefaultProfile(item, index) {
     mapping: null,
     error_msg: '',
     stunConfig: {
-      protocol: 'udp',
-      stunServer: '',
-      httpServer: '',
-      interface: '',
-      keepaliveInterval: '',
-      checkCycle: '',
-      bindPort: '11010'
+      listenProtocol: 'udp',
+      listenPort: '11010',
     },
     changeConfig: {
-      dnsProvider: 'dynv6',
-      apiKey: '',
-      apiSecret: '',
-      domainName: ''
+      dnsProvider: 'dynv6'
     }
   })
+}
+
+function onListenProtocolChange(value) {
+  if (listenPortDefaults[value] && activeProfile.value) {
+    activeProfile.value.stunConfig.listenPort = listenPortDefaults[value]
+  }
+}
+
+// DNS 服务商元数据：key 为 dnsProvider 值，fields 定义该服务商需要的输入项
+// 新增服务商时只需在此处添加元数据即可
+const dnsProviderMeta = {
+  dynv6: {
+    website: 'https://dynv6.com',
+    fields: [
+      { key: 'zoneName', tip: '主域名，一般是三级域名', required: true },
+      { key: 'httpToken', tip: 'HTTP token', required: true },
+      { key: 'subDomain', tip: '子域名', required: false },
+    ]
+  }
+}
+
+const currentProviderFields = computed(() => {
+  const provider = activeProfile.value?.changeConfig?.dnsProvider
+  return dnsProviderMeta[provider]?.fields || []
+})
+
+const currentProviderWebsite = computed(() => {
+  const provider = activeProfile.value?.changeConfig?.dnsProvider
+  return dnsProviderMeta[provider]?.website || ''
+})
+
+function getProtocolChipType(protocol) {
+  const typeMap = { tcp: 'primary', udp: 'warning', quic: 'success', wg: 'info', ws: 'success', wss: 'info', faketcp: 'warning' }
+  // return typeMap[protocol] || 'default'
+  return 'primary'
 }
 
 // Natmap 信息
 const natmapVersion = ref('')
 const existsNatmap = ref(false)
 const natmapInstalling = ref(false)
+const natTypeResult = ref(null)
 const showTipPopup = ref(false)
+
+const isNatGood = computed(() => {
+  if (!natTypeResult.value) return null
+  const tcp = String(natTypeResult.value.tcp)
+  const udp = String(natTypeResult.value.udp)
+  const good = (v) => v === '0' || v === '1'
+  return good(tcp) || good(udp)
+})
 
 // 多配置
 const profiles = reactive([])
@@ -444,6 +458,34 @@ async function checkNatmapVersion() {
   }
 }
 
+// 检测 NAT 类型
+async function checkNatType() {
+  try {
+    const { data } = await api.stun.natCheck()
+    if (data) {
+      natTypeResult.value = { tcp: data.tcp, udp: data.udp }
+    }
+  } catch (e) {
+    toast.error(t('stun.checkNatTypeFailed'))
+  }
+}
+
+// NAT 类型数值 → 显示名称
+function getNatTypeName(raw) {
+  const v = String(raw)
+  if (v === '-1' || v === 'unknown') return 'unknown'
+  return 'nat' + (Number(v))
+}
+
+function getNatTypeChipType(raw) {
+  const v = String(raw)
+  if (v === '-1' || v === 'unknown') return 'default'
+  const n = Number(v)
+  if (n <= 1) return 'success'
+  if (n <= 3) return 'warning'
+  return 'danger'
+}
+
 // 安装 Natmap
 async function installNatmap() {
   natmapInstalling.value = true
@@ -508,6 +550,7 @@ async function fetchStunStatus() {
         if (info) {
           Object.assign(p, {
             id: info.id,
+            stunConfig: info.stunConfig || {},
             running: info.running || false,
             mapping: info.mapping || null,
             error_msg: info.error_msg || '' })
@@ -533,13 +576,21 @@ async function saveCurrentConfig() {
     toast.error(t('stun.nameRequired'))
     return
   }
-  if (!profileToSave.stunConfig?.protocol) {
-    toast.error(t('stun.protocolRequired'))
+  if (!profileToSave.stunConfig?.listenProtocol) {
+    toast.error(t('stun.listenProtocolRequired'))
     return
   }
-  if (!profileToSave.stunConfig?.bindPort) {
-    toast.error(t('stun.bindPortRequired'))
+  if (!profileToSave.stunConfig?.listenPort) {
+    toast.error(t('stun.listenPortRequired'))
     return
+  }
+
+  // 变更推送必填校验（根据 DNS 服务商元数据）
+  for (const field of currentProviderFields.value) {
+    if (field.required && !profileToSave.changeConfig?.[field.key]) {
+      toast.error(t('common.required', { label: field.tip }))
+      return
+    }
   }
 
   try {
@@ -703,6 +754,33 @@ onUnmounted(() => {
   white-space: nowrap;
 }
 
+.nat-protocol-label {
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.nat-hint-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  margin-top: 4px;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.nat-hint--success {
+  background: var(--color-success-container);
+  color: var(--color-on-success-container);
+}
+
+.nat-hint--warning {
+  background: var(--color-warning-container);
+  color: var(--color-on-warning-container);
+}
+
 .version-value {
   font-size: 14px;
   font-weight: 500;
@@ -751,11 +829,10 @@ onUnmounted(() => {
 
 .profile-row-left {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
   flex: 1;
   min-width: 0;
-  flex-wrap: wrap;
 }
 
 .status-dot {
@@ -763,6 +840,22 @@ onUnmounted(() => {
   height: 10px;
   border-radius: 50%;
   flex-shrink: 0;
+  margin-top: 6px;
+}
+
+.profile-row-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.profile-row-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .profile-row-name {
@@ -772,6 +865,12 @@ onUnmounted(() => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.profile-row-arrow {
+  font-size: 13px;
+  color: var(--color-text-disabled);
+  font-family: 'Consolas', 'JetBrains Mono', monospace;
 }
 
 .profile-row-port {
@@ -967,5 +1066,16 @@ onUnmounted(() => {
   .block-footer .var-button {
     width: 100%;
   }
+}
+
+.provider-link {
+  font-size: 12px;
+  color: var(--color-primary);
+  text-decoration: none;
+  margin-left: 8px;
+}
+
+.provider-link:hover {
+  text-decoration: underline;
 }
 </style>
