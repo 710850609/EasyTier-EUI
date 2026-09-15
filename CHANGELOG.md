@@ -23,6 +23,11 @@
 - Improved: [Config] page first-time add now supports multiple modes: QR scan, clipboard, quick, and custom. Optimized new config flow to reduce unnecessary clicks
 - Improved: [Config] page replaced QR scan component with qr-scanner, improving QR code recognition success rate
 - Fixed: [Config] page - shared config with encryption enabled could not join the virtual network
+----
+- New: Experimental feature - STUN listen address, inspired by 亮一光 (LiangYiGuang)
+  - Not supported on Android
+  - FnOS / FygoOS / Docker versions support auto-start on boot
+  - Other versions only support launching with the app
 
 ##  2.4
 - 新增：【节点】页面支持查看中继路径（默认开启）
