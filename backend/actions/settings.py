@@ -21,7 +21,6 @@ def eui_info(*args, **kwargs):
     platform = 'trim' if run_configs.is_fn_system() else sys.platform
     platform = 'android' if run_configs.IS_ANDROID else platform
     install_path = Path(run_configs.log_dir()).parent
-    # 解析符号链接，获取真实路径
     install_path = install_path.resolve()
     is_docker = run_configs.is_docker()
     release_info = et_eui.get_release_info({'refresh': 'false', 'no_assets': 'true'}) or {}
@@ -103,7 +102,12 @@ def delete_log(params=None, *args, **kwargs):
     total_bytes = 0
     if log_path.exists():
         for entry in log_path.iterdir():
-            if entry.is_file():
+            if entry.is_dir():
+                try:
+                    total_bytes += _delete_dir(entry)
+                except (OSError, PermissionError):
+                    pass
+            elif entry.is_file():
                 try:
                     total_bytes += entry.stat().st_size
                     if entry.suffix == '.log':
@@ -144,7 +148,6 @@ def set_log_level(params=None, *args, **kwargs):
     except Exception as e:
         logger.exception(f"fail to set android log level: {e}")
     excluded_console = run_configs.is_docker()
-    # docker 环境下，不修改 console 日志输出，方便控制台定位问题
     log_util.set_log_level(log_level, None, excluded_console)
     app_settings.save('log_level', log_level.lower())
 

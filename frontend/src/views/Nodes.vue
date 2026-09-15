@@ -976,16 +976,18 @@ const handleConfigChange = async () => {
   if (serviceRunning.value) {
     loadingSkeleton.value = true
     dataLoading.value = false
-    isUnmounted.value = false
     const skStart = Date.now()
     await fetchNodes()
+    if (isUnmounted.value) return
     const minSkTime = 400
     const elapsed = Date.now() - skStart
     if (elapsed < minSkTime) {
       await new Promise(r => setTimeout(r, minSkTime - elapsed))
     }
+    if (isUnmounted.value) return
     loadingSkeleton.value = false
   }
+  if (isUnmounted.value) return
   nodesPoller.start(fetchNodes)
 }
 
@@ -1032,6 +1034,7 @@ const stopService = async () => {
 onMounted(async () => {
   loadSettings()
   const result = await loadConfigs()
+  if (isUnmounted.value) return
   if (!result) {    
     toast.error(t('nodes.loadConfigListFailed'))
     return
@@ -1080,13 +1083,14 @@ onMounted(async () => {
   try {
     const skStart = Date.now()
     await fetchNodes()
+    if (isUnmounted.value) return
     const minSkTime = 400
     const elapsed = Date.now() - skStart
     if (elapsed < minSkTime) {
       await new Promise(r => setTimeout(r, minSkTime - elapsed))
     }
+    if (isUnmounted.value) return
     loadingSkeleton.value = false
-    // 启动配置状态轮询
     configStatusPoller.start(loadConfigs)
     nodesPoller.start(fetchNodes)
   } catch (error) {

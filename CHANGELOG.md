@@ -11,6 +11,11 @@
   - 安卓版本不支持
   - FnOS / FygoOS / Docker 版本支持开机运行
   - 其它版本仅支持随应用启动
+----
+- 修复：飞牛版本stun执行脚本无权限问题
+- 修复：清理日志，支持stun日志
+- 修复：切换页面时，偶发未能终止节点页面定时查询
+
 
 <br>
 
@@ -28,6 +33,10 @@
   - Not supported on Android
   - FnOS / FygoOS / Docker versions support auto-start on boot
   - Other versions only support launching with the app
+---- 
+- Fixed: FnOS version STUN execution script permission denied issue
+- Fixed: Cleaned up logs, added STUN log support
+- Fixed: When switching pages, occasionally failed to stop the node page's periodic polling requests
 
 ##  2.4
 - 新增：【节点】页面支持查看中继路径（默认开启）
