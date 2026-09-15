@@ -278,6 +278,8 @@ def _build_callback_script(config: dict) -> str:
             if not raw.startswith(b'\xef\xbb\xbf'):
                 with open(dns_callback_script, 'wb') as f:
                     f.write(b'\xef\xbb\xbf' + raw)
+        if sys.platform != 'win32':
+            os.chmod(dns_callback_script, 0o755)
 
     if sys.platform == 'win32':
         script_path = os.path.join(running_dir, 'callback.bat')
