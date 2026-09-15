@@ -152,6 +152,13 @@ MESSAGES = {
         "single_download_progress": "Einzelthread-Download-Fortschritt: {percent}%",
     },
     "stun": {
+        "natmapBinaryNotFound": "natmap-Binärdatei im heruntergeladenen Paket nicht gefunden",
+        "natmapInstallFailed": "natmap-Installation fehlgeschlagen: {error}",
+        "idRequired": "Konfigurations-ID ist erforderlich",
+        "configRequired": "Konfigurationsinhalt ist erforderlich",
         "configsRequired": "Konfigurationsdaten sind erforderlich",
+        "configNotFound": "Konfiguration nicht gefunden",
+        "duplicateProtocolBindPort": "Protokoll- und Bind-Port-Kombination existiert bereits, bitte anderes Protokoll oder Port verwenden",
+        "listenProtocolRequired": "Bitte Horchprotokoll auswählen",
     },
 }

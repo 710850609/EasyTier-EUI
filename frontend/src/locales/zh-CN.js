@@ -686,10 +686,10 @@ export default {
   },
   stun: {
     tipTitle: 'STUN 穿透说明',
-    tipContent: '把具备公网ip或是nat1类型网络，通过端口映射到公网，实现家庭宽带自建初始节点效果',
-    tipItem1: '1 新增 stun 穿透，选择监听协议，保存并启动，等待stun成功，复制 txt协议',
+    tipContent: '需要公网ip或是nat1类型网络，把EasyTier监听端口映射到公网，并注册到固定DNS txt记录，实现家庭宽带自建初始节点效果',
+    tipItem1: '1 新增 stun 穿透，选择监听协议，保存并启动，等待stun成功、注册DNS txt记录后，复制 txt协议地址（预计12秒后显示）',
     tipItem2: '2 本地配置选择上一步的监听协议，保存并启动',
-    tipItem3: '3 其它设备的初始节点加入第1步复制的 txt协议，保存并启动',
+    tipItem3: '3 其它设备的初始节点加入第1步复制的 txt协议地址，保存并启动',
     natmapInfo: 'Natmap 信息',
     stunCore: 'STUN 核心',
     natmap: 'natmap',
@@ -771,5 +771,11 @@ export default {
     checkNatTypeFailed: 'NAT 类型检测失败',
     natGoodHint: '当前网络适合 STUN 穿透，NAT 类型良好',
     natBadHint: '当前网络非公网IP或NAT1，请路由开启DMZ或UPnP，以提升STUN联通可能。',
+    dynv6: {
+      domain: '域名',
+      domainTip: '注册域名或是自定义其子域名',
+      httpToken: 'http token',
+      httpTokenTip: '授权域名的http token',
+    },
   }
 }

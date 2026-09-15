@@ -11,7 +11,7 @@ import os.path
 import sys
 from pathlib import Path
 
-from et_adapters import get_facade
+from actions import stun
 from et_adapters.core_background_adapter import CoreBackgroundAdapter
 
 try:
@@ -57,6 +57,7 @@ def start():
     Path(run_configs.config_dir()).mkdir(parents=True, exist_ok=True)
     _fix_remove_sys_service()
     services.start_all()
+    stun.start_enable()
     check_file = Path(_fn_check_file)
     if not check_file.exists():
         check_file.touch()
@@ -71,6 +72,7 @@ def stop():
     停止应用，不设置
     """
     services.stop_all()
+    stun.stop_all()
     Path(_fn_check_file).unlink(missing_ok=True)
     logger.info(f"文件 {_fn_check_file} 已删除, 应用停止成功")
 

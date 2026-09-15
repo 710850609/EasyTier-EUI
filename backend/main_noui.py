@@ -285,6 +285,8 @@ def start_hook():
     """启动钩子服务"""
     if run_configs.is_docker():
         services.start_all()
+    from actions import stun
+    stun.start_enable()
     pass
 
 

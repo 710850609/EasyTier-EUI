@@ -122,7 +122,7 @@ def setup_env():
     _is_inited_evn = True
 
 
-BUILD_VERSION = "2.4.020604-20260914173239"
+BUILD_VERSION = "2.4.020604-20260915140508"
 
 
 def is_musl_sys():
@@ -237,7 +237,4 @@ def upgrade_script_path() -> str:
         return os.path.join(UPGRADE_SCRIPT_PATH, 'upgrade.sh')
 
 def dns_callback_script_path() -> str:
-    if sys.platform == 'win32':
-        return os.path.join(UPGRADE_SCRIPT_PATH, 'update_dns_dynv6.bat')
-    else:
-        return os.path.join(UPGRADE_SCRIPT_PATH, 'update_dns_dynv6.sh')
+    return UPGRADE_SCRIPT_PATH

@@ -485,10 +485,10 @@ export default {
   },
   stun: {
     tipTitle: 'STUN NAT Traversal',
-    tipContent: 'STUN-Traversal verwendet natmap, um interne Ports ins Internet zu mappen.',
-    tipItem1: 'Führt automatisch ein Skript aus, wenn sich öffentliche IP/Port ändern',
-    tipItem2: 'Unterstützt das Pushen von IP/Port-Änderungen an DNS-TXT-Einträge',
-    tipItem3: 'Geeignet für Port-Mapping in dynamischen Netzwerkumgebungen',
+    tipContent: 'Benötigt eine öffentliche IP oder NAT1-Netzwerktyp. Mappen Sie den EasyTier-Listening-Port ins Internet und registrieren Sie ihn in einem festen DNS-TXT-Eintrag, um einen selbst gehosteten Anfangsknoten über Heim-Breitband zu erreichen.',
+    tipItem1: '1 STUN-Traversal hinzufügen, Listening-Protokoll auswählen, speichern und starten. Nach erfolgreichem STUN und DNS-TXT-Registrierung die TXT-Protokolladresse kopieren (Anzeige voraussichtlich nach 12 Sekunden).',
+    tipItem2: '2 Wählen Sie das Listening-Protokoll aus dem vorherigen Schritt in der lokalen Konfiguration, speichern und starten.',
+    tipItem3: '3 Fügen Sie auf anderen Geräten die in Schritt 1 kopierte TXT-Protokolladresse als Anfangsknoten hinzu, speichern und starten.',
     natmapInfo: 'Natmap Info',
     stunCore: 'STUN Core',
     natmap: 'natmap',
@@ -570,6 +570,12 @@ export default {
     checkNatTypeFailed: 'NAT-Typ Prüfung fehlgeschlagen',
     natGoodHint: 'Netzwerk für STUN-Traversal geeignet, NAT-Typ ist gut',
     natBadHint: 'Keine öffentliche IP oder NAT1. DMZ oder UPnP am Router aktivieren für bessere STUN-Konnektivität.',
+    dynv6: {
+      domain: 'Domain',
+      domainTip: 'Registrierte Domain oder benutzerdefinierte Subdomain',
+      httpToken: 'HTTP-Token',
+      httpTokenTip: 'HTTP-Token zur Domain-Autorisierung',
+    },
   },
   validate: {
     required: '{label} ist erforderlich',

@@ -1,5 +1,5 @@
 appname               = EasyTier-EUI
-version=2.4.020604-20260914173239
+version=2.4.020604-20260915140508
 display_name          = "${manifest.display_name}"
 desc                  = "${manifest.desc}"
 platform=x86

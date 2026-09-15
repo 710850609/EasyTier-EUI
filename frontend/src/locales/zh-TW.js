@@ -580,10 +580,10 @@ export default {
   },
   stun: {
     tipTitle: 'STUN 穿透說明',
-    tipContent: 'STUN 穿透功能透過 natmap 工具將內網埠映射到公網，實現 NAT 穿透存取。',
-    tipItem1: '當公網 IP 或埠發生變動時，自動執行指定腳本',
-    tipItem2: '支援將變動後的 IP 和埠推送到網域名稱 TXT 記錄',
-    tipItem3: '適用於動態公網環境下的埠映射需求',
+    tipContent: '需要公網ip或是nat1類型網絡，把EasyTier監聽埠映射到公網，並註冊到固定DNS txt記錄，實現家庭寬頻自建初始節點效果',
+    tipItem1: '1 新增 stun 穿透，選擇監聽協議，儲存並啟動，等待stun成功、註冊DNS txt記錄後，複製 txt協議地址（預計12秒後顯示）',
+    tipItem2: '2 本地配置選擇上一步的監聽協議，儲存並啟動',
+    tipItem3: '3 其它設備的初始節點加入第1步複製的 txt協議地址，儲存並啟動',
     natmapInfo: 'Natmap 資訊',
     stunCore: 'STUN 核心',
     natmap: 'natmap',
@@ -665,6 +665,12 @@ export default {
     checkNatTypeFailed: 'NAT 類型檢測失敗',
     natGoodHint: '目前網路適合 STUN 穿透，NAT 類型良好',
     natBadHint: '目前網路非公網IP或NAT1，請路由開啟DMZ或UPnP，以提升STUN聯通可能。',
+    dynv6: {
+      domain: '網域名稱',
+      domainTip: '註冊網域名稱或自訂其子網域',
+      httpToken: 'http token',
+      httpTokenTip: '授權網域名稱的http token',
+    },
   },
   validate: {
     required: '{label}不能為空',

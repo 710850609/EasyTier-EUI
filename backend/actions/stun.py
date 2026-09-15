@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import ctypes
 import json
 import logging
 import os
@@ -8,17 +7,15 @@ import platform
 import re
 import shutil
 import sys
-import time
 import uuid
 import zipfile
-from ipaddress import ip_address
 from pathlib import Path
 
 from http_dispatcher.dispatcher import HttpException
 from locales import get_message
-from utils import run_configs, process_util, ip_util
-from utils import github_util
 from utils import common_util
+from utils import github_util
+from utils import run_configs, process_util
 from utils.validators import Validator
 
 logger = logging.getLogger(__name__)
@@ -33,11 +30,12 @@ def _get_running_dir(config_id: str) -> str:
 
 
 def _get_natmap_binary() -> str | None:
-    core_dir = run_configs.core_dir()
+    # 为防止飞牛系统升级导致 natmap 不存在，存储到 data_dir
+    install_dir = run_configs.data_dir()
     if sys.platform == 'win32':
-        bin_path = os.path.join(core_dir, 'natmap', 'natmap.exe')
+        bin_path = os.path.join(install_dir, 'natmap', 'natmap.exe')
     else:
-        bin_path = os.path.join(core_dir, 'natmap', 'natmap')
+        bin_path = os.path.join(install_dir, 'natmap', 'natmap')
     if os.path.exists(bin_path):
         return bin_path
     return None
@@ -105,9 +103,9 @@ def natmap_install(params=None, *args, **kwargs):
             logger.info(f'解压 natmap: {download_path}')
             with zipfile.ZipFile(download_path, 'r') as zf:
                 zf.extractall(tmp_dir)
-            shutil.move(os.path.join(tmp_dir, 'natmap'), run_configs.core_dir())
+            shutil.move(os.path.join(tmp_dir, 'natmap'), run_configs.data_dir())
         else:
-            natmap_dir = os.path.join(run_configs.core_dir(), 'natmap')
+            natmap_dir = os.path.join(run_configs.data_dir(), 'natmap')
             Path(natmap_dir).mkdir(parents=True, exist_ok=True)
             shutil.move(download_path, os.path.join(natmap_dir, 'natmap'))
 
@@ -164,7 +162,7 @@ def list_stun(params=None, *args, **kwargs):
                         config['mapping'] = json.load(f)
                 except Exception:
                     pass
-            else:
+            if 'mapping' not in config or 'dns_record' not in config.get('mapping', {}):
                 error_file = os.path.join(running_dir, 'error.txt')
                 if os.path.exists(error_file):
                     try:
@@ -234,65 +232,112 @@ def _cleanup_running_dir(config_id: str):
         logger.info(f'清理运行目录: {running_dir}')
 
 
-def _build_callback_script(config: dict):
+def _build_callback_script(config: dict) -> str:
     config_id = config.get('id', '')
     running_dir = _get_running_dir(config_id)
     os.makedirs(running_dir, exist_ok=True)
     mapping_file = os.path.join(running_dir, 'mapping.json')
+    error_file = os.path.join(running_dir, 'error.txt')
     callback_log = os.path.join(run_configs.log_dir(), 'stun', f'stun-{config_id}.log')
     os.makedirs(os.path.dirname(callback_log), exist_ok=True)
-
-    # 复制 callback 脚本
-    src_dns_callback_script = run_configs.dns_callback_script_path()
-    script_name = os.path.basename(src_dns_callback_script)
-    dns_callback_script = os.path.join(_get_stun_dir(), script_name)
-    shutil.copy2(src_dns_callback_script, dns_callback_script)
-
-    changeConfig = config.get('changeConfig', {})
-    zone_name = changeConfig.get('zoneName', '')
-    sub_domain_prefix = changeConfig.get('subDomain', '')
-    http_token = changeConfig.get('httpToken', '')
-    need_update_dns = zone_name and http_token
     listen_protocol = config.get('stunConfig', {}).get('listenProtocol', '')
+    if not listen_protocol:
+        raise HttpException(get_message('stun.listenProtocolRequired'))
+
+    # 根据 DNS 服务商构建回调参数（后续扩展在此添加 elif 分支）
+    changeConfig = config.get('changeConfig', {})
+    dns_provider = changeConfig.get('dnsProvider', '')
+    callback_script_params = {}
+    dns_script_src = None
+
+    if dns_provider == 'dynv6':
+        domain = changeConfig.get('domain', '')
+        http_token = changeConfig.get('httpToken', '')
+        if domain and http_token:
+            domain_parts = domain.split('.')
+            zone = '.'.join(domain_parts[-3:])
+            record_name = domain.removesuffix(f'{zone}').removesuffix('.')
+            if zone:
+                dns_script_name = f'update_dns_dynv6.{"bat" if sys.platform == "win32" else "sh"}'
+                assets_dir = run_configs.dns_callback_script_path()
+                dns_script_src = os.path.join(assets_dir, dns_script_name)
+                callback_script_params = {
+                    'zone': zone,
+                    'record_name': record_name,
+                    'http_token': http_token,
+                }
+
+    dns_callback_script = None
+    if dns_script_src:
+        dns_callback_script = os.path.join(_get_stun_dir(), os.path.basename(dns_script_src))
+        shutil.copy2(dns_script_src, dns_callback_script)
+        # 确保 Windows bat 文件带 BOM，否则 chcp 65001 + 中文会出现乱码
+        if sys.platform == 'win32' and dns_callback_script.endswith('.bat'):
+            with open(dns_callback_script, 'rb') as f:
+                raw = f.read()
+            if not raw.startswith(b'\xef\xbb\xbf'):
+                with open(dns_callback_script, 'wb') as f:
+                    f.write(b'\xef\xbb\xbf' + raw)
 
     if sys.platform == 'win32':
         script_path = os.path.join(running_dir, 'callback.bat')
         mapping_json = '{"public_addr":"%1","public_port":"%2","ip4p":"%3","private_port":"%4","protocol":"%5","private_addr":"%6"}'
         script_content = (
             f'@echo off\r\n'
+            f'chcp 65001 >nul\r\n'
+            f'setlocal enabledelayedexpansion\r\n'
             f'for /f "tokens=2 delims==" %%I in (\'wmic os get localdatetime /value\') do set "TS=%%I"\r\n'
-            f'set "TS=%TS:~0,4%-%TS:~4,2%-%TS:~6,2% %TS:~8,2%:%TS:~10,2%:%TS:~12,2%"\r\n'
+            f'set "TS=!TS:~0,4!-!TS:~4,2!-!TS:~6,2! !TS:~8,2!:!TS:~10,2!:!TS:~12,2!"\r\n'
             f'set CHANGED=1\r\n'
             f'if exist "{mapping_file}" (\r\n'
             f'    powershell -NoProfile -Command "$j = Get-Content \'{mapping_file}\' -Raw | ConvertFrom-Json; if ($j.public_addr -eq \'%1\' -and $j.public_port -eq \'%2\') {{ exit 1 }} else {{ exit 0 }}"\r\n'
             f'    if errorlevel 1 set CHANGED=0\r\n'
             f')\r\n'
-            f'echo {mapping_json}> "{mapping_file}"\r\n'
-            f'>> "{callback_log}" 2>&1 (\r\n'
-            f'echo %TS% [natmap-callback] started: public_addr=%1 public_port=%2 ip4p=%3 private_port=%4 protocol=%5 private_addr=%6\r\n'
+            f'>> "{callback_log}" 2>&1 echo !TS! [natmap-callback] started: public_addr=%1 public_port=%2 ip4p=%3 private_port=%4 protocol=%5 private_addr=%6\r\n'
         )
-        if need_update_dns:
+        if dns_callback_script:
+            callback_cmd = f'"{dns_callback_script}" -protocol "{listen_protocol}" -ip "%1" -port "%2"'
+            for key, value in callback_script_params.items():
+                callback_cmd += f' -{key} "{value}"'
             script_content += (
-                f'if %CHANGED%==1 (\r\n'
-                f'    echo %TS% [natmap-callback] triggering DNS update...\r\n'
-                f'    if exist "{dns_callback_script}" (call "{dns_callback_script}" "{listen_protocol}" "%1" "%2" {zone_name} {sub_domain_prefix} {http_token}) else (echo %TS% [natmap-callback] DNS script not found: {dns_callback_script})\r\n'
-                f'    echo %TS% [natmap-callback] DNS update exit code=%ERRORLEVEL%\r\n'
+                f'if !CHANGED!==1 (\r\n'
+                f'    echo {mapping_json}> "{mapping_file}"\r\n'
+                f'    >> "{callback_log}" 2>&1 echo !TS! [natmap-callback] triggering DNS update...\r\n'
+                f'    if exist "{dns_callback_script}" (\r\n'
+                f'        set "DNS_RESULT_FILE=%TEMP%\\dns_result_!RANDOM!.txt"\r\n'
+f'        call {callback_cmd} > "!DNS_RESULT_FILE!" 2>> "{callback_log}"\r\n'
+                f'        set DNS_RC=!ERRORLEVEL!\r\n'
+                f'        >> "{callback_log}" 2>&1 echo !TS! [natmap-callback] DNS update exit code=!DNS_RC!\r\n'
+                f'        if !DNS_RC!==0 (\r\n'
+                f'            if exist "!DNS_RESULT_FILE!" (\r\n'
+                f'                set /p DNS_RECORD=<"!DNS_RESULT_FILE!"\r\n'
+                f'                powershell -NoProfile -Command "$j=Get-Content \'{mapping_file}\' -Raw|ConvertFrom-Json; $j|Add-Member -NotePropertyValue \\"!DNS_RECORD!\\" -NotePropertyName \'dns_record\'; $j|ConvertTo-Json -Compress|Set-Content \'{mapping_file}\'"\r\n'
+                f'                >> "{callback_log}" 2>&1 echo !TS! [natmap-callback] DNS record updated: !DNS_RECORD!\r\n'
+                f'            )\r\n'
+                f'        ) else (\r\n'
+                f'            >> "{error_file}" echo !TS! [natmap-callback] DNS update failed with exit code !DNS_RC!\r\n'
+                f'        )\r\n'
+                f'        del "!DNS_RESULT_FILE!" 2>nul\r\n'
+                f'    ) else (\r\n'
+                f'        >> "{callback_log}" 2>&1 echo !TS! [natmap-callback] DNS script not found: {dns_callback_script}\r\n'
+                f'    )\r\n'
                 f') else (\r\n'
-                f'    echo %TS% [natmap-callback] public addr/port unchanged, skipping DNS update\r\n'
+                f'    >> "{callback_log}" 2>&1 echo !TS! [natmap-callback] public addr/port unchanged, skipping DNS update\r\n'
                 f')\r\n'
             )
         else:
-            script_content += f'echo %TS% [natmap-callback] DNS update skipped (no zone/token configured)\r\n'
-        script_content += f'echo %TS% [natmap-callback] completed\r\n'
-        script_content += f')\r\n'
-        script_content += f'powershell -NoProfile -Command "Get-Content \'{callback_log}\' | Select-Object -Last 1000 | Set-Content \'{callback_log}\'"\r\n'
+            script_content += f'echo {mapping_json}> "{mapping_file}"\r\n'
+            script_content += f'>> "{callback_log}" 2>&1 echo !TS! [natmap-callback] DNS update skipped (no zone/token configured)\r\n'
+        script_content += (
+            f'>> "{callback_log}" 2>&1 echo !TS! [natmap-callback] completed\r\n'
+            f'powershell -NoProfile -Command "Get-Content \'{callback_log}\' | Select-Object -Last 1000 | Set-Content \'{callback_log}\'"\r\n'
+        )
     else:
         script_path = os.path.join(running_dir, 'callback.sh')
         script_content = (
             '#!/bin/sh\n'
-            f'exec >> "{callback_log}" 2>&1\n'
             f'ts() {{ date \'+%Y-%m-%d %H:%M:%S\'; }}\n'
-            f'echo "$(ts) [natmap-callback] started: public_addr=$1 public_port=$2 ip4p=$3 private_port=$4 protocol=$5 private_addr=$6"\n'
+            f'>> "{callback_log}" echo "$(ts) [natmap-callback] started: public_addr=$1 public_port=$2 ip4p=$3 private_port=$4 protocol=$5 private_addr=$6"\n'
             f'CHANGED=1\n'
             f'if [ -f "{mapping_file}" ]; then\n'
             f'    OLD_ADDR=$(sed -n \'s/.*"public_addr":"\\([^"]*\\)".*/\\1/p\' "{mapping_file}")\n'
@@ -301,29 +346,44 @@ def _build_callback_script(config: dict):
             f'        CHANGED=0\n'
             f'    fi\n'
             f'fi\n'
-            f'echo \'{{"public_addr":"\'$1\'","public_port":"\'$2\'","ip4p":"\'$3\'","private_port":"\'$4\'","protocol":"\'$5\'","private_addr":"\'$6\'"}}\' > "{mapping_file}"\n'
         )
-        if need_update_dns:
+        if dns_callback_script:
+            callback_cmd = f'"{dns_callback_script}" -protocol "{listen_protocol}" -ip "$1" -port "$2"'
+            for key, value in callback_script_params.items():
+                callback_cmd += f' -{key} "{value}"'
             script_content += (
                 f'if [ $CHANGED -eq 1 ]; then\n'
-                f'    echo "$(ts) [natmap-callback] triggering DNS update..."\n'
+                f'    echo \'{{"public_addr":"\'$1\'","public_port":"\'$2\'","ip4p":"\'$3\'","private_port":"\'$4\'","protocol":"\'$5\'","private_addr":"\'$6\'"}}\' > "{mapping_file}"\n'
+                f'    >> "{callback_log}" echo "$(ts) [natmap-callback] triggering DNS update..."\n'
                 f'    if [ -f "{dns_callback_script}" ]; then\n'
-                f'        sh "{dns_callback_script}" "{listen_protocol}" "$1" "$2" {zone_name} {sub_domain_prefix} {http_token}\n'
+                f'        DNS_RECORD=$({callback_cmd} 2>> "{callback_log}")\n'
                 f'        RC=$?\n'
-                f'        echo "$(ts) [natmap-callback] DNS update exit code=$RC"\n'
+                f'        >> "{callback_log}" echo "$(ts) [natmap-callback] DNS update exit code=$RC"\n'
+                f'        if [ $RC -eq 0 ]; then\n'
+                f'            if [ -n "$DNS_RECORD" ]; then\n'
+                f'                sed -i "s|}}$|,\\"dns_record\\":\\"${{DNS_RECORD}}\\"}}|" "{mapping_file}"\n'
+                f'                >> "{callback_log}" echo "$(ts) [natmap-callback] DNS record updated: $DNS_RECORD"\n'
+                f'            fi\n'
+                f'        else\n'
+                f'            echo "$(ts) [natmap-callback] DNS update failed with exit code $RC" >> "{error_file}"\n'
+                f'        fi\n'
                 f'    else\n'
-                f'        echo "$(ts) [natmap-callback] DNS script not found: {dns_callback_script}"\n'
+                f'        >> "{callback_log}" echo "$(ts) [natmap-callback] DNS script not found: {dns_callback_script}"\n'
                 f'    fi\n'
                 f'else\n'
-                f'    echo "$(ts) [natmap-callback] public addr/port unchanged, skipping DNS update"\n'
+                f'    >> "{callback_log}" echo "$(ts) [natmap-callback] public addr/port unchanged, skipping DNS update"\n'
                 f'fi\n'
             )
         else:
-            script_content += f'echo "$(ts) [natmap-callback] DNS update skipped (no zone/token configured)"\n'
-        script_content += f'echo "$(ts) [natmap-callback] completed"\n'
-        script_content += f'tail -n 1000 "{callback_log}" > "{callback_log}.tmp" && mv "{callback_log}.tmp" "{callback_log}"\n'
+            script_content += f'echo \'{{"public_addr":"\'$1\'","public_port":"\'$2\'","ip4p":"\'$3\'","private_port":"\'$4\'","protocol":"\'$5\'","private_addr":"\'$6\'"}}\' > "{mapping_file}"\n'
+            script_content += f'>> "{callback_log}" echo "$(ts) [natmap-callback] DNS update skipped (no zone/token configured)"\n'
+        script_content += (
+            f'>> "{callback_log}" echo "$(ts) [natmap-callback] completed"\n'
+            f'tail -n 1000 "{callback_log}" > "{callback_log}.tmp" && mv "{callback_log}.tmp" "{callback_log}"\n'
+        )
 
-    with open(script_path, 'w', encoding='utf-8') as f:
+    encoding = 'utf-8-sig' if sys.platform == 'win32' else 'utf-8'
+    with open(script_path, 'w', encoding=encoding) as f:
         f.write(script_content)
     if sys.platform != 'win32':
         os.chmod(script_path, 0o755)
@@ -331,7 +391,7 @@ def _build_callback_script(config: dict):
     return script_path
 
 
-def _build_launcher_script(config_id: str, natmap_cmd: list[str]) -> tuple[str, str]:
+def _build_launcher_script(config_id: str, natmap_cmd: list[str]) -> str:
     running_dir = _get_running_dir(config_id)
     os.makedirs(running_dir, exist_ok=True)
     error_file = os.path.join(running_dir, 'error.txt')
@@ -340,7 +400,7 @@ def _build_launcher_script(config_id: str, natmap_cmd: list[str]) -> tuple[str, 
     os.makedirs(os.path.dirname(app_log), exist_ok=True)
     natmap_cmd_str = ' '.join(f'"{x}"' if ' ' in x else x for x in natmap_cmd)
 
-    interval = 3
+    interval = 60
     if sys.platform == 'win32':
         # 在 Windows 上，无论加不加 -e，hev_stun_run 这一次任务内部都只做一次 STUN 绑定就退出（break），不会在同一个任务里反复轮询
         script_path = os.path.join(running_dir, 'launcher.bat')
@@ -364,16 +424,14 @@ def _build_launcher_script(config_id: str, natmap_cmd: list[str]) -> tuple[str, 
             f'    tail -n 4 "{error_file}" > "{error_file}.tmp" && mv "{error_file}.tmp" "{error_file}"\n'
             f'done\n'
         )
-        with open(script_path, 'w', encoding='utf-8') as f:
-            f.write(script_content)
-        os.chmod(script_path, 0o755)
-        logger.info(f'生成 natmap 启动器脚本: {script_path}')
-        return script_path, script_content
 
-    with open(script_path, 'w', encoding='utf-8') as f:
+    encoding = 'utf-8-sig' if sys.platform == 'win32' else 'utf-8'
+    with open(script_path, 'w', encoding=encoding) as f:
         f.write(script_content)
+    if sys.platform != 'win32':
+        os.chmod(script_path, 0o755)
     logger.info(f'生成 natmap 启动器脚本: {script_path}')
-    return script_path, script_content
+    return script_path
 
 
 def start_stun(params=None, *args, **kwargs):
@@ -387,10 +445,10 @@ def start_stun(params=None, *args, **kwargs):
     default_http_server = "www.baidu.com"
     default_stun_server = "turn.cloud-rtc.com:80"
     is_udp_mode = stun_config.get('protocol', '').lower() == 'udp'
-    cmd_list = [_get_natmap_binary()]
-    if cmd_list[0] is None:
+    natmap_binary = _get_natmap_binary()
+    if natmap_binary is None:
         raise HttpException(get_message('stun.natmapBinaryNotFound'))
-    cmd_list.append('-4')
+    cmd_list = [natmap_binary, '-4']
     if is_udp_mode:
         cmd_list.append('-u')
         default_http_server = "119.29.29.29"
@@ -430,6 +488,9 @@ def start_stun(params=None, *args, **kwargs):
     _cleanup_running_dir(config_id)
     os.makedirs(running_dir, exist_ok=True)
 
+    config['status'] = 1
+    _save_stun_configs(stun_configs)
+
     pid_file = os.path.join(running_dir, 'pid.txt')
     pm = process_util.ProcessManager(pid_file)
 
@@ -437,11 +498,11 @@ def start_stun(params=None, *args, **kwargs):
     cmd_list.extend(['-e', callback_script])
 
     if sys.platform == 'win32':
-        launcher_script, _ = _build_launcher_script(config_id, cmd_list)
+        launcher_script = _build_launcher_script(config_id, cmd_list)
         logger.info(f"stun 启动器: {launcher_script}")
         pm.start(['cmd.exe', '/c', launcher_script])
     else:
-        launcher_script, _ = _build_launcher_script(config_id, cmd_list)
+        launcher_script = _build_launcher_script(config_id, cmd_list)
         logger.info(f"stun 启动器: {launcher_script}")
         pm.start(['sh', launcher_script])
 
@@ -458,3 +519,24 @@ def stop_stun(params=None, *args, **kwargs):
     pm = process_util.ProcessManager(pid_file)
     pm.stop(timeout=0)
     _cleanup_running_dir(config_id)
+    config['status'] = 0
+    _save_stun_configs(stun_configs)
+
+def start_enable(params=None, *args, **kwargs):
+    try:
+        stun_configs = list_stun()
+        for config in stun_configs:
+            if str(config.get('status', 0)) == '1' and not config.get('running'):
+                logger.info(f"开启 stun 配置: {config}")
+                start_stun({'id': config.get('id')})
+    except Exception as e:
+        logger.error(f"开启 stun 配置失败: {e}")
+        pass
+
+
+def stop_all(params=None, *args, **kwargs):
+    stun_configs = _load_stun()
+    for config_id, config in stun_configs.items():
+        if str(config.get('status', 0)) == '1':
+            logger.info(f"停止 stun 配置: {config}")
+            stop_stun({'id': config_id})

@@ -684,10 +684,10 @@ export default {
   },
   stun: {
     tipTitle: 'STUN NAT Traversal',
-    tipContent: 'STUN traversal uses natmap to map internal ports to the public internet, enabling NAT traversal access.',
-    tipItem1: 'Automatically executes a specified script when public IP or port changes',
-    tipItem2: 'Supports pushing updated IP and port to domain TXT records',
-    tipItem3: 'Suitable for port mapping in dynamic public network environments',
+    tipContent: 'Requires a public IP or NAT1 network type. Map EasyTier listening port to the public internet and register it to a fixed DNS TXT record to achieve a self-hosted initial node on home broadband.',
+    tipItem1: '1 Add STUN traversal, select the listening protocol, save and start. After STUN succeeds and DNS TXT record is registered, copy the TXT protocol address (expected to display after 12 seconds).',
+    tipItem2: '2 Select the listening protocol from the previous step in local configuration, save and start.',
+    tipItem3: '3 On other devices, add the TXT protocol address copied in step 1 as the initial node, save and start.',
     natmapInfo: 'Natmap Info',
     stunCore: 'STUN Core',
     natmap: 'natmap',
@@ -769,5 +769,11 @@ export default {
     checkNatTypeFailed: 'NAT type check failed',
     natGoodHint: 'Current network is suitable for STUN traversal, NAT type is good',
     natBadHint: 'Not public IP or NAT1. Enable DMZ or UPnP on your router to improve STUN connectivity.',
+    dynv6: {
+      domain: 'Domain',
+      domainTip: 'Registered domain or custom subdomain',
+      httpToken: 'HTTP Token',
+      httpTokenTip: 'HTTP token for domain authorization',
+    },
   }
 }

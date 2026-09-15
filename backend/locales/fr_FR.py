@@ -152,6 +152,13 @@ MESSAGES = {
         "single_download_progress": "Progression du téléchargement mono-thread: {percent}%",
     },
     "stun": {
+        "natmapBinaryNotFound": "Exécutable natmap introuvable dans le paquet téléchargé",
+        "natmapInstallFailed": "Échec de l'installation de natmap: {error}",
+        "idRequired": "L'ID de configuration est requis",
+        "configRequired": "Le contenu de la configuration est requis",
         "configsRequired": "Les données de configuration sont requises",
+        "configNotFound": "Configuration introuvable",
+        "duplicateProtocolBindPort": "La combinaison protocole et port de liaison existe déjà, veuillez utiliser un protocole ou un port différent",
+        "listenProtocolRequired": "Veuillez sélectionner le protocole d'écoute",
     },
 }

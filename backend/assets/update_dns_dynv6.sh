@@ -1,7 +1,7 @@
 #!/bin/sh
 # EasyTier-EUI dynv6 DNS TXT 记录更新脚本
-# 用法: ./update_dns_dynv6.sh <protocol> <publicIp> <publicPort> <zoneName> <subdomain> [apiToken]
-# 示例: ./update_dns_dynv6.sh "tcp" "1.2.3.4" "8080" "example.com" "_acme-challenge" "your-api-token"
+# 用法: ./update_dns_dynv6.sh -protocol <protocol> -ip <publicIp> -port <publicPort> -zone <zoneName> -record_name <subdomain> -http_token <apiToken>
+# 示例: ./update_dns_dynv6.sh -protocol "tcp" -ip "1.2.3.4" -port "8080" -zone "example.com" -record_name "_acme-challenge" -http_token "your-api-token"
 # 支持最多 3 次重试
 
 set -e
@@ -12,7 +12,7 @@ MAX_RETRY=3
 RETRY_DELAY=2
 
 log() {
-    echo "$(date '+%Y-%m-%d %H:%M:%S') [$SCRIPT_NAME] $*"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') [$SCRIPT_NAME] $*" >&2
 }
 
 retry() {
@@ -40,24 +40,38 @@ retry() {
     return 1
 }
 
-if [ $# -lt 4 ]; then
-    log "用法: $0 <protocol> <publicIp> <publicPort> <zoneName> <subdomain> [apiToken]"
-    log "示例: $0 \"tcp\" \"1.2.3.4\" \"8080\" \"example.com\" \"_acme-challenge\""
+# 解析命名参数
+PROTOCOL=""
+PUBLIC_IP=""
+PUBLIC_PORT=""
+ZONE_NAME=""
+SUBDOMAIN=""
+TOKEN=""
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -protocol)    PROTOCOL="$2";   shift 2 ;;
+        -ip)          PUBLIC_IP="$2";  shift 2 ;;
+        -port)        PUBLIC_PORT="$2"; shift 2 ;;
+        -zone)        ZONE_NAME="$2";  shift 2 ;;
+        -record_name) SUBDOMAIN="$2";  shift 2 ;;
+        -http_token)  TOKEN="$2";      shift 2 ;;
+        *) shift ;;
+    esac
+done
+
+if [ -z "$PROTOCOL" ] || [ -z "$PUBLIC_IP" ] || [ -z "$PUBLIC_PORT" ] || [ -z "$ZONE_NAME" ]; then
+    log "用法: $0 -protocol <protocol> -ip <publicIp> -port <publicPort> -zone <zoneName> -record_name <subdomain> -http_token <apiToken>"
     exit 1
 fi
-
-PROTOCOL="$1"
-PUBLIC_IP="$2"
-PUBLIC_PORT="$3"
-ZONE_NAME="$4"
-SUBDOMAIN="$5"
-TOKEN="${6:-${DYNV6_API_TOKEN}}"
 
 TXT_VALUE="${PROTOCOL}://${PUBLIC_IP}:${PUBLIC_PORT}"
 
 if [ -z "$TOKEN" ]; then
-    log "错误: 未设置 apiToken 参数或环境变量 DYNV6_API_TOKEN"
-    exit 1
+    TOKEN="${DYNV6_API_TOKEN:-}"
+    if [ -z "$TOKEN" ]; then
+        log "错误: 未设置 -http_token 参数或环境变量 DYNV6_API_TOKEN"
+        exit 1
+    fi
 fi
 
 FULL_RECORD_NAME="${SUBDOMAIN}.${ZONE_NAME}"
@@ -123,3 +137,9 @@ else
 fi
 
 log "完成"
+if [ -n "$SUBDOMAIN" ]; then
+    RESULT_URI="txt://${SUBDOMAIN}.${ZONE_NAME}"
+else
+    RESULT_URI="txt://${ZONE_NAME}"
+fi
+echo "${RESULT_URI}"

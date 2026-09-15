@@ -486,10 +486,10 @@ export default {
   },
   stun: {
     tipTitle: 'Traversée STUN NAT',
-    tipContent: 'La traversée STUN utilise natmap pour mapper les ports internes vers Internet.',
-    tipItem1: 'Exécute automatiquement un script lorsque l\'IP/port public change',
-    tipItem2: 'Prend en charge le push des changements IP/port vers les enregistrements DNS TXT',
-    tipItem3: 'Adapté au mappage de ports dans les environnements réseau dynamiques',
+    tipContent: 'Nécessite une IP publique ou un réseau de type NAT1. Mappez le port d\'écoute EasyTier vers Internet et enregistrez-le dans un enregistrement DNS TXT fixe pour créer un nœud initial auto-hébergé sur une connexion domestique.',
+    tipItem1: '1 Ajoutez une traversée STUN, sélectionnez le protocole d\'écoute, enregistrez et démarrez. Après le succès STUN et l\'enregistrement DNS TXT, copiez l\'adresse du protocole TXT (affichage prévu après 12 secondes).',
+    tipItem2: '2 Sélectionnez le protocole d\'écoute de l\'étape précédente dans la configuration locale, enregistrez et démarrez.',
+    tipItem3: '3 Sur les autres appareils, ajoutez l\'adresse du protocole TXT copiée à l\'étape 1 comme nœud initial, enregistrez et démarrez.',
     natmapInfo: 'Info Natmap',
     stunCore: 'Cœur STUN',
     natmap: 'natmap',
@@ -571,6 +571,12 @@ export default {
     checkNatTypeFailed: 'Échec vérification type NAT',
     natGoodHint: 'Réseau adapté à la traversée STUN, type NAT favorable',
     natBadHint: 'Pas d\'IP publique ou NAT1. Activez DMZ ou UPnP sur votre routeur pour améliorer la connectivité STUN.',
+    dynv6: {
+      domain: 'Domaine',
+      domainTip: 'Domaine enregistré ou sous-domaine personnalisé',
+      httpToken: 'Jeton HTTP',
+      httpTokenTip: 'Jeton HTTP pour autorisation de domaine',
+    },
   },
   validate: {
     required: '{label} est requis',

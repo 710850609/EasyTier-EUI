@@ -113,9 +113,17 @@
                 </var-chip>
               </div>
               <div class="profile-row-line" v-if="p.running && p.mapping">
-                <span class="profile-row-arrow">→</span>
+<!--                <span class="profile-row-arrow">→</span>-->
+                <span class="profile-row-arrow">stun →</span>
                 <span class="profile-row-mapping" @click.stop="copyText(`${p.stunConfig.listenProtocol}://${p.mapping.public_addr}:${p.mapping.public_port}`)">
                   {{ p.stunConfig.listenProtocol }}://{{ p.mapping.public_addr }}:{{ p.mapping.public_port }}
+                </span>
+              </div>
+              <div class="profile-row-line" v-if="p.running && p.mapping && p.mapping.dns_record">
+<!--                <span class="profile-row-arrow">↳</span>-->
+                <span class="profile-row-arrow">dns →</span>
+                <span class="profile-row-dns" @click.stop="copyText(p.mapping.dns_record)">
+                  {{ p.mapping.dns_record }}
                 </span>
               </div>
               <div class="profile-row-line" v-if="p.running && p.error_msg">
@@ -205,8 +213,6 @@
       <!-- 公网IP/端口变更推送 -->
       <div class="section-label">
         {{ $t('stun.changePushLabel') }}
-        <span v-if="activeProfile?.changeConfig?.zoneName"> → </span>
-        <span v-if="activeProfile?.changeConfig?.zoneName" class="profile-row-mapping" @click="copyText(`txt://${activeProfile.changeConfig.subDomain ? activeProfile.changeConfig.subDomain + '.' : ''}${activeProfile.changeConfig.zoneName}`)">txt://{{ activeProfile.changeConfig.subDomain ? activeProfile.changeConfig.subDomain + '.' : '' }}{{ activeProfile.changeConfig.zoneName }}</span>
       </div>
       <div class="form-grid">
         <div class="form-row">
@@ -220,12 +226,17 @@
             size="small"
             v-model="activeProfile.changeConfig.dnsProvider"
           >
-            <var-option label="dynv6" value="dynv6" />
+            <var-option
+              v-for="(meta, key) in dnsProviderMeta"
+              :key="key"
+              :label="key"
+              :value="key"
+            />
           </var-select>
         </div>
 
         <div class="form-row" v-for="field in currentProviderFields" :key="field.key">
-          <label class="form-label">{{ field.tip }}</label>
+          <label class="form-label">{{ field.name }}</label>
           <var-input
             variant="outlined"
             size="small"
@@ -281,6 +292,19 @@ const listenPortDefaults = {
   faketcp: '11013'
 }
 
+// DNS 服务商元数据：key 为 dnsProvider 值，fields 定义该服务商需要的输入项
+// 新增服务商时只需在此处添加元数据即可
+const dnsProviderMeta = {
+  '': {website: '', fields: []},
+  dynv6: {
+    website: 'https://dynv6.com',
+    fields: [
+      { key: 'domain', name: t('stun.dynv6.domain'), tip: t('stun.dynv6.domainTip'), required: true },
+      { key: 'httpToken', name: t('stun.dynv6.httpToken'), tip: t('stun.dynv6.httpTokenTip'), required: true },
+    ]
+  }
+}
+
 function createDefaultProfile(item, index) {
   return reactive({
     id: item.id,
@@ -301,19 +325,6 @@ function createDefaultProfile(item, index) {
 function onListenProtocolChange(value) {
   if (listenPortDefaults[value] && activeProfile.value) {
     activeProfile.value.stunConfig.listenPort = listenPortDefaults[value]
-  }
-}
-
-// DNS 服务商元数据：key 为 dnsProvider 值，fields 定义该服务商需要的输入项
-// 新增服务商时只需在此处添加元数据即可
-const dnsProviderMeta = {
-  dynv6: {
-    website: 'https://dynv6.com',
-    fields: [
-      { key: 'zoneName', tip: 'zone', required: true },
-      { key: 'httpToken', tip: 'HTTP token', required: true },
-      { key: 'subDomain', tip: 'sub domain prefix', required: false },
-    ]
   }
 }
 
@@ -548,12 +559,11 @@ async function fetchStunStatus() {
       profiles.forEach(p => {
         const info = statusMap[p.id]
         if (info) {
-          Object.assign(p, {
-            id: info.id,
-            stunConfig: info.stunConfig || {},
-            running: info.running || false,
-            mapping: info.mapping || null,
-            error_msg: info.error_msg || '' })
+          p.id = info.id
+          p.stunConfig = info.stunConfig || {}
+          p.running = info.running || false
+          p.mapping = info.mapping || null
+          p.error_msg = info.error_msg || ''
         }
       })
     }
@@ -588,7 +598,7 @@ async function saveCurrentConfig() {
   // 变更推送必填校验（根据 DNS 服务商元数据）
   for (const field of currentProviderFields.value) {
     if (field.required && !profileToSave.changeConfig?.[field.key]) {
-      toast.error(t('validate.required', { label: field.tip }))
+      toast.error(t('validate.required', { label: field.name }))
       return
     }
   }
@@ -663,6 +673,7 @@ onUnmounted(() => {
 <style scoped>
 .stun-page {
   padding: 16px;
+  padding-bottom: calc(16px + var(--safe-area-inset-bottom, 0px));
   max-width: 800px;
   margin: 0 auto;
 }
@@ -670,7 +681,7 @@ onUnmounted(() => {
 .stun-block {
   margin-bottom: 16px;
   padding: 16px;
-  border-radius: 12px;
+  border-radius: 20px;
   background: var(--color-surface-container);
 }
 
@@ -894,6 +905,21 @@ onUnmounted(() => {
   background: rgba(76, 175, 80, 0.15);
 }
 
+.profile-row-dns {
+  font-size: 12px;
+  color: var(--color-primary);
+  font-family: 'Consolas', 'JetBrains Mono', monospace;
+  background: rgba(33, 150, 243, 0.08);
+  padding: 1px 8px;
+  border-radius: 4px;
+  word-break: break-all;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.profile-row-dns:hover {
+  background: rgba(33, 150, 243, 0.15);
+}
+
 .profile-row-error {
   display: flex;
   align-items: flex-start;
@@ -1047,7 +1073,8 @@ onUnmounted(() => {
 /* 移动端适配 */
 @media (max-width: 767px) {
   .stun-page {
-    padding: 12px;
+    padding: 16px;
+    padding-bottom: calc(64px + var(--safe-area-inset-bottom, 0px));
   }
 
   .stun-block {

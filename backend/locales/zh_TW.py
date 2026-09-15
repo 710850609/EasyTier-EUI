@@ -152,6 +152,13 @@ MESSAGES = {
         "single_download_progress": "單執行緒下載進度: {percent}%",
     },
     "stun": {
+        "natmapBinaryNotFound": "在下載包中未找到 natmap 可執行檔",
+        "natmapInstallFailed": "natmap 安裝失敗: {error}",
+        "idRequired": "配置ID不能為空",
+        "configRequired": "配置內容不能為空",
         "configsRequired": "配置資料不能為空",
+        "configNotFound": "配置不存在",
+        "duplicateProtocolBindPort": "協定和綁定埠組合已存在，請使用不同的協定或埠",
+        "listenProtocolRequired": "請選擇監聽協定",
     },
 }

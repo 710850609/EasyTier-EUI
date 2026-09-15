@@ -2,8 +2,8 @@
 chcp 65001 >nul 2>nul
 setlocal enabledelayedexpansion
 :: EasyTier-EUI dynv6 DNS TXT 记录更新脚本 (Windows)
-:: 用法: update_dns_dynv6.bat <protocol> <publicIp> <publicPort> <zoneName> <subdomain> [apiToken]
-:: 示例: update_dns_dynv6.bat "tcp" "1.2.3.4" "8080" "example.com" "_acme-challenge"
+:: 用法: update_dns_dynv6.bat -protocol <protocol> -ip <publicIp> -port <publicPort> -zone <zoneName> -record_name <subdomain> -http_token <apiToken>
+:: 示例: update_dns_dynv6.bat -protocol "tcp" -ip "1.2.3.4" -port "8080" -zone "example.com" -record_name "_acme-challenge" -http_token "your-api-token"
 :: 支持最多 3 次重试
 
 set "DYNV6_API=https://dynv6.com/api/v2"
@@ -14,24 +14,38 @@ set "TEMP_JSON=%TEMP%\dynv6_update_%RANDOM%.json"
 set "TEMP_ERR=%TEMP%\dynv6_err_%RANDOM%.txt"
 set "TEMP_BODY=%TEMP%\dynv6_body_%RANDOM%.txt"
 
-if "%~4"=="" (
-    call :log "用法: %~nx0 <protocol> <publicIp> <publicPort> <zoneName> <subdomain> [apiToken]"
-    call :log "示例: %~nx0 \"tcp\" \"1.2.3.4\" \"8080\" \"example.com\" \"_acme-challenge\""
-    exit /b 1
-)
+:: 解析命名参数
+set "PROTOCOL="
+set "PUBLIC_IP="
+set "PUBLIC_PORT="
+set "ZONE_NAME="
+set "SUBDOMAIN="
+set "TOKEN="
+:parse_args
+if "%~1"=="" goto :args_done
+if "%~1"=="-protocol"    set "PROTOCOL=%~2" & shift & shift & goto :parse_args
+if "%~1"=="-ip"          set "PUBLIC_IP=%~2" & shift & shift & goto :parse_args
+if "%~1"=="-port"        set "PUBLIC_PORT=%~2" & shift & shift & goto :parse_args
+if "%~1"=="-zone"        set "ZONE_NAME=%~2" & shift & shift & goto :parse_args
+if "%~1"=="-record_name" set "SUBDOMAIN=%~2" & shift & shift & goto :parse_args
+if "%~1"=="-http_token"  set "TOKEN=%~2" & shift & shift & goto :parse_args
+shift
+goto :parse_args
+:args_done
 
-set "PROTOCOL=%~1"
-set "PUBLIC_IP=%~2"
-set "PUBLIC_PORT=%~3"
-set "ZONE_NAME=%~4"
-set "SUBDOMAIN=%~5"
+if "%PROTOCOL%"=="" goto :usage
+if "%PUBLIC_IP%"=="" goto :usage
+if "%PUBLIC_PORT%"=="" goto :usage
+if "%ZONE_NAME%"=="" goto :usage
+goto :args_ok
+:usage
+call :log "用法: %~nx0 -protocol <protocol> -ip <publicIp> -port <publicPort> -zone <zoneName> -record_name <subdomain> -http_token <apiToken>"
+exit /b 1
+:args_ok
 
-if not "%~6"=="" (
-    set "TOKEN=%~6"
-) else if defined DYNV6_API_TOKEN (
-    set "TOKEN=%DYNV6_API_TOKEN%"
-) else (
-    call :log "错误: 未设置 apiToken 参数或环境变量 DYNV6_API_TOKEN"
+if "%TOKEN%"=="" if defined DYNV6_API_TOKEN set "TOKEN=%DYNV6_API_TOKEN%"
+if "%TOKEN%"=="" (
+    call :log "错误: 未设置 -http_token 参数或环境变量 DYNV6_API_TOKEN"
     exit /b 1
 )
 
@@ -54,7 +68,7 @@ call :log "查询 Zone ID..."
 call :retry_get "%DYNV6_API%/zones" || goto :cleanup_fail
 
 call :log "  Zone API 返回: "
-type "%TEMP_JSON%"
+type "%TEMP_JSON%" 1>&2
 for /f %%i in ('powershell -NoProfile -Command "$z=Get-Content '%TEMP_JSON%' -Raw|ConvertFrom-Json|Where-Object{$_.name -eq '%ZONE_NAME%'}; if($z){$z.id}"') do set "ZONE_ID=%%i"
 if "%ZONE_ID%"=="" (
     call :log "错误: 未找到域名 %ZONE_NAME% 对应的 Zone"
@@ -68,7 +82,7 @@ call :log "  Zone ID: %ZONE_ID%"
 call :log "查询已有 TXT 记录..."
 call :retry_get "%DYNV6_API%/zones/%ZONE_ID%/records" || goto :cleanup_fail
 call :log "  Records API 返回: "
-type "%TEMP_JSON%"
+type "%TEMP_JSON%" 1>&2
 
 set "HAS_RECORDS="
 for /f %%i in ('powershell -NoProfile -Command "$r=(Get-Content '%TEMP_JSON%' -Raw|ConvertFrom-Json|Where-Object{$_.name -eq '%SUBDOMAIN%' -and $_.type -eq 'TXT'}); if($r){$r.id}"') do (
@@ -87,6 +101,12 @@ if not defined HAS_RECORDS (
 )
 
 call :log "完成"
+if defined SUBDOMAIN (
+    set "RESULT_URI=txt://%SUBDOMAIN%.%ZONE_NAME%"
+) else (
+    set "RESULT_URI=txt://%ZONE_NAME%"
+)
+echo %RESULT_URI%
 del "%TEMP_JSON%" 2>nul
 del "%TEMP_ERR%" 2>nul
 del "%TEMP_BODY%" 2>nul
@@ -101,7 +121,7 @@ for /f "tokens=2 delims==" %%I in ('wmic os get localdatetime /value') do set "L
 set "LTS=%LTS:~0,4%-%LTS:~4,2%-%LTS:~6,2% %LTS:~8,2%:%LTS:~10,2%:%LTS:~12,2%"
 set "LMSG=%*"
 set "LMSG=!LMSG:"=!"
-echo %LTS% [%SCRIPT_NAME%] !LMSG!
+echo %LTS% [%SCRIPT_NAME%] !LMSG! 1>&2
 goto :eof
 
 :: HTTP GET 带重试，结果写入 %TEMP_JSON%
@@ -127,7 +147,7 @@ exit /b 1
 set "RURL=%~1"
 call :log "  POST %RURL%"
 call :log "  请求体: "
-type "%TEMP_BODY%"
+type "%TEMP_BODY%" 1>&2
 set /a N=0
 :retry_post_loop
 set /a N+=1
@@ -148,7 +168,7 @@ exit /b 1
 set "RURL=%~1"
 call :log "  PATCH %RURL%"
 call :log "  请求体: "
-type "%TEMP_BODY%"
+type "%TEMP_BODY%" 1>&2
 set /a N=0
 :retry_patch_loop
 set /a N+=1
