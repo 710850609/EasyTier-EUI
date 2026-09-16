@@ -597,9 +597,9 @@ class MainActivity : AppCompatActivity() {
         AppLogger.info(TAG, "onResume")
     }
 
-    override fun onNewIntent(intent: Intent?) {
+    override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        AppLogger.info(TAG, "onNewIntent: received new intent, action=${intent?.action}")
+        AppLogger.info(TAG, "onNewIntent: received new intent, action=${intent.action}")
     }
 
     override fun onStop() {
