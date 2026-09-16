@@ -302,9 +302,14 @@ class EasyTierVpnService : VpnService() {
 
     private fun buildNotification(title: String, text: String): Notification {
         return try {
+            val intent = Intent(this, MainActivity::class.java).apply {
+                action = Intent.ACTION_MAIN
+                addCategory(Intent.CATEGORY_LAUNCHER)
+                flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            }
             val pendingIntent = PendingIntent.getActivity(
                 this, 0,
-                Intent(this, MainActivity::class.java),
+                intent,
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
             )
             NotificationCompat.Builder(this, CHANNEL_ID)
