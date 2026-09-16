@@ -14,7 +14,8 @@
 - 修复：飞牛版本stun执行脚本无权限问题
 - 修复：清理日志，支持stun日志
 - 修复：切换页面时，偶发未能终止节点页面定时查询
-
+----
+- 修复：安卓版本，小米15点击通知栏进入应用后，页面无法使用
 
 <br>
 
@@ -35,6 +36,9 @@
 - Fixed: FnOS version STUN execution script permission denied issue
 - Fixed: Cleaned up logs, added STUN log support
 - Fixed: When switching pages, occasionally failed to stop the node page's periodic polling requests
+- Fixed: Android version, Xiaomi 15 clicking notification bar to enter app causes page to become unusable
+----
+- Fixed: Android version, Xiaomi 15 clicking notification bar to enter app causes page to become unusable
 
 ##  2.4
 - 新增：【节点】页面支持查看中继路径（默认开启）
