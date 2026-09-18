@@ -94,6 +94,9 @@ def set_running(profile:str, running:bool = False) -> None:
     if info is None:
         return
     info.running = running
+    if not running:
+        # 清空 rpc_portal，避免多应用脏读
+        info.rpc_portal = None
     __save_data(data)
     __load_data(reload=True)
 

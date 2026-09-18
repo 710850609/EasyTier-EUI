@@ -159,6 +159,7 @@ MESSAGES = {
         "configsRequired": "Les données de configuration sont requises",
         "configNotFound": "Configuration introuvable",
         "duplicateProtocolBindPort": "La combinaison protocole et port de liaison existe déjà, veuillez utiliser un protocole ou un port différent",
+        "duplicateBindPort": "Le port de liaison de transfert est déjà utilisé par une autre configuration, veuillez utiliser un port différent",
         "listenProtocolRequired": "Veuillez sélectionner le protocole d'écoute",
     },
 }

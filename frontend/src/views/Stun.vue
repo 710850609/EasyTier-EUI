@@ -8,6 +8,7 @@
           <span class="tip-popup-title">{{ $t('stun.tipTitle') }}</span>
         </div>
         <p>{{ $t('stun.tipContent') }}</p>
+        <p class="tip-notice">{{ $t('stun.tipNotice') }}</p>
         <ul>
           <li>{{ $t('stun.tipItem1') }}</li>
           <li>{{ $t('stun.tipItem2') }}</li>
@@ -103,8 +104,8 @@
             <div class="profile-row-info">
               <div class="profile-row-line">
                 <span class="profile-row-name">{{ p.name }}</span>
-                <var-chip size="mini" plain type="info">
-                  {{ p.stunConfig.protocol }}
+                <var-chip size="mini" plain type="warning">
+                  stun | {{ p.stunConfig.protocol }}
                 </var-chip>
                 <var-chip size="mini" plain :type="getProtocolChipType(p.stunConfig.listenProtocol)">
                   <template v-if="p.stunConfig.listenProtocol">
@@ -113,14 +114,12 @@
                 </var-chip>
               </div>
               <div class="profile-row-line" v-if="p.running && p.mapping">
-<!--                <span class="profile-row-arrow">→</span>-->
                 <span class="profile-row-arrow">stun →</span>
                 <span class="profile-row-mapping" @click.stop="copyText(`${p.stunConfig.listenProtocol}://${p.mapping.public_addr}:${p.mapping.public_port}`)">
                   {{ p.stunConfig.listenProtocol }}://{{ p.mapping.public_addr }}:{{ p.mapping.public_port }}
                 </span>
               </div>
               <div class="profile-row-line" v-if="p.running && p.mapping && p.mapping.dns_record">
-<!--                <span class="profile-row-arrow">↳</span>-->
                 <span class="profile-row-arrow">dns →</span>
                 <span class="profile-row-dns" @click.stop="copyText(p.mapping.dns_record)">
                   {{ p.mapping.dns_record }}
@@ -181,7 +180,12 @@
         </div>
 
         <div class="form-row">
-          <label class="form-label">{{ $t('stun.listenProtocol') }}</label>
+          <label class="form-label">
+            {{ $t('stun.listenProtocol') }}
+            <var-chip size="mini" plain type="warning">
+                  stun | {{ ['tcp', 'ws', 'wss'].includes(activeProfile.stunConfig.listenProtocol) ? 'tcp' : 'udp' }}
+            </var-chip>
+          </label>
           <var-select
             variant="outlined"
             size="small"
@@ -204,6 +208,16 @@
             variant="outlined"
             size="small"
             v-model="activeProfile.stunConfig.listenPort"
+          />
+        </div>
+
+        <div class="form-row">
+          <label class="form-label">{{ $t('stun.forwardBindPort') }}</label>
+          <var-input
+            variant="outlined"
+            size="small"
+            v-model="activeProfile.stunConfig.bindPort"
+            :placeholder="$t('stun.forwardBindPortPlaceholder')"
           />
         </div>
       </div>
@@ -315,6 +329,7 @@ function createDefaultProfile(item, index) {
     stunConfig: {
       listenProtocol: 'udp',
       listenPort: '11010',
+      bindPort: '',
     },
     changeConfig: {
       dnsProvider: 'dynv6'
@@ -723,9 +738,16 @@ onUnmounted(() => {
   margin: 0 0 8px 0;
 }
 
+.tip-notice {
+  font-size: 12px;
+  color: #d4a853;
+  white-space: pre-line;
+}
+
 .tip-popup-content ul {
   margin: 0;
   padding-left: 20px;
+  list-style: none;
 }
 
 .tip-popup-content li {
@@ -1031,6 +1053,18 @@ onUnmounted(() => {
   font-size: 13px;
   color: var(--color-text-secondary);
   margin-bottom: 8px;
+}
+
+.switch-with-tip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0px 8px 0px;
+}
+
+.switch-tip-text {
+  font-size: 12px;
+  color: var(--color-text-hint, var(--color-text-disabled));
 }
 
 .input-with-btn {

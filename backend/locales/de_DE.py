@@ -159,6 +159,7 @@ MESSAGES = {
         "configsRequired": "Konfigurationsdaten sind erforderlich",
         "configNotFound": "Konfiguration nicht gefunden",
         "duplicateProtocolBindPort": "Protokoll- und Bind-Port-Kombination existiert bereits, bitte anderes Protokoll oder Port verwenden",
+        "duplicateBindPort": "Weiterleitungs-Bind-Port wird bereits von einer anderen Konfiguration verwendet, bitte anderen Port verwenden",
         "listenProtocolRequired": "Bitte Horchprotokoll auswählen",
     },
 }

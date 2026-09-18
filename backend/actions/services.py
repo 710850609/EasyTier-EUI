@@ -2,15 +2,13 @@
 # -*- coding: utf-8 -*-
 import copy
 import logging
-import os.path
-import sys
+import time
 from pathlib import Path
 from typing import List, Optional, Set
 
 from et_adapters import get_facade
 from http_dispatcher.dispatcher import HttpException
 from locales import get_message
-from utils import common_util
 from utils import et_run_info
 from utils import run_configs
 from utils.validators import Validator
@@ -38,7 +36,14 @@ def start(params=None, *args, **kwargs):
 def restart(params=None, *args, **kwargs):
     logger.info(f"重启ET服务...")
     if status(params):
-       stop(params)
+        stop(params)
+        # 等待服务真正停止后再启动，避免系统服务模式下异步停止导致的冲突
+        max_retries = 20
+        while max_retries > 0 and status(params):
+            time.sleep(0.5)
+            max_retries -= 1
+        if max_retries == 0:
+            logger.warning(f"等待服务停止超时，仍尝试启动")
     start(params)
 
 def start_all(*args, **kwargs):

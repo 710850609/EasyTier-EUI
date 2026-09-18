@@ -117,8 +117,7 @@ exit /b 0
 :: ============================================================
 
 :log
-for /f "tokens=2 delims==" %%I in ('wmic os get localdatetime /value') do set "LTS=%%I"
-set "LTS=%LTS:~0,4%-%LTS:~4,2%-%LTS:~6,2% %LTS:~8,2%:%LTS:~10,2%:%LTS:~12,2%"
+for /f "usebackq delims=" %%I in (`powershell -NoProfile -Command "(Get-Date).ToString('yyyy-MM-dd HH:mm:ss')"`) do set "LTS=%%I"
 set "LMSG=%*"
 set "LMSG=!LMSG:"=!"
 echo %LTS% [%SCRIPT_NAME%] !LMSG! 1>&2

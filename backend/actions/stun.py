@@ -193,8 +193,10 @@ def save_stun(params=None, *args, **kwargs):
         'quic': 'udp',
         'faketcp': 'udp',
     }.get(listen_protocol, '')
-    bind_port = str(sc.get('listenPort', ''))
-    sc['bindPort'] = bind_port
+    listen_port = str(sc.get('listenPort', ''))
+    if not listen_port:
+        raise HttpException(get_message('stun.listenPortRequired'))
+    bind_port = str(sc.get('bindPort', ''))
     sc['protocol'] = protocol
 
     stun_configs = _load_stun()
@@ -202,8 +204,14 @@ def save_stun(params=None, *args, **kwargs):
         if existing_id == config_id:
             continue
         esc = existing_config.get('stunConfig', {})
-        if str(esc.get('bindPort', '')) == bind_port and esc.get('protocol', '') == protocol:
+        if str(esc.get('listenPort', '')) == listen_port and esc.get('protocol', '') == protocol:
             raise HttpException(get_message('stun.duplicateProtocolBindPort'))
+        if bind_port and bind_port != '0' and (
+                bind_port == listen_port
+                or str(esc.get('bindPort', '')) == bind_port
+                or str(esc.get('listenPort', '')) == bind_port
+        ):
+            raise HttpException(get_message('stun.duplicateBindPort'))
 
     config.pop('running', None)
     config.pop('mapping', None)
@@ -288,8 +296,7 @@ def _build_callback_script(config: dict) -> str:
             f'@echo off\r\n'
             f'chcp 65001 >nul\r\n'
             f'setlocal enabledelayedexpansion\r\n'
-            f'for /f "tokens=2 delims==" %%I in (\'wmic os get localdatetime /value\') do set "TS=%%I"\r\n'
-            f'set "TS=!TS:~0,4!-!TS:~4,2!-!TS:~6,2! !TS:~8,2!:!TS:~10,2!:!TS:~12,2!"\r\n'
+            f'for /f "usebackq delims=" %%I in (`powershell -NoProfile -Command "(Get-Date).ToString(\'yyyy-MM-dd HH:mm:ss\')"`) do set "TS=%%I"\r\n'
             f'set CHANGED=1\r\n'
             f'if exist "{mapping_file}" (\r\n'
             f'    powershell -NoProfile -Command "$j = Get-Content \'{mapping_file}\' -Raw | ConvertFrom-Json; if ($j.public_addr -eq \'%1\' -and $j.public_port -eq \'%2\') {{ exit 1 }} else {{ exit 0 }}"\r\n'
@@ -444,6 +451,9 @@ def start_stun(params=None, *args, **kwargs):
     if not config:
         raise HttpException(get_message('stun.configNotFound'))
     stun_config = config.get("stunConfig") or {}
+    listen_port = stun_config.get('listenPort')
+    if not listen_port:
+        raise HttpException(get_message('stun.listenPortRequired'))
     default_http_server = "www.baidu.com"
     default_stun_server = "turn.cloud-rtc.com:80"
     is_udp_mode = stun_config.get('protocol', '').lower() == 'udp'
@@ -456,17 +466,18 @@ def start_stun(params=None, *args, **kwargs):
         default_http_server = "119.29.29.29"
         default_stun_server = "stun.miwifi.com"
     if stun_config.get('bindPort'):
-        if sys.platform == 'win32':
-            # cmd_list.append('-t')
-            # cmd_list.append("127.0.0.1")
-            # cmd_list.append('-p')
-            # cmd_list.append(stun_config.get('bindPort'))
-            # cmd_list.append("20000-30000")
-            cmd_list.append('-b')
-            cmd_list.append(stun_config.get('bindPort'))
-        else:
-            cmd_list.append('-b')
-            cmd_list.append(stun_config.get('bindPort'))
+        # 指定了 bindPort，则走转发模式
+        cmd_list.append('-t')
+        cmd_list.append("127.0.0.1")
+        cmd_list.append('-p')
+        cmd_list.append(listen_port)
+        cmd_list.append('-b')
+        cmd_list.append(stun_config.get('bindPort'))
+    else:
+        # 没指定 bindPort，则绑定 listenPort
+        cmd_list.append('-b')
+        cmd_list.append(listen_port)
+
     if stun_config.get('interface'):
         cmd_list.append('-i')
         cmd_list.append(stun_config.get('interface'))

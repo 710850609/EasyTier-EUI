@@ -15,6 +15,8 @@
 - 修复：清理日志，支持stun日志
 - 修复：切换页面时，偶发未能终止节点页面定时查询
 ----
+- 优化：【STUN】页面支持转发端口，以解决应用端口冲突问题，优化相关提示文案
+- 优化：安卓版本被其它VPN抢占时，Toast提示停止原因
 - 修复：安卓版本，小米15点击通知栏进入应用后，页面无法使用
 
 <br>
@@ -38,6 +40,8 @@
 - Fixed: When switching pages, occasionally failed to stop the node page's periodic polling requests
 - Fixed: Android version, Xiaomi 15 clicking notification bar to enter app causes page to become unusable
 ----
+- Optimized: [STUN] page supports forwarding port to resolve application port conflicts, optimized related hint copy
+- Optimized: Android version shows Toast notification with stop reason when VPN is preempted by other apps
 - Fixed: Android version, Xiaomi 15 clicking notification bar to enter app causes page to become unusable
 
 ##  2.4

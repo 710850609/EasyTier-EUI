@@ -160,6 +160,7 @@ MESSAGES = {
         "configRequired": "Configuration content is required",
         "configNotFound": "Configuration not found",
         "duplicateProtocolBindPort": "Protocol and bind port combination already exists, please use a different protocol or port",
+        "duplicateBindPort": "Forward bind port is already in use by another configuration, please use a different port",
         "listenProtocolRequired": "Please select listen protocol",
     },
 }

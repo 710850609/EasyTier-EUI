@@ -159,6 +159,7 @@ MESSAGES = {
         "configsRequired": "配置資料不能為空",
         "configNotFound": "配置不存在",
         "duplicateProtocolBindPort": "協定和綁定埠組合已存在，請使用不同的協定或埠",
+        "duplicateBindPort": "轉發綁定埠已被其他設定使用，請使用不同的埠",
         "listenProtocolRequired": "請選擇監聽協定",
     },
 }

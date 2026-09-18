@@ -79,11 +79,10 @@ class CoreAdapter(IEasyTierAdapter):
                 self._background.start_network('', '')
 
         for profile in profiles_no_systemed:
-            info = et_run_info.get(profile)
-            log_level = 'disabled' if log_level == 'off' else log_level
-            log_level = 'warning' if log_level == 'warn' else log_level
-            if info.rpc_portal is not None:
-                self._foreground.change_log_level(log_level, rpc_portal=info.rpc_portal)
+            if self._foreground.status(profile):
+                info = et_run_info.get(profile)
+                if info.rpc_portal is not None:
+                    self._foreground.change_log_level(log_level, rpc_portal=info.rpc_portal)
 
     def get_logs(self, params: dict) -> dict:
         return self._foreground.get_logs(params)

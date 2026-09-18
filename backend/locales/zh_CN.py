@@ -160,6 +160,7 @@ MESSAGES = {
         "configRequired": "配置内容不能为空",
         "configNotFound": "配置不存在",
         "duplicateProtocolBindPort": "协议和绑定端口组合已存在，请使用不同的协议或端口",
+        "duplicateBindPort": "转发绑定端口已被其他配置使用，请使用不同的端口",
         "listenProtocolRequired": "请选择监听协议",
     },
 }

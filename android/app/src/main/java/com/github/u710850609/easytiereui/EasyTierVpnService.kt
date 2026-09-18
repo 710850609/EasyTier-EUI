@@ -11,6 +11,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.ParcelFileDescriptor
+import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import com.chaquo.python.Python
 import kotlin.concurrent.thread
@@ -352,7 +353,8 @@ class EasyTierVpnService : VpnService() {
     }
 
     override fun onRevoke() {
-        AppLogger.info(TAG, "onRevoke: VPN revoked by system (another VPN took over)")
+        AppLogger.info(TAG, "onRevoke: VPN was revoked by the system")
+        Toast.makeText(this, "易组网VPN已被系统中断（可能是其他 VPN 抢占或在设置中关闭）", Toast.LENGTH_LONG).show()
         isRunning = false
         try {
             vpnInterface?.close()
