@@ -105,7 +105,7 @@
               <div class="profile-row-line">
                 <span class="profile-row-name">{{ p.name }}</span>
                 <var-chip size="mini" plain type="warning">
-                  stun | {{ p.stunConfig.protocol }}
+                  stun | {{ p.stunConfig.protocol }}{{ p.stunConfig.bindPort ? ":" + p.stunConfig.bindPort : "" }}
                 </var-chip>
                 <var-chip size="mini" plain :type="getProtocolChipType(p.stunConfig.listenProtocol)">
                   <template v-if="p.stunConfig.listenProtocol">

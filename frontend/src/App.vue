@@ -123,18 +123,15 @@ body {
   background: var(--color-surface-container-high) !important;
 }
 
-/* var-select 下拉框毛玻璃效果 — 内层只做毛玻璃，不带阴影 */
+/* var-select 下拉框 — scroller 透明化，避免和外层 menu 形成双重玻璃边缘 */
 html body .var-select__scroller,
 html body .var-select__scroller.var-elevation--3 {
-  --select-scroller-background: rgba(var(--color-surface-container-rgb, 234, 240, 248), 0.02) !important;
-  background: rgba(var(--color-surface-container-rgb, 234, 240, 248), 0.02) !important;
-  background-color: rgba(var(--color-surface-container-rgb, 234, 240, 248), 0.02) !important;
-  backdrop-filter: blur(20px) saturate(140%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(140%) !important;
-  will-change: backdrop-filter !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  will-change: auto !important;
   border: none !important;
-  border-left: 2px solid rgba(255, 255, 255, 0.25) !important;
-  border-right: 2px solid rgba(255, 255, 255, 0.25) !important;
   border-radius: 12px !important;
   box-shadow: none !important;
   --shadow-key-umbra-opacity: transparent !important;
@@ -144,11 +141,11 @@ html body .var-select__scroller.var-elevation--3 {
 
 html.dark body .var-select__scroller,
 html.dark body .var-select__scroller.var-elevation--3 {
-  --select-scroller-background: rgba(var(--color-surface-container-rgb, 30, 36, 53), 0.18) !important;
-  background: rgba(var(--color-surface-container-rgb, 30, 36, 53), 0.18) !important;
-  background-color: rgba(var(--color-surface-container-rgb, 30, 36, 53), 0.18) !important;
-  border-left: 1px solid rgba(255, 255, 255, 0.25) !important;
-  border-right: 1px solid rgba(255, 255, 255, 0.25) !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  will-change: auto !important;
   box-shadow: none !important;
   --shadow-key-umbra-opacity: transparent !important;
   --shadow-key-penumbra-opacity: transparent !important;
@@ -716,9 +713,105 @@ html.dark .var-menu__menu.var--box.var-select__menu {
     inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
 }
 
+/* var-select 下拉菜单毛玻璃底色 */
+.var-menu__menu.var--box:has(.var-select__scroller) {
+  background: rgba(var(--color-surface-container-rgb, 234, 240, 248), 0.08) !important;
+  background-color: rgba(var(--color-surface-container-rgb, 234, 240, 248), 0.08) !important;
+  backdrop-filter: blur(20px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(140%) !important;
+  will-change: backdrop-filter !important;
+  border: none !important;
+  border-radius: 12px !important;
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.32),
+    0 8px 24px rgba(0, 0, 0, 0.22),
+    0 16px 48px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+}
+
+html.dark .var-menu__menu.var--box:has(.var-select__scroller) {
+  background: rgba(var(--color-surface-container-rgb, 30, 36, 53), 0.25) !important;
+  background-color: rgba(var(--color-surface-container-rgb, 30, 36, 53), 0.25) !important;
+  backdrop-filter: blur(20px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(140%) !important;
+  will-change: backdrop-filter !important;
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.12),
+    0 8px 24px rgba(0, 0, 0, 0.12),
+    0 16px 48px rgba(0, 0, 0, 0.20),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+}
+
+html.no-glass .var-menu__menu.var--box:has(.var-select__scroller) {
+  background: var(--color-surface-container) !important;
+  background-color: var(--color-surface-container) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  will-change: auto !important;
+  border: none !important;
+  border-top: 1px solid var(--color-outline-variant) !important;
+  border-bottom: 1px solid var(--color-outline-variant) !important;
+  border-radius: 12px !important;
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.08),
+    0 8px 24px rgba(0, 0, 0, 0.08) !important;
+}
+
+html.no-glass.dark .var-menu__menu.var--box:has(.var-select__scroller) {
+}
+
+/* var-select 左边缘渐变高光条（暗→亮→暗） */
+.var-menu__menu.var--box:has(.var-select__scroller)::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 3px;
+  background: linear-gradient(180deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.08) 20%,
+    rgba(255, 255, 255, 0.5) 50%,
+    rgba(255, 255, 255, 0.08) 80%,
+    transparent 100%);
+  border-radius: 12px 0 0 12px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* var-select 右边缘渐变高光条（暗→亮→暗） */
+.var-menu__menu.var--box:has(.var-select__scroller)::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 3px;
+  background: linear-gradient(180deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.08) 20%,
+    rgba(255, 255, 255, 0.5) 50%,
+    rgba(255, 255, 255, 0.08) 80%,
+    transparent 100%);
+  border-radius: 0 12px 12px 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+html.dark .var-menu__menu.var--box:has(.var-select__scroller)::before,
+html.dark .var-menu__menu.var--box:has(.var-select__scroller)::after {
+  width: 2px;
+  background: linear-gradient(180deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.06) 20%,
+    rgba(255, 255, 255, 0.35) 50%,
+    rgba(255, 255, 255, 0.06) 80%,
+    transparent 100%);
+}
+
 /* 通用 var-menu 毛玻璃（非 select，如更多菜单等） */
-html body .var-menu__menu.var--box:not(.var-select__menu),
-html body .var-menu__menu.var--box.var-menu--menu-background-color:not(.var-select__menu) {
+html body .var-menu__menu.var--box:not(:has(.var-select__scroller)),
+html body .var-menu__menu.var--box.var-menu--menu-background-color:not(:has(.var-select__scroller)) {
   --menu-background-color: transparent !important;
   background-image: none !important;
   background: rgba(var(--color-surface-container-rgb, 234, 240, 248), 0.08) !important;
@@ -737,8 +830,8 @@ html body .var-menu__menu.var--box.var-menu--menu-background-color:not(.var-sele
     inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
 }
 
-html.dark body .var-menu__menu.var--box:not(.var-select__menu),
-html.dark body .var-menu__menu.var--box.var-menu--menu-background-color:not(.var-select__menu) {
+html.dark body .var-menu__menu.var--box:not(:has(.var-select__scroller)),
+html.dark body .var-menu__menu.var--box.var-menu--menu-background-color:not(:has(.var-select__scroller)) {
   background: rgba(var(--color-surface-container-rgb, 30, 36, 53), 0.25) !important;
   background-color: rgba(var(--color-surface-container-rgb, 30, 36, 53), 0.25) !important;
   backdrop-filter: blur(20px) saturate(140%) !important;
@@ -862,8 +955,8 @@ html.no-glass .var-popover__content {
   -webkit-backdrop-filter: none !important;
 }
 
-html.no-glass .var-menu__menu.var--box:not(.var-select__menu),
-html.no-glass .var-menu__menu.var--box.var-menu--menu-background-color:not(.var-select__menu) {
+html.no-glass .var-menu__menu.var--box:not(:has(.var-select__scroller)),
+html.no-glass .var-menu__menu.var--box.var-menu--menu-background-color:not(:has(.var-select__scroller)) {
   background: var(--color-surface-container) !important;
   background-color: var(--color-surface-container) !important;
   backdrop-filter: none !important;

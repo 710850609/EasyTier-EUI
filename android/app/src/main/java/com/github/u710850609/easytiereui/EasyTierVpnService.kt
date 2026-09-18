@@ -358,7 +358,7 @@ class EasyTierVpnService : VpnService() {
         try {
             val isChinese = Locale.getDefault().language == "zh"
             val title = if (isChinese) "💥VPN被系统中断" else "💥VPN was interrupted by system"
-            val text = if (isChinese) "可能是其他 VPN 抢占或在设置-VPN中关闭" else "Another VPN may have taken over or it was turned off in Settings-VPN"
+            val text = if (isChinese) "可能是其他 VPN 抢占或在设置中关闭" else "Another VPN may have taken over or it was turned off in Settings"
             val intent = Intent(this, MainActivity::class.java).apply {
                 action = Intent.ACTION_MAIN
                 addCategory(Intent.CATEGORY_LAUNCHER)
