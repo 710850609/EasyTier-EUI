@@ -11,7 +11,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.ParcelFileDescriptor
-import android.widget.Toast
+import java.util.Locale
 import androidx.core.app.NotificationCompat
 import com.chaquo.python.Python
 import kotlin.concurrent.thread
@@ -29,6 +29,7 @@ class EasyTierVpnService : VpnService() {
         private const val TAG = "EasyTierVpnService"
         const val CHANNEL_ID = "easytier_eui_vpn_channel"
         const val NOTIFICATION_ID = 1
+        private const val REVOKE_NOTIFICATION_ID = 2
 
         private val DISALLOWED_APPS = listOf(
             "com.android.phone",                     // 电话/VoLTE/VoWiFi 服务
@@ -354,7 +355,33 @@ class EasyTierVpnService : VpnService() {
 
     override fun onRevoke() {
         AppLogger.info(TAG, "onRevoke: VPN was revoked by the system")
-        Toast.makeText(this, "易组网VPN已被系统中断（可能是其他 VPN 抢占或在设置中关闭）", Toast.LENGTH_LONG).show()
+        try {
+            val isChinese = Locale.getDefault().language == "zh"
+            val title = if (isChinese) "💥VPN被系统中断" else "💥VPN was interrupted by system"
+            val text = if (isChinese) "可能是其他 VPN 抢占或在设置-VPN中关闭" else "Another VPN may have taken over or it was turned off in Settings-VPN"
+            val intent = Intent(this, MainActivity::class.java).apply {
+                action = Intent.ACTION_MAIN
+                addCategory(Intent.CATEGORY_LAUNCHER)
+                flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            }
+            val pendingIntent = PendingIntent.getActivity(
+                this, 1, intent,
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            )
+            val notification = NotificationCompat.Builder(this, CHANNEL_ID)
+                .setContentTitle(title)
+                .setContentText(text)
+                .setSmallIcon(R.drawable.ic_notification)
+                .setContentIntent(pendingIntent)
+                .setAutoCancel(true)
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .build()
+            val nm = getSystemService(NotificationManager::class.java)
+            nm.notify(REVOKE_NOTIFICATION_ID, notification)
+            AppLogger.info(TAG, "onRevoke: notification sent")
+        } catch (e: Exception) {
+            AppLogger.warn(TAG, "onRevoke: notification failed: ${e.message}")
+        }
         isRunning = false
         try {
             vpnInterface?.close()
