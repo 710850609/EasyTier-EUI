@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""FfiAdapter — current default FFI adapter for v2.4.5/v2.6.4"""
+"""FfiAdapter — current default FFI adapter for v2.4.5/v2.6.4/v2.7.0"""
 import ctypes
 import json
 import logging
@@ -122,7 +122,230 @@ class FfiAdapter(IEasyTierAdapter):
         if self._has_symbol('free_string'):
             lib.free_string.argtypes = [c_void_p]
             lib.free_string.restype = None
+        # v2.7.0 新增的 FFI 符号（可选）
+        if self._has_symbol('call_json_rpc'):
+            lib.call_json_rpc.argtypes = [c_char_p, c_char_p, c_char_p, c_char_p, POINTER(c_char_p)]
+            lib.call_json_rpc.restype = c_int
+        if self._has_symbol('start_config_server_client'):
+            lib.start_config_server_client.argtypes = [c_char_p, c_char_p, c_char_p, c_int, c_void_p, c_void_p]
+            lib.start_config_server_client.restype = c_int
+        if self._has_symbol('stop_config_server_client'):
+            lib.stop_config_server_client.argtypes = []
+            lib.stop_config_server_client.restype = c_int
+        if self._has_symbol('is_config_server_client_connected'):
+            lib.is_config_server_client_connected.argtypes = []
+            lib.is_config_server_client_connected.restype = c_int
 
+    # ─────────────────── ffi 接口 开始 ─────────────────────────────
+
+    def _parse_config(self, toml_config: str) -> int:
+        try:
+            with self._lock:
+                toml_bytes = toml_config.encode('utf-8')
+                c_config = ctypes.c_char_p(toml_bytes)
+                return self._lib.parse_config(c_config)
+        except Exception as e:
+            logger.exception(f"parse_config failed: {e}")
+            return -1
+
+    def _get_last_error(self) -> str:
+        try:
+            with self._lock:
+                error_ptr = c_char_p()
+                self._lib.get_error_msg(ctypes.byref(error_ptr))
+            raw_ptr = ctypes.cast(error_ptr, c_void_p).value
+            if raw_ptr:
+                msg = ctypes.string_at(raw_ptr).decode('utf-8', errors='replace')
+                if self._has_symbol('free_string'):
+                    self._lib.free_string(raw_ptr)
+                return msg
+            return ""
+        except Exception:
+            return ""
+
+    def _retain_instances(self, names: List[str]) -> None:
+        try:
+            with self._lock:
+                if not names:
+                    ret = self._lib.retain_network_instance(None, 0)
+                else:
+                    encoded = [n.encode('utf-8') for n in names]
+                    arr = (c_char_p * len(names))(*encoded)
+                    ret = self._lib.retain_network_instance(arr, len(names))
+                if ret != 0:
+                    raise RuntimeError(f"retain_network_instance failed: {self._get_last_error()}")
+        except Exception as e:
+            logger.exception(f"_retain_instances failed: {e}")
+            raise
+
+    def _list_all_instance_names(self) -> List[str]:
+        info = self._collect_via_raw_ffi()
+        return list(info.keys())
+
+    def _collect_via_raw_ffi(self, max_len: int = _MAX_INSTANCE_COUNT) -> Dict[str, Any]:
+        now = time.time()
+        if self._enable_cache and self._ffi_cache and (now - self._ffi_cache_time) < self._FFI_CACHE_TTL:
+            return self._ffi_cache
+        try:
+            with self._lock:
+                infos = (KeyValuePair * max_len)()
+                count = self._lib.collect_network_infos(infos, max_len)
+                if count < 0:
+                    return {}
+                result = {}
+                for i in range(min(count, max_len)):
+                    key_ptr = infos[i].key
+                    val_ptr = infos[i].value
+                    key = ctypes.string_at(key_ptr).decode('utf-8') if key_ptr else ""
+                    value = ctypes.string_at(val_ptr).decode('utf-8') if val_ptr else ""
+                    # logger.debug(f"collect_network_infos: key={key}, value={value}")
+                    result[key] = json.loads(value) if value else {}
+                    if self._has_symbol('free_string'):
+                        if key_ptr:
+                            self._lib.free_string(key_ptr)
+                        if val_ptr:
+                            self._lib.free_string(val_ptr)
+                if self._enable_cache:
+                    self._ffi_cache = result
+                    self._ffi_cache_time = now
+                return result
+        except Exception as e:
+            logger.exception(f"_collect_via_raw_ffi failed: {e}")
+        return {}
+
+    def set_tun_fd(self, instance_name: str, fd: int) -> int:
+        logger.info(f"set_tun_fd {instance_name} {fd}")
+        if not self._has_symbol('set_tun_fd'):
+            raise RuntimeError("set_tun_fd symbol not available")
+        try:
+            with self._lock:
+                name_bytes = instance_name.encode('utf-8')
+                c_name = ctypes.c_char_p(name_bytes)
+                ret = self._lib.set_tun_fd(c_name, fd)
+                if ret != 0:
+                    raise RuntimeError(f"set_tun_fd failed: {self._get_last_error()}")
+                return 0
+        except RuntimeError as e:
+            logger.exception(f"set_tun_fd runtime error: {e}")
+            raise
+        except Exception as e:
+            raise RuntimeError(f"set_tun_fd failed: {e}") from e
+
+    def _call_json_rpc(self, service_name: str, method_name: str, domain_name: str, payload_json: str) -> str:
+        """调用 EasyTier 暴露的 RPC 服务（protobuf JSON 格式）。
+
+        v2.7.0 开始支持。
+
+        注意：api.logger.LoggerRpcService 在 FFI 模式下不可用（核心日志未初始化），
+        其他 RPC 服务（如实例查询、节点管理等）均可正常调用。
+
+        :param service_name: RPC 服务名，如 "api.manage.NetworkInstanceService"
+        :param method_name:  RPC 方法名，如 "list_instances"
+        :param domain_name:  域名称，可选（传空字符串表示无域筛选）
+        :param payload_json: JSON 格式的请求参数，如 '{"instance_name": "default"}'
+        :return: JSON 格式的响应字符串；失败时抛出 RuntimeError
+        :rtype: str
+        """
+        if not self._has_symbol('call_json_rpc'):
+            raise RuntimeError("call_json_rpc symbol not available (requires EasyTier >= v2.7.0)")
+        try:
+            with self._lock:
+                svc = ctypes.c_char_p(service_name.encode('utf-8'))
+                mtd = ctypes.c_char_p(method_name.encode('utf-8'))
+                dom = ctypes.c_char_p(domain_name.encode('utf-8') if domain_name else b'')
+                pld = ctypes.c_char_p(payload_json.encode('utf-8'))
+                resp_ptr = ctypes.c_char_p()
+                ret = self._lib.call_json_rpc(svc, mtd, dom, pld, ctypes.byref(resp_ptr))
+                if ret != 0:
+                    raise RuntimeError(f"call_json_rpc failed: {self._get_last_error()}")
+                raw_ptr = ctypes.cast(resp_ptr, c_void_p).value
+                if raw_ptr:
+                    result = ctypes.string_at(raw_ptr).decode('utf-8', errors='replace')
+                    if self._has_symbol('free_string'):
+                        self._lib.free_string(raw_ptr)
+                    return result
+                return ''
+        except RuntimeError as e:
+            logger.exception(f"call_json_rpc runtime error: {e}")
+            raise
+        except Exception as e:
+            raise RuntimeError(f"call_json_rpc failed: {e}") from e
+
+    def _start_config_server_client(self, config_server_url: str, hostname: str,
+                                   machine_id: str, secure_mode: bool) -> None:
+        """启动托管的配置服务器客户端。
+
+        v2.7.0 开始支持。
+
+        启动后，FFI 层会通过配置服务器同步远程实例配置，并根据事件自动创建/删除
+        本地网络实例。配置服务器客户端与 FFI 数据平面互斥，数据平面运行时调用此
+        方法会返回 -1。
+
+        :param config_server_url: 配置服务器地址，如 "https://config.example.com"
+        :param hostname:          主机名，可传空字符串
+        :param machine_id:        机器标识 ID
+        :param secure_mode:       是否启用安全模式
+        :raises RuntimeError: 符号不存在或调用失败时抛出
+        """
+        logger.info(f"start_config_server_client url={config_server_url} hostname={hostname}")
+        if not self._has_symbol('start_config_server_client'):
+            raise RuntimeError("start_config_server_client symbol not available (requires EasyTier >= v2.7.0)")
+        try:
+            with self._lock:
+                url = ctypes.c_char_p(config_server_url.encode('utf-8'))
+                host = ctypes.c_char_p(hostname.encode('utf-8') if hostname else None)
+                mid = ctypes.c_char_p(machine_id.encode('utf-8'))
+                sec = 1 if secure_mode else 0
+                ret = self._lib.start_config_server_client(url, host, mid, sec, None, None)
+                if ret != 0:
+                    raise RuntimeError(f"start_config_server_client failed: {self._get_last_error()}")
+        except RuntimeError:
+            raise
+        except Exception as e:
+            raise RuntimeError(f"start_config_server_client failed: {e}") from e
+
+    def _stop_config_server_client(self) -> None:
+        """停止托管的配置服务器客户端。
+
+        v2.7.0 开始支持。
+
+        停止客户端，移除由配置服务器追踪的远程实例，等待进行中的回调完成，
+        并释放配置服务器/数据平面互斥状态。
+
+        :raises RuntimeError: 符号不存在或调用失败时抛出
+        """
+        logger.info("stop_config_server_client")
+        if not self._has_symbol('stop_config_server_client'):
+            raise RuntimeError("stop_config_server_client symbol not available (requires EasyTier >= v2.7.0)")
+        try:
+            with self._lock:
+                ret = self._lib.stop_config_server_client()
+                if ret != 0:
+                    raise RuntimeError(f"stop_config_server_client failed: {self._get_last_error()}")
+        except RuntimeError:
+            raise
+        except Exception as e:
+            raise RuntimeError(f"stop_config_server_client failed: {e}") from e
+
+    def _is_config_server_client_connected(self) -> bool:
+        """查询配置服务器客户端是否已连接。
+
+        v2.7.0 开始支持。
+
+        :return: 客户端存在且报告已连接时返回 True，否则返回 False
+        :rtype: bool
+        :raises RuntimeError: 当 FFI 符号不可用时抛出
+        """
+        if not self._has_symbol('is_config_server_client_connected'):
+            raise RuntimeError("is_config_server_client_connected symbol not available (requires EasyTier >= v2.7.0)")
+        try:
+            with self._lock:
+                return self._lib.is_config_server_client_connected() != 0
+        except Exception as e:
+            logger.exception(f"is_config_server_client_connected exception: {e}")
+            return False
+
+    # ─────────────────── ffi 接口 结束 ─────────────────────────────
 
     def get_version(self) -> str:
         ffi_version: str = app_settings.get('ffi_version')
@@ -348,7 +571,6 @@ class FfiAdapter(IEasyTierAdapter):
         ))
         return peers
 
-
     def change_log_level(self, log_level: str, **kwargs) -> None:
         """
         FFI 模式不支持改变日志级别
@@ -372,23 +594,6 @@ class FfiAdapter(IEasyTierAdapter):
             'appending': False
         }
 
-    def set_tun_fd(self, instance_name: str, fd: int) -> int:
-        logger.info(f"set_tun_fd {instance_name} {fd}")
-        if not self._has_symbol('set_tun_fd'):
-            raise RuntimeError("set_tun_fd symbol not available")
-        try:
-            with self._lock:
-                name_bytes = instance_name.encode('utf-8')
-                c_name = ctypes.c_char_p(name_bytes)
-                ret = self._lib.set_tun_fd(c_name, fd)
-                if ret != 0:
-                    raise RuntimeError(f"set_tun_fd failed: {self._get_last_error()}")
-                return 0
-        except RuntimeError as e:
-            logger.exception(f"set_tun_fd runtime error: {e}")
-            raise
-        except Exception as e:
-            raise RuntimeError(f"set_tun_fd failed: {e}") from e
 
     def _get_route_info_dict(self, instance_name: str) -> Dict[str, Any]:
         info = {
@@ -436,9 +641,10 @@ class FfiAdapter(IEasyTierAdapter):
         info['total_download'] = self._humanize_bytes(total_download, for_short=True)
         return info
 
-    # ── 监控线程 ──────────────────────────────────────────────
-
     def _start_monitor(self, instance_name: str):
+        """
+        监控线程
+        """
         if not run_configs.IS_ANDROID:
             logger.info(f"Monitor not started for {instance_name} on Android platform")
             return
@@ -578,83 +784,6 @@ class FfiAdapter(IEasyTierAdapter):
                 parts.append(f"{hours}h ")
             parts.append(f"{minutes}m")
             return "".join(parts)
-
-
-
-    def _parse_config(self, toml_config: str) -> int:
-        try:
-            with self._lock:
-                toml_bytes = toml_config.encode('utf-8')
-                c_config = ctypes.c_char_p(toml_bytes)
-                return self._lib.parse_config(c_config)
-        except Exception as e:
-            logger.exception(f"parse_config failed: {e}")
-            return -1
-
-    def _get_last_error(self) -> str:
-        try:
-            with self._lock:
-                error_ptr = c_char_p()
-                self._lib.get_error_msg(ctypes.byref(error_ptr))
-            raw_ptr = ctypes.cast(error_ptr, c_void_p).value
-            if raw_ptr:
-                msg = ctypes.string_at(raw_ptr).decode('utf-8', errors='replace')
-                if self._has_symbol('free_string'):
-                    self._lib.free_string(raw_ptr)
-                return msg
-            return ""
-        except Exception:
-            return ""
-
-    def _retain_instances(self, names: List[str]) -> None:
-        try:
-            with self._lock:
-                if not names:
-                    ret = self._lib.retain_network_instance(None, 0)
-                else:
-                    encoded = [n.encode('utf-8') for n in names]
-                    arr = (c_char_p * len(names))(*encoded)
-                    ret = self._lib.retain_network_instance(arr, len(names))
-                if ret != 0:
-                    raise RuntimeError(f"retain_network_instance failed: {self._get_last_error()}")
-        except Exception as e:
-            logger.exception(f"_retain_instances failed: {e}")
-            raise
-
-    def _list_all_instance_names(self) -> List[str]:
-        info = self._collect_via_raw_ffi()
-        return list(info.keys())
-
-    def _collect_via_raw_ffi(self, max_len: int = _MAX_INSTANCE_COUNT) -> Dict[str, Any]:
-        now = time.time()
-        if self._enable_cache and self._ffi_cache and (now - self._ffi_cache_time) < self._FFI_CACHE_TTL:
-            return self._ffi_cache
-        try:
-            with self._lock:
-                infos = (KeyValuePair * max_len)()
-                count = self._lib.collect_network_infos(infos, max_len)
-                if count < 0:
-                    return {}
-                result = {}
-                for i in range(min(count, max_len)):
-                    key_ptr = infos[i].key
-                    val_ptr = infos[i].value
-                    key = ctypes.string_at(key_ptr).decode('utf-8') if key_ptr else ""
-                    value = ctypes.string_at(val_ptr).decode('utf-8') if val_ptr else ""
-                    # logger.debug(f"collect_network_infos: key={key}, value={value}")
-                    result[key] = json.loads(value) if value else {}
-                    if self._has_symbol('free_string'):
-                        if key_ptr:
-                            self._lib.free_string(key_ptr)
-                        if val_ptr:
-                            self._lib.free_string(val_ptr)
-                if self._enable_cache:
-                    self._ffi_cache = result
-                    self._ffi_cache_time = now
-                return result
-        except Exception as e:
-            logger.exception(f"_collect_via_raw_ffi failed: {e}")
-        return {}
 
     def _format_tunnel_type(self, tunnel: dict) -> str:
         tunnel_type = tunnel.get('tunnel_type', '')
