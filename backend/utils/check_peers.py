@@ -227,7 +227,7 @@ def check_peers_available_use_peer(bin_path, rpc_port, peer_list:list):
                 uri = conns[0].get('tunnel', {}).get('remote_addr', {}).get('url')
                 result['uri'] = uri
                 # result['resolved_uri'] = conns[0].get('tunnel', {}).get('resolved_remote_addr', {}).get('url')
-                latency_us = conns[0].get('stats', {}).get('latency_us')
+                latency_us = float(conns[0].get('stats', {}).get('latency_us', 0))
                 result['latency'] = max(1, latency_us // 1000)
                 # 此节点数据为毫秒，当大于500ms, 只能取到500
                 # result['latency_ms'] = item.get('route', {}).get('path_latency', [])

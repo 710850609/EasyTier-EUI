@@ -225,8 +225,8 @@ class CoreForegroundAdapter(IEasyTierAdapter):
             if not stats:
                 continue
             if default_id_str and conn.get('conn_id', '') == default_id_str:
-                return f'{stats.get("latency_us", 0) / 1000.0:.2f}'
-            lat = stats.get('latency_us', 0)
+                return f'{float(stats.get("latency_us", 0)) / 1000.0:.2f}'
+            lat = float(stats.get('latency_us', 0))
             if best is None or lat < best:
                 best = lat
         if best is not None:
@@ -239,7 +239,7 @@ class CoreForegroundAdapter(IEasyTierAdapter):
         for conn in peer_info.get('conns', []):
             stats = conn.get('stats')
             if stats:
-                total += stats.get('rx_bytes', 0)
+                total += float(stats.get('rx_bytes', 0))
         return CoreForegroundAdapter._format_size(total) if total else '-'
 
     @staticmethod
@@ -248,7 +248,7 @@ class CoreForegroundAdapter(IEasyTierAdapter):
         for conn in peer_info.get('conns', []):
             stats = conn.get('stats')
             if stats:
-                total += stats.get('tx_bytes', 0)
+                total += float(stats.get('tx_bytes', 0))
         return CoreForegroundAdapter._format_size(total) if total else '-'
 
     @staticmethod

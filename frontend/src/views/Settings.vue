@@ -542,7 +542,7 @@ const cancelPress = () => {
   clearTimeout(dev_toggle_timer.value);
 };
 
-const hasNewVersion = computed(() => etVersion.value.version && etVersion.value.latest_version && etVersion.value.version !== etVersion.value.latest_version)
+const hasNewVersion = computed(() => etVersion.value.version && etVersion.value.latest_version && etVersion.value.version < etVersion.value.latest_version)
 // 计算当前主题模式（从 theme.js 获取）
 const currentThemeMode = computed(() => themeMode.value)
 
