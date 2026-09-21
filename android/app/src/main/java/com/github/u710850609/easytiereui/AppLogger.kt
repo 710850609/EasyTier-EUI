@@ -22,14 +22,14 @@ object AppLogger {
     var logDir: File? = null
     var minLevel: Level = Level.WARN
 
+    private const val LOG_FILE_NAME = "app_kt.log"
     private const val LOG_FILE_PREFIX = "app_kt_"
     // 每个文件最大大小，5MB
     private const val MAX_FILE_SIZE = 5L * 1024 * 1024
     // 最大文件数量，50个
     private const val MAX_FILE_COUNT = 50
-    // 最大保留天数，7天
-    private const val MAX_DAYS = 7
-    private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+    // 最大保留天数，5天
+    private const val MAX_DAYS = 5
     private val tsFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault())
 
     @Volatile private var currentLogFile: File? = null
@@ -64,7 +64,7 @@ object AppLogger {
             synchronized(lock) {
                 val file = ensureLogFile()
                 if (file.length() >= MAX_FILE_SIZE) {
-                    currentLogFile = null
+                    rotateLogs()
                 }
                 val target = ensureLogFile()
                 target.appendText(line + "\r\n")
@@ -74,32 +74,60 @@ object AppLogger {
 
     private fun ensureLogFile(): File {
         val dir = logDir ?: return File("/dev/null")
-        val today = dateFormat.format(Date())
 
         currentLogFile?.let { f ->
-            val name = f.nameWithoutExtension
-            if (name.startsWith("${LOG_FILE_PREFIX}$today")) return f
+            if (f.name == LOG_FILE_NAME) return f
         }
 
         dir.mkdirs()
-
-        var index = 0
-        var file: File
-        do {
-            val suffix = if (index == 0) "" else "_$index"
-            file = File(dir, "${LOG_FILE_PREFIX}$today$suffix.log")
-            index++
-        } while (file.exists() && file.length() >= MAX_FILE_SIZE)
-
+        val file = File(dir, LOG_FILE_NAME)
         currentLogFile = file
         cleanOldLogs()
         return file
     }
 
+    private fun rotateLogs() {
+        val dir = logDir ?: return
+        dir.mkdirs()
+
+        // 找到当前最大的归档索引
+        var maxIndex = 0
+        dir.listFiles { f ->
+            f.name.startsWith(LOG_FILE_PREFIX) && f.name.endsWith(".log") && f.name != LOG_FILE_NAME
+        }?.forEach { f ->
+            val name = f.nameWithoutExtension
+            if (name.startsWith(LOG_FILE_PREFIX)) {
+                val idxStr = name.removePrefix(LOG_FILE_PREFIX)
+                val idx = idxStr.toIntOrNull()
+                if (idx != null && idx > maxIndex) {
+                    maxIndex = idx
+                }
+            }
+        }
+
+        // 从最大索引开始向后移动：3→4, 2→3, 1→2
+        for (i in maxIndex downTo 1) {
+            val src = File(dir, "${LOG_FILE_PREFIX}${i}.log")
+            val dst = File(dir, "${LOG_FILE_PREFIX}${i + 1}.log")
+            if (src.exists()) {
+                src.renameTo(dst)
+            }
+        }
+
+        // 当前文件移到 app_kt_1.log
+        val current = File(dir, LOG_FILE_NAME)
+        if (current.exists()) {
+            current.renameTo(File(dir, "${LOG_FILE_PREFIX}1.log"))
+        }
+
+        currentLogFile = null
+    }
+
     private fun cleanOldLogs() {
         val dir = logDir ?: return
-        val logFiles = dir.listFiles { f -> f.name.startsWith(LOG_FILE_PREFIX) && f.name.endsWith(".log") }
-            ?: return
+        val logFiles = dir.listFiles { f ->
+            f.name.startsWith(LOG_FILE_PREFIX) && f.name.endsWith(".log")
+        } ?: return
 
         val cutoff = System.currentTimeMillis() - MAX_DAYS * 24L * 3600 * 1000
 

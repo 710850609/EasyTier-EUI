@@ -100,6 +100,7 @@ def _delete_dir(delete_path: Path):
 def delete_log(params=None, *args, **kwargs):
     log_path = Path(run_configs.log_dir())
     total_bytes = 0
+    keep_names = {'app.log', 'app_kt.log', 'easytier_py.log', 'easytier_py_crash.log', 'easytier_py_stderr.log'}
     if log_path.exists():
         for entry in log_path.iterdir():
             if entry.is_dir():
@@ -110,12 +111,12 @@ def delete_log(params=None, *args, **kwargs):
             elif entry.is_file():
                 try:
                     total_bytes += entry.stat().st_size
-                    if entry.suffix == '.log':
+                    if entry.name in keep_names:
                         entry.write_text('', encoding='utf-8')
                     else:
                         entry.unlink()
                 except (OSError, PermissionError):
-                    if entry.suffix == '.log':
+                    if entry.name in keep_names:
                         try:
                             entry.write_text('', encoding='utf-8')
                         except (OSError, PermissionError):
