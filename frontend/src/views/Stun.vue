@@ -13,6 +13,7 @@
           <li>{{ $t('stun.tipItem1') }}</li>
           <li>{{ $t('stun.tipItem2') }}</li>
           <li>{{ $t('stun.tipItem3') }}</li>
+          <li>{{ $t('stun.tipItem4') }}</li>
         </ul>
       </div>
     </var-popup>
@@ -89,9 +90,8 @@
       </div>
 
       <div class="profile-list" v-else>
+        <template v-for="(p, idx) in profiles" :key="p.id">
         <div
-          v-for="(p, idx) in profiles"
-          :key="p.id"
           class="profile-row"
           :class="{ 'profile-row--active': !isDraft && idx === activeProfileIndex }"
           @click="switchProfile(idx)"
@@ -104,13 +104,13 @@
             <div class="profile-row-info">
               <div class="profile-row-line">
                 <span class="profile-row-name">{{ p.name }}</span>
-                <var-chip size="mini" plain type="warning">
-                  stun | {{ p.stunConfig.protocol }}{{ p.stunConfig.bindPort ? ":" + p.stunConfig.bindPort : "" }}
-                </var-chip>
                 <var-chip size="mini" plain :type="getProtocolChipType(p.stunConfig.listenProtocol)">
                   <template v-if="p.stunConfig.listenProtocol">
                     {{ p.stunConfig.listenProtocol }}:{{ p.stunConfig.listenPort }}
                   </template>
+                </var-chip>
+                <var-chip size="mini" plain type="warning">
+                  stun | {{ p.stunConfig.protocol }}{{ p.stunConfig.bindPort ? ":" + p.stunConfig.bindPort : "" }}
                 </var-chip>
               </div>
               <div class="profile-row-line" v-if="p.running && p.mapping">
@@ -151,6 +151,8 @@
             </var-button>
           </div>
         </div>
+        <var-divider v-if="idx < profiles.length - 1" />
+        </template>
       </div>
     </var-paper>
 

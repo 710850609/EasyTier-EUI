@@ -9,10 +9,11 @@ from pathlib import Path
 
 import tomlkit
 
+from et_adapters.facade import get_facade
 from http_dispatcher.dispatcher import HttpException
 from locales import get_message
 from models.peers import PeersCheckResult
-from utils import check_peers as check_util, run_configs, app_settings
+from utils import run_configs, app_settings
 from utils import github_util
 
 logger = logging.getLogger(__name__)
@@ -27,13 +28,9 @@ def check_peers(params: dict, *args, **kwargs):
     peer_list = public_peers(data = {'profile': profile, 'refresh': 'false'})
     if len(peer_list) == 0:
         peer_list = public_peers(data = {'profile': profile, 'refresh': 'true'})
-    if run_configs.IS_ANDROID:
-        # ffi 模式暂不支持检查节点
-        return peer_list
     # 提取 URI 列表
     peer_uris = [peer['uri'] for peer in peer_list]
-    core_dir = run_configs.core_dir()
-    result = check_util.check_peers(core_dir, peer_uris, max_wait_second=6)
+    result = get_facade().check_peers(peer_uris, max_wait_second=8)
     success_peers = result.get('success', {})
     for peer in peer_list:
         uri = peer.get('uri')

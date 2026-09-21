@@ -511,6 +511,12 @@ class FfiAdapter(IEasyTierAdapter):
             stun = route.get('stun_info') or {}
             cost = route.get('cost', 0)
 
+            peer_uri = None
+            if route.get('feature_flag', {}).get('is_public_server', False):
+                conns = peer.get('conns', [])
+                if len(conns) > 0:
+                    peer_uri = conns[0].get('tunnel', {}).get('remote_addr', {}).get('url', {})
+
             if cost == 1:
                 lat_ms = self._get_latency_ms(peer)
             else:
@@ -563,6 +569,7 @@ class FfiAdapter(IEasyTierAdapter):
                 'relay_path': relay,
                 'proxy_cidrs': list(route.get('proxy_cidrs') or []),
                 'proxy_info': [],
+                'peer_uri': peer_uri,
             })
 
         peers.sort(key=lambda x: (
@@ -570,6 +577,83 @@ class FfiAdapter(IEasyTierAdapter):
             x['ipv4'] if x['ipv4'] else '255.255.255.255',
         ))
         return peers
+
+    def check_peers(self, peer_uris: list[str], max_wait_second: int = 6) -> dict:
+        """通过 FFI 启动临时网络实例来检测公开节点连通性"""
+        import random
+        import string as _string
+
+        random_name = '_peer_check_' + ''.join(
+            random.choices(_string.ascii_letters + _string.digits, k=8)
+        )
+
+        peers_toml = '\n'.join([f'[[peer]]\nuri = "{uri}"' for uri in peer_uris])
+        toml_config = (
+            f'instance_name = "{random_name}"\n'
+            f'network_name = "{random_name}"\n'
+            f'network_secret = "{random_name}"\n'
+            f'no_listener = true\n'
+            f'private_mode = true\n'
+            f'{peers_toml}\n'
+        )
+
+        ret = self._parse_config(toml_config)
+        if ret != 0:
+            logger.warning(f"check_peers: parse_config failed for temp instance {random_name}")
+            return {'success': {}, 'fail': list(peer_uris)}
+
+        try:
+            with self._lock:
+                toml_bytes = toml_config.encode('utf-8')
+                c_config = ctypes.c_char_p(toml_bytes)
+                ret = self._lib.run_network_instance(c_config)
+                if ret != 0:
+                    logger.warning(f"check_peers: run_network_instance failed for temp instance {random_name}")
+                    return {'success': {}, 'fail': list(peer_uris)}
+
+            self._invalidate_ffi_cache()
+
+            success = {}
+            fail = list(peer_uris)
+            start_time = time.time()
+
+            while (time.time() - start_time) < max_wait_second:
+                time.sleep(3)
+                raw = self._collect_via_raw_ffi()
+                inst_info = raw.get(random_name, {})
+                peer_route_pairs = inst_info.get('peer_route_pairs', [])
+
+                for pair in peer_route_pairs:
+                    route = pair.get('route') or {}
+                    peer = pair.get('peer') or {}
+                    conns = peer.get('conns', [])
+                    if not conns:
+                        continue
+                    tunnel = conns[0].get('tunnel') or {}
+                    remote_addr = tunnel.get('remote_addr') or {}
+                    uri = remote_addr.get('url', '')
+                    if uri in fail:
+                        fail.remove(uri)
+                        stats = conns[0].get('stats') or {}
+                        latency_us = float(stats.get('latency_us', 0))
+                        success[uri] = {
+                            'latency': max(1, latency_us // 1000),
+                            'hostname': route.get('hostname', ''),
+                            'relay': route.get('feature_flag', {}).get(
+                                'avoid_relay_data', True
+                            ) == False,
+                        }
+
+                if len(fail) == 0:
+                    break
+
+            return {'success': success, 'fail': fail}
+
+        finally:
+            all_names = self._list_all_instance_names()
+            keep = [n for n in all_names if n != random_name]
+            self._retain_instances(keep)
+            self._invalidate_ffi_cache()
 
     def change_log_level(self, log_level: str, **kwargs) -> None:
         """

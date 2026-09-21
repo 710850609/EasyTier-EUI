@@ -36,3 +36,12 @@ class IEasyTierAdapter(ABC):
         """Get logs.
         Returns {'lines': str, 'offset': int, 'appending': bool}
         """
+
+    @abstractmethod
+    def check_peers(self, peer_uris: list[str], max_wait_second: int = 6) -> dict:
+        """Check if public peer URIs are reachable (standalone check, does not affect running instances).
+
+        :param peer_uris: list of peer URIs to check, e.g. ['tcp://1.2.3.4:11010', ...]
+        :param max_wait_second: maximum wait time in seconds
+        :return: {'success': {uri: {relay, latency, hostname, ...}}, 'fail': [uri, ...]}
+        """

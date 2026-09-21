@@ -968,7 +968,6 @@
     <var-popup position="top" v-model:show="showPublicPeerTip">
       <div class="help-content">
         <p class="help-paragraph"><span class="help-bold">{{ $t('config.peerHelp.publicPeer') }}</span>：{{ $t('config.peerHelp.publicPeerDesc') }}</p>
-        <p class="help-paragraph"><span class="help-bold">{{ $t('config.peerHelp.dynamicPeer') }}</span>：{{ $t('config.peerHelp.dynamicPeerDesc') }}</p>
         <p class="help-paragraph"><span class="help-bold">{{ $t('config.peerHelp.peerRefresh') }}</span>：{{ $t('config.peerHelp.peerRefreshDesc') }}</p>
         <p class="help-paragraph"><span class="help-bold">{{ $t('config.peerHelp.peerCheck') }}</span>：{{ $t('config.peerHelp.peerCheckDesc') }}</p>
         <div style="margin-top: 20px;">

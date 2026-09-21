@@ -67,9 +67,9 @@ def strip_ansi(text):
 
 class ProcessManager:
 
-    def __init__(self, pid_file: str) -> None:
-        self.pid_file = Path(pid_file)
-        pass
+    def __init__(self, pid_file: str = None) -> None:
+        self.pid_file = Path(pid_file) if pid_file else None
+        self._process = None
 
 
     def __check_process(self, pid: int) -> bool:
@@ -86,169 +86,178 @@ class ProcessManager:
         检查应用状态
         返回: True=运行中, False=未运行
         """
+        if self._process is not None:
+            return self._process.poll() is None
+        if self.pid_file is None:
+            return False
         if self.pid_file.exists():
             try:
                 pid = int(self.pid_file.read_text().strip().split()[0])
                 if self.__check_process(pid):
                     return True
                 else:
-                    # 进程不在运行但 pidfile 存在 - 清理
                     self.pid_file.unlink(missing_ok=True)
             except (ValueError, IndexError):
                 self.pid_file.unlink(missing_ok=True)
-        
         return False
 
 
-    def start(self, start_cmd:list[str]) -> int:
+    def start(self, start_cmd:list[str], wait_seconds: float = 2, raise_on_failure: bool = True) -> None:
         """
-        启动进程
+        启动进程，失败时根据 raise_on_failure 决定抛异常或静默返回
+        :param start_cmd: 启动命令列表
+        :param wait_seconds: 启动后等待秒数
+        :param raise_on_failure: 启动失败时是否抛出 RuntimeError
         """
         if self.status():
             logging.info("Process already running")
-            return 0
+            return
         
         logging.info("Starting process ...")
-        # 确保目录存在
-        self.pid_file.parent.mkdir(parents=True, exist_ok=True)
+        if self.pid_file is not None:
+            self.pid_file.parent.mkdir(parents=True, exist_ok=True)
         
-        # 启动进程: bash -c "${CMD}" >> /dev/null 2>&1 & (Linux/macOS)
-        # 使用 Popen 实现后台运行，不依赖当前 Python 进程
         try:
             # 根据平台选择启动方式
             if sys.platform == 'win32':
-                # 在命令中添加 --no-color
-                # if '--no-color' not in self.start_cmd:
-                #     self.start_cmd += ' --no-color'
-                # Windows: 直接使用命令，创建新进程组
                 startupinfo = subprocess.STARTUPINFO()
                 startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-                startupinfo.wShowWindow = subprocess.SW_HIDE  # <-- 关键：强制隐藏窗口
-                process = subprocess.Popen(
+                startupinfo.wShowWindow = subprocess.SW_HIDE
+                self._process = subprocess.Popen(
                     start_cmd,
                     stdout=subprocess.DEVNULL,
-                    stderr=subprocess.PIPE,
+                    stderr=subprocess.PIPE if raise_on_failure else subprocess.DEVNULL,
                     stdin=subprocess.DEVNULL,
                     encoding='utf-8',
                     errors='replace',
-                    # creationflags=subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.CREATE_NO_WINDOW | subprocess.DETACHED_PROCESS,
                     creationflags=subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.CREATE_NO_WINDOW,
                     startupinfo=startupinfo,
                 )
             else:
-                # Linux/macOS: 使用 bash -c
-                # 改用 sh 命令 兼容 alpine Linux 无 bash 环境
                 bash_cmd = ["sh", "-c", "exec " + " ".join(shlex.quote(x) for x in start_cmd)]
-                process = subprocess.Popen(
+                self._process = subprocess.Popen(
                     bash_cmd,
                     stdout=subprocess.DEVNULL,
-                    stderr=subprocess.PIPE,
+                    stderr=subprocess.PIPE if raise_on_failure else subprocess.DEVNULL,
                     stdin=subprocess.DEVNULL,
                     encoding='utf-8',
                     errors='replace',
-                    start_new_session=True,  # 等效于 & 后台运行，脱离终端
+                    start_new_session=True,
                 )
 
-            # 等待一小段时间检查进程是否立即失败
-            import time
-            time.sleep(2)
+            time.sleep(wait_seconds)
 
-            # 检查进程是否还在运行
-            if process.poll() is not None:
-                # 进程已退出，读取错误信息
-                _, stderr = process.communicate()
-                error_msg = stderr
-                if isinstance(error_msg, bytes):
-                    error_msg = stderr.decode('utf-8', errors='ignore').srip() if stderr else "未知错误"
+            if self._process.poll() is not None:
+                process = self._process
+                self._process = None
+                if raise_on_failure:
+                    _, stderr_data = process.communicate()
+                    error_msg = stderr_data
+                    if isinstance(error_msg, bytes):
+                        error_msg = stderr_data.decode('utf-8', errors='ignore').strip() if stderr_data else "未知错误"
+                    error_msg = strip_ansi(error_msg)
+                    raise RuntimeError(f"{error_msg}")
+                return
 
-                error_msg = strip_ansi(error_msg)
-                raise RuntimeError(f"{error_msg}")
+            pid = self._process.pid
 
-            pid = process.pid
-
-            # 写入 PID 文件（等效于 printf "%s" "$!" > ${self.pid_file}）
-            self.pid_file.write_text(str(pid))
+            if self.pid_file is not None:
+                self.pid_file.write_text(str(pid))
 
             logging.info(f"Started with PID: {pid}")
-            return 0
 
+        except RuntimeError as e:
+            raise e
         except Exception as e:
-            raise RuntimeError(f"Failed to start: {e}") from e
+            self._process = None
+            if raise_on_failure:
+                raise RuntimeError(f"Failed to start: {e}") from e
+            raise
 
 
     def stop(self, timeout: int = 5) -> int:
         """
-        停止进程
+        停止进程：
+        1. 优先从 Popen 句柄获取 PID
+        2. 回退到 PID 文件
+        3. 执行 _kill_pid（含 pid_file 清理）
         """
         logging.info("Stopping process ...")
-        
-        # 检查 PID 文件是否可读
-        if not self.pid_file.exists() or not os.access(self.pid_file, os.R_OK):
-            logging.info("PID file not found or not readable")
+
+        pid = None
+
+        # 1. 尝试从 Popen 句柄获取 PID
+        if self._process is not None:
+            if self._process.poll() is not None:
+                self._process = None
+                return 0
+            pid = self._process.pid
+            logging.info(f"Stopping by handle, pid={pid}")
+
+        # 2. 回退到 PID 文件
+        if pid is None and self.pid_file is not None:
+            try:
+                if self.pid_file.exists() and os.access(self.pid_file, os.R_OK):
+                    pid = int(self.pid_file.read_text().strip().split()[0])
+                    logging.info(f"pid={pid}")
+            except (ValueError, IndexError) as e:
+                logging.info(f"Invalid PID file: {e}")
+                self.pid_file.unlink(missing_ok=True)
+                return 0
+
+        if pid is None:
+            logging.info("No PID found")
             return 0
-        
-        # 读取 PID（等效于 head -n 1 "${self.pid_file}" | tr -d '[:space:]'）
-        try:
-            pid = int(self.pid_file.read_text().strip().split()[0])
-        except (ValueError, IndexError) as e:
-            logging.info(f"Invalid PID file: {e}")
-            self.pid_file.unlink(missing_ok=True)
-            return 0
-        
-        logging.info(f"pid={pid}")
-        
-        # 检查进程是否存在
-        if not self.__check_process(pid):
-            # 进程不存在，删除 pidfile
-            self.pid_file.unlink(missing_ok=True)
-            logging.info("remove pid file 1")
-            return 0
-        
-        # 发送终止信号
+
+        # 3. 执行杀逻辑（_kill_pid 内统一清理 pid_file）
+        self._kill_pid(pid, timeout)
+        if self._process is not None:
+            self._process.wait(timeout=2)
+            self._process = None
+        return 0
+
+    def _kill_pid(self, pid: int, timeout: int = 5) -> int:
+        """通过 PID 停止进程（保留原有逻辑）"""
         logging.info(f"send TERM signal to PID:{pid}...")
         try:
             if sys.platform == 'win32':
-                # Windows: 使用 taskkill /T 终止整个进程树
                 subprocess.run(['taskkill', '/T', '/PID', str(pid)], capture_output=True,
                                creationflags=subprocess.CREATE_NO_WINDOW)
             else:
-                # Linux/macOS: 使用 SIGTERM 发送到进程组
                 try:
                     os.killpg(os.getpgid(pid), signal.SIGTERM)
                 except (ProcessLookupError, OSError):
                     os.kill(pid, signal.SIGTERM)
         except OSError as e:
             logging.info(f"Failed to send TERM: {e}")
+            if self.pid_file is not None:
+                self.pid_file.unlink(missing_ok=True)
             return 1
-        
-        # 等待进程退出（最多 10 秒）
+
         count = 0
         while self.__check_process(pid) and count < timeout:
             time.sleep(1)
             count += 1
             logging.info(f"waiting process terminal... ({count}s/{timeout}s)")
-        
-        # 如果还在，强制终止
+
         if self.__check_process(pid):
             logging.info(f"send KILL signal to PID:{pid}...")
             try:
                 if sys.platform == 'win32':
-                    # Windows: 使用 taskkill /F /T 强制终止整个进程树
                     subprocess.run(['taskkill', '/F', '/T', '/PID', str(pid)], capture_output=True,
-                               creationflags=subprocess.CREATE_NO_WINDOW)
+                                   creationflags=subprocess.CREATE_NO_WINDOW)
                 else:
-                    # Linux/macOS: 使用 SIGKILL 发送到进程组
                     try:
                         os.killpg(os.getpgid(pid), signal.SIGKILL)
                     except (ProcessLookupError, OSError):
                         os.kill(pid, signal.SIGKILL)
             except OSError as e:
                 logging.info(f"Failed to send KILL: {e}")
-            
+
             time.sleep(1)
             self.pid_file.unlink(missing_ok=True)
         else:
             logging.info("process killed... ")
             self.pid_file.unlink(missing_ok=True)
-        
+
         return 0

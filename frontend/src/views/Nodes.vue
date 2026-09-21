@@ -186,7 +186,10 @@
                   </span>
                 </template>
                 <template v-else>
-                  <var-tooltip v-if="['hostname', 'tunnel_proto'].includes(col.key)" :content="parseNode(node, col.key)">
+                  <var-tooltip v-if="'hostname' == col.key" :content="parseNode(node, col.key) + (node['peer_uri'] ? '\n' + node['peer_uri'] : '')">
+                    <span class="cell-text" @click="handleClickCell(node, col.key)">{{ parseNode(node, col.key) }}</span>
+                  </var-tooltip>
+                  <var-tooltip v-else-if="['tunnel_proto'].includes(col.key)" :content="parseNode(node, col.key)">
                     <span class="cell-text" @click="handleClickCell(node, col.key)">{{ parseNode(node, col.key) }}</span>
                   </var-tooltip>
                   <span v-else class="cell-text" @click="handleClickCell(node, col.key)">{{ parseNode(node, col.key) }}</span>
@@ -2432,4 +2435,11 @@ html.dark .traffic-item {
   font-size: 14px;
 }
 
+</style>
+
+<style>
+/* Nodes.vue: 使 tooltip 内容支持 \n 换行，如 hostname + Peer URI */
+.var-tooltip__content-container {
+  white-space: pre-line;
+}
 </style>

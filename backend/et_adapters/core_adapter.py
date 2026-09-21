@@ -54,6 +54,8 @@ class CoreAdapter(IEasyTierAdapter):
     def get_peers(self, instance_name: str, relay_path: bool = False, proxy_info: bool = True) -> list[dict]:
         return self._foreground.get_peers(instance_name, relay_path, proxy_info)
 
+    def check_peers(self, peer_uris: list[str], max_wait_second: int = 6) -> dict:
+        return self._foreground.check_peers(peer_uris, max_wait_second)
 
     def change_log_level(self, log_level: str, **kwargs) -> None:
         infos = et_run_info.get_all()

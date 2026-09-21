@@ -8,7 +8,7 @@ from typing import Set, List
 
 from http_dispatcher.dispatcher import HttpException
 from locales import get_message
-from utils import run_configs, et_run_info, check_peers, common_util
+from utils import run_configs, et_run_info, common_util
 from .core_foreground_adapter import CoreForegroundAdapter
 
 logger = logging.getLogger(__name__)
@@ -63,7 +63,7 @@ class CoreBackgroundAdapter(CoreForegroundAdapter):
                 logging.warning(f"跳过配置不存在: {profile}")
         desc = get_message('service.start_config_desc') + f":{','.join(profiles)}"
         display_name = "EasyTier-EUI"
-        rpc_port = check_peers.get_available_port(start_port=16999)
+        rpc_port = CoreForegroundAdapter.get_available_port(start_port=16999)
         rpc_portal = f"127.0.0.1:{rpc_port}"
         cmd = (f"{self._cli_path} service install "
                f' --display-name {display_name}'
