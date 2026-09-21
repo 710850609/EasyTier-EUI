@@ -209,6 +209,7 @@ class FfiAdapter(IEasyTierAdapter):
                 if self._enable_cache:
                     self._ffi_cache = result
                     self._ffi_cache_time = now
+                logger.debug(f"_collect_via_raw_ffi: {result}")
                 return result
         except Exception as e:
             logger.exception(f"_collect_via_raw_ffi failed: {e}")
