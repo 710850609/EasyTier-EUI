@@ -14,6 +14,7 @@ from typing import Dict, Any, List, Set, Optional
 import tomlkit
 
 from et_adapters.interface import IEasyTierAdapter
+from . import et_util
 from locales import get_last_lang
 from utils import run_configs, app_settings
 
@@ -470,7 +471,7 @@ class FfiAdapter(IEasyTierAdapter):
         if my_node_info:
             ipv4_addr = my_node_info.get('virtual_ipv4') or {}
             addr = (ipv4_addr.get('address') or {}).get('addr', 0)
-            ipv4 = self._addr_to_ipv4(addr)
+            ipv4 = et_util.addr_to_ipv4(addr)
             network_len = ipv4_addr.get('network_length') or ''
             cidr = f"{ipv4}/{network_len}" if ipv4 else ''
             stun = my_node_info.get('stun_info', {})
@@ -485,7 +486,7 @@ class FfiAdapter(IEasyTierAdapter):
                 'loss_rate': '-',
                 'rx_bytes': '-',
                 'tx_bytes': '-',
-                'nat_type': self._format_nat_type(stun.get('udp_nat_type', 0)),
+                'nat_type': et_util.format_nat_type(stun.get('udp_nat_type', 0)),
                 'id': str(my_node_info.get('peer_id', '')),
             })
 
@@ -506,7 +507,7 @@ class FfiAdapter(IEasyTierAdapter):
                 continue
             seen.add(pid)
             ipv4_addr = route.get('ipv4_addr') or {}
-            ipv4 = self._addr_to_ipv4(ipv4_addr.get('address', {}).get('addr', 0))
+            ipv4 = et_util.addr_to_ipv4(ipv4_addr.get('address', {}).get('addr', 0))
             cidr = f"{ipv4}/{ipv4_addr.get('network_length', '')}" if ipv4 else ''
             stun = route.get('stun_info') or {}
             cost = route.get('cost', 0)
@@ -518,7 +519,7 @@ class FfiAdapter(IEasyTierAdapter):
                     peer_uri = conns[0].get('tunnel', {}).get('remote_addr', {}).get('url', {})
 
             if cost == 1:
-                lat_ms = self._get_latency_ms(peer)
+                lat_ms = et_util.get_latency_ms(peer)
             else:
                 lat_first = route.get('path_latency_latency_first')
                 lat_ms = f'{float(lat_first):.2f}' if lat_first is not None else '-'
@@ -540,11 +541,11 @@ class FfiAdapter(IEasyTierAdapter):
                     relay.append({
                         'peer_id': str(cur_route.get('peer_id', '')),
                         'hostname': cur_route.get('hostname', ''),
-                        'ipv4': self._addr_to_ipv4(
+                        'ipv4': et_util.addr_to_ipv4(
                             cur_ipv4_inet.get('address', {}).get('addr', 0) if cur_ipv4_inet else 0
                         ),
-                        'remote_addrs': self._get_remote_addrs(cur_peer_info),
-                        'lat_ms': self._get_latency_ms(cur_peer_info)
+                        'remote_addrs': et_util.get_remote_addrs(cur_peer_info),
+                        'lat_ms': et_util.get_latency_ms(cur_peer_info)
                         if is_first_hop else None,
                     })
                     if next_hop == cur_pid or next_hop is None:
@@ -558,13 +559,13 @@ class FfiAdapter(IEasyTierAdapter):
                 'cidr': cidr,
                 'hostname': route.get('hostname') or '',
                 'version': route.get('version') or '',
-                'cost': self._format_cost(cost),
-                'tunnel_proto': self._get_conn_protos(peer) if has_peer else '',
+                'cost': et_util.format_cost(cost),
+                'tunnel_proto': et_util.get_conn_protos(peer) if has_peer else '',
                 'lat_ms': lat_ms,
-                'loss_rate': self._get_loss_rate(peer) if has_peer else '0.0%',
-                'rx_bytes': self._get_rx_bytes(peer) if has_peer else '0 B',
-                'tx_bytes': self._get_tx_bytes(peer) if has_peer else '0 B',
-                'nat_type': self._format_nat_type(stun.get('udp_nat_type', 0)),
+                'loss_rate': et_util.get_loss_rate(peer) if has_peer else '0.0%',
+                'rx_bytes': et_util.get_rx_bytes(peer) if has_peer else '0 B',
+                'tx_bytes': et_util.get_tx_bytes(peer) if has_peer else '0 B',
+                'nat_type': et_util.format_nat_type(stun.get('udp_nat_type', 0)),
                 'id': str(route.get('peer_id', '')),
                 'relay_path': relay,
                 'proxy_cidrs': list(route.get('proxy_cidrs') or []),
@@ -698,7 +699,7 @@ class FfiAdapter(IEasyTierAdapter):
         my_node_info = instance_infos.get('my_node_info', {})
         virtual_ipv4 = my_node_info.get('virtual_ipv4') or {}
         addr = (virtual_ipv4.get('address') or {}).get('addr', 0)
-        addr_str = self._addr_to_ipv4(addr)
+        addr_str = et_util.addr_to_ipv4(addr)
         network_len = virtual_ipv4.get('network_length') or '24'
         info['virtual_ipv4'] = f"{addr_str}/{network_len}" if addr_str else ""
         routes = instance_infos.get('routes') or []
@@ -721,8 +722,8 @@ class FfiAdapter(IEasyTierAdapter):
                 stats = conn.get('stats') or {}
                 total_download += float(stats.get('rx_bytes', 0))
                 total_upload += float(stats.get('tx_bytes', 0))
-        info['total_upload'] = self._humanize_bytes(total_upload, for_short=True)
-        info['total_download'] = self._humanize_bytes(total_download, for_short=True)
+        info['total_upload'] = et_util.humanize_bytes(total_upload, for_short=True)
+        info['total_download'] = et_util.humanize_bytes(total_download, for_short=True)
         return info
 
     def _start_monitor(self, instance_name: str):
@@ -868,151 +869,3 @@ class FfiAdapter(IEasyTierAdapter):
                 parts.append(f"{hours}h ")
             parts.append(f"{minutes}m")
             return "".join(parts)
-
-    def _format_tunnel_type(self, tunnel: dict) -> str:
-        tunnel_type = tunnel.get('tunnel_type', '')
-        if not tunnel_type:
-            return ''
-        if self._is_ipv6_tunnel(tunnel_type, tunnel):
-            if tunnel_type.endswith('6'):
-                return tunnel_type
-            return tunnel_type + '6'
-        return tunnel_type
-
-    def _is_ipv6_tunnel(self, tunnel_type: str, tunnel: dict) -> bool:
-        if '://' in tunnel_type:
-            _, rest = tunnel_type.split('://', 1)
-            if rest.startswith('['):
-                return True
-        for addr_key in ('resolved_remote_addr', 'local_addr', 'remote_addr'):
-            addr = tunnel.get(addr_key, {})
-            url = addr.get('url', '') if isinstance(addr, dict) else ''
-            if url and '://[' in url:
-                return True
-        return False
-
-    def _addr_to_ipv4(self, addr: int) -> str:
-        if not addr:
-            return ""
-        return ".".join(str((addr >> (i * 8)) & 0xFF) for i in range(3, -1, -1))
-
-    def _latency_to_ms(self, latency_us: int) -> float:
-        if isinstance(latency_us, str):
-            latency_us = int(latency_us)
-        if not latency_us or latency_us <= 0:
-            return 0
-        ms = latency_us / 1000
-        return round(ms, 2)
-
-    def _format_nat_type(self, nat_type: int) -> str:
-        types = {
-            0: "Unknown",
-            1: "OpenInternet",
-            2: "NoPAT",
-            3: "FullCone",
-            4: "Restricted",
-            5: "PortRestricted",
-            6: "Symmetric",
-            7: "SymUdpFirewall",
-            8: "SymEasyInc",
-            9: "SymEasyDec",
-        }
-        if isinstance(nat_type, str):
-            try:
-                nat_type = int(nat_type)
-            except ValueError:
-                return nat_type
-        return types.get(nat_type, "Unknown")
-
-    def _format_cost(self, cost: int) -> str:
-        if cost == 0:
-            return "Local"
-        if cost == 1:
-            return "p2p"
-        return f"relay({cost})"
-
-    def _get_latency_ms(self, peer_info: dict) -> str:
-        conns = peer_info.get('conns', [])
-        default_conn_id = peer_info.get('default_conn_id', '')
-        best = None
-        for conn in conns:
-            stats = conn.get('stats')
-            if not stats:
-                continue
-            if default_conn_id and conn.get('conn_id', '') == default_conn_id:
-                return f'{float(stats.get("latency_us", 0)) / 1000.0:.2f}'
-            lat = float(stats.get('latency_us', 0))
-            if best is None or lat < best:
-                best = lat
-        if best is not None:
-            return f'{best / 1000.0:.2f}'
-        return '-'
-
-    def _get_loss_rate(self, peer_info: dict) -> str:
-        default_conn_id = peer_info.get('default_conn_id', '')
-        best = None
-        for conn in peer_info.get('conns', []):
-            lr = conn.get('loss_rate', 0.0)
-            if default_conn_id and conn.get('conn_id', '') == default_conn_id:
-                return f'{lr * 100.0:.1f}%'
-            if best is None:
-                best = lr
-        if best is not None:
-            return f'{best * 100.0:.1f}%'
-        return '-'
-
-    def _get_rx_bytes(self, peer_info: dict) -> str:
-        total = 0
-        for conn in peer_info.get('conns', []):
-            stats = conn.get('stats')
-            if stats:
-                total += float(stats.get('rx_bytes', 0))
-        return self._humanize_bytes(total) if total else '-'
-
-    def _get_tx_bytes(self, peer_info: dict) -> str:
-        total = 0
-        for conn in peer_info.get('conns', []):
-            stats = conn.get('stats')
-            if stats:
-                total += float(stats.get('tx_bytes', 0))
-        return self._humanize_bytes(total) if total else '-'
-
-    def _get_conn_protos(self, peer_info: dict) -> str:
-        protos = []
-        for conn in peer_info.get('conns', []):
-            tunnel = conn.get('tunnel')
-            if not tunnel:
-                continue
-            tt = self._format_tunnel_type(tunnel)
-            if tt and tt not in protos:
-                protos.append(tt)
-        return ','.join(protos) if protos else '-'
-
-    def _get_remote_addrs(self, peer_info: dict) -> list[str]:
-        addrs = []
-        for conn in peer_info.get('conns', []):
-            tunnel = conn.get('tunnel')
-            if not tunnel:
-                continue
-            url = tunnel.get('resolved_remote_addr', {}).get('url', '') \
-                or tunnel.get('remote_addr', {}).get('url', '')
-            if url and url not in addrs:
-                addrs.append(url)
-        return addrs
-
-    def _humanize_bytes(self, size: int, for_short: bool = False) -> str:
-        """将字节数转为可读格式。
-
-        for_short=False: 1.46 KB, 15.00 MB, 5.20 GB
-        for_short=True:  1.46 K, 15 M, 5.20 G  （单位单字母，>=10 时省略小数）
-        """
-        if isinstance(size, str):
-            size = int(size)
-        unit_names = ["B", "KB", "MB", "GB", "TB"]
-        for unit in unit_names:
-            if abs(size) < 1024:
-                if for_short and size >= 10:
-                    return f"{int(size)} {unit}"
-                return f"{size:.2f} {unit}"
-            size /= 1024
-        return f"{size:.2f} PB"

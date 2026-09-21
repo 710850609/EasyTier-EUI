@@ -96,59 +96,55 @@
           :class="{ 'profile-row--active': !isDraft && idx === activeProfileIndex }"
           @click="switchProfile(idx)"
         >
-          <div class="profile-row-left">
+          <div class="profile-row-line profile-row-line--header">
             <span
               class="status-dot"
               :style="{ background: p.running ? 'var(--color-success)' : 'var(--color-text-disabled)' }"
             />
-            <div class="profile-row-info">
-              <div class="profile-row-line">
-                <span class="profile-row-name">{{ p.name }}</span>
-                <var-chip size="mini" plain :type="getProtocolChipType(p.stunConfig.listenProtocol)">
-                  <template v-if="p.stunConfig.listenProtocol">
-                    {{ p.stunConfig.listenProtocol }}:{{ p.stunConfig.listenPort }}
-                  </template>
-                </var-chip>
-                <var-chip size="mini" plain type="warning">
-                  stun | {{ p.stunConfig.protocol }}{{ p.stunConfig.bindPort ? ":" + p.stunConfig.bindPort : "" }}
-                </var-chip>
-              </div>
-              <div class="profile-row-line" v-if="p.running && p.mapping">
-                <span class="profile-row-arrow">stun →</span>
-                <span class="profile-row-mapping" @click.stop="copyText(`${p.stunConfig.listenProtocol}://${p.mapping.public_addr}:${p.mapping.public_port}`)">
-                  {{ p.stunConfig.listenProtocol }}://{{ p.mapping.public_addr }}:{{ p.mapping.public_port }}
-                </span>
-              </div>
-              <div class="profile-row-line" v-if="p.running && p.mapping && p.mapping.dns_record">
-                <span class="profile-row-arrow">dns →</span>
-                <span class="profile-row-dns" @click.stop="copyText(p.mapping.dns_record)">
-                  {{ p.mapping.dns_record }}
-                </span>
-              </div>
-              <div class="profile-row-line" v-if="p.running && p.error_msg">
-                <span class="profile-row-error" @click.stop="copyText(p.error_msg)">{{ p.error_msg }}</span>
-              </div>
+            <span class="profile-row-name">{{ p.name }}</span>
+            <var-chip size="mini" plain :type="getProtocolChipType(p.stunConfig.listenProtocol)">
+              <template v-if="p.stunConfig.listenProtocol">
+                {{ p.stunConfig.listenProtocol }}:{{ p.stunConfig.listenPort }}
+              </template>
+            </var-chip>
+            <var-chip size="mini" plain type="warning">
+              stun | {{ p.stunConfig.protocol }}{{ p.stunConfig.bindPort ? ":" + p.stunConfig.bindPort : "" }}
+            </var-chip>
+            <div class="profile-row-actions" @click.stop>
+              <var-button
+                v-if="!p.running"
+                type="primary"
+                size="small"
+                @click="startStun(idx)"
+                auto-loading
+              >
+                {{ $t('stun.start') }}
+              </var-button>
+              <var-button
+                v-if="p.running"
+                type="danger"
+                size="small"
+                @click="stopStun(idx)"
+                auto-loading
+              >
+                {{ $t('stun.stop') }}
+              </var-button>
             </div>
           </div>
-          <div class="profile-row-right" @click.stop>
-            <var-button
-              v-if="!p.running"
-              type="primary"
-              size="small"
-              @click="startStun(idx)"
-              auto-loading
-            >
-              {{ $t('stun.start') }}
-            </var-button>
-            <var-button
-              v-if="p.running"
-              type="danger"
-              size="small"
-              @click="stopStun(idx)"
-              auto-loading
-            >
-              {{ $t('stun.stop') }}
-            </var-button>
+          <div class="profile-row-line" v-if="p.running && p.mapping">
+            <span class="profile-row-arrow">stun →</span>
+            <span class="profile-row-mapping" @click.stop="copyText(`${p.stunConfig.listenProtocol}://${p.mapping.public_addr}:${p.mapping.public_port}`)">
+              {{ p.stunConfig.listenProtocol }}://{{ p.mapping.public_addr }}:{{ p.mapping.public_port }}
+            </span>
+          </div>
+          <div class="profile-row-line" v-if="p.running && p.mapping && p.mapping.dns_record">
+            <span class="profile-row-arrow">dns →</span>
+            <span class="profile-row-dns" @click.stop="copyText(p.mapping.dns_record)">
+              {{ p.mapping.dns_record }}
+            </span>
+          </div>
+          <div class="profile-row-line" v-if="p.running && p.error_msg">
+            <span class="profile-row-error" @click.stop="copyText(p.error_msg)">{{ p.error_msg }}</span>
           </div>
         </div>
         <var-divider v-if="idx < profiles.length - 1" />
@@ -843,13 +839,12 @@ onUnmounted(() => {
 
 .profile-row {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
   padding: 10px 12px;
   border-radius: 8px;
   cursor: pointer;
   transition: background 0.15s;
-  gap: 8px;
+  gap: 6px;
 }
 
 .profile-row:hover {
@@ -862,28 +857,11 @@ onUnmounted(() => {
   padding-left: 9px;
 }
 
-.profile-row-left {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  flex: 1;
-  min-width: 0;
-}
-
 .status-dot {
   width: 10px;
   height: 10px;
   border-radius: 50%;
   flex-shrink: 0;
-  margin-top: 6px;
-}
-
-.profile-row-info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  flex: 1;
-  min-width: 0;
 }
 
 .profile-row-line {
@@ -968,10 +946,11 @@ onUnmounted(() => {
   background: rgba(244, 67, 54, 0.1);
 }
 
-.profile-row-right {
+.profile-row-actions {
   display: flex;
   align-items: center;
   gap: 4px;
+  margin-left: auto;
   flex-shrink: 0;
 }
 
