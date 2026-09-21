@@ -420,6 +420,12 @@ class FfiAdapter(IEasyTierAdapter):
                 ret = self._lib.run_network_instance(c_config)
                 if ret != 0:
                     raise RuntimeError(f"run_network_instance failed: {self._get_last_error()}")
+                time.sleep(1.5)
+                self._invalidate_ffi_cache()
+                network_info = self._collect_via_raw_ffi()
+                if network_info.get(instance_name, {}).get('error_msg'):
+                    raise RuntimeError(f"ffi start failed: {network_info.get(instance_name, {}).get('error_msg')}")
+
             self._instance_set.add(instance_name)
             # 记录是否开启了魔法DNS
             accept_dns = doc.get('flags', {}).get('accept_dns')
@@ -433,6 +439,11 @@ class FfiAdapter(IEasyTierAdapter):
             self._start_monitor(instance_name)
         except Exception as e:
             logger.exception(f"start_network failed: {e}")
+            if instance_name in self._list_all_instance_names():
+                try:
+                    self.stop_network(instance_name)
+                except Exception as cleanup_err:
+                    logger.warning(f"cleanup failed instance failed: {cleanup_err}")
             raise
 
     def stop_network(self, instance_name: str) -> None:
@@ -674,6 +685,8 @@ class FfiAdapter(IEasyTierAdapter):
                 for e_key, e_value in item.get('event', {}).items():
                     msg += f' {e_key} {str(e_value)}'
                 events.insert(0, msg)
+            if info.get('error_msg'):
+                events.insert(0, f"Error: {info.get('error_msg')}")
         return {
             'lines': '\n'.join(events) + ('\n' if events else ''),
             'offset': 0,
