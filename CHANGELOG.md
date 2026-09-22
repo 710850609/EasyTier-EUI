@@ -2,11 +2,14 @@
 - 新增：【节点】页面，主机名列悬浮显示对应服务节点的URI
 - 优化：【配置】页面，安卓版本支持本机检测初始节点连通
 - 修复：兼容EasyTier2.7.0内核
------ 
+-----
+- 修复：【节点】页面，PC版本节点检测异常问题
+-----
 - New: [Nodes] page, hover on hostname column to display the corresponding service node's URI
 - Improved: [Config] page, Android version now supports local initial node connectivity check
 - Fixed: Compatibility with EasyTier 2.7.0 core
-
+----
+- Fixed: [Nodes] page, PC version node detection issue
 
 ##  2.5
 - 优化：【配置】页面统一下拉输入框显示背景
