@@ -13,7 +13,7 @@
       "status": 1,
       "updateTime": 1776731675,
       "uri": "udp://us01.225284.xyz:11010",
-      "owner": "刚刚[国外]",
+      "owner": "刚刚 [国外]",
       "dynamic": false
     },
     "tcp://mc.yqst.top:11010": {
@@ -41,14 +41,14 @@
       "status": 1,
       "updateTime": 1787923566,
       "uri": "wss://et0.303302.xyz",
-      "owner": "佚名[CF]",
+      "owner": "佚名 [CF]",
       "dynamic": false
     },
     "udp://et.0612.fun:11010": {
       "status": 1,
       "updateTime": 1787985162,
       "uri": "udp://et.0612.fun:11010",
-      "owner": "罐头[CF]",
+      "owner": "罐头 [CF]",
       "dynamic": false
     },
     "tcp://et.basd1.de:11010": {
