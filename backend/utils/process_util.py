@@ -255,9 +255,11 @@ class ProcessManager:
                 logging.info(f"Failed to send KILL: {e}")
 
             time.sleep(1)
-            self.pid_file.unlink(missing_ok=True)
+            if self.pid_file is not None:
+                self.pid_file.unlink(missing_ok=True)
         else:
             logging.info("process killed... ")
-            self.pid_file.unlink(missing_ok=True)
+            if self.pid_file is not None:
+                self.pid_file.unlink(missing_ok=True)
 
         return 0

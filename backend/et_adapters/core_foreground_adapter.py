@@ -4,7 +4,9 @@
 import ipaddress
 import json
 import logging
+import socket
 import subprocess
+import sys
 import threading
 import time
 from pathlib import Path
@@ -118,7 +120,7 @@ class CoreForegroundAdapter(IEasyTierAdapter):
             '--console-log-level', 'ERROR',
             '--no-listener',
             '--private-mode', 'true',
-            '--rpc-portal', str(rpc_port),
+            '--rpc-portal', f"127.0.0.1:{rpc_port}",
             '--network-name', random_string,
             '--network-secret', random_string
         ]
