@@ -16,13 +16,6 @@
       "owner": "刚刚",
       "dynamic": false
     },
-    "tcp://har.yqst.top:11010": {
-      "status": 1,
-      "updateTime": 1782392202,
-      "uri": "tcp://har.yqst.top:11010",
-      "owner": "Enterprise",
-      "dynamic": false
-    },
     "tcp://mc.yqst.top:11010": {
       "status": 1,
       "updateTime": 1782392202,
@@ -57,10 +50,10 @@
       "owner": "佚名",
       "dynamic": false
     },
-    "wss://et.0612.fun:443": {
+    "udp://et.0612.fun:11010": {
       "status": 1,
       "updateTime": 1787985162,
-      "uri": "wss://et.0612.fun:443",
+      "uri": "udp://et.0612.fun:11010",
       "owner": "罐头",
       "dynamic": false
     },
