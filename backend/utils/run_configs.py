@@ -172,7 +172,7 @@ def log_dir() -> str:
     return LOG_DIR
 
 def et_config_file(file_name=None) -> str:
-    file_name = 'default.toml' if file_name is None else file_name
+    file_name = 'default.toml' if not file_name else file_name
     return os.path.join(config_dir(), file_name)
 
 def et_config_files() -> List[str]:
