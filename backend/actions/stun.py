@@ -79,6 +79,7 @@ def natmap_install(params=None, *args, **kwargs):
     arch_map = {
         'x86_64': 'x86_64',
         'arm64': 'arm64',
+        'aarch64': 'arm64',
         'armv7l': 'arm32',
     }
     arch = arch_map.get(machine, machine)
