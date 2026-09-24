@@ -187,6 +187,8 @@ def __download_peers() ->dict:
             if test_peer_mark_file.exists():
                 peer_meta_url = peer_meta_url.replace('.json', '-test.json')
             data = github_util.download_raw_file(peer_meta_url, timeout=10)
+            if isinstance(data, bytes):
+                data = json.loads(data)
             data['downloadTime'] = int(time.time() * 1000)
         except Exception as e:
             logger.exception(f"获取节点元数据失败")

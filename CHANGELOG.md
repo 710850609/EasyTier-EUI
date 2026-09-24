@@ -3,13 +3,21 @@
 - 优化：【配置】页面，安卓版本支持本机检测初始节点连通
 - 修复：兼容EasyTier2.7.0内核
 -----
+- 优化：安卓版本默认开启打开时恢复上一次未关闭组网功能
+- 优化：GitHub资源下载优化
 - 修复：【节点】页面，PC版本节点检测异常问题
+- 修复：linux-aarch64 系统 natmap 下载失败问题
+- 修复：没有配置且后台获取公共节点时，日志输出解析配置文件失败问题
 -----
 - New: [Nodes] page, hover on hostname column to display the corresponding service node's URI
 - Improved: [Config] page, Android version now supports local initial node connectivity check
 - Fixed: Compatibility with EasyTier 2.7.0 core
 ----
+- Improved: Android version enables auto-reconnect on launch to restore the last unclosed network by default
+- Improved: Optimized GitHub resource downloads
 - Fixed: [Nodes] page, PC version node detection issue
+- Fixed: natmap download failure on linux-aarch64 systems
+- Fixed: Log output showing config file parse error when no config exists and fetching public peers in background
 
 ##  2.5
 - 优化：【配置】页面统一下拉输入框显示背景

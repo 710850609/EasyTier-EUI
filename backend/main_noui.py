@@ -183,9 +183,9 @@ def start_android_server(data_dir: str, external_dir: str = "", host: str = "127
         raise
 
 def _android_async_start_hook():
-    enabled_start_recovery = app_settings.get('enabled_start_recovery', False)
+    enabled_start_recovery = app_settings.get('enabled_start_recovery', True)
     if not enabled_start_recovery:
-        logger.info("跳过启动应用恢复组网：未启用功能")
+        logger.info("跳过启动应用恢复组网：禁用功能")
         return
     def _async_start_vpn():
         try:
