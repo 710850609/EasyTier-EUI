@@ -12,6 +12,9 @@ MESSAGES = {
         "path_traversal": "Path traversal attempt detected",
         "redirect_base": "Request URL must start with {base_uri}",
         "resource_not_found_at": "Resource not found: {url}",
+        "dangerous_filename": "Filename contains dangerous character {character}: {filename}",
+        "string_too_long": "String length exceeds limit: {length} > {max_length}",
+        "path_out_of_bounds": "Path outside allowed directory: {path} not within {base}",
     },
     "settings": {
         "cache_cleared": "Cache cleared completely",

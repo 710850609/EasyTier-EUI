@@ -12,6 +12,9 @@ MESSAGES = {
         "path_traversal": "偵測到路徑走訪嘗試",
         "redirect_base": "請求位址必須以{base_uri}開頭",
         "resource_not_found_at": "請求資源不存在: {url}",
+        "dangerous_filename": "檔名包含危險字元 {character}: {filename}",
+        "string_too_long": "字串長度超出限制: {length} > {max_length}",
+        "path_out_of_bounds": "路徑超出允許範圍: {path} 不在 {base} 內",
     },
     "settings": {
         "cache_cleared": "快取已刪除乾淨",

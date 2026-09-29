@@ -12,6 +12,9 @@ MESSAGES = {
         "path_traversal": "Pfad-Traversal-Versuch erkannt",
         "redirect_base": "Anfrage-URL muss mit {base_uri} beginnen",
         "resource_not_found_at": "Ressource nicht gefunden: {url}",
+        "dangerous_filename": "Dateiname enthält gefährliches Zeichen {character}: {filename}",
+        "string_too_long": "Zeichenkettenlänge überschreitet Limit: {length} > {max_length}",
+        "path_out_of_bounds": "Pfad außerhalb des erlaubten Verzeichnisses: {path} nicht innerhalb {base}",
     },
     "settings": {
         "cache_cleared": "Cache vollständig geleert",

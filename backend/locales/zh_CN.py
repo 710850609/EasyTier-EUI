@@ -12,6 +12,9 @@ MESSAGES = {
         "path_traversal": "检测到路径遍历尝试",
         "redirect_base": "请求地址必须以{base_uri}开头",
         "resource_not_found_at": "请求资源不存在: {url}",
+        "dangerous_filename": "文件名包含危险字符 {character}: {filename}",
+        "string_too_long": "字符串长度超出限制: {length} > {max_length}",
+        "path_out_of_bounds": "路径超出允许范围: {path} 不在 {base} 内",
     },
     "settings": {
         "cache_cleared": "缓存已删除干净",

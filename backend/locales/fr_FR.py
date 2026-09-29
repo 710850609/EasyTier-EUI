@@ -12,6 +12,9 @@ MESSAGES = {
         "path_traversal": "Tentative de traversée de chemin détectée",
         "redirect_base": "L'URL de la requête doit commencer par {base_uri}",
         "resource_not_found_at": "Ressource introuvable: {url}",
+        "dangerous_filename": "Nom de fichier contient un caractère dangereux {character}: {filename}",
+        "string_too_long": "La longueur de la chaîne dépasse la limite: {length} > {max_length}",
+        "path_out_of_bounds": "Chemin en dehors du répertoire autorisé: {path} non dans {base}",
     },
     "settings": {
         "cache_cleared": "Cache entièrement vidé",
