@@ -157,6 +157,7 @@ MESSAGES = {
     "stun": {
         "natmapBinaryNotFound": "在下載包中未找到 natmap 可執行檔",
         "natmapInstallFailed": "natmap 安裝失敗: {error}",
+        "natmapInstallInProgress": "natmap 正在安裝中，請稍後再試",
         "idRequired": "配置ID不能為空",
         "configRequired": "配置內容不能為空",
         "configsRequired": "配置資料不能為空",

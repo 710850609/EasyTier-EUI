@@ -7,6 +7,7 @@ import platform
 import re
 import shutil
 import sys
+import threading
 import uuid
 import zipfile
 from pathlib import Path
@@ -19,6 +20,8 @@ from utils import run_configs, process_util
 from utils.validators import Validator
 
 logger = logging.getLogger(__name__)
+
+_natmap_install_lock = threading.Lock()
 
 
 def _get_stun_dir() -> str:
@@ -67,66 +70,71 @@ def natmap_version(params=None, *args, **kwargs):
     }
 
 def natmap_install(params=None, *args, **kwargs):
-    system = sys.platform
-    if system == 'win32':
-        platform_name = 'win64'
-    elif system == 'darwin':
-        platform_name = 'darwin'
-    else:
-        platform_name = 'linux'
-
-    machine = platform.machine().lower()
-    arch_map = {
-        'x86_64': 'x86_64',
-        'arm64': 'arm64',
-        'aarch64': 'arm64',
-        'armv7l': 'arm32',
-    }
-    arch = arch_map.get(machine, machine)
-    arch_name = '.zip' if platform_name == 'win64' else f'-{arch}'
-    filename = f'natmap-{platform_name}{arch_name}'
-    download_url = f'https://github.com/heiher/natmap/releases/latest/download/{filename}'
-
+    if not _natmap_install_lock.acquire(blocking=False):
+        raise HttpException(get_message('stun.natmapInstallInProgress'))
     try:
-        logger.info(f'下载 natmap: {download_url}')
-        core_dir = run_configs.core_dir()
-        os.makedirs(core_dir, exist_ok=True)
-
-        tmp_dir = os.path.join(run_configs.data_dir(), 'download', 'natmap')
-        if os.path.exists(tmp_dir):
-            shutil.rmtree(tmp_dir)
-        os.makedirs(tmp_dir, exist_ok=True)
-
-        download_path = os.path.join(tmp_dir, filename)
-        github_util.download_release_file(download_url, download_path, desc=filename)
-
-        if filename.endswith('.zip'):
-            logger.info(f'解压 natmap: {download_path}')
-            with zipfile.ZipFile(download_path, 'r') as zf:
-                zf.extractall(tmp_dir)
-            shutil.move(os.path.join(tmp_dir, 'natmap'), run_configs.data_dir())
+        system = sys.platform
+        if system == 'win32':
+            platform_name = 'win64'
+        elif system == 'darwin':
+            platform_name = 'darwin'
         else:
-            natmap_dir = os.path.join(run_configs.data_dir(), 'natmap')
-            Path(natmap_dir).mkdir(parents=True, exist_ok=True)
-            shutil.move(download_path, os.path.join(natmap_dir, 'natmap'))
+            platform_name = 'linux'
 
-        target_path = _get_natmap_binary()
-        if not target_path:
-            raise HttpException(get_message('stun.natmapBinaryNotFound'))
+        machine = platform.machine().lower()
+        arch_map = {
+            'x86_64': 'x86_64',
+            'arm64': 'arm64',
+            'aarch64': 'arm64',
+            'armv7l': 'arm32',
+        }
+        arch = arch_map.get(machine, machine)
+        arch_name = '.zip' if platform_name == 'win64' else f'-{arch}'
+        filename = f'natmap-{platform_name}{arch_name}'
+        download_url = f'https://github.com/heiher/natmap/releases/latest/download/{filename}'
 
-        if sys.platform != 'win32':
-            os.chmod(target_path, 0o755)
+        try:
+            logger.info(f'下载 natmap: {download_url}')
+            core_dir = run_configs.core_dir()
+            os.makedirs(core_dir, exist_ok=True)
 
-        shutil.rmtree(tmp_dir, ignore_errors=True)
+            tmp_dir = os.path.join(run_configs.data_dir(), 'download', 'natmap')
+            if os.path.exists(tmp_dir):
+                shutil.rmtree(tmp_dir)
+            os.makedirs(tmp_dir, exist_ok=True)
 
-        version = _get_natmap_version(target_path)
-        logger.info(f'natmap 安装成功，版本: {version}')
-        return {'success': True, 'version': version}
-    except HttpException:
-        raise
-    except Exception as e:
-        logger.error(f'natmap 安装失败: {e}')
-        raise HttpException(get_message('stun.natmapInstallFailed', error=str(e)))
+            download_path = os.path.join(tmp_dir, filename)
+            github_util.download_release_file(download_url, download_path, desc=filename)
+
+            if filename.endswith('.zip'):
+                logger.info(f'解压 natmap: {download_path}')
+                with zipfile.ZipFile(download_path, 'r') as zf:
+                    zf.extractall(tmp_dir)
+                shutil.move(os.path.join(tmp_dir, 'natmap'), run_configs.data_dir())
+            else:
+                natmap_dir = os.path.join(run_configs.data_dir(), 'natmap')
+                Path(natmap_dir).mkdir(parents=True, exist_ok=True)
+                shutil.move(download_path, os.path.join(natmap_dir, 'natmap'))
+
+            target_path = _get_natmap_binary()
+            if not target_path:
+                raise HttpException(get_message('stun.natmapBinaryNotFound'))
+
+            if sys.platform != 'win32':
+                os.chmod(target_path, 0o755)
+
+            shutil.rmtree(tmp_dir, ignore_errors=True)
+
+            version = _get_natmap_version(target_path)
+            logger.info(f'natmap 安装成功，版本: {version}')
+            return {'success': True, 'version': version}
+        except HttpException:
+            raise
+        except Exception as e:
+            logger.error(f'natmap 安装失败: {e}')
+            raise HttpException(get_message('stun.natmapInstallFailed', error=str(e)))
+    finally:
+        _natmap_install_lock.release()
 
 def _load_stun():
     stun_file = os.path.join(_get_stun_dir(), 'stun.json')

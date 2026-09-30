@@ -157,6 +157,7 @@ MESSAGES = {
     "stun": {
         "natmapBinaryNotFound": "natmap-Binärdatei im heruntergeladenen Paket nicht gefunden",
         "natmapInstallFailed": "natmap-Installation fehlgeschlagen: {error}",
+        "natmapInstallInProgress": "natmap-Installation läuft, bitte versuchen Sie es später erneut",
         "idRequired": "Konfigurations-ID ist erforderlich",
         "configRequired": "Konfigurationsinhalt ist erforderlich",
         "configsRequired": "Konfigurationsdaten sind erforderlich",
