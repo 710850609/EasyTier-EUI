@@ -11,6 +11,8 @@
 -----
 - 优化：配置文件名开放更宽松字符限制，并前端提示受限错误提示
 -----
+- 优化：【STUN】页面natmap 下载安装，避免弱网环境下安装提示错误
+----
 
 - New: [Nodes] page, hover on hostname column to display the corresponding service node's URI
 - Improved: [Config] page, Android version now supports local initial node connectivity check
@@ -23,6 +25,8 @@
 - Fixed: Log output showing config file parse error when no config exists and fetching public peers in background
 -----
 - Improved: Config filenames now allow more relaxed character restrictions, with restricted error prompts shown on the frontend
+-----
+- Improved: [STUN] page natmap download and installation, preventing false error prompts caused by concurrent requests on slow networks
 
 ##  2.5
 - 优化：【配置】页面统一下拉输入框显示背景
