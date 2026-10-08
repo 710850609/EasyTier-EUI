@@ -1372,8 +1372,6 @@ const saveConfig = () => {
     } else {
       delete data.flags.instance_recv_bps_limit;
     }
-    // 删除历史版本错位key
-    delete data.flags.compression;
     // 删除 flags 中 空 字段
     ['dev_name', 'encryption_algorithm', 'default_protocol', 'data_compress_algo', 'relay_network_whitelist', 'tld_dns_zone'].forEach(key => {
       if (config.value.flags[key] == null || config.value.flags[key].trim() === '') {

@@ -117,6 +117,16 @@ def save(data, *args, **kwargs):
         doc = tomlkit.parse(f.read())
     if not doc.get("network_identity"):
         doc["network_identity"] = {"network_name": '', "network_secret": ''}
+
+    flags = data.get('flags', {})
+    # 处理历史版本错位key
+    if 'compression' in flags:
+        if flags.get('compression') == 'zstd':
+            flags['data_compress_algo'] = 'Zstd'
+        del data['flags']['compression']
+    if 'compression' in doc.get('flags', {}):
+        del doc['flags']['compression']
+
     __deep_merge(doc, data)
     doc['instance_name'] = profile
     # 头部注释
