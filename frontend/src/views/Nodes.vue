@@ -371,7 +371,7 @@
               <span v-if="visibleColumnsMap.hostname && node.hostname && !node.ipv4" class="info-chip host-chip" style="margin-left: auto;">
                 {{ node.hostname }}
               </span>
-              <span v-if="visibleColumnsMap.hostname && node.hostname" class="info-chip host-chip">{{ node.peer_uri }}</span>
+              <span v-if="visibleColumnsMap.hostname && node.peer_uri" class="info-chip host-chip">{{ node.peer_uri }}</span>
             </div>
             <div class="node-card-footer">
               <span v-if="visibleColumnsMap.version && node.version" class="version-text">v{{ node.version }}</span>
