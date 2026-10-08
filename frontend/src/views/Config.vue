@@ -584,7 +584,7 @@
                     <div class="input-section">
                       <div class="section-subtitle">{{ $t('config.compression') }}</div>
                       <var-select
-                        v-model="config.flags.compression"
+                        v-model="config.flags.data_compress_algo"
                         :placeholder="$t('config.compressionPlaceholder')"
                         variant="outlined"
                         :chip="true"
@@ -1097,7 +1097,7 @@ const customExitNode = ref('')
 const customRoute = ref('')
 const encryptionAlgorithmList = ref(['aes-gcm','xor','chacha20','aes-gcm','aes-gcm-256','openssl-aes128-gcm','openssl-aes256-gcm','openssl-chacha20'])
 const defaultProtocolList = computed(() => [{label: t('config.defaultOption'), value: ''}, {label: 'tcp', value: 'tcp'}, {label: 'udp', value: 'udp'}, {label: 'quic', value: 'quic'}, {label: 'wg', value: 'wg'}, {label: 'ws', value: 'ws'}, {label: 'wss', value: 'wss'}, {label: 'faketcp', value: 'faketcp'}])
-const compressionOptions = computed(() => [{label: t('config.noCompression'), value: 'none'}, {label: 'zstd', value: 'zstd'}])
+const compressionOptions = computed(() => [{label: t('config.noCompression'), value: 'None'}, {label: 'zstd', value: 'Zstd'}])
 
 const config = ref({
   hostname: '',
@@ -1370,10 +1370,12 @@ const saveConfig = () => {
     if (data.flags.instance_recv_bps_limit > 0) {
       data.flags.instance_recv_bps_limit = ensureInt(data.flags.instance_recv_bps_limit)
     } else {
-      delete data.flags.instance_recv_bps_limit
+      delete data.flags.instance_recv_bps_limit;
     }
+    // 删除历史版本错位key
+    delete data.flags.compression;
     // 删除 flags 中 空 字段
-    ['dev_name', 'encryption_algorithm', 'default_protocol', 'compression', 'relay_network_whitelist', 'tld_dns_zone'].forEach(key => {
+    ['dev_name', 'encryption_algorithm', 'default_protocol', 'data_compress_algo', 'relay_network_whitelist', 'tld_dns_zone'].forEach(key => {
       if (config.value.flags[key] == null || config.value.flags[key].trim() === '') {
         data.flags[key] = null
       }

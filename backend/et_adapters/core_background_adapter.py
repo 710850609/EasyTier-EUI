@@ -71,12 +71,27 @@ class CoreBackgroundAdapter(CoreForegroundAdapter):
                f' --description {desc}'
                f" --core-path {self._core_path}"
                f" --service-work-dir {run_configs.data_dir()}"
+               # f" --rpc-portal {rpc_portal}"
+               # f" {cmd_config_file_parts}"
+               # f" --file-log-dir {run_configs.log_dir()}"
+               # f" --file-log-level {log_level or 'error'}"
+               # f" --file-log-size 50" # 单个文件日志大小，单位 MB，默认值为 100MB
+               )
+
+        def _ver(v):
+            return tuple(int(x) for x in v.split('-')[0].split('.'))
+
+        if _ver(self.get_version()) >= _ver('2.7.0'):
+            # 2.7.0 引入不兼容参数 core-args 参数，core启动参数必须在这个参数后面
+            cmd += " --core-args"
+        cmd += (
                f" --rpc-portal {rpc_portal}"
                f" {cmd_config_file_parts}"
                f" --file-log-dir {run_configs.log_dir()}"
                f" --file-log-level {log_level or 'error'}"
                f" --file-log-size 50" # 单个文件日志大小，单位 MB，默认值为 100MB
                )
+
         logging.info(f"注册服务命令： {cmd}")
         result = common_util.run_cmd(cmd)
         logging.info(f"ET系统服务注册结果：{result}")

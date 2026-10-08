@@ -13,6 +13,10 @@
 -----
 - 优化：【STUN】页面natmap 下载安装，避免弱网环境下安装提示错误
 ----
+- 新增：【节点】页面，卡片列表支持显示公共节点对应的监听地址
+- 优化：【配置】页面，PC版本开机自启适配 EasyTier 2.7.0 新增 --core-args 参数
+- 修复：适配 EasyTier 2.7.0 更严格的配置文件校验。TOML配置文件加密算法配置key由 compression 改为 data_compress_algo，选项值为 None、 Zstd
+----
 
 - New: [Nodes] page, hover on hostname column to display the corresponding service node's URI
 - Improved: [Config] page, Android version now supports local initial node connectivity check
@@ -27,6 +31,10 @@
 - Improved: Config filenames now allow more relaxed character restrictions, with restricted error prompts shown on the frontend
 -----
 - Improved: [STUN] page natmap download and installation, preventing false error prompts caused by concurrent requests on slow networks
+----
+- New: [Nodes] page, card list now supports displaying the listening addresses corresponding to public nodes
+- Improved: [Config] page, PC version auto-start on boot adapts to EasyTier 2.7.0's new --core-args parameter
+- Fixed: Adapted to EasyTier 2.7.0's stricter config file validation. TOML config file encryption algorithm config key changed from `compression` to `data_compress_algo`, with option values `None` and `Zstd`
 
 ##  2.5
 - 优化：【配置】页面统一下拉输入框显示背景

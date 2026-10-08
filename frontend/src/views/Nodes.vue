@@ -371,12 +371,11 @@
               <span v-if="visibleColumnsMap.hostname && node.hostname && !node.ipv4" class="info-chip host-chip" style="margin-left: auto;">
                 {{ node.hostname }}
               </span>
+              <span v-if="visibleColumnsMap.hostname && node.hostname" class="info-chip host-chip">{{ node.peer_uri }}</span>
             </div>
             <div class="node-card-footer">
               <span v-if="visibleColumnsMap.version && node.version" class="version-text">v{{ node.version }}</span>
-              <span v-if="visibleColumnsMap.cidr && node.cidr" class="info-chip cidr-chip">
-                {{ node.cidr }}
-              </span>
+              <span v-if="visibleColumnsMap.cidr && node.cidr" class="info-chip cidr-chip">{{ node.cidr }}</span>
             </div>
           </div>
           <div v-if="filteredNodes.length === 0" class="empty-state">
