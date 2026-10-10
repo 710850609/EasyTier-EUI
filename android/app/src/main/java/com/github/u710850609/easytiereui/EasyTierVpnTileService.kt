@@ -11,6 +11,7 @@ import android.service.quicksettings.TileService
 
 class EasyTierVpnTileService : TileService() {
     companion object {
+        private const val TAG = "EasyTierVpnTile"
         private const val PREFS_NAME = "easytier_vpn_tile"
         private const val PENDING_ACTION_KEY = "pending_action"
         const val ACTION_START = "start"
@@ -22,12 +23,14 @@ class EasyTierVpnTileService : TileService() {
             val action = preferences.getString(PENDING_ACTION_KEY, null)
             if (action != null) {
                 preferences.edit().remove(PENDING_ACTION_KEY).commit()
+                AppLogger.info(TAG, "consumePendingAction: consumed action=$action")
             }
             return action
         }
 
         fun requestStateUpdate(context: Context) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                AppLogger.info(TAG, "requestStateUpdate triggered")
                 requestListeningState(context, ComponentName(context, EasyTierVpnTileService::class.java))
             }
         }
@@ -46,11 +49,13 @@ class EasyTierVpnTileService : TileService() {
 
     override fun onStartListening() {
         super.onStartListening()
+        AppLogger.info(TAG, "onStartListening: instance=${EasyTierVpnService.instance != null}")
         updateTileState()
     }
 
     override fun onClick() {
         super.onClick()
+        AppLogger.info(TAG, "onClick: isLocked=$isLocked, instance=${EasyTierVpnService.instance != null}")
 
         if (isLocked) {
             unlockAndRun(::handleClick)
@@ -62,20 +67,25 @@ class EasyTierVpnTileService : TileService() {
     private fun handleClick() {
         val action = consumePendingAction(this)
             ?: if (EasyTierVpnService.instance == null) ACTION_START else ACTION_STOP
+        AppLogger.info(TAG, "handleClick: action=$action, instance=${EasyTierVpnService.instance != null}")
         updateTileState()
 
         val permissionRequired = action == ACTION_START && VpnService.prepare(this) != null
         if (permissionRequired) {
+            AppLogger.info(TAG, "handleClick: permission required, opening app")
             openApp()
         }
         else if (EasyTierVpnService.instance == null && action == ACTION_START) {
+            AppLogger.info(TAG, "handleClick: VPN not running, opening app to start")
             openApp()
         }
         else if (action == ACTION_STOP) {
             val manager = MainActivity.easyTierManager
             if (manager != null) {
+                AppLogger.info(TAG, "handleClick: stopping VPN via EasyTierManager")
                 manager.stopVpn(stopPythonNetwork = true)
             } else {
+                AppLogger.warn(TAG, "handleClick: EasyTierManager is null, fallback to direct stop")
                 EasyTierVpnService.requestStop()
             }
             updateTileState()
@@ -85,6 +95,7 @@ class EasyTierVpnTileService : TileService() {
     private fun updateTileState() {
         qsTile?.apply {
             state = if (EasyTierVpnService.instance == null) Tile.STATE_INACTIVE else Tile.STATE_ACTIVE
+            AppLogger.info(TAG, "updateTileState: state=${if (state == Tile.STATE_ACTIVE) "ACTIVE" else "INACTIVE"}")
             updateTile()
         }
     }
@@ -92,8 +103,12 @@ class EasyTierVpnTileService : TileService() {
     private fun openApp() {
         val intent = packageManager.getLaunchIntentForPackage(packageName)?.apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-        } ?: return
+        } ?: run {
+            AppLogger.error(TAG, "openApp: launch intent is null")
+            return
+        }
 
+        AppLogger.info(TAG, "openApp: launching $packageName")
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             val pendingIntent = PendingIntent.getActivity(
                 this,

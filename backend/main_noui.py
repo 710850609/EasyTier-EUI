@@ -200,7 +200,10 @@ def _android_async_start_hook():
                         continue
                     logger.info(f"应用启动恢复上次未关闭的组网：{profile_filename}")
                     facade.get_facade().start_network(toml_path, profile_filename)
-                    break
+                    if run_configs.IS_ANDROID:
+                        # 安卓环境下，仅启动单个组网配置
+                        logger.info(f"安卓环境，仅启动单个组网配置")
+                        break
             logger.info("async VPN startup done")
         except Exception:
             logger.exception(f"async VPN startup failed")

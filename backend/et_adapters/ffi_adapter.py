@@ -16,7 +16,7 @@ import tomlkit
 from et_adapters.interface import IEasyTierAdapter
 from . import et_util
 from locales import get_last_lang
-from utils import run_configs, app_settings
+from utils import run_configs, app_settings, et_run_info
 
 logger = logging.getLogger(__name__)
 # github action 注入版本号，格式 2.6.4-8428a89d
@@ -414,6 +414,8 @@ class FfiAdapter(IEasyTierAdapter):
                 while len(self._instance_set) > 0:
                     # 安卓环境下，确保所有实例都停止，再启动新实例
                     self.stop_network(self._instance_set.pop())
+                    # 记录配置已停止，避免启动重连时，启动冲突
+                    et_run_info.set_running(instance_name, False)
             with self._lock:
                 toml_bytes = toml_config.encode('utf-8')
                 c_config = ctypes.c_char_p(toml_bytes)
@@ -468,7 +470,7 @@ class FfiAdapter(IEasyTierAdapter):
                 MainActivity = jclass(run_configs.ANDROID_MAIN_ACTIVITY)
                 manager = MainActivity.getEasyTierManager()
                 if manager is not None:
-                    manager.stopVpn()
+                    manager.stopVpn(False)
         except Exception as e:
             logger.exception(f"fail to stop vpn manager monitor: {e}")
 
@@ -819,7 +821,7 @@ class FfiAdapter(IEasyTierAdapter):
                 dns = info.get('dns_servers', [])
                 title, text = self._build_notification_text(instance_name, info)
                 mtu = info.get('mtu') or 1400
-                manager.stopVpn()
+                manager.stopVpn(False)
                 manager.startVpn(ipv4, ipv6, cidrs, dns, title, text, mtu, instance_name)
                 logger.info(f"Notified Kotlin: startVpn for {instance_name} ipv4={ipv4} ipv6={ipv6}")
         except Exception as e:
