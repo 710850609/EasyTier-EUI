@@ -79,6 +79,7 @@ class EasyTierVpnService : VpnService() {
             AppLogger.error(TAG, "Failed to create notification channel: ${e.message}")
         }
         instance = this
+        EasyTierVpnTileService.requestStateUpdate(this)
         AppLogger.info(TAG, "VPN Service created")
     }
 
@@ -401,6 +402,7 @@ class EasyTierVpnService : VpnService() {
             AppLogger.error(TAG, "onRevoke: callback failed: ${e.message}")
         }
         instance = null
+        EasyTierVpnTileService.requestStateUpdate(this)
         try {
             super.onRevoke()
         } catch (e: Exception) {
@@ -423,6 +425,7 @@ class EasyTierVpnService : VpnService() {
             AppLogger.error(TAG, "onDestroy: stopForegroundCompat failed: ${e.message}")
         }
         instance = null
+        EasyTierVpnTileService.requestStateUpdate(this)
         try {
             super.onDestroy()
         } catch (e: Exception) {
