@@ -61,10 +61,19 @@ class EasyTierManager(
         startVpnService(params)
     }
 
-    fun stopVpn() {
-        AppLogger.info(TAG, "stopVpn")
+    fun stopVpn(stopPythonNetwork: Boolean = false) {
+        AppLogger.info(TAG, "stopVpn: stopPythonNetwork=$stopPythonNetwork, instance=$currentInstanceName")
+        val instanceName = currentInstanceName
         stopVpnService()
         currentInstanceName = null
+        if (stopPythonNetwork && instanceName != null) {
+            try {
+                getFacade()?.callAttr("stop_network", instanceName)
+                AppLogger.info(TAG, "stopVpn: Python stop_network called for $instanceName")
+            } catch (e: Exception) {
+                AppLogger.error(TAG, "stopVpn: stop_network failed: ${e.message}")
+            }
+        }
     }
 
     fun updateNotification(title: String, text: String) {

@@ -72,7 +72,12 @@ class EasyTierVpnTileService : TileService() {
             openApp()
         }
         else if (action == ACTION_STOP) {
-            EasyTierVpnService.requestStop()
+            val manager = MainActivity.easyTierManager
+            if (manager != null) {
+                manager.stopVpn(stopPythonNetwork = true)
+            } else {
+                EasyTierVpnService.requestStop()
+            }
             updateTileState()
         }
     }
