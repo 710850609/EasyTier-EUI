@@ -31,7 +31,7 @@ def eui_info(*args, **kwargs):
         'for_user': run_configs.is_fn_system() and run_configs.DEFAULT_TRIM_APPNAME == 'EasyTier-EUI.User',
         'is_docker': is_docker,
         'log_level': get_log_level(),
-        'enabled_start_recovery': app_settings.get('enabled_start_recovery', False),
+        'enabled_start_recovery': app_settings.get('enabled_start_recovery', True),
         'webview_debug': app_settings.get('webview_debug', False),
         'ignore_ssl_errors': app_settings.get('ignore_ssl_errors', False),
         'release_info': release_info,
