@@ -76,8 +76,9 @@ class EasyTierVpnTileService : TileService() {
             openApp()
         }
         else if (EasyTierVpnService.instance == null && action == ACTION_START) {
-            AppLogger.info(TAG, "handleClick: VPN not running, opening app to start")
+            AppLogger.info(TAG, "handleClick: VPN not running, opening app then triggering auto-start")
             openApp()
+            MainActivity.easyTierManager?.triggerAutoStart()
         }
         else if (action == ACTION_STOP) {
             val manager = MainActivity.easyTierManager

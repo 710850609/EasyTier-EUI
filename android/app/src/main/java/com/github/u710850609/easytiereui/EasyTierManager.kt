@@ -76,6 +76,16 @@ class EasyTierManager(
         }
     }
 
+    fun triggerAutoStart() {
+        AppLogger.info(TAG, "triggerAutoStart")
+        try {
+            val result = getFacade()?.callAttr("start_last_network")
+            AppLogger.info(TAG, "triggerAutoStart: result=$result")
+        } catch (e: Exception) {
+            AppLogger.error(TAG, "triggerAutoStart failed: ${e.message}")
+        }
+    }
+
     fun updateNotification(title: String, text: String) {
         EasyTierVpnService.instance?.updateNotification(title, text)
     }

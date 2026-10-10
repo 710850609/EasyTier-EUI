@@ -199,6 +199,14 @@ def _android_async_start_hook():
                         logger.warning(f"跳过应用启动恢复上次未关闭的组网：{profile_filename} 配置不存在")
                         continue
                     logger.info(f"应用启动恢复上次未关闭的组网：{profile_filename}")
+                    if facade.get_facade().status(profile_filename):
+                        logger.info(f"应用启动恢复：{profile_filename} 已在运行中，跳过")
+                        if run_configs.IS_ANDROID:
+                            # 安卓环境下，仅启动单个组网配置
+                            logger.info(f"安卓环境，仅启动单个组网配置")
+                            break
+                        else:
+                            continue
                     facade.get_facade().start_network(toml_path, profile_filename)
                     if run_configs.IS_ANDROID:
                         # 安卓环境下，仅启动单个组网配置

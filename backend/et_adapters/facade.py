@@ -3,6 +3,7 @@
 """EasyTierFacade — unified entry point with adapter auto-selection"""
 
 import logging
+import os
 import threading
 from typing import Optional
 
@@ -64,6 +65,30 @@ class EasyTierFacade(IEasyTierAdapter):
             logger.warning(f"current adapter is not FfiAdapter, cannot set_tun_fd")
             return -1
 
+    def start_last_network(self) -> Optional[str]:
+        run_infos = et_run_info.get_all()
+        if not run_infos:
+            logger.info("start_last_network: no profiles found")
+            return None
+        profiles = []
+        for name, info in run_infos.items():
+            toml_path = run_configs.et_config_file(name)
+            if not os.path.exists(toml_path):
+                logger.warning(f"start_last_network: skip {name}, config not found")
+                continue
+            if info.running:
+                profiles.append((toml_path, name))
+            else:
+                profiles.insert(0, (toml_path, name))
+        if len(profiles) > 0:
+            toml_path, profile = profiles[0]
+            if self.status(profile):
+                logger.info(f"start_last_network: {profile} already running, skip")
+                return profile
+            logger.info(f"start_last_network: starting {profile}")
+            self.start_network(toml_path, profile)
+            return profile
+        return None
 
 
 _facade_instance: Optional[EasyTierFacade] = None
