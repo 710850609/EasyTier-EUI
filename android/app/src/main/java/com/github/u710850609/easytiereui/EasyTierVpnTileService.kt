@@ -60,9 +60,8 @@ class EasyTierVpnTileService : TileService() {
     }
 
     private fun handleClick() {
-        val action = pendingAction(this)
+        val action = consumePendingAction(this)
             ?: if (EasyTierVpnService.instance == null) ACTION_START else ACTION_STOP
-        savePendingAction(this, action)
         updateTileState()
 
         val permissionRequired = action == ACTION_START && VpnService.prepare(this) != null
