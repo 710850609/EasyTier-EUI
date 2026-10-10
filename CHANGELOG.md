@@ -17,6 +17,8 @@
 - 优化：【配置】页面，PC版本开机自启适配 EasyTier 2.7.0 新增 --core-args 参数
 - 修复：适配 EasyTier 2.7.0 更严格的配置文件校验。TOML配置文件加密算法配置key由 compression 改为 data_compress_algo，选项值为 None、 Zstd
 ----
+- 新增：支持安卓快捷设置磁贴
+----
 
 - New: [Nodes] page, hover on hostname column to display the corresponding service node's URI
 - Improved: [Config] page, Android version now supports local initial node connectivity check
@@ -35,6 +37,8 @@
 - New: [Nodes] page, card list now supports displaying the listening addresses corresponding to public nodes
 - Improved: [Config] page, PC version auto-start on boot adapts to EasyTier 2.7.0's new --core-args parameter
 - Fixed: Adapted to EasyTier 2.7.0's stricter config file validation. TOML config file encryption algorithm config key changed from `compression` to `data_compress_algo`, with option values `None` and `Zstd`
+----
+- New: Support Android Quick Settings Tile
 
 ##  2.5
 - 优化：【配置】页面统一下拉输入框显示背景
