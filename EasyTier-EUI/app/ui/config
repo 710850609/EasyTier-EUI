@@ -7,7 +7,7 @@
             "url": "/cgi/ThirdParty/EasyTier-EUI/index.cgi",
             "allUsers": false,
             "control": {
-                "accessPerm": "editable",
+                "accessPerm": "editable"
             }
         }
     }
