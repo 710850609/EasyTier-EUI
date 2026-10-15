@@ -73,9 +73,10 @@ def get_release_info(params: dict, *args, **kwargs) -> dict:
                 filename = asset.get('name')
                 need_platform = ['linux', 'windows', 'macos']
                 need_arch = ['x86_64', 'x86', 'aarch64', 'armv7', 'riscv64']
-                if filename.startswith('easytier-') and filename.endswith(f'{ver}.zip'):
+                if filename.startswith('easytier-') and filename.endswith(f'.zip'):
                     # 只取核心包 只适配部分平台架构
-                    platform_arch = filename.replace('easytier-', '').replace(f'-{ver}.zip', '')
+                    # Nightly 版本规则是 easytier-windows-x86_64-v2.7.0.zip、 easytier-linux-aarch64-v2.7.0.zip
+                    platform_arch = filename.replace('easytier-', '').replace(f'.zip', '').replace(f'-{ver}', '')
                     t_p_a = platform_arch.split('-')
                     if t_p_a[0] in need_platform and t_p_a[1] in need_arch:
                         assets[platform_arch] = {'download_url': asset.get('browser_download_url', ''), 'download_count': download_count}
@@ -124,8 +125,8 @@ def install(data, *args, **kwargs):
     arch = __get_arch()
     sys_platform = 'linux' if sys.platform == 'linux' else ('windows' if sys.platform == 'win32' else 'macos')
 
-    if run_configs.IS_ANDROID:
-        __install_android(et_version, arch)
+    if get_facade().et_mode == 'ffi':
+        __install_ffi(et_version, arch)
     else:
         __install_et_core(et_version, arch, sys_platform)
 
@@ -165,6 +166,21 @@ def __unzip(zip_file, unzip_dir):
 
 def __install_et_core(et_version, arch, sys_platform):
     url = f"https://github.com/easyTier/easytier/releases/download/{et_version}/easytier-{sys_platform}-{arch}-{et_version}.zip"
+    versions = get_release_info({}).get('versions', [])
+    for ver in versions:
+        if ver.get('version') == et_version:
+            download_url = ''
+            if et_version != 'Nightly':
+                download_url = ver.get('assets', {}).get(f'{sys_platform}-{arch}', {}).get('download_url', '')
+            else:
+                for asset_ver, asset in ver.get('assets', {}).items():
+                    if asset_ver.startswith(f'{sys_platform}-{arch}'):
+                        download_url = asset.get('download_url', '')
+                        break
+            if download_url:
+                url = download_url
+                break
+
     logger.info(f"内核下载地址: {url}")
     core_dir = run_configs.core_dir()
     run_configs.data_dir()
@@ -189,7 +205,7 @@ def __install_et_core(et_version, arch, sys_platform):
         logger.info(f'启动配置：{profile}')
         services.start({'profile': profile})
 
-def __install_android(et_version, arch):
+def __install_ffi(et_version, arch):
     services.stop_all()
     logger.info(f"停止所有服务")
     ffi_dir = run_configs.core_dir()

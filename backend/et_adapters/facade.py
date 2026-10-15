@@ -25,6 +25,7 @@ class EasyTierFacade(IEasyTierAdapter):
             self._adapter = FfiAdapter()
         else:
             self._adapter = CoreAdapter()
+        self.et_mode = et_mode
         logger.debug(f"use adapter: {self._adapter}")
 
     def get_version(self) -> str:
