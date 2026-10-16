@@ -55,42 +55,39 @@ class CoreBackgroundAdapter(CoreForegroundAdapter):
     def system_service_install(self, profiles: List[str], log_level:str = 'error') -> str:
         if len(profiles or []) == 0:
             raise AssertionError(get_message('service.no_config_for_system_service'))
-        cmd_config_file_parts = ''
+        cmd_config_file_parts = []
         for profile in profiles:
             cfg_path = run_configs.et_config_file(profile)
             if Path(cfg_path).exists():
-                cmd_config_file_parts += f" -c {cfg_path}"
+                cmd_config_file_parts.extend(['-c', cfg_path])
             else:
                 logging.warning(f"跳过配置不存在: {profile}")
         desc = get_message('service.start_config_desc') + f":{','.join(profiles)}"
         display_name = "EasyTier-EUI"
         rpc_port = et_util.get_available_port(start_port=16999)
         rpc_portal = f"127.0.0.1:{rpc_port}"
-        cmd = (f"{self._cli_path} service install "
-               f' --display-name {display_name}'
-               f' --description {desc}'
-               f" --core-path {self._core_path}"
-               f" --service-work-dir {run_configs.data_dir()}"
-               # f" --rpc-portal {rpc_portal}"
-               # f" {cmd_config_file_parts}"
-               # f" --file-log-dir {run_configs.log_dir()}"
-               # f" --file-log-level {log_level or 'error'}"
-               # f" --file-log-size 50" # 单个文件日志大小，单位 MB，默认值为 100MB
-               )
+        cmd = [
+            self._cli_path, 'service', 'install',
+            '--display-name', display_name,
+            '--description', desc,
+            '--core-path', self._core_path,
+            '--service-work-dir', run_configs.data_dir(),
+        ]
 
         def _ver(v):
             return tuple(int(x) for x in v.split('-')[0].split('.'))
 
         if _ver(self.get_version()) >= _ver('2.7.0'):
             # 2.7.0 引入不兼容参数 core-args 参数，core启动参数必须在这个参数后面
-            cmd += " --core-args"
-        cmd += (
-               f" --rpc-portal {rpc_portal}"
-               f" {cmd_config_file_parts}"
-               f" --file-log-dir {run_configs.log_dir()}"
-               f" --file-log-level {log_level or 'error'}"
-               f" --file-log-size 50" # 单个文件日志大小，单位 MB，默认值为 100MB
-               )
+            cmd.append('--core-args')
+
+        cmd.extend([
+            '--rpc-portal', rpc_portal,
+            '--file-log-dir', run_configs.log_dir(),
+            '--file-log-level', log_level or 'error',
+            '--file-log-size', '50', # 单个文件日志大小，单位 MB，默认值为 100MB
+        ])
+        cmd.extend(cmd_config_file_parts)
 
         logging.info(f"注册服务命令： {cmd}")
         result = common_util.run_cmd(cmd)
