@@ -22,10 +22,6 @@ from utils.validators import Validator
 
 logger = logging.getLogger(__name__)
 
-# def get_log_level(params:dict, *args, **kwargs):
-#     log_level = et_run_info.get_log_level()
-#     return log_level
-
 def set_log_level(params:dict, *args, **kwargs):
     params = params or {}
     log_level = params.get("level", 'error')
@@ -38,7 +34,7 @@ def get_config(params=None, *args, **kwargs):
     dash_idx = ver.find('-')
     et_version = ver[:dash_idx] if dash_idx > 0 else ver
     log_level = et_run_info.get_log_level()
-    return {'version': f'v{et_version}', 'raw_version': f'easytier-core {ver}', 'log_level': log_level}
+    return {'version': f'{et_version}', 'log_level': log_level}
 
 def get_release_info(params: dict, *args, **kwargs) -> dict:
     params = params or {}
@@ -215,9 +211,10 @@ def __install_ffi(et_version, arch, sys_platform):
         ffi_adapter.set_ffi_version(None)
         logger.info(f'选择内置FFI版本：{et_version}，无需下载，已删除旧FFI文件。重启后生效')
         return
-    if et_version == 'Nightly':
-        et_version = et_version.lower()
-    ffi_url = f"https://github.com/710850609/easytier-ffi/releases/download/{et_version}/easytier-ffi-{sys_platform}-{arch}-{et_version}.tar.gz"
+    ffi_version = et_version
+    if ffi_version == 'Nightly':
+        ffi_version = ffi_version.lower()
+    ffi_url = f"https://github.com/710850609/easytier-ffi/releases/download/{ffi_version}/easytier-ffi-{sys_platform}-{arch}-{ffi_version}.tar.gz"
     logger.info(f"FFI 下载地址: {ffi_url}")
     download_file = os.path.join(run_configs.data_dir(), "download", f"easytier-ffi-{sys_platform}.tar.gz")
     if os.path.exists(download_file):

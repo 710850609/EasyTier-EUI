@@ -56,7 +56,7 @@ class CoreForegroundAdapter(IEasyTierAdapter):
         cmd = [self._core_path, '--version']
         try:
             raw_version = common_util.run_cmd(cmd)
-            return raw_version.replace('easytier-core ', '')
+            return raw_version.replace('easytier-core ', 'v')
         except Exception:
             logger.exception(f"获取ET版本失败：{cmd}")
             return "unknown"
