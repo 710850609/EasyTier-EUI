@@ -124,9 +124,9 @@ def install(data, *args, **kwargs):
         raise HttpException(get_message('download.id_required', param='version'))
     arch = __get_arch()
     sys_platform = 'linux' if sys.platform == 'linux' else ('windows' if sys.platform == 'win32' else 'macos')
-
+    sys_platform = 'android' if run_configs.IS_ANDROID else sys_platform
     if get_facade().et_mode == 'ffi':
-        __install_ffi(et_version, arch)
+        __install_ffi(et_version, arch, sys_platform)
     else:
         __install_et_core(et_version, arch, sys_platform)
 
@@ -205,7 +205,7 @@ def __install_et_core(et_version, arch, sys_platform):
         logger.info(f'启动配置：{profile}')
         services.start({'profile': profile})
 
-def __install_ffi(et_version, arch):
+def __install_ffi(et_version, arch, sys_platform):
     services.stop_all()
     logger.info(f"停止所有服务")
     ffi_dir = run_configs.core_dir()
@@ -215,9 +215,11 @@ def __install_ffi(et_version, arch):
         ffi_adapter.set_ffi_version(None)
         logger.info(f'选择内置FFI版本：{et_version}，无需下载，已删除旧FFI文件。重启后生效')
         return
-    ffi_url = f"https://github.com/710850609/easytier-ffi/releases/download/{et_version}/easytier-ffi-android-{arch}-{et_version}.tar.gz"
+    if et_version == 'Nightly':
+        et_version = et_version.lower()
+    ffi_url = f"https://github.com/710850609/easytier-ffi/releases/download/{et_version}/easytier-ffi-{sys_platform}-{arch}-{et_version}.tar.gz"
     logger.info(f"FFI 下载地址: {ffi_url}")
-    download_file = os.path.join(run_configs.data_dir(), "download", f"easytier-ffi-android.tar.gz")
+    download_file = os.path.join(run_configs.data_dir(), "download", f"easytier-ffi-{sys_platform}.tar.gz")
     if os.path.exists(download_file):
         os.remove(download_file)
     github_util.download_release_file(ffi_url, download_file)
