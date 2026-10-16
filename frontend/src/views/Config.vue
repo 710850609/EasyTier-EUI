@@ -1348,7 +1348,7 @@ const saveConfig = () => {
       configList.value.push({ 'profile': selectedConfig.value, 'name': networkName, 'autostart': false })
     }
     data._profile = selectedConfig.value
-    data._new_config = showMode.value != 0
+    data._new_config = showMode.value !== 0
     data.peer = data.peer.map(e => ({ uri: e }))
     data.proxy_network = data.proxy_network
       .filter(e => e.subnet_cidr && e.subnet_cidr.trim())
@@ -1409,7 +1409,7 @@ const saveConfig = () => {
         toast.info(t('config.exitSetupMode'))
         fastSettingMode.value = false
       }
-      if (showMode.value != 0) {
+      if (showMode.value !== 0) {
         exitAddMode(res.data.profile)
       }
     }).catch(e => {
@@ -1420,7 +1420,6 @@ const saveConfig = () => {
     })
   }).catch(e => {
     console.error('保存配置失败:', e.message)
-    reject(e)
   })
 }
 

@@ -19,7 +19,10 @@
 ----
 - 新增：支持安卓快捷设置磁贴
 ----
+- 优化：适配 EasyTier 新发版规则，支持 Nightly 预发版本下载
+- 修复：PC版本设置开机自启，兼容含空格的安装路径 ([Issues #13](https://github.com/710850609/EasyTier-EUI/issues/13))
 
+----
 - New: [Nodes] page, hover on hostname column to display the corresponding service node's URI
 - Improved: [Config] page, Android version now supports local initial node connectivity check
 - Fixed: Compatibility with EasyTier 2.7.0 core
@@ -39,6 +42,9 @@
 - Fixed: Adapted to EasyTier 2.7.0's stricter config file validation. TOML config file encryption algorithm config key changed from `compression` to `data_compress_algo`, with option values `None` and `Zstd`
 ----
 - New: Support Android Quick Settings Tile
+----
+- Improved: Adapted to EasyTier's new release rules, supporting Nightly pre-release version downloads
+- Fixed: PC version auto-start on boot, compatible with installation paths containing spaces ([Issues #13](https://github.com/710850609/EasyTier-EUI/issues/13))
 
 ##  2.5
 - 优化：【配置】页面统一下拉输入框显示背景
