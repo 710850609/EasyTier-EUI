@@ -118,10 +118,12 @@ async function request(url, options = {}, otherOptions = {}) {
   }
   
   let timeoutId
+  let isTimeout = false
   
   try {
     // 设置超时
     timeoutId = setTimeout(() => {
+      isTimeout = true
       controller.abort()
       console.warn(`Request to ${fullUrl} timed out after ${timeout}ms`)
     }, timeout)
@@ -153,8 +155,16 @@ async function request(url, options = {}, otherOptions = {}) {
     return await response.text()
   } catch (error) {
     if (error.name === 'AbortError') {
+      if (isTimeout) {
+        const timeoutMsg = `请求超时 (${timeout / 1000}s): ${fullUrl}`
+        console.error(timeoutMsg)
+        if (toastError) {
+          toast.error(timeoutMsg)
+        }
+        throw new Error(timeoutMsg)
+      }
       console.warn(`Request ${requestId} was cancelled`)
-      // 取消操作不提示错误
+      // 手动取消操作不提示错误
       throw error
     }
     
@@ -291,7 +301,7 @@ export const api = {
     getConfig: () => get('/et_core/get_config'),
     // getReleaseInfo: (data) => get('/et_core/get_release_info', data),
     getVersionList: (params = {}) => get('/et_core/version_list', params),
-    install: (data) => post('/et_core/install', data),
+    install: (data) => post('/et_core/install', data, {}, {timeout: 60000}),
     getEtLogLevel: (params = {}) => get('/et_core/get_log_level', params),
     setEtLogLevel: (params = {}) => post('/et_core/set_log_level', params),
     getVersionChangeLog: (params = {}) => get('/et_core/version_changelog', params),
