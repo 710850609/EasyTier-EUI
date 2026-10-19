@@ -132,7 +132,7 @@ def save(data, *args, **kwargs):
     # 头部注释
     with open(et_config_file, "w", encoding="utf-8") as f:
         f.write(tomlkit.dumps(doc))
-    #
+
     et_run_info.save(profile, None, None, None)
     logger.info(f"save profile: {profile}")
     return {'profile': profile}
