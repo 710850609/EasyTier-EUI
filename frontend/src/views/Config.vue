@@ -172,6 +172,12 @@
                 <span class="fast-setting-hint">{{ $t('config.fastSetupHint') }} -&gt; </span>
                 <var-button type="primary" size="small" @click="saveConfig" auto-loading>{{ $t('config.saveAndStart') }}</var-button>
               </div>
+              <div v-if="!fastSettingMode" class="section-header-doc">
+                <a href="https://easytier.cn/guide/network/configurations.html" target="_blank" style="text-decoration: none; display: flex; align-items: center; gap: 4px;">
+                  <span style="font-size: 13px; color: var(--color-primary);">{{ $t('settings.easytierDoc') }}</span>
+                  <var-icon name="share" color="var(--color-primary)" />
+                </a>
+              </div>
             </div>
 
               <div class="input-row">

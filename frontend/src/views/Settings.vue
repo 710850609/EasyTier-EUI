@@ -184,15 +184,6 @@
           </var-button>
         </div>
       </div>
-      <!-- <var-divider /> -->
-      <div class="setting-row" @click="window.open('https://easytier.cn', '_blank')">
-        <span class="setting-label">
-          {{ $t('settings.easytierDoc') }}
-        </span>
-        <a href="https://easytier.cn" target="_blank" style="text-decoration: none;">
-          <var-icon name="share" color="var(--color-primary)" />
-        </a>
-      </div>
     </var-paper>
 
     <!-- 其他 -->
