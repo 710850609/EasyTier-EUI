@@ -53,6 +53,9 @@ class CoreForegroundAdapter(IEasyTierAdapter):
         self._core_path = core_path
 
     def get_version(self) -> str:
+        mark_version = super().get_version()
+        if mark_version:
+            return mark_version
         cmd = [self._core_path, '--version']
         try:
             raw_version = common_util.run_cmd(cmd)

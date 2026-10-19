@@ -140,7 +140,7 @@ def __get_arch():
     }
     return arch_map.get(machine, machine)
 
-def __unzip(zip_file, unzip_dir):    
+def __unzip(zip_file, unzip_dir):
     unzip_temp_dir = f"{unzip_dir}/{int(time.time())}"
     logger.info(f"解压: {zip_file} -> {unzip_temp_dir}")
     with zipfile.ZipFile(zip_file, 'r') as zf:
@@ -196,6 +196,9 @@ def __install_et_core(et_version, arch, sys_platform):
         logger.info(f"移动: {item.name}")
     Path(zip_file).unlink()
     shutil.rmtree(unzip_temp_dir)
+    if et_version == 'Nightly':
+        # Nightly 版本，设置版本号，避免通过 命令获取得到数字版本
+        get_facade().set_version(et_version)
     logger.info(f'安装{et_version}版本成功')
     for profile in stop_profiles:
         logger.info(f'启动配置：{profile}')
@@ -248,7 +251,7 @@ def __install_ffi(et_version, arch, sys_platform):
             os.remove(ffi_path)
         shutil.copy2(extracted_so, ffi_path)
         os.chmod(ffi_path, 0o555)
-        ffi_adapter.set_ffi_version(et_version)
+        get_facade().set_version(et_version)
         logger.info(f'FFI {et_version} 安装成功，重启后生效')
     finally:
         shutil.rmtree(extract_dir, ignore_errors=True)

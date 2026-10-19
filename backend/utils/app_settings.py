@@ -32,7 +32,7 @@ def get(key: Optional[str] = None, default_value: Any = None) -> Any:
         return default_value
     return data.get(key)
 
-def save(key: str, value: str | dict | list) -> None:
+def save(key: str, value: str | dict | list | None) -> None:
     settings = _load_data()
     settings[key] = value
     with open(_setting_file(), "w", encoding="utf-8") as f:

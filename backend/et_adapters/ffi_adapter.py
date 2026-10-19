@@ -350,11 +350,10 @@ class FfiAdapter(IEasyTierAdapter):
     # ─────────────────── ffi 接口 结束 ─────────────────────────────
 
     def get_version(self) -> str:
-        ffi_version: str = app_settings.get('ffi_version')
-        if ffi_version:
-            return ffi_version
-        else:
-            return _FFI_LIB_VERSION
+        mark_version = super().get_version()
+        if mark_version:
+            return mark_version
+        return _FFI_LIB_VERSION
 
     def start_network(self, toml_path: str, instance_name: str) -> None:
         logger.info(f"start_network {instance_name}")

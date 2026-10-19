@@ -1,15 +1,34 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """EasyTier adapter abstract interface"""
-
+import logging
 from abc import ABC, abstractmethod
+from typing import Optional
 
+from utils import app_settings
+
+logger = logging.getLogger(__name__)
 
 class IEasyTierAdapter(ABC):
+
+    @staticmethod
+    def set_version(et_version):
+        """设置 EasyTier 版本"""
+        if et_version is None:
+            app_settings.save('et_version', None)
+            logger.info("EasyTier version set to None")
+            return
+        et_version: Optional[str] = et_version.replace('v', '') if et_version else None
+        if not et_version:
+            logger.warning("no EasyTier version value")
+            return
+        app_settings.save('et_version', et_version)
+        logger.info(f"EasyTier version set to {et_version}")
 
     @abstractmethod
     def get_version(self) -> str:
         """Get the EasyTier version string."""
+        return app_settings.get('et_version', None)
 
     @abstractmethod
     def start_network(self, toml_path: str, instance_name: str) -> None:
