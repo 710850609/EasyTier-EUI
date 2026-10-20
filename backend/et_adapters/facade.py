@@ -80,8 +80,8 @@ class EasyTierFacade(IEasyTierAdapter):
             # if info.running:
             if info.autostart:
                 profiles.insert(0, (toml_path, name))
-            else:
-                profiles.append((toml_path, name))
+            # else:
+            #     profiles.append((toml_path, name))
         if len(profiles) > 0:
             toml_path, profile = profiles[0]
             if self.status(profile):

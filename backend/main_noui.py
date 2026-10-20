@@ -177,7 +177,7 @@ def start_android_server(data_dir: str, external_dir: str = "", host: str = "127
         actual_port = handle._server.server_address[1]
         py_log(f"HTTP server started on {host}:{actual_port}")
         # _android_async_start_hook()
-        threading.Thread(target=start_hook, daemon=True, name='async-vpn-startup').start()
+        threading.Thread(target=facade.get_facade().start_last_network, daemon=True, name='async-vpn-startup').start()
         return {"port": actual_port, "host": host}
     except Exception as e:
         py_log(f"EXCEPTION: {e}\n{traceback.format_exc()}")
@@ -296,7 +296,7 @@ def run():
 
 def start_hook():
     """启动钩子服务"""
-    if run_configs.is_docker() or run_configs.IS_ANDROID:
+    if run_configs.is_docker():
         services.start_all()
     from actions import stun
     stun.start_enable()
