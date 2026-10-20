@@ -79,9 +79,9 @@ class EasyTierFacade(IEasyTierAdapter):
                 continue
             # if info.running:
             if info.autostart:
-                profiles.append((toml_path, name))
-            else:
                 profiles.insert(0, (toml_path, name))
+            else:
+                profiles.append((toml_path, name))
         if len(profiles) > 0:
             toml_path, profile = profiles[0]
             if self.status(profile):
@@ -90,6 +90,8 @@ class EasyTierFacade(IEasyTierAdapter):
             logger.info(f"start_last_network: starting {profile}")
             self.start_network(toml_path, profile)
             return profile
+        else:
+            logger.info("start_last_network: no profiles found")
         return None
 
 
