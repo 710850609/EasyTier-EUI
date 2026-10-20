@@ -35,18 +35,6 @@ def get_ffi_lib_name() -> str:
         return 'libeasytier_ffi.dylib'
 
 
-def set_ffi_version(et_version):
-    """设置FFI版本"""
-    if et_version is None:
-        app_settings.save('ffi_version', None)
-        logger.info("FFI version set to None")
-        return
-    et_version: Optional[str] = et_version.replace('v', '') if et_version else None
-    if not et_version:
-        logger.warning("no FFI version value")
-        return
-    app_settings.save('ffi_version', et_version)
-
 class KeyValuePair(Structure):
     _fields_ = [("key", c_void_p), ("value", c_void_p)]
 

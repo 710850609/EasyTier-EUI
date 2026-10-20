@@ -213,7 +213,7 @@ def __install_ffi(et_version, arch, sys_platform):
     build_in_vers = ffi_adapter.get_built_in_version()
     if f"v{build_in_vers}".startswith(et_version):
         shutil.rmtree(ffi_dir)
-        ffi_adapter.set_ffi_version(None)
+        get_facade().set_version(None)
         logger.info(f'选择内置FFI版本：{et_version}，无需下载，已删除旧FFI文件。重启后生效')
         return
     ffi_version = et_version
