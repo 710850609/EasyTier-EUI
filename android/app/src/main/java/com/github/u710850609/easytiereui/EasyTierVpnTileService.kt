@@ -74,7 +74,6 @@ class EasyTierVpnTileService : TileService() {
         if (permissionRequired) {
             AppLogger.info(TAG, "handleClick: permission required, opening app")
             openApp()
-            manager.triggerAutoStart()
         }
         else if (EasyTierVpnService.instance == null && action == ACTION_START) {
             val manager = MainActivity.easyTierManager
