@@ -21,6 +21,13 @@
 ----
 - 优化：适配 EasyTier 新发版规则，支持 Nightly 预发版本下载
 - 修复：PC版本设置开机自启，兼容含空格的安装路径 ([Issues #13](https://github.com/710850609/EasyTier-EUI/issues/13))
+----
+- 优化：【配置】页面，内核 Nightly 版本识别
+- 优化：分享配置时，自动识别本地STUN地址，实现一次获取可用自建STUN配置
+- 优化：EasyTier文档快捷入口，从【设置】页面移动到【配置】页面
+- 优化：安卓版本【设置】页面的【启动重连】功能，迁移到【配置】页面，多配置下精准控制启动。需要重新设置生效
+- 修复：PC版本已设置开机自启、运行时，保存配置后，【节点】页面看不到节点信息
+- 修复：适配兼容2.7.0以上，2.6.4以下运行，TOML配置文件加密算法 data_compress_algo，选项值改为兼容值：1（None）、2（Zstd）
 
 ----
 - New: [Nodes] page, hover on hostname column to display the corresponding service node's URI
@@ -45,6 +52,13 @@
 ----
 - Improved: Adapted to EasyTier's new release rules, supporting Nightly pre-release version downloads
 - Fixed: PC version auto-start on boot, compatible with installation paths containing spaces ([Issues #13](https://github.com/710850609/EasyTier-EUI/issues/13))
+----
+- Improved: Kernel Nightly version detection on the [Config] page
+- Improved: Auto-detect local STUN address when sharing config, enabling one-click retrieval of available self-hosted STUN config
+- Improved: Moved the EasyTier documentation quick entry from the [Settings] page to the [Config] page
+- Improved: Migrated the [Startup Reconnect] feature from the Android [Settings] page to the [Config] page, allowing precise per-profile startup control. Re-configuration required to take effect
+- Fixed: On PC, node info not visible on the [Nodes] page after saving config when auto-start on boot was already enabled and running
+- Fixed: Compatibility with versions ≥2.7.0 and <2.6.4; TOML config encryption algorithm `data_compress_algo` option values changed to compatible values: 1 (None), 2 (Zstd)
 
 ##  2.5
 - 优化：【配置】页面统一下拉输入框显示背景
