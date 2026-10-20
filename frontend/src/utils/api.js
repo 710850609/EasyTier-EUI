@@ -317,7 +317,7 @@ export const api = {
     setLogLevel: (params = {}) => post('/settings/set_log_level', params),
     getLogs: (params = {}) => get('/settings/get_logs', params, { toastError: false }),
     deleteLog: () => post('/settings/delete_log'),
-    setEnabledStartRecovery: (params = {}) => post('/settings/enabled_start_recovery', params),
+    // setEnabledStartRecovery: (params = {}) => post('/settings/enabled_start_recovery', params),
     setWebviewDebug: (params = {}) => post('/settings/set_webview_debug', params),
     setIgnoreSslErrors: (params = {}) => post('/settings/set_ignore_ssl_errors', params),
   },

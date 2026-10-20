@@ -212,6 +212,8 @@ export default {
     rename: 'Renommer',
     autostart: 'Démarrage auto',
     androidAutostart: 'Auto-reconnexion',
+    autoAndroidStartEnabled: 'Auto-reconnexion activée',
+    autoAndroidStartDisabled: 'Auto-reconnexion désactivée',
     saveConfig: 'Sauvegarder',
     save: 'Sauver',
     editFile: 'Modifier fichier',

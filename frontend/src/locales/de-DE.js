@@ -212,6 +212,8 @@ export default {
     rename: 'Umbenennen',
     autostart: 'Autostart',
     androidAutostart: 'Auto-Wiederverbindung',
+    autoAndroidStartEnabled: 'Auto-Wiederverbindung aktiviert',
+    autoAndroidStartDisabled: 'Auto-Wiederverbindung deaktiviert',
     saveConfig: 'Konfig speichern',
     save: 'Speichern',
     editFile: 'Datei bearbeiten',

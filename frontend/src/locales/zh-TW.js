@@ -306,6 +306,8 @@ export default {
     rename: '改名',
     autostart: '開機自啟',
     androidAutostart: '啟動重連',
+    autoAndroidStartEnabled: '已開啟啟動重連',
+    autoAndroidStartDisabled: '已關閉啟動重連',
     saveConfig: '儲存設定',
     save: '儲存',
     editFile: '編輯檔案',

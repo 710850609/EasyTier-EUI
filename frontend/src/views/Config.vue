@@ -106,7 +106,7 @@
             </var-select>
 
             <div class="config-actions-group" v-if="selectedConfig">
-              <label class="toggle-item" v-if="showMode === 0 && platform !== 'android'">
+              <label class="toggle-item" v-if="showMode === 0">
                 <var-switch variant size="18" :loading="changingAutostart" v-model="currentConfigAutostart" @change="(val) => handleSwitchChange(currentConfigData, 'autostart', val)"></var-switch>
               </label>
               <span class="toggle-label" v-if="showMode === 0 && platform !== 'android'">{{ $t('config.autostart') }}</span>
@@ -1936,7 +1936,12 @@ const handleSwitchChange = async (cfg, field, val) => {
     try {
       changingAutostart.value = true
       await api.services.autoStart(cfg.profile, val)
-      toast.success(val ? t('config.autostartEnabled') : t('config.autostartDisabled'))
+      if (platform.value === 'android') {
+        toast.success(val ? t('config.autoAndroidStartEnabled') : t('config.autoAndroidStartDisabled'))
+      } else {
+        toast.success(val ? t('config.autostartEnabled') : t('config.autostartDisabled'))
+      }
+      await loadConfigs()
     } catch (error) {
       cfg[field] = !val
     } finally {

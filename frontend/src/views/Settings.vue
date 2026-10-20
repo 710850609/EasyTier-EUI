@@ -738,7 +738,7 @@ const getEuiInfo = async () => {
     platform.value = data.platform
     isDocker.value = data.is_docker
     logLevel.value = data.log_level
-    enabledStartRecovery.value = data.enabled_start_recovery || false
+    // enabledStartRecovery.value = data.enabled_start_recovery || false
     webviewDebugEnabled.value = data.webview_debug || false
     ignoreSslErrors.value = data.ignore_ssl_errors || false
     if (euiReleaseInfo.value) {

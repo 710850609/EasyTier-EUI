@@ -121,6 +121,8 @@ def setup_env():
     logger.info(f"LOG_DIR: {LOG_DIR}")
     _is_inited_evn = True
 
+    IS_ANDROID = True
+
 
 BUILD_VERSION = "2.4.020604-20260915140508"
 

@@ -176,46 +176,47 @@ def start_android_server(data_dir: str, external_dir: str = "", host: str = "127
             raise RuntimeError("HTTP server start failed")
         actual_port = handle._server.server_address[1]
         py_log(f"HTTP server started on {host}:{actual_port}")
-        _android_async_start_hook()
+        # _android_async_start_hook()
+        threading.Thread(target=start_hook, daemon=True, name='async-vpn-startup').start()
         return {"port": actual_port, "host": host}
     except Exception as e:
         py_log(f"EXCEPTION: {e}\n{traceback.format_exc()}")
         raise
 
-def _android_async_start_hook():
-    enabled_start_recovery = app_settings.get('enabled_start_recovery', True)
-    if not enabled_start_recovery:
-        logger.info("跳过启动应用恢复组网：禁用功能")
-        return
-    def _async_start_vpn():
-        try:
-            logger.info("async VPN startup begin")
-            run_infos = et_run_info.get_all()
-            for info in run_infos.values():
-                if info.running:
-                    profile_filename = info.profile
-                    toml_path = run_configs.et_config_file(profile_filename)
-                    if not os.path.exists(toml_path):
-                        logger.warning(f"跳过应用启动恢复上次未关闭的组网：{profile_filename} 配置不存在")
-                        continue
-                    logger.info(f"应用启动恢复上次未关闭的组网：{profile_filename}")
-                    if facade.get_facade().status(profile_filename):
-                        logger.info(f"应用启动恢复：{profile_filename} 已在运行中，跳过")
-                        if run_configs.IS_ANDROID:
-                            # 安卓环境下，仅启动单个组网配置
-                            logger.info(f"安卓环境，仅启动单个组网配置")
-                            break
-                        else:
-                            continue
-                    facade.get_facade().start_network(toml_path, profile_filename)
-                    if run_configs.IS_ANDROID:
-                        # 安卓环境下，仅启动单个组网配置
-                        logger.info(f"安卓环境，仅启动单个组网配置")
-                        break
-            logger.info("async VPN startup done")
-        except Exception:
-            logger.exception(f"async VPN startup failed")
-    threading.Thread(target=_async_start_vpn, daemon=True, name='async-vpn-startup').start()
+# def _android_async_start_hook():
+#     enabled_start_recovery = app_settings.get('enabled_start_recovery', True)
+#     if not enabled_start_recovery:
+#         logger.info("跳过启动应用恢复组网：禁用功能")
+#         return
+#     def _async_start_vpn():
+#         try:
+#             logger.info("async VPN startup begin")
+#             run_infos = et_run_info.get_all()
+#             for info in run_infos.values():
+#                 if info.running:
+#                     profile_filename = info.profile
+#                     toml_path = run_configs.et_config_file(profile_filename)
+#                     if not os.path.exists(toml_path):
+#                         logger.warning(f"跳过应用启动恢复上次未关闭的组网：{profile_filename} 配置不存在")
+#                         continue
+#                     logger.info(f"应用启动恢复上次未关闭的组网：{profile_filename}")
+#                     if facade.get_facade().status(profile_filename):
+#                         logger.info(f"应用启动恢复：{profile_filename} 已在运行中，跳过")
+#                         if run_configs.IS_ANDROID:
+#                             # 安卓环境下，仅启动单个组网配置
+#                             logger.info(f"安卓环境，仅启动单个组网配置")
+#                             break
+#                         else:
+#                             continue
+#                     facade.get_facade().start_network(toml_path, profile_filename)
+#                     if run_configs.IS_ANDROID:
+#                         # 安卓环境下，仅启动单个组网配置
+#                         logger.info(f"安卓环境，仅启动单个组网配置")
+#                         break
+#             logger.info("async VPN startup done")
+#         except Exception:
+#             logger.exception(f"async VPN startup failed")
+#     threading.Thread(target=_async_start_vpn, daemon=True, name='async-vpn-startup').start()
 
 
 def run():
@@ -295,7 +296,7 @@ def run():
 
 def start_hook():
     """启动钩子服务"""
-    if run_configs.is_docker():
+    if run_configs.is_docker() or run_configs.IS_ANDROID:
         services.start_all()
     from actions import stun
     stun.start_enable()

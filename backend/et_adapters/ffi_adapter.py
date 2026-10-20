@@ -414,7 +414,7 @@ class FfiAdapter(IEasyTierAdapter):
                     # 安卓环境下，确保所有实例都停止，再启动新实例
                     self.stop_network(self._instance_set.pop())
                     # 记录配置已停止，避免启动重连时，启动冲突
-                    et_run_info.set_running(instance_name, False)
+                    # et_run_info.set_running(instance_name, False)
             with self._lock:
                 toml_bytes = toml_config.encode('utf-8')
                 c_config = ctypes.c_char_p(toml_bytes)

@@ -33,11 +33,11 @@ class EasyTierFacade(IEasyTierAdapter):
 
     def start_network(self, toml_path: str, instance_name: str) -> None:
         self._adapter.start_network(toml_path, instance_name)
-        et_run_info.set_running(instance_name, True)
+        # et_run_info.set_running(instance_name, True)
 
     def stop_network(self, instance_name: str) -> None:
         self._adapter.stop_network(instance_name)
-        et_run_info.set_running(instance_name, False)
+        # et_run_info.set_running(instance_name, False)
 
     def status(self, instance_name: str) -> bool:
         return self._adapter.status(instance_name)
@@ -77,7 +77,8 @@ class EasyTierFacade(IEasyTierAdapter):
             if not os.path.exists(toml_path):
                 logger.warning(f"start_last_network: skip {name}, config not found")
                 continue
-            if info.running:
+            # if info.running:
+            if info.autostart:
                 profiles.append((toml_path, name))
             else:
                 profiles.insert(0, (toml_path, name))
@@ -90,6 +91,7 @@ class EasyTierFacade(IEasyTierAdapter):
             self.start_network(toml_path, profile)
             return profile
         return None
+
 
 
 _facade_instance: Optional[EasyTierFacade] = None

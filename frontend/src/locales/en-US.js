@@ -310,6 +310,8 @@ export default {
     rename: 'Rename',
     autostart: 'Auto-start',
     androidAutostart: 'Auto-reconnect',
+    autoAndroidStartEnabled: 'Auto-reconnect enabled',
+    autoAndroidStartDisabled: 'Auto-reconnect disabled',
     saveConfig: 'Save Config',
     save: 'Save',
     editFile: 'Edit File',

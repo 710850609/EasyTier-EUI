@@ -53,18 +53,24 @@ def start_all(*args, **kwargs):
         return
     infos = et_run_info.get_all()
     system_service_profiles = []
+    start_count = 0
     for _, info in infos.items():
         if info.use_system_service:
-            try:
-                system_service_profiles.append(info.profile)
-            except Exception as e:
-                logger.exception(f"启动【{info.profile}】失败")
+            system_service_profiles.append(info.profile)
         elif info.autostart:
-            logger.info(f"启动 EaysTier 核心服务：{info.profile}")
-            start({'profile': info.profile})
+            if start_count < 1 or not run_configs.IS_ANDROID:
+                logger.info(f"启动 EasyTier 配置：{info.profile}")
+                try:
+                    start({'profile': info.profile})
+                    start_count += 1
+                except Exception as e:
+                    logger.exception(f"启动【{info.profile}】失败")
     if len(system_service_profiles) > 0:
-        logger.info(f"启动 EaysTier 系统注册服务：{system_service_profiles}")
-        start({'profile': system_service_profiles[0]})
+        logger.info(f"启动 EasyTier 系统注册服务：{system_service_profiles}")
+        try:
+            start({'profile': system_service_profiles[0]})
+        except Exception as e:
+            logger.exception(f"启动系统服务失败")
 
 def stop_all(*args, **kwargs) -> List[str]:
     stop_profiles = []
@@ -105,6 +111,12 @@ def auto_start(params: Optional[dict]=None, keep_run_status:bool=True, *args, **
         # 不支持系统服务，仅修改配置
         info.use_system_service = False
         et_run_info.save(*info.__dict__.values())
+        # 安卓系统仅支持单个自启配置
+        if run_configs.IS_ANDROID:
+            for _, info in et_run_info.get_all().items():
+                if info.autostart and info.profile != profile:
+                    info.autostart = False
+                    et_run_info.save(*info.__dict__.values())
         return
     # 支持系统服务
     auto_start_set = __get_system_service_profiles()
