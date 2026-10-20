@@ -18,7 +18,6 @@ class IEasyTierAdapter(ABC):
             app_settings.save('et_version', None)
             logger.info("EasyTier version set to None")
             return
-        et_version: Optional[str] = et_version.replace('v', '') if et_version else None
         if not et_version:
             logger.warning("no EasyTier version value")
             return

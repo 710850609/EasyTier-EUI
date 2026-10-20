@@ -238,18 +238,18 @@
         >
         </var-select>
       </div>
-      <div class="setting-row" v-if="platform === 'android'">
-        <span class="setting-label">
-          {{ $t('settings.startRecovery') }}
-          <var-tooltip :offset-x="65">
-            <var-icon name="help-circle-outline" size="16" class="help-icon" color="var(--color-primary)" />
-            <template #content>
-              <div class="tooltip-multiline">{{ $t('settings.startRecoveryTip') }}</div>
-            </template>
-          </var-tooltip>
-        </span>
-        <var-switch variant size="20" v-model="enabledStartRecovery" @change="toggleEnabledStartRecovery" />
-      </div>
+<!--      <div class="setting-row" v-if="platform === 'android'">-->
+<!--        <span class="setting-label">-->
+<!--          {{ $t('settings.startRecovery') }}-->
+<!--          <var-tooltip :offset-x="65">-->
+<!--            <var-icon name="help-circle-outline" size="16" class="help-icon" color="var(&#45;&#45;color-primary)" />-->
+<!--            <template #content>-->
+<!--              <div class="tooltip-multiline">{{ $t('settings.startRecoveryTip') }}</div>-->
+<!--            </template>-->
+<!--          </var-tooltip>-->
+<!--        </span>-->
+<!--        <var-switch variant size="20" v-model="enabledStartRecovery" @change="toggleEnabledStartRecovery" />-->
+<!--      </div>-->
       <div class="setting-row">
         <span class="setting-label">
           {{ $t('common.deleteLog') }}
@@ -481,7 +481,7 @@ const euiReleaseInfo = ref({})
 const euiRelease = ref({})
 const euiChangeMarkdown = ref('')
 const updateProgress = ref({ current_progress: 0, description: '', status: -1, active: false })
-const enabledStartRecovery = ref(false)
+// const enabledStartRecovery = ref(false)
 const showEuiReleaseInfo = ref(false)
 const showEtChangeLog = ref(false)
 const etChangeLog = ref('')
@@ -512,13 +512,13 @@ const toggleGlassEffect = (val) => {
   setGlassEffect(val)
 }
 
-const toggleEnabledStartRecovery = (val) => {
-  api.settings.setEnabledStartRecovery({ enabled: val })
-    .then(() => toast.success(t(val ? 'settings.startRecoveryEnabled' : 'settings.startRecoveryDisabled')))
-    .catch(() => {
-      enabledStartRecovery.value = !val
-    })
-}
+// const toggleEnabledStartRecovery = (val) => {
+//   api.settings.setEnabledStartRecovery({ enabled: val })
+//     .then(() => toast.success(t(val ? 'settings.startRecoveryEnabled' : 'settings.startRecoveryDisabled')))
+//     .catch(() => {
+//       enabledStartRecovery.value = !val
+//     })
+// }
 
 const startPress = (e) => {
   dev_toggle_timer.value = setTimeout(() => { 
@@ -665,7 +665,6 @@ const getEtInfo = async () => {
     etLogLevel.value = data.log_level
     delete data.log_level
     etVersion.value = { ...etVersion.value, ...data }
-
   } catch (e) {
     console.error('获取内核版本失败:', e)
     etVersion.value.raw_version = t('settings.getVersionFailed') + e.message
@@ -680,6 +679,9 @@ const getEtReleaseInfo = async (refresh = false, showTip = true) => {
     const resp = await api.etCore.getVersionList({'refresh': refresh})
     etVersionList.value = resp.data.versions || []
     etVersion.value.latest_version = etVersionList.value[0]?.version || ''
+    if (etVersion.value.latest_version === 'Nightly') {
+      etVersion.value.latest_version = etVersionList.value[1]?.version || ''
+    }
     if (!etVersion.value.selected_version) {
       etVersion.value.selected_version = etVersion.value.latest_version
     }
