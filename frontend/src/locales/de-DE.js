@@ -211,6 +211,7 @@ export default {
     normalAdd: 'Benutzerdefiniert',
     rename: 'Umbenennen',
     autostart: 'Autostart',
+    androidAutostart: 'Auto-Wiederverbindung',
     saveConfig: 'Konfig speichern',
     save: 'Speichern',
     editFile: 'Datei bearbeiten',

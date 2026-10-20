@@ -199,6 +199,8 @@ def __install_et_core(et_version, arch, sys_platform):
     if et_version == 'Nightly':
         # Nightly 版本，设置版本号，避免通过 命令获取得到数字版本
         get_facade().set_version(et_version)
+    else:
+        get_facade().set_version(None)
     logger.info(f'安装{et_version}版本成功')
     for profile in stop_profiles:
         logger.info(f'启动配置：{profile}')

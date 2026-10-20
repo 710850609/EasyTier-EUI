@@ -211,6 +211,7 @@ export default {
     normalAdd: 'Ajout personnalisé',
     rename: 'Renommer',
     autostart: 'Démarrage auto',
+    androidAutostart: 'Auto-reconnexion',
     saveConfig: 'Sauvegarder',
     save: 'Sauver',
     editFile: 'Modifier fichier',

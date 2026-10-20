@@ -309,6 +309,7 @@ export default {
     normalAdd: '自定义新增',
     rename: '改名',
     autostart: '开机自启',
+    androidAutostart: '启动重连',
     saveConfig: '保存配置',
     save: '保存',
     editFile: '编辑文件',

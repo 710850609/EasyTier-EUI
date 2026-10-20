@@ -99,6 +99,7 @@
                 :value="cfg.profile"
               >
                 <div class="config-option">
+                  <svg-icon type="mdi" :path="mdiRotateRight" :size="20" :color="cfg.autostart ? 'var(--color-primary)' : 'var(--color-text-disabled)'"></svg-icon>
                   <span>{{ cfg.name }}</span>
                 </div>
               </var-option>
@@ -106,9 +107,10 @@
 
             <div class="config-actions-group" v-if="selectedConfig">
               <label class="toggle-item" v-if="showMode === 0 && platform !== 'android'">
-                <var-switch variant size="18" :loading="changingAutostart" v-model="currentConfigAutostart" @change="(val) => handleSwitchChange(currentConfigData, 'autostart', val)" />
+                <var-switch variant size="18" :loading="changingAutostart" v-model="currentConfigAutostart" @change="(val) => handleSwitchChange(currentConfigData, 'autostart', val)"></var-switch>
               </label>
               <span class="toggle-label" v-if="showMode === 0 && platform !== 'android'">{{ $t('config.autostart') }}</span>
+              <span class="toggle-label" v-if="showMode === 0 && platform === 'android'">{{ $t('config.androidAutostart') }}</span>
             </div>
           </div>
           <div class="toolbar-right" v-if="selectedConfig">
@@ -1026,7 +1028,7 @@ import toast from '../components/toast.js'
 import { api } from '../utils/api.js'
 import CodeEditor from '../components/CodeEditor.vue'
 import SvgIcon from '@jamescoyle/vue-icon'
-import { mdiEye, mdiEyeOff, mdiHomeEdit, mdiRouterNetwork, mdiMonitor, mdiLanConnect, mdiTuneVariant, mdiPlus, mdiDrawPen, mdiShareOutline, mdiSquareEditOutline, mdiTrashCanOutline, mdiDraw, mdiShapeSquareRoundedPlus, mdiClipboardTextMultipleOutline, mdiLineScan } from '@mdi/js'
+import { mdiEye, mdiEyeOff, mdiHomeEdit, mdiRouterNetwork, mdiMonitor, mdiLanConnect, mdiTuneVariant, mdiPlus, mdiDrawPen, mdiShareOutline, mdiSquareEditOutline, mdiTrashCanOutline, mdiDraw, mdiShapeSquareRoundedPlus, mdiClipboardTextMultipleOutline, mdiLineScan, mdiRotateRight } from '@mdi/js'
 import { mdilAccount, mdilLock } from '@mdi/light-js'
 import QrScanner from 'qr-scanner'
 import QRCode from 'qrcode'
@@ -1103,7 +1105,7 @@ const customExitNode = ref('')
 const customRoute = ref('')
 const encryptionAlgorithmList = ref(['aes-gcm','xor','chacha20','aes-gcm','aes-gcm-256','openssl-aes128-gcm','openssl-aes256-gcm','openssl-chacha20'])
 const defaultProtocolList = computed(() => [{label: t('config.defaultOption'), value: ''}, {label: 'tcp', value: 'tcp'}, {label: 'udp', value: 'udp'}, {label: 'quic', value: 'quic'}, {label: 'wg', value: 'wg'}, {label: 'ws', value: 'ws'}, {label: 'wss', value: 'wss'}, {label: 'faketcp', value: 'faketcp'}])
-const compressionOptions = computed(() => [{label: t('config.noCompression'), value: 'None'}, {label: 'zstd', value: 'Zstd'}])
+const compressionOptions = computed(() => [{label: t('config.noCompression'), value: 1}, {label: 'zstd', value: 2}])
 
 const config = ref({
   hostname: '',
@@ -1379,7 +1381,7 @@ const saveConfig = () => {
       delete data.flags.instance_recv_bps_limit;
     }
     // 删除 flags 中 空 字段
-    ['dev_name', 'encryption_algorithm', 'default_protocol', 'data_compress_algo', 'relay_network_whitelist', 'tld_dns_zone'].forEach(key => {
+    ['dev_name', 'encryption_algorithm', 'default_protocol', 'relay_network_whitelist', 'tld_dns_zone'].forEach(key => {
       if (config.value.flags[key] == null || config.value.flags[key].trim() === '') {
         data.flags[key] = null
       }

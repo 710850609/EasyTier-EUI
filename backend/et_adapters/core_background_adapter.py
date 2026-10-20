@@ -78,6 +78,7 @@ class CoreBackgroundAdapter(CoreForegroundAdapter):
             return tuple(int(x) for x in v.split('-')[0].split('.'))
 
         et_version = self.get_version()
+        et_version = et_version.replace('v', '') if et_version.startswith('v') else et_version
         if et_version == 'Nightly' or _ver(et_version) >= _ver('2.7.0'):
             # 2.7.0 引入不兼容参数 core-args 参数，core启动参数必须在这个参数后面
             cmd.append('--core-args')

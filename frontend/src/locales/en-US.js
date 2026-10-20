@@ -309,6 +309,7 @@ export default {
     normalAdd: 'Custom Add',
     rename: 'Rename',
     autostart: 'Auto-start',
+    androidAutostart: 'Auto-reconnect',
     saveConfig: 'Save Config',
     save: 'Save',
     editFile: 'Edit File',

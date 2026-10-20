@@ -305,6 +305,7 @@ export default {
     normalAdd: '自定義新增',
     rename: '改名',
     autostart: '開機自啟',
+    androidAutostart: '啟動重連',
     saveConfig: '儲存設定',
     save: '儲存',
     editFile: '編輯檔案',

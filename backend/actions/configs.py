@@ -122,10 +122,17 @@ def save(data, *args, **kwargs):
     # 处理历史版本错位key
     if 'compression' in flags:
         if flags.get('compression') == 'zstd':
-            flags['data_compress_algo'] = 'Zstd'
+            flags['data_compress_algo'] = 2
         del data['flags']['compression']
+
+    if flags.get('data_compress_algo') == 'Zstd' or flags.get('data_compress_algo') == 2:
+        flags['data_compress_algo'] = 2
+    else:
+        flags['data_compress_algo'] = 1
+
     if 'compression' in doc.get('flags', {}):
         del doc['flags']['compression']
+
 
     __deep_merge(doc, data)
     doc['instance_name'] = profile
@@ -219,26 +226,27 @@ def copy(profile:str):
         if doc_flags.get("encryption_algorithm"):
             share_flags["encryption_algorithm"] = doc_flags.get("encryption_algorithm")
     # 如果是本地STUN，则自动加入初始节点信息
-    stun_map = {}
-    for stun_data in stun.list_stun() or []:
-        map_value = stun_data.get('mapping', {}).get('dns_record', '')
-        if not stun_data.get('running') or not map_value:
-            continue
-        stun_cfg = stun_data.get('stunConfig') or {}
-        map_key = stun_cfg.get('listenProtocol', '') + ':' + stun_cfg.get('listenPort', '')
-        stun_map[map_key] = map_value
-    if stun_map:
-        listeners = []
-        for listener in doc["listeners"] or []:
-            listener_parts = listener.split(':')
-            map_key = listener_parts[0] + ':' + listener_parts[-1]
-            if map_key in stun_map and stun_map[map_key] not in listeners:
-                listeners.append(stun_map[map_key])
-        if listeners:
-            peers = []
-            for listener in listeners:
-                peers.append({'uri': listener})
-            share_doc["peer"] = peers
+    if not share_doc["peer"]:
+        stun_map = {}
+        for stun_data in stun.list_stun() or []:
+            map_value = stun_data.get('mapping', {}).get('dns_record', '')
+            if not stun_data.get('running') or not map_value:
+                continue
+            stun_cfg = stun_data.get('stunConfig') or {}
+            map_key = stun_cfg.get('listenProtocol', '') + ':' + stun_cfg.get('listenPort', '')
+            stun_map[map_key] = map_value
+        if stun_map:
+            listeners = []
+            for listener in doc["listeners"] or []:
+                listener_parts = listener.split(':')
+                map_key = listener_parts[0] + ':' + listener_parts[-1]
+                if map_key in stun_map and stun_map[map_key] not in listeners:
+                    listeners.append(stun_map[map_key])
+            if listeners:
+                peers = []
+                for listener in listeners:
+                    peers.append({'uri': listener})
+                share_doc["peer"] = peers
 
     with open(tmp_file, "w", encoding="utf-8") as f:
         f.write(tomlkit.dumps(share_doc))
