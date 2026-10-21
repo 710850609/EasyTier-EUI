@@ -1014,6 +1014,15 @@
         {{ $t('common.cancel') }}
       </var-button>
     </div>
+    <var-button
+      v-if="flashAvailable"
+      text
+      round
+      class="qr-flash-btn"
+      @click="toggleFlash"
+    >
+      <svg-icon type="mdi" :size="40" :path="flashOn ? mdiFlashlight : mdiFlashlightOff"></svg-icon>
+    </var-button>
     <p class="qr-scan-hint">{{ $t('config.scanHint') }}</p>
   </div>
 </template>
@@ -1028,7 +1037,7 @@ import toast from '../components/toast.js'
 import { api } from '../utils/api.js'
 import CodeEditor from '../components/CodeEditor.vue'
 import SvgIcon from '@jamescoyle/vue-icon'
-import { mdiEye, mdiEyeOff, mdiHomeEdit, mdiRouterNetwork, mdiMonitor, mdiLanConnect, mdiTuneVariant, mdiPlus, mdiDrawPen, mdiShareOutline, mdiSquareEditOutline, mdiTrashCanOutline, mdiDraw, mdiShapeSquareRoundedPlus, mdiClipboardTextMultipleOutline, mdiLineScan, mdiRotateRight } from '@mdi/js'
+import { mdiEye, mdiEyeOff, mdiHomeEdit, mdiRouterNetwork, mdiMonitor, mdiLanConnect, mdiTuneVariant, mdiPlus, mdiDrawPen, mdiShareOutline, mdiSquareEditOutline, mdiTrashCanOutline, mdiDraw, mdiShapeSquareRoundedPlus, mdiClipboardTextMultipleOutline, mdiLineScan, mdiRotateRight, mdiFlashlight, mdiFlashlightOff } from '@mdi/js'
 import { mdilAccount, mdilLock } from '@mdi/light-js'
 import QrScanner from 'qr-scanner'
 import QRCode from 'qrcode'
@@ -1099,6 +1108,8 @@ const showQrScanner = ref(false)
 const isScanning = ref(false)
 const cameraReady = ref(false)
 const qrScanner = ref(null)
+const flashAvailable = ref(false)
+const flashOn = ref(false)
 const newConfigName = ref('')
 const editNameValue = ref('')
 const customExitNode = ref('')
@@ -1764,6 +1775,11 @@ const onStartScan = async () => {
     qrScanner.value = scanner
     await scanner.start()
     cameraReady.value = true
+    try {
+      flashAvailable.value = scanner.hasFlash
+    } catch {
+      flashAvailable.value = false
+    }
   } catch (err) {
     console.error('QR scan error:', err)
     isScanning.value = false
@@ -1832,8 +1848,20 @@ const onClipboardAdd = async () => {
   }
 }
 
+const toggleFlash = async () => {
+  if (qrScanner.value) {
+    try {
+      await qrScanner.value.toggleFlash()
+      flashOn.value = qrScanner.value.isFlashOn()
+    } catch {
+    }
+  }
+}
+
 const stopQrScanner = () => {
   cameraReady.value = false
+  flashAvailable.value = false
+  flashOn.value = false
   if (qrScanner.value) {
     const scanner = qrScanner.value
     qrScanner.value = null
@@ -3379,6 +3407,15 @@ html.dark .port-forward-row {
 }
 
 .qr-back-btn {
+  color: #fff !important;
+}
+
+.qr-flash-btn {
+  position: absolute;
+  top: calc(50% + 160px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
   color: #fff !important;
 }
 
