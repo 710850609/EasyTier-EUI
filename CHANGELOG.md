@@ -1,4 +1,4 @@
-##  
+## 2.6
 - 新增：【节点】页面，主机名列悬浮显示对应服务节点的URI
 - 优化：【配置】页面，安卓版本支持本机检测初始节点连通
 - 修复：兼容EasyTier2.7.0内核
@@ -31,7 +31,6 @@
 -----
 - 优化：扫码支持打开闪光灯
 - 优化：内核更新标识，Nightly 版本不提示更新
-- 优化：ffi模式下 EasyTier 日志 按需格式化显示JSON数据
 
 ----
 - New: [Nodes] page, hover on hostname column to display the corresponding service node's URI
@@ -63,6 +62,9 @@
 - Improved: Migrated the [Startup Reconnect] feature from the Android [Settings] page to the [Config] page, allowing precise per-profile startup control. Re-configuration required to take effect
 - Fixed: On PC, node info not visible on the [Nodes] page after saving config when auto-start on boot was already enabled and running
 - Fixed: Compatibility with versions ≥2.7.0 and <2.6.4; TOML config encryption algorithm `data_compress_algo` option values changed to compatible values: 1 (None), 2 (Zstd)
+----
+- Improved: Flashlight support for QR code scanning
+- Improved: Kernel update indicator — Nightly versions no longer show update notifications
 
 ##  2.5
 - 优化：【配置】页面统一下拉输入框显示背景
