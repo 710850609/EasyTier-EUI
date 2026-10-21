@@ -38,7 +38,7 @@
               @click="showLogViewer = true"
             >
               <svg-icon type="mdi" :path="mdiTextBoxSearchOutline" size="17"></svg-icon>
-              日志
+              {{ $t('nodes.log') }}
             </var-button>
             <var-loading type="circle" v-if="serviceOperating" />
             <var-button

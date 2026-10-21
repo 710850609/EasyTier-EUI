@@ -136,6 +136,7 @@ export default {
     starting: 'Wird gestartet...',
     running: 'Läuft',
     stopped: 'Gestoppt',
+    log: 'Log',
     start: 'Start',
     stop: 'Stop',
     normalNodes: 'Normale Knoten',

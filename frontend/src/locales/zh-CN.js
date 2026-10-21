@@ -222,6 +222,7 @@ export default {
     starting: '启动中...',
     running: '运行中',
     stopped: '未启动',
+    log: '日志',
     start: '启动',
     stop: '停止',
     normalNodes: '普通节点',

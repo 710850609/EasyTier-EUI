@@ -136,6 +136,7 @@ export default {
     starting: 'Démarrage...',
     running: 'En cours',
     stopped: 'Arrêté',
+    log: 'Log',
     start: 'Démarrer',
     stop: 'Arrêter',
     normalNodes: 'Nœuds normaux',

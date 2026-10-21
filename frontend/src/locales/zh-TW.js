@@ -218,6 +218,7 @@ export default {
     starting: '啟動中...',
     running: '執行中',
     stopped: '未啟動',
+    log: '日志',
     start: '啟動',
     stop: '停止',
     normalNodes: '普通節點',

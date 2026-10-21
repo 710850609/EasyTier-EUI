@@ -222,6 +222,7 @@ export default {
     starting: 'Starting...',
     running: 'Running',
     stopped: 'Stopped',
+    log: 'Log',
     start: 'Start',
     stop: 'Stop',
     normalNodes: 'Normal Nodes',

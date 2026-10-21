@@ -28,6 +28,10 @@
 - 优化：安卓版本【设置】页面的【启动重连】功能，迁移到【配置】页面，多配置下精准控制启动。需要重新设置生效
 - 修复：PC版本已设置开机自启、运行时，保存配置后，【节点】页面看不到节点信息
 - 修复：适配兼容2.7.0以上，2.6.4以下运行，TOML配置文件加密算法 data_compress_algo，选项值改为兼容值：1（None）、2（Zstd）
+-----
+- 优化：扫码支持打开闪光灯
+- 优化：内核更新标识，Nightly 版本不提示更新
+- 优化：ffi模式下 EasyTier 日志 按需格式化显示JSON数据
 
 ----
 - New: [Nodes] page, hover on hostname column to display the corresponding service node's URI
