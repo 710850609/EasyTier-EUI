@@ -672,6 +672,8 @@ class FfiAdapter(IEasyTierAdapter):
                 item = json.loads(item)
                 msg = f"{item.get('time', '')[11:22]}"
                 for e_key, e_value in item.get('event', {}).items():
+                    if isinstance(e_value, dict):
+                        e_value = json.dumps(e_value, ensure_ascii=False, indent=2)
                     msg += f' {e_key} {str(e_value)}'
                 events.insert(0, msg)
             if info.get('error_msg'):
