@@ -840,7 +840,10 @@ jobs:
         if: ${{ needs.build-info.outputs.prerelease == 'false' && github.event.inputs.no-draft == 'true' }}
         run: |
          new_version="${{ needs.build-info.outputs.version }}"
-         changelog="${{ needs.build-info.outputs.release_notes }}"
+         changelog=$(cat <<'EOF_CHANGELOG'
+         ${{ needs.build-info.outputs.release_notes }}
+         EOF_CHANGELOG
+         )
 
          gh workflow run update-version.yml \
            --repo "710850609/FnDepot" \
