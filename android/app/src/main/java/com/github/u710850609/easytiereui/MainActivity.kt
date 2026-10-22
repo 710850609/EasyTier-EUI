@@ -503,6 +503,13 @@ class MainActivity : AppCompatActivity() {
         val module = python.getModule("main_noui")
         AppLogger.info(TAG, "main_noui module imported successfully")
 
+        // 在启动后端服务前初始化 EasyTierManager，避免 EasyTierVpnTileService 触发组网时，EasyTierManager 未初始化拿不到设备名称
+        withContext(Dispatchers.Main) {
+            AppLogger.info(TAG, "Creating EasyTierManager...")
+            easyTierManager = EasyTierManager(this@MainActivity)
+            AppLogger.info(TAG, "EasyTierManager created (not auto-starting)")
+        }
+
         AppLogger.info(TAG, "Calling start_android_server with data_dir=${filesDir.absolutePath}...")
         val externalDir = getExternalFilesDir(null)?.absolutePath ?: ""
         AppLogger.info(TAG, "start_android_server: externalDir=$externalDir")
@@ -516,9 +523,6 @@ class MainActivity : AppCompatActivity() {
         withContext(Dispatchers.Main) {
             AppLogger.info(TAG, "Loading WebView...")
             loadWebView()
-            AppLogger.info(TAG, "Creating EasyTierManager...")
-            easyTierManager = EasyTierManager(this@MainActivity)
-            AppLogger.info(TAG, "EasyTierManager created (not auto-starting)")
         }
     }
 
