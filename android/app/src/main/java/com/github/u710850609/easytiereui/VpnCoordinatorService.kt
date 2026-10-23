@@ -62,7 +62,11 @@ class VpnCoordinatorService : Service() {
         }
 
         AppLogger.info(TAG, "handleStart: triggering auto-start in background")
-        manager.triggerAutoStart()
+        val started = manager.triggerAutoStart()
+        if (!started) {
+            AppLogger.warn(TAG, "handleStart: no network started, opening app for setup")
+            openMainActivity()
+        }
     }
 
     private fun handleStop() {
