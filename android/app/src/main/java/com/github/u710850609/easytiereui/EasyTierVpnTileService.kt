@@ -74,28 +74,43 @@ class EasyTierVpnTileService : TileService() {
         if (permissionRequired) {
             AppLogger.info(TAG, "handleClick: permission required, opening app")
             openApp()
+            return
         }
-        else if (EasyTierVpnService.instance == null && action == ACTION_START) {
-            val manager = MainActivity.easyTierManager
-            if (manager != null) {
-                AppLogger.info(TAG, "handleClick: triggering auto-start in background")
-                manager.triggerAutoStart()
-            } else {
-                AppLogger.warn(TAG, "handleClick: EasyTierManager is null, opening app to init")
-                openApp()
+
+        if (EasyTierVpnService.instance == null && action == ACTION_START) {
+            handleStartViaCoordinator()
+        } else if (action == ACTION_STOP) {
+            handleStopViaCoordinator()
+        }
+    }
+
+    private fun handleStartViaCoordinator() {
+        val manager = App.easyTierManager
+        if (manager != null && App.pythonReady) {
+            AppLogger.info(TAG, "handleClick: EasyTierManager ready, delegating to coordinator")
+            val intent = Intent(this, VpnCoordinatorService::class.java).apply {
+                putExtra(VpnCoordinatorService.EXTRA_ACTION, VpnCoordinatorService.ACTION_START)
             }
+            startService(intent)
+        } else {
+            AppLogger.warn(TAG, "handleClick: EasyTierManager not ready (manager=${manager != null}, pythonReady=${App.pythonReady}), opening app")
+            openApp()
         }
-        else if (action == ACTION_STOP) {
-            val manager = MainActivity.easyTierManager
-            if (manager != null) {
-                AppLogger.info(TAG, "handleClick: stopping VPN via EasyTierManager")
-                manager.stopVpn(stopPythonNetwork = true)
-            } else {
-                AppLogger.warn(TAG, "handleClick: EasyTierManager is null, fallback to direct stop")
-                EasyTierVpnService.requestStop()
+    }
+
+    private fun handleStopViaCoordinator() {
+        val manager = App.easyTierManager
+        if (manager != null) {
+            AppLogger.info(TAG, "handleClick: stopping via coordinator")
+            val intent = Intent(this, VpnCoordinatorService::class.java).apply {
+                putExtra(VpnCoordinatorService.EXTRA_ACTION, VpnCoordinatorService.ACTION_STOP)
             }
-            updateTileState()
+            startService(intent)
+        } else {
+            AppLogger.warn(TAG, "handleClick: EasyTierManager is null, fallback to direct stop")
+            EasyTierVpnService.requestStop()
         }
+        updateTileState()
     }
 
     private fun updateTileState() {

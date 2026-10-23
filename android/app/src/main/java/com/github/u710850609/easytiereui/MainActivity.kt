@@ -192,6 +192,10 @@ class MainActivity : AppCompatActivity() {
         AppLogger.info(TAG, "FilesDir: ${filesDir.absolutePath}")
         AppLogger.info(TAG, "ExternalFilesDir: ${getExternalFilesDir(null)?.absolutePath}")
 
+        AppLogger.info(TAG, "Binding Activity to EasyTierManager...")
+        easyTierManager?.bindActivity(this)
+        AppLogger.info(TAG, "Activity bound to EasyTierManager")
+
         try {
             AppLogger.info(TAG, "onCreate: setting up UI")
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
@@ -483,9 +487,13 @@ class MainActivity : AppCompatActivity() {
     private suspend fun startPythonBackend() {
         AppLogger.info(TAG, "Starting Python backend...")
 
-        AppLogger.info(TAG, "Copying frontend assets...")
-        copyAssetDir("frontend", File(filesDir, "frontend"))
-        AppLogger.info(TAG, "Frontend assets copied")
+        val copyDone = withContext(Dispatchers.IO) {
+            AppLogger.info(TAG, "Copying frontend assets...")
+            copyAssetDir("frontend", File(filesDir, "frontend"))
+            AppLogger.info(TAG, "Frontend assets copied")
+            true
+        }
+        AppLogger.info(TAG, "startPythonBackend: copyDone=$copyDone")
 
         if (!Python.isStarted()) {
             AppLogger.info(TAG, "Python not started, calling Python.start()...")
@@ -502,13 +510,6 @@ class MainActivity : AppCompatActivity() {
         AppLogger.info(TAG, "Importing main_noui module...")
         val module = python.getModule("main_noui")
         AppLogger.info(TAG, "main_noui module imported successfully")
-
-        // 在启动后端服务前初始化 EasyTierManager，避免 EasyTierVpnTileService 触发组网时，EasyTierManager 未初始化拿不到设备名称
-        withContext(Dispatchers.Main) {
-            AppLogger.info(TAG, "Creating EasyTierManager...")
-            easyTierManager = EasyTierManager(this@MainActivity)
-            AppLogger.info(TAG, "EasyTierManager created (not auto-starting)")
-        }
 
         AppLogger.info(TAG, "Calling start_android_server with data_dir=${filesDir.absolutePath}...")
         val externalDir = getExternalFilesDir(null)?.absolutePath ?: ""
@@ -567,7 +568,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        AppLogger.info(TAG, "onDestroy: stopping HTTP server, VPN, and cancelling scope")
+        AppLogger.info(TAG, "onDestroy: unbinding Activity, stopping HTTP server, VPN, and cancelling scope")
+        easyTierManager?.unbindActivity()
         pendingPermissionRequest?.deny()
         pendingPermissionRequest = null
         try {

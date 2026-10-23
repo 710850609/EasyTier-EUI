@@ -1,6 +1,7 @@
 package com.github.u710850609.easytiereui
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.net.VpnService
@@ -14,7 +15,8 @@ import java.io.PrintWriter
 import java.io.StringWriter
 
 class EasyTierManager(
-    private val activity: Activity,
+    private val context: Context,
+    private var activity: Activity? = null,
 ) {
     companion object {
         private const val TAG = "EasyTierManager"
@@ -44,6 +46,16 @@ class EasyTierManager(
         }
     }
 
+    fun bindActivity(activity: Activity) {
+        AppLogger.info(TAG, "bindActivity")
+        this.activity = activity
+    }
+
+    fun unbindActivity() {
+        AppLogger.info(TAG, "unbindActivity")
+        this.activity = null
+    }
+
     // ── Python 回调 ──────────────────────────────────────────
 
     fun startVpn(ipv4: String, ipv6: String, proxyCidrs: Array<String>, dnsServers: Array<String>, notificationTitle: String, notificationText: String, mtu: Int, instanceName: String) {
@@ -51,11 +63,16 @@ class EasyTierManager(
         currentInstanceName = instanceName
         stopVpnService()
         val params = VpnParams(instanceName, ipv4, ipv6, proxyCidrs.toList(), dnsServers.toList(), notificationTitle, notificationText, mtu)
-        val prepareIntent = VpnService.prepare(activity)
+        val prepareIntent = VpnService.prepare(activity ?: context)
         if (prepareIntent != null) {
-            AppLogger.info(TAG, "startVpn: VPN not authorized, showing dialog")
-            pendingVpnParams = params
-            activity.startActivityForResult(prepareIntent, VPN_REQUEST_CODE)
+            val act = activity
+            if (act != null) {
+                AppLogger.info(TAG, "startVpn: VPN not authorized, showing dialog")
+                pendingVpnParams = params
+                act.startActivityForResult(prepareIntent, VPN_REQUEST_CODE)
+            } else {
+                AppLogger.warn(TAG, "startVpn: VPN not authorized and no Activity to show dialog")
+            }
             return
         }
         startVpnService(params)
@@ -109,20 +126,26 @@ class EasyTierManager(
 
     private fun startVpnService(params: VpnParams) {
         try {
-            if (activity.isFinishing) {
-                AppLogger.error(TAG, "Activity is finishing, cannot start VPN")
-                return
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1 && activity.isDestroyed) {
-                AppLogger.error(TAG, "Activity is destroyed, cannot start VPN")
-                return
+            activity?.let { act ->
+                if (act.isFinishing) {
+                    AppLogger.error(TAG, "Activity is finishing, cannot start VPN")
+                    return
+                }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1 && act.isDestroyed) {
+                    AppLogger.error(TAG, "Activity is destroyed, cannot start VPN")
+                    return
+                }
             }
 
-            val intent = Intent(activity, EasyTierVpnService::class.java)
+            val intent = Intent(context, EasyTierVpnService::class.java)
             intent.putExtra("vpn_params", params)
 
             AppLogger.info(TAG, "startVpnService: calling startService, instanceName=${params.instanceName}")
-            activity.startService(intent)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.startForegroundService(intent)
+            } else {
+                context.startService(intent)
+            }
 
             AppLogger.info(TAG, "VPN started: ${params.ipv4}, CIDRs=${params.proxyCidrs.size}, DNS=${params.dnsServers.size}")
         } catch (e: Exception) {
@@ -136,8 +159,8 @@ class EasyTierManager(
         try {
             EasyTierVpnService.requestStop()
             AppLogger.info(TAG, "Called EasyTierVpnService.requestStop()")
-            val intent = Intent(activity, EasyTierVpnService::class.java)
-            val stopped = activity.stopService(intent)
+            val intent = Intent(context, EasyTierVpnService::class.java)
+            val stopped = context.stopService(intent)
             AppLogger.info(TAG, "stopService result=$stopped")
         } catch (e: Exception) {
             val sw = StringWriter()
@@ -166,7 +189,7 @@ class EasyTierManager(
 
     fun getDeviceName(): String {
         try {
-            val name = Settings.Global.getString(activity.contentResolver, Settings.Global.DEVICE_NAME)
+            val name = Settings.Global.getString(context.contentResolver, Settings.Global.DEVICE_NAME)
             if (!name.isNullOrEmpty()) {
                 AppLogger.debug(TAG, "getDeviceName from Settings.Global: $name")
                 return name
@@ -175,7 +198,7 @@ class EasyTierManager(
             AppLogger.debug(TAG, "getDeviceName from Settings.Global failed: ${e.message}")
         }
         try {
-            val name = Settings.System.getString(activity.contentResolver, "device_name")
+            val name = Settings.System.getString(context.contentResolver, "device_name")
             if (!name.isNullOrEmpty()) {
                 AppLogger.debug(TAG, "getDeviceName from Settings.System: $name")
                 return name
@@ -196,13 +219,13 @@ class EasyTierManager(
                 AppLogger.error(TAG, "installApk: file not found: $filePath")
                 return
             }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !activity.packageManager.canRequestPackageInstalls()) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !context.packageManager.canRequestPackageInstalls()) {
                 AppLogger.warn(TAG, "installApk: no REQUEST_INSTALL_PACKAGES permission, opening settings")
                 val intent = Intent(android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
-                    data = Uri.parse("package:${activity.packageName}")
+                    data = Uri.parse("package:${context.packageName}")
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 }
-                activity.startActivity(intent)
+                context.startActivity(intent)
                 return
             }
             val intent = Intent(Intent.ACTION_VIEW).apply {
@@ -210,8 +233,8 @@ class EasyTierManager(
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                     val uri = FileProvider.getUriForFile(
-                        activity,
-                        "${activity.packageName}.fileprovider",
+                        context,
+                        "${context.packageName}.fileprovider",
                         apkFile
                     )
                     setDataAndType(uri, "application/vnd.android.package-archive")
@@ -220,7 +243,7 @@ class EasyTierManager(
                     setDataAndType(uri, "application/vnd.android.package-archive")
                 }
             }
-            activity.startActivity(intent)
+            context.startActivity(intent)
             AppLogger.info(TAG, "installApk: intent started")
         } catch (e: Exception) {
             AppLogger.error(TAG, "installApk: failed", e)
