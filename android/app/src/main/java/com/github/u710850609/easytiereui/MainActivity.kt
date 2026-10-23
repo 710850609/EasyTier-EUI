@@ -226,7 +226,6 @@ class MainActivity : AppCompatActivity() {
             applySavedTheme()
             AppLogger.info(TAG, "applySavedTheme done, calling setupBackPress")
             setupBackPress()
-            requestNotificationPermission()
 
             scope.launch(Dispatchers.IO) {
                 try {
@@ -524,6 +523,8 @@ class MainActivity : AppCompatActivity() {
         withContext(Dispatchers.Main) {
             AppLogger.info(TAG, "Loading WebView...")
             loadWebView()
+            AppLogger.info(TAG, "WebView loaded, requesting notification permission")
+            requestNotificationPermission()
         }
     }
 
