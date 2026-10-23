@@ -74,6 +74,13 @@ def stop_server(handle: ServerHandle, port: int):
                 pass
 
 
+def init_android_env(data_dir: str, external_dir: str = ""):
+    """初始化 Android 环境：设置环境变量 + setup_env。
+    不启动 HTTP 服务器，供后台 VPN 启动场景使用。"""
+    os.environ['ANDROID_DATA_DIR'] = data_dir
+    os.environ['ANDROID_EXTERNAL_DIR'] = external_dir or data_dir
+    run_configs.setup_env()
+
 def start_android_server(data_dir: str, external_dir: str = "", host: str = "127.0.0.1", port: int = 0) -> dict:
     """Android 入口：初始化环境 + 启动 HTTP 服务，返回 {'port': int, 'host': str}"""
     import traceback
@@ -117,9 +124,7 @@ def start_android_server(data_dir: str, external_dir: str = "", host: str = "127
         def fileno(self):
             return self._fd.fileno()
 
-    os.environ['ANDROID_DATA_DIR'] = data_dir
-    os.environ['ANDROID_EXTERNAL_DIR'] = external_dir
-    run_configs.setup_env()
+    init_android_env(data_dir, external_dir)
     run_mode = run_configs.get_run_mode()
     log_util.setup_log(log_file=os.path.join(external_dir, 'logs', 'app.log'),
                        log_level=logging.DEBUG if run_mode == 0 else None,
