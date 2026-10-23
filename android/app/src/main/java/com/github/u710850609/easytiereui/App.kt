@@ -80,7 +80,6 @@ class App : Application() {
             AppLogger.info(TAG, "initPython: setup complete, pythonReady=true")
 
             pythonReady = true
-            EasyTierManager.getFacade()
             AppLogger.info(TAG, "initPython: ready")
         } catch (e: Exception) {
             AppLogger.error(TAG, "initPython failed: ${e.message}")
