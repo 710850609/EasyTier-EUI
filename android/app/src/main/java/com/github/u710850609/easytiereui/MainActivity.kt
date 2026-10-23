@@ -226,6 +226,7 @@ class MainActivity : AppCompatActivity() {
             applySavedTheme()
             AppLogger.info(TAG, "applySavedTheme done, calling setupBackPress")
             setupBackPress()
+            requestNotificationPermission()
 
             scope.launch(Dispatchers.IO) {
                 try {
@@ -354,6 +355,15 @@ class MainActivity : AppCompatActivity() {
             AppLogger.info(TAG, "setupWebView: done")
         } catch (e: Exception) {
             AppLogger.error(TAG,"setupWebView failed", e)
+        }
+    }
+
+    private fun requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) !=
+                android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 0)
+            }
         }
     }
 

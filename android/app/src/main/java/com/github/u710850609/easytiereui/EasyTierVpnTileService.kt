@@ -71,7 +71,7 @@ class EasyTierVpnTileService : TileService() {
 
         val permissionRequired = action == ACTION_START && VpnService.prepare(this) != null
         if (permissionRequired) {
-            AppLogger.info(TAG, "handleClick: VPN permission required, opening app")
+            AppLogger.info(TAG, "handleClick: permission required, opening app")
             openApp()
             return
         }
