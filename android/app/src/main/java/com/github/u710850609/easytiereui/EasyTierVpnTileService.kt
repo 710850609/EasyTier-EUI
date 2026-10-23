@@ -1,6 +1,5 @@
 package com.github.u710850609.easytiereui
 
-import android.app.PendingIntent
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -72,7 +71,7 @@ class EasyTierVpnTileService : TileService() {
 
         val permissionRequired = action == ACTION_START && VpnService.prepare(this) != null
         if (permissionRequired) {
-            AppLogger.info(TAG, "handleClick: permission required, opening app")
+            AppLogger.info(TAG, "handleClick: VPN permission required, opening app")
             openApp()
             return
         }
@@ -131,23 +130,10 @@ class EasyTierVpnTileService : TileService() {
 
         AppLogger.info(TAG, "openApp: launching $packageName")
         try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                val pendingIntent = PendingIntent.getActivity(
-                    this, 0, intent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-                )
-                startActivityAndCollapse(pendingIntent)
-            } else {
-                @Suppress("DEPRECATION")
-                startActivityAndCollapse(intent)
-            }
+            startActivity(intent)
+            AppLogger.info(TAG, "openApp: launch succeeded")
         } catch (e: Exception) {
-            AppLogger.error(TAG, "openApp: startActivityAndCollapse failed, fallback to startActivity", e)
-            try {
-                startActivity(intent)
-            } catch (e2: Exception) {
-                AppLogger.error(TAG, "openApp: startActivity also failed", e2)
-            }
+            AppLogger.error(TAG, "openApp: launch failed", e)
         }
     }
 }

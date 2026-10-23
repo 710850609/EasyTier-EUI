@@ -29,7 +29,6 @@ class EasyTierVpnService : VpnService() {
         private const val TAG = "EasyTierVpnService"
         const val CHANNEL_ID = "easytier_eui_vpn_channel"
         const val NOTIFICATION_ID = 1
-        private const val REVOKE_NOTIFICATION_ID = 2
 
         private val DISALLOWED_APPS = listOf(
             "com.android.phone",                     // 电话/VoLTE/VoWiFi 服务
@@ -378,7 +377,7 @@ class EasyTierVpnService : VpnService() {
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .build()
             val nm = getSystemService(NotificationManager::class.java)
-            nm.notify(REVOKE_NOTIFICATION_ID, notification)
+            nm.notify(NOTIFICATION_ID, notification)
             AppLogger.info(TAG, "onRevoke: notification sent")
         } catch (e: Exception) {
             AppLogger.warn(TAG, "onRevoke: notification failed: ${e.message}")
@@ -391,7 +390,7 @@ class EasyTierVpnService : VpnService() {
         }
         vpnInterface = null
         try {
-            stopForeground(STOP_FOREGROUND_REMOVE)
+            stopForeground(false)
             AppLogger.info(TAG, "onRevoke: stopForeground succeeded")
         } catch (e: Exception) {
             AppLogger.error(TAG, "onRevoke: stopForeground failed: ${e.message}")

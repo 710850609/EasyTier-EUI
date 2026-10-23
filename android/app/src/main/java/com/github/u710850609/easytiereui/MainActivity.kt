@@ -357,15 +357,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun requestNotificationPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) !=
-                android.content.pm.PackageManager.PERMISSION_GRANTED) {
-                requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 0)
-            }
-        }
-    }
-
     private fun requestCameraPermission() {
         if (checkSelfPermission(Manifest.permission.CAMERA) !=
             android.content.pm.PackageManager.PERMISSION_GRANTED) {
@@ -523,8 +514,6 @@ class MainActivity : AppCompatActivity() {
         withContext(Dispatchers.Main) {
             AppLogger.info(TAG, "Loading WebView...")
             loadWebView()
-            AppLogger.info(TAG, "WebView loaded, requesting notification permission")
-            requestNotificationPermission()
         }
     }
 
