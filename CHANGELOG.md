@@ -1,5 +1,12 @@
-## 
-- 修复：安卓快捷设置磁贴启动，默认当前设备显示localhost，而不是设备名称
+##  
+- 优化：安卓首个配置，默认开启启动重连功能
+- 优化：安卓快捷设置磁贴启动VPN，默认不打开WebView界面，静默后台运行，仅显示系统通知，减少运存使用（参考值：90-60MB）
+- 修复：安卓快捷设置磁贴启动VPN，默认当前设备显示localhost，而不是设备名称
+
+----
+- Optimization: Enable auto-reconnect by default for the first configuration on Android
+- Optimization: Android Quick Settings tile now starts VPN silently in the background without opening the WebView, showing only system notification, reducing memory usage (reference: 90→60MB)
+- Fix: Android Quick Settings tile VPN start now displays actual device name instead of "localhost"
 
 ## 2.6
 *鉴于EasyTier2.7.0版本存在已知问题较多，此版本默认内核仍为2.6.4，想尝鲜的可到【配置】页面自行切换内核*
