@@ -296,8 +296,7 @@ class EasyTierVpnService : VpnService() {
     fun updateNotification(title: String, text: String) {
         try {
             val notification = buildNotification(title, text)
-            val nm = getSystemService(NotificationManager::class.java)
-            nm.notify(NOTIFICATION_ID, notification)
+            startForeground(NOTIFICATION_ID, notification)
         } catch (e: Exception) {
             AppLogger.error(TAG, "updateNotification failed: ${e.message}")
         }
@@ -377,8 +376,7 @@ class EasyTierVpnService : VpnService() {
                 .setAutoCancel(true)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .build()
-            val nm = getSystemService(NotificationManager::class.java)
-            nm.notify(REVOKE_NOTIFICATION_ID, notification)
+            startForeground(REVOKE_NOTIFICATION_ID, notification)
             AppLogger.info(TAG, "onRevoke: notification sent")
         } catch (e: Exception) {
             AppLogger.warn(TAG, "onRevoke: notification failed: ${e.message}")
@@ -391,7 +389,7 @@ class EasyTierVpnService : VpnService() {
         }
         vpnInterface = null
         try {
-            stopForeground(STOP_FOREGROUND_REMOVE)
+            stopForeground(STOP_FOREGROUND_DETACH)
             AppLogger.info(TAG, "onRevoke: stopForeground succeeded")
         } catch (e: Exception) {
             AppLogger.error(TAG, "onRevoke: stopForeground failed: ${e.message}")

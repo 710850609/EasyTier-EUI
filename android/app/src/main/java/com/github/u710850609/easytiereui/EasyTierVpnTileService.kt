@@ -87,13 +87,14 @@ class EasyTierVpnTileService : TileService() {
     private fun handleStartViaCoordinator() {
         val manager = App.easyTierManager
         if (manager != null && App.pythonReady) {
-            AppLogger.info(TAG, "handleClick: EasyTierManager ready, delegating to coordinator")
-            val intent = Intent(this, VpnCoordinatorService::class.java).apply {
-                putExtra(VpnCoordinatorService.EXTRA_ACTION, VpnCoordinatorService.ACTION_START)
+            AppLogger.info(TAG, "handleStart: triggering auto-start")
+            val started = manager.triggerAutoStart()
+            if (!started) {
+                AppLogger.warn(TAG, "handleStart: no network to start, opening app")
+                openApp()
             }
-            startService(intent)
         } else {
-            AppLogger.warn(TAG, "handleClick: EasyTierManager not ready (manager=${manager != null}, pythonReady=${App.pythonReady}), opening app")
+            AppLogger.warn(TAG, "handleStart: not ready (manager=${manager != null}, pythonReady=${App.pythonReady}), opening app")
             openApp()
         }
     }
