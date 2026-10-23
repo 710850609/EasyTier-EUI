@@ -1,5 +1,6 @@
 package com.github.u710850609.easytiereui
 
+import android.app.PendingIntent
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -122,25 +123,22 @@ class EasyTierVpnTileService : TileService() {
     }
 
     private fun openApp() {
-        val intent = packageManager.getLaunchIntentForPackage(packageName)?.apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-        } ?: run {
-            AppLogger.error(TAG, "openApp: launch intent is null")
-            return
-        }
-
-        AppLogger.info(TAG, "openApp: launching $packageName")
+        AppLogger.info(TAG, "openApp: launching MainActivity")
         try {
-            @Suppress("DEPRECATION")
-            startActivityAndCollapse(intent)
-            AppLogger.info(TAG, "openApp: startActivityAndCollapse succeeded")
-        } catch (e: Exception) {
-            AppLogger.error(TAG, "openApp: startActivityAndCollapse failed, fallback to startActivity", e)
-            try {
-                startActivity(intent)
-            } catch (e2: Exception) {
-                AppLogger.error(TAG, "openApp: startActivity also failed", e2)
+            val intent = Intent(this, MainActivity::class.java).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
             }
+            val pi = PendingIntent.getActivity(
+                this, System.currentTimeMillis().toInt(), intent,
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_ONE_SHOT,
+            )
+            pi.send()
+            sendBroadcast(Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS))
+            AppLogger.info(TAG, "openApp: PendingIntent.send() succeeded")
+        } catch (e: PendingIntent.CanceledException) {
+            AppLogger.error(TAG, "openApp: PendingIntent canceled", e)
+        } catch (e: Exception) {
+            AppLogger.error(TAG, "openApp: failed: ${e.message}", e)
         }
     }
 }
