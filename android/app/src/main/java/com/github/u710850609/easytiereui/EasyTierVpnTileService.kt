@@ -130,17 +130,24 @@ class EasyTierVpnTileService : TileService() {
         }
 
         AppLogger.info(TAG, "openApp: launching $packageName")
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            val pendingIntent = PendingIntent.getActivity(
-                this,
-                0,
-                intent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-            )
-            startActivityAndCollapse(pendingIntent)
-        } else {
-            @Suppress("DEPRECATION")
-            startActivityAndCollapse(intent)
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                val pendingIntent = PendingIntent.getActivity(
+                    this, 0, intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+                )
+                startActivityAndCollapse(pendingIntent)
+            } else {
+                @Suppress("DEPRECATION")
+                startActivityAndCollapse(intent)
+            }
+        } catch (e: Exception) {
+            AppLogger.error(TAG, "openApp: startActivityAndCollapse failed, fallback to startActivity", e)
+            try {
+                startActivity(intent)
+            } catch (e2: Exception) {
+                AppLogger.error(TAG, "openApp: startActivity also failed", e2)
+            }
         }
     }
 }
