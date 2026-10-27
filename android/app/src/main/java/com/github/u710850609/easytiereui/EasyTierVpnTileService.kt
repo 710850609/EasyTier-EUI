@@ -20,9 +20,16 @@ class EasyTierVpnTileService : TileService() {
         @Volatile
         private var isConnecting = false
 
+        @Volatile
+        private var activeTile: Tile? = null
+
         fun notifyVpnServiceCreated() {
-            AppLogger.info(TAG, "notifyVpnServiceCreated: clearing connecting state")
+            AppLogger.info(TAG, "notifyVpnServiceCreated: setting tile to ACTIVE directly")
             isConnecting = false
+            activeTile?.apply {
+                state = Tile.STATE_ACTIVE
+                updateTile()
+            }
         }
 
         @Synchronized
@@ -57,8 +64,15 @@ class EasyTierVpnTileService : TileService() {
 
     override fun onStartListening() {
         super.onStartListening()
+        activeTile = qsTile
         AppLogger.info(TAG, "onStartListening: instance=${EasyTierVpnService.instance != null}")
         updateTileState()
+    }
+
+    override fun onStopListening() {
+        super.onStopListening()
+        activeTile = null
+        AppLogger.info(TAG, "onStopListening")
     }
 
     override fun onClick() {
