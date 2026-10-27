@@ -24,10 +24,15 @@ class EasyTierVpnTileService : TileService() {
         private var activeTile: Tile? = null
 
         fun notifyVpnServiceCreated() {
-            AppLogger.info(TAG, "notifyVpnServiceCreated: setting tile to ACTIVE directly")
             isConnecting = false
+            val isRunning = EasyTierVpnService.instance != null
+            AppLogger.info(TAG, "notifyVpnServiceCreated: pushing tile state, instance=${EasyTierVpnService.instance != null}")
+            updateTileDirect(isRunning)
+        }
+
+        private fun updateTileDirect(isRunning: Boolean) {
             activeTile?.apply {
-                state = Tile.STATE_ACTIVE
+                state = if (isRunning) Tile.STATE_ACTIVE else Tile.STATE_INACTIVE
                 updateTile()
             }
         }
