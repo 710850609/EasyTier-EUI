@@ -17,6 +17,14 @@ class EasyTierVpnTileService : TileService() {
         const val ACTION_START = "start"
         const val ACTION_STOP = "stop"
 
+        @Volatile
+        private var isConnecting = false
+
+        fun notifyVpnServiceCreated() {
+            AppLogger.info(TAG, "notifyVpnServiceCreated: clearing connecting state")
+            isConnecting = false
+        }
+
         @Synchronized
         fun consumePendingAction(context: Context): String? {
             val preferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -65,6 +73,12 @@ class EasyTierVpnTileService : TileService() {
     }
 
     private fun handleClick() {
+        if (isConnecting) {
+            AppLogger.info(TAG, "handleClick: already connecting, cancelling and reverting")
+            clearConnectingState()
+            return
+        }
+
         val action = consumePendingAction(this)
             ?: if (EasyTierVpnService.instance == null) ACTION_START else ACTION_STOP
         AppLogger.info(TAG, "handleClick: action=$action, instance=${EasyTierVpnService.instance != null}")
@@ -88,9 +102,11 @@ class EasyTierVpnTileService : TileService() {
         val manager = App.easyTierManager
         if (manager != null && App.pythonReady) {
             AppLogger.info(TAG, "handleStart: triggering auto-start")
+            setConnectingState()
             val started = manager.triggerAutoStart()
             if (!started) {
                 AppLogger.warn(TAG, "handleStart: no network to start, opening app")
+                clearConnectingState()
                 openApp()
             }
         } else {
@@ -116,8 +132,16 @@ class EasyTierVpnTileService : TileService() {
 
     private fun updateTileState() {
         qsTile?.apply {
-            state = if (EasyTierVpnService.instance == null) Tile.STATE_INACTIVE else Tile.STATE_ACTIVE
-            AppLogger.info(TAG, "updateTileState: state=${if (state == Tile.STATE_ACTIVE) "ACTIVE" else "INACTIVE"}")
+            state = when {
+                EasyTierVpnService.instance != null -> Tile.STATE_ACTIVE
+                isConnecting -> Tile.STATE_UNAVAILABLE
+                else -> Tile.STATE_INACTIVE
+            }
+            AppLogger.info(TAG, "updateTileState: state=${when (state) {
+                Tile.STATE_ACTIVE -> "ACTIVE"
+                Tile.STATE_UNAVAILABLE -> "UNAVAILABLE"
+                else -> "INACTIVE"
+            }}")
             updateTile()
         }
     }
@@ -150,5 +174,23 @@ class EasyTierVpnTileService : TileService() {
                 AppLogger.error(TAG, "openApp: startActivity also failed", e2)
             }
         }
+    }
+
+    private fun setConnectingState() {
+        isConnecting = true
+        qsTile?.apply {
+            state = Tile.STATE_UNAVAILABLE
+            updateTile()
+        }
+        AppLogger.info(TAG, "setConnectingState: tile=UNAVAILABLE")
+    }
+
+    private fun clearConnectingState() {
+        isConnecting = false
+        qsTile?.apply {
+            state = Tile.STATE_INACTIVE
+            updateTile()
+        }
+        AppLogger.info(TAG, "clearConnectingState: tile=INACTIVE")
     }
 }

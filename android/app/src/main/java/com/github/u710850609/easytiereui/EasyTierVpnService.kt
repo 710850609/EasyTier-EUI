@@ -4,6 +4,7 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
 import android.net.ConnectivityManager
 import android.net.VpnService
@@ -30,6 +31,22 @@ class EasyTierVpnService : VpnService() {
         const val CHANNEL_ID = "easytier_eui_vpn_channel"
         const val NOTIFICATION_ID = 1
         private const val REVOKE_NOTIFICATION_ID = 2
+
+        fun ensureNotificationChannel(context: Context) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                if (nm.getNotificationChannel(CHANNEL_ID) == null) {
+                    val channel = NotificationChannel(
+                        CHANNEL_ID, "组网服务", NotificationManager.IMPORTANCE_LOW
+                    ).apply {
+                        description = "组网运行通知"
+                        setShowBadge(true)
+                    }
+                    nm.createNotificationChannel(channel)
+                    AppLogger.info(TAG, "ensureNotificationChannel: channel created")
+                }
+            }
+        }
 
         private val DISALLOWED_APPS = listOf(
             "com.android.phone",                     // 电话/VoLTE/VoWiFi 服务
@@ -79,7 +96,9 @@ class EasyTierVpnService : VpnService() {
             AppLogger.error(TAG, "Failed to create notification channel: ${e.message}")
         }
         instance = this
+        EasyTierVpnTileService.notifyVpnServiceCreated()
         EasyTierVpnTileService.requestStateUpdate(this)
+        startForeground(NOTIFICATION_ID, buildConnectingNotification())
         AppLogger.info(TAG, "VPN Service created")
     }
 
@@ -320,7 +339,7 @@ class EasyTierVpnService : VpnService() {
                 .setSmallIcon(R.drawable.ic_notification)
                 .setContentIntent(pendingIntent)
                 .setOngoing(true)
-                .setForegroundServiceBehavior(Notification.FOREGROUND_SERVICE_IMMEDIATE)
+                .setForegroundServiceBehavior(android.app.Notification.FOREGROUND_SERVICE_IMMEDIATE)
                 .setPriority(NotificationCompat.PRIORITY_LOW)
                 .build()
         } catch (e: Exception) {
@@ -330,27 +349,36 @@ class EasyTierVpnService : VpnService() {
                 .setContentText("Service Is Running")
                 .setSmallIcon(R.drawable.ic_notification)
                 .setOngoing(true)
-                .setForegroundServiceBehavior(Notification.FOREGROUND_SERVICE_IMMEDIATE)
+                .setForegroundServiceBehavior(android.app.Notification.FOREGROUND_SERVICE_IMMEDIATE)
                 .setPriority(NotificationCompat.PRIORITY_LOW)
                 .build()
         }
     }
 
-    private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            try {
-                val channel = NotificationChannel(
-                    CHANNEL_ID, "组网服务", NotificationManager.IMPORTANCE_LOW
-                ).apply {
-                    description = "组网运行通知"
-                    setShowBadge(true)
-                }
-                getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
-                AppLogger.info(TAG, "Notification channel created")
-            } catch (e: Exception) {
-                AppLogger.error(TAG, "createNotificationChannel failed: ${e.message}")
-            }
+    private fun buildConnectingNotification(): Notification {
+        val intent = Intent(this, MainActivity::class.java).apply {
+            action = Intent.ACTION_MAIN
+            addCategory(Intent.CATEGORY_LAUNCHER)
+            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
+        val pendingIntent = PendingIntent.getActivity(
+            this, 0, intent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+        return NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle("EasyTier-EUI")
+            .setContentText("正在连接...")
+            .setSmallIcon(R.drawable.ic_notification)
+            .setContentIntent(pendingIntent)
+            .setOngoing(true)
+            .setForegroundServiceBehavior(android.app.Notification.FOREGROUND_SERVICE_IMMEDIATE)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setProgress(0, 0, true)
+            .build()
+    }
+
+    private fun createNotificationChannel() {
+        ensureNotificationChannel(this)
     }
 
     override fun onRevoke() {
@@ -400,6 +428,7 @@ class EasyTierVpnService : VpnService() {
             AppLogger.error(TAG, "onRevoke: callback failed: ${e.message}")
         }
         instance = null
+        EasyTierVpnTileService.notifyVpnServiceCreated()
         EasyTierVpnTileService.requestStateUpdate(this)
         try {
             super.onRevoke()
@@ -423,6 +452,7 @@ class EasyTierVpnService : VpnService() {
             AppLogger.error(TAG, "onDestroy: stopForegroundCompat failed: ${e.message}")
         }
         instance = null
+        EasyTierVpnTileService.notifyVpnServiceCreated()
         EasyTierVpnTileService.requestStateUpdate(this)
         try {
             super.onDestroy()
