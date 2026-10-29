@@ -40,6 +40,11 @@ class EasyTierManager(
     private var currentInstanceName: String? = null
     private var pendingVpnParams: VpnParams? = null
 
+    // 最近一次通过磁贴/自动启动触发运行的组网实例名。
+    // 用于在 VPN 尚未建立时判断「是否有组网配置运行中」，以及停止尚未建立 VPN 的组网配置。
+    @Volatile
+    private var activeNetworkInstance: String? = null
+
     init {
         EasyTierVpnService.onRevokeCallback = {
             onVpnRevoked()
@@ -80,9 +85,10 @@ class EasyTierManager(
 
     fun stopVpn(stopPythonNetwork: Boolean = false) {
         AppLogger.info(TAG, "stopVpn: stopPythonNetwork=$stopPythonNetwork, instance=$currentInstanceName")
-        val instanceName = currentInstanceName
+        val instanceName = currentInstanceName ?: activeNetworkInstance
         stopVpnService()
         currentInstanceName = null
+        activeNetworkInstance = null
         if (stopPythonNetwork && instanceName != null) {
             try {
                 getFacade()?.callAttr("stop_network", instanceName)
@@ -98,11 +104,33 @@ class EasyTierManager(
         try {
             val result = getFacade()?.callAttr("start_last_network")
             val started = result != null && result.toString() != "None"
+            if (started) {
+                activeNetworkInstance = result.toString()
+            }
             AppLogger.info(TAG, "triggerAutoStart: result=$result, started=$started")
             return started
         } catch (e: Exception) {
             AppLogger.error(TAG, "triggerAutoStart failed: ${e.message}")
             return false
+        }
+    }
+
+    /**
+     * 以「是否有组网配置运行中」为准，而不是以 VPN 是否已建立为准。
+     * 初始节点连不上时，实际易组网核心进程仍在运行（等待重试），此时也应视为已开启。
+     */
+    fun isNetworkRunning(): Boolean {
+        val instance = activeNetworkInstance ?: currentInstanceName
+        if (instance == null) {
+            AppLogger.debug(TAG, "isNetworkRunning: no active instance")
+            return false
+        }
+        return try {
+            val status = getFacade()?.callAttr("status", instance)
+            status?.toBoolean() ?: false
+        } catch (e: Exception) {
+            AppLogger.error(TAG, "isNetworkRunning failed: ${e.message}")
+            false
         }
     }
 

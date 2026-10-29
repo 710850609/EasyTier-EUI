@@ -31,6 +31,15 @@ class EasyTierVpnService : VpnService() {
         const val CHANNEL_ID = "easytier_eui_vpn_channel"
         const val NOTIFICATION_ID = 1
         private const val REVOKE_NOTIFICATION_ID = 2
+        private const val ACTION_CONNECTING = "action_connecting"
+        private const val EXTRA_TITLE = "connecting_title"
+        private const val EXTRA_TEXT = "connecting_text"
+
+        private fun isZh() = Locale.getDefault().language == "zh"
+
+        fun defaultAppName(): String = if (isZh()) "易组网" else "EasyTier-EUI"
+
+        fun defaultStartText(): String = if (isZh()) "启动配置中..." else "Starting configuration..."
 
         fun ensureNotificationChannel(context: Context) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -84,6 +93,24 @@ class EasyTierVpnService : VpnService() {
                 service.stopSelf()
             } ?: AppLogger.warn(TAG, "requestStop: no active instance")
         }
+
+        /**
+         * 以“连接中”模式启动前台服务，展示“启动配置中…”通知。
+         * 真正的 VPN 建立后，EasyTierManager.startVpn 会先 stopVpnService 再带参数启动，无缝切换。
+         */
+        fun postConnectingNotification(context: Context, title: String, text: String) {
+            AppLogger.info(TAG, "postConnectingNotification: title=$title, text=$text")
+            val intent = Intent(context, EasyTierVpnService::class.java).apply {
+                action = ACTION_CONNECTING
+                putExtra(EXTRA_TITLE, title)
+                putExtra(EXTRA_TEXT, text)
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.startForegroundService(intent)
+            } else {
+                context.startService(intent)
+            }
+        }
     }
 
     override fun onCreate() {
@@ -98,7 +125,7 @@ class EasyTierVpnService : VpnService() {
         instance = this
         EasyTierVpnTileService.notifyVpnServiceCreated()
         EasyTierVpnTileService.requestStateUpdate(this)
-        startForeground(NOTIFICATION_ID, buildConnectingNotification())
+        startForeground(NOTIFICATION_ID, buildConnectingNotification(defaultAppName(), defaultStartText()))
         AppLogger.info(TAG, "VPN Service created")
     }
 
@@ -113,6 +140,14 @@ class EasyTierVpnService : VpnService() {
         }
 
         if (params == null) {
+            if (intent?.action == ACTION_CONNECTING) {
+                // 连接中模式：尚未建立 VPN（等待初始节点/虚拟 IP），保持前台“启动配置中”状态
+                AppLogger.info(TAG, "onStartCommand: connecting mode, staying active")
+                val title = intent.getStringExtra(EXTRA_TITLE) ?: defaultAppName()
+                val text = intent.getStringExtra(EXTRA_TEXT) ?: defaultStartText()
+                startForeground(NOTIFICATION_ID, buildConnectingNotification(title, text))
+                return START_STICKY
+            }
             AppLogger.error(TAG, "Missing parameters: params=$params")
             stopSelf()
             return START_NOT_STICKY
@@ -355,7 +390,7 @@ class EasyTierVpnService : VpnService() {
         }
     }
 
-    private fun buildConnectingNotification(): Notification {
+    private fun buildConnectingNotification(title: String, text: String): Notification {
         val intent = Intent(this, MainActivity::class.java).apply {
             action = Intent.ACTION_MAIN
             addCategory(Intent.CATEGORY_LAUNCHER)
@@ -366,8 +401,8 @@ class EasyTierVpnService : VpnService() {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("EasyTier-EUI")
-            .setContentText("正在连接...")
+            .setContentTitle(title)
+            .setContentText(text)
             .setSmallIcon(R.drawable.ic_notification)
             .setContentIntent(pendingIntent)
             .setOngoing(true)

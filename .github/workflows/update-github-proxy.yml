@@ -3,7 +3,7 @@ name: update-github-proxy
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 0 */3 * *'
+    - cron: '0 0 * * *'
 
 permissions:
   contents: read
