@@ -103,18 +103,14 @@ class EasyTierVpnTileService : TileService() {
     }
 
     private fun startNetwork(manager: EasyTierManager) {
-        // 启动配置需要等待（可能包含连接初始节点），先按已开启显示，避免磁贴停在未开启状态
+        // 启动配置需要等待（可能包含连接初始节点），先按已开启显示，避免磁贴停在未开启状态。
+        // 通知由 Py 层在 start_network 统一发起（"启动配置中..."），各入口行为一致。
         applyTileState(true)
         Thread {
             val started = manager.triggerAutoStart()
             Handler(Looper.getMainLooper()).post {
                 if (started) {
-                    AppLogger.info(TAG, "startNetwork: started, posting connecting notification")
-                    EasyTierVpnService.postConnectingNotification(
-                        this,
-                        EasyTierVpnService.defaultAppName(),
-                        EasyTierVpnService.defaultStartText()
-                    )
+                    AppLogger.info(TAG, "startNetwork: started, notification handled by py layer")
                 } else {
                     AppLogger.warn(TAG, "startNetwork: no network to start, opening app")
                     openApp()

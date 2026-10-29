@@ -40,8 +40,6 @@ class EasyTierManager(
     private var currentInstanceName: String? = null
     private var pendingVpnParams: VpnParams? = null
 
-    // 最近一次通过磁贴/自动启动触发运行的组网实例名。
-    // 用于在 VPN 尚未建立时判断「是否有组网配置运行中」，以及停止尚未建立 VPN 的组网配置。
     @Volatile
     private var activeNetworkInstance: String? = null
 
@@ -66,6 +64,7 @@ class EasyTierManager(
     fun startVpn(ipv4: String, ipv6: String, proxyCidrs: Array<String>, dnsServers: Array<String>, notificationTitle: String, notificationText: String, mtu: Int, instanceName: String) {
         AppLogger.info(TAG, "startVpn: ipv4=$ipv4, ipv6=$ipv6, cidrs=${proxyCidrs.size}, dns=${dnsServers.size}, mtu=$mtu, instanceName=$instanceName")
         currentInstanceName = instanceName
+        activeNetworkInstance = instanceName
         stopVpnService()
         val params = VpnParams(instanceName, ipv4, ipv6, proxyCidrs.toList(), dnsServers.toList(), notificationTitle, notificationText, mtu)
         val prepareIntent = VpnService.prepare(activity ?: context)
@@ -84,10 +83,11 @@ class EasyTierManager(
     }
 
     fun stopVpn(stopPythonNetwork: Boolean = false) {
-        AppLogger.info(TAG, "stopVpn: stopPythonNetwork=$stopPythonNetwork, instance=$currentInstanceName")
-        val instanceName = currentInstanceName ?: activeNetworkInstance
+        AppLogger.info(TAG, "stopVpn: stopPythonNetwork=$stopPythonNetwork, instance=$currentInstanceName, active=$activeNetworkInstance")
+        val instanceName = currentInstanceName
         stopVpnService()
         currentInstanceName = null
+        val active = activeNetworkInstance
         activeNetworkInstance = null
         if (stopPythonNetwork && instanceName != null) {
             try {
@@ -95,6 +95,13 @@ class EasyTierManager(
                 AppLogger.info(TAG, "stopVpn: Python stop_network called for $instanceName")
             } catch (e: Exception) {
                 AppLogger.error(TAG, "stopVpn: stop_network failed: ${e.message}")
+            }
+        } else if (stopPythonNetwork && active != null) {
+            try {
+                getFacade()?.callAttr("stop_network", active)
+                AppLogger.info(TAG, "stopVpn: Python stop_network called for active=$active")
+            } catch (e: Exception) {
+                AppLogger.error(TAG, "stopVpn: stop_network failed for active: ${e.message}")
             }
         }
     }
@@ -104,9 +111,6 @@ class EasyTierManager(
         try {
             val result = getFacade()?.callAttr("start_last_network")
             val started = result != null && result.toString() != "None"
-            if (started) {
-                activeNetworkInstance = result.toString()
-            }
             AppLogger.info(TAG, "triggerAutoStart: result=$result, started=$started")
             return started
         } catch (e: Exception) {
@@ -116,20 +120,38 @@ class EasyTierManager(
     }
 
     /**
-     * 以「是否有组网配置运行中」为准，而不是以 VPN 是否已建立为准。
-     * 初始节点连不上时，实际易组网核心进程仍在运行（等待重试），此时也应视为已开启。
+     * 统一的组网通知入口（方案2）：由 Py 层各入口调用。
+     * 若前台服务尚未创建则先创建（展示默认"启动配置中..."）；已创建则更新文案。
+     * title/text 为 null 时使用默认的"启动配置中..."文案。
+     */
+    fun showNotification(instanceName: String, title: String? = null, text: String? = null) {
+        AppLogger.info(TAG, "showNotification: $instanceName, serviceAlive=${EasyTierVpnService.instance != null}")
+        activeNetworkInstance = instanceName
+        val service = EasyTierVpnService.instance
+        if (service == null) {
+            // 前台服务尚未建立（VPN 建立前 / 初始节点连接中），先创建并展示默认连接文案
+            EasyTierVpnService.postConnectingNotification(context)
+        } else {
+            service.updateNotification(title ?: EasyTierVpnService.defaultAppName(), text ?: EasyTierVpnService.defaultStartText())
+        }
+    }
+
+    /**
+     * 磁贴状态以「是否有组网配置运行中」为准，而非以 VPN 服务是否已建立为准。
+     * 初始节点连不上时配置仍在运行（一直等待重试），磁贴也应显示为已开启。
      */
     fun isNetworkRunning(): Boolean {
-        val instance = activeNetworkInstance ?: currentInstanceName
-        if (instance == null) {
-            AppLogger.debug(TAG, "isNetworkRunning: no active instance")
-            return false
-        }
+        val instance = activeNetworkInstance ?: currentInstanceName ?: return false
+        return safeStatus(instance)
+    }
+
+    private fun safeStatus(instance: String): Boolean {
         return try {
-            val status = getFacade()?.callAttr("status", instance)
-            status?.toBoolean() ?: false
+            val st = getFacade()?.callAttr("status", instance)
+            val s = st?.toString()
+            if (s == null || s == "None") false else s.toBooleanStrictOrNull() ?: false
         } catch (e: Exception) {
-            AppLogger.error(TAG, "isNetworkRunning failed: ${e.message}")
+            AppLogger.error(TAG, "safeStatus failed for $instance: ${e.message}")
             false
         }
     }
