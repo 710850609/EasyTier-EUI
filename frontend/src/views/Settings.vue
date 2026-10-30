@@ -174,7 +174,7 @@
       <div class="setting-row" v-if="etVersion.selected_version != ''">
         <div class="setting-actions">
           <var-chip v-if="hasNewVersion" type="warning" size="mini" plain>{{ $t('common.canUpgrade') }}</var-chip>
-          <var-button type="primary" size="small" @click="installEtCore(true)" auto-loading>
+          <var-button type="primary" size="small" @click="installEtCore(true)" auto-loading :loading="etInstallProgress.active">
             <!-- <var-icon name="download" /> -->
             {{ $t('common.install') }}
           </var-button>
@@ -183,6 +183,18 @@
             {{ $t('common.updateContent') }}
           </var-button>
         </div>
+      </div>
+      <div class="setting-row" v-if="etInstallProgress.active" style="flex-direction: column; align-items: stretch;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+          <span style="font-size: 13px; color: var(--color-text-secondary);">{{ etInstallProgress.description }}</span>
+          <span style="font-size: 13px; color: var(--color-primary);">{{ etInstallProgress.current_progress }}%</span>
+        </div>
+        <var-progress 
+          :value="Number(etInstallProgress.current_progress) || 0" 
+          :color="'var(--color-primary)'"
+          line-width="6"
+          ripple
+        />
       </div>
     </var-paper>
 
@@ -481,6 +493,7 @@ const euiReleaseInfo = ref({})
 const euiRelease = ref({})
 const euiChangeMarkdown = ref('')
 const updateProgress = ref({ current_progress: 0, description: '', status: -1, active: false })
+const etInstallProgress = ref({ current_progress: 0, description: '', status: -1, active: false })
 // const enabledStartRecovery = ref(false)
 const showEuiReleaseInfo = ref(false)
 const showEtChangeLog = ref(false)
@@ -695,22 +708,56 @@ const getEtReleaseInfo = async (refresh = false, showTip = true) => {
   }
 }
 
-const installEtCore = async () => {
-  return new Promise((resolve, reject) => {
-    api.etCore.install({ version: etVersion.value.selected_version })
-    .then((res) => {
-      toast.success(res.data || t('settings.toast.kernelInstalled', { version: etVersion.value.selected_version }))
-      // getEtVersion()
-      getEtInfo()
-      if (platform.value === 'android') {
-        toast.success(t('settings.toast.restartToApply'))
-      }
-      resolve(res)
-    })
-    .catch((err) => {
-      // toast.error(err.message || `安装内核版本 ${etVersion.value.selected_version} 失败`)
-      reject(err)
-    })
+const installEtCore = () => {
+  return new Promise(async (resolve, reject) => {
+    etInstallProgress.value = { current_progress: 0, description: t('settings.toast.preparingUpdate'), status: 0, active: true }
+    const loadingToast = toast.loading(t('settings.toast.updating'))
+    let pollErrorCount = 0
+
+    try {
+      const { data: installResp } = await api.etCore.install({ version: etVersion.value.selected_version })
+      const installId = installResp.install_id
+
+      const pollTimer = setInterval(async () => {
+        try {
+          const { data: progress } = await api.etCore.getInstallProgress({ install_id: installId })
+          pollErrorCount = 0
+          etInstallProgress.value = { ...progress, active: true }
+          loadingToast.content = `${progress.description} (${progress.current_progress}%)`
+
+          if (progress.status === 1) {
+            clearInterval(pollTimer)
+            etInstallProgress.value = { ...progress, active: false }
+            loadingToast.clear()
+            toast.success(progress.description || t('settings.toast.kernelInstalled', { version: etVersion.value.selected_version }))
+            getEtInfo()
+            if (platform.value === 'android') {
+              toast.success(t('settings.toast.restartToApply'))
+            }
+            resolve()
+          } else if (progress.status === 2) {
+            clearInterval(pollTimer)
+            etInstallProgress.value = { ...progress, active: false }
+            loadingToast.clear()
+            toast.error(progress.description || t('settings.toast.updateFailed'))
+            reject(new Error(progress.description))
+          }
+        } catch (e) {
+          pollErrorCount++
+          if (pollErrorCount >= 3) {
+            clearInterval(pollTimer)
+            etInstallProgress.value = { ...etInstallProgress.value, active: false }
+            loadingToast.clear()
+            reject(e)
+          }
+        }
+      }, 1000)
+    } catch (e) {
+      etInstallProgress.value = { current_progress: 0, description: '', status: -1, active: false }
+      toast.error(e.message || t('settings.toast.updateFailed'))
+      loadingToast.clear()
+      reject(e)
+    }
   })
 }
 
