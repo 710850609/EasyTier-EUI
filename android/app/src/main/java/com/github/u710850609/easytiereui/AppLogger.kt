@@ -26,8 +26,8 @@ object AppLogger {
     private const val LOG_FILE_PREFIX = "app_kt_"
     // 每个文件最大大小，5MB
     private const val MAX_FILE_SIZE = 5L * 1024 * 1024
-    // 最大文件数量，50个
-    private const val MAX_FILE_COUNT = 50
+    // 最大文件数量，5个
+    private const val MAX_FILE_COUNT = 5
     // 最大保留天数，5天
     private const val MAX_DAYS = 5
     private val tsFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault())

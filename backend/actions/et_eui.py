@@ -405,8 +405,3 @@ def _clean_env_for_upgrade():
                 v = v.replace(';;', ';')
         clean[k] = v
     return clean
-
-if __name__ == '__main__':
-    run_configs.setup_env()
-    get_release_info({'refresh': 'true'})
-    # __get_download_url(True)

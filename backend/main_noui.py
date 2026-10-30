@@ -87,7 +87,7 @@ def start_android_server(data_dir: str, external_dir: str = "", host: str = "127
     import faulthandler
     import sys
 
-    def _rotate_file(filepath, max_size=5*1024*1024, backups=2):
+    def _rotate_file(filepath, max_size=5*1024*1024, backups=1):
         try:
             if os.path.exists(filepath) and os.path.getsize(filepath) >= max_size:
                 for i in range(backups - 1, 0, -1):
@@ -105,7 +105,7 @@ def start_android_server(data_dir: str, external_dir: str = "", host: str = "127
             pass
 
     class _RotatingFile:
-        def __init__(self, filepath, max_size=5*1024*1024, backups=2):
+        def __init__(self, filepath, max_size=5*1024*1024, backups=1):
             self.filepath = filepath
             self.max_size = max_size
             self.backups = backups

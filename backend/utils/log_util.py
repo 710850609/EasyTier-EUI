@@ -50,7 +50,7 @@ def setup_log(log_file:Optional[str] = None, log_level:Union[int, str, None] = N
         #  创建 RotatingFileHandler
         file_handler = RotatingFileHandler(
             filename=log_file,
-            maxBytes=20 * 1024 * 1024,
+            maxBytes=5 * 1024 * 1024,
             backupCount=5,  # 保留5个备份
             encoding='utf-8'
         )
