@@ -85,6 +85,7 @@ MESSAGES = {
         "arch_not_supported": "当前不支持 {arch} 架构下载，仅支持 {list_str}",
         "no_url": "没有可下载链接",
         "platform_arch_not_found": "未找到 {arch}-{type} 的下载链接",
+        "install_completed": "内核安装完成",
     },
     "peers": {
         "fetch_failed": "获取公共节点失败, 请检查网络连接： {error}",

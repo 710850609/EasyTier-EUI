@@ -83,6 +83,7 @@ MESSAGES = {
         "arch_not_supported": "L'architecture {arch} n'est pas prise en charge, uniquement: {list_str}",
         "no_url": "Aucune URL de téléchargement disponible",
         "platform_arch_not_found": "Lien de téléchargement introuvable pour {arch}-{type}",
+        "install_completed": "Installation du noyau terminée",
     },
     "peers": {
         "fetch_failed": "Échec de la récupération des pairs publics, vérifiez le réseau: {error}",

@@ -15,9 +15,10 @@ from pathlib import Path
 import utils.github_util as github_util
 from actions import services
 from et_adapters import get_facade, ffi_adapter
-from http_dispatcher.dispatcher import HttpException
+from http_dispatcher.dispatcher import HttpException, HttpResponse
 from locales import get_message
 from utils import run_configs, et_run_info
+from utils.async_task import InstallCoreTask
 from utils.validators import Validator
 
 logger = logging.getLogger(__name__)
@@ -121,10 +122,28 @@ def install(data, *args, **kwargs):
     arch = __get_arch()
     sys_platform = 'linux' if sys.platform == 'linux' else ('windows' if sys.platform == 'win32' else 'macos')
     sys_platform = 'android' if run_configs.IS_ANDROID else sys_platform
+    task = InstallCoreTask(data or {})
+    task.update_progress(0, get_message('download.preparing'))
+    task.start(_do_install, et_version, arch, sys_platform)
+    return HttpResponse(data={'install_id': task.install_id})
+
+
+def get_install_progress(params: dict, *args, **kwargs):
+    install_id = params.get('install_id', '')
+    if not install_id:
+        raise HttpException(get_message('download.id_required', param='install_id'))
+    progress = InstallCoreTask.load(install_id)
+    if progress is None:
+        raise HttpException(get_message('download.task_not_found', id=install_id))
+    return HttpResponse(data=progress)
+
+
+def _do_install(task: InstallCoreTask, et_version, arch, sys_platform):
     if get_facade().et_mode == 'ffi':
-        __install_ffi(et_version, arch, sys_platform)
+        __install_ffi(task, et_version, arch, sys_platform)
     else:
-        __install_et_core(et_version, arch, sys_platform)
+        __install_et_core(task, et_version, arch, sys_platform)
+    task.set_completed(get_message('download.install_completed'))
 
 def __get_arch():
     machine = platform.machine()
@@ -160,7 +179,7 @@ def __unzip(zip_file, unzip_dir):
     logger.info(f"解压完成: {zip_file} -> {unzip_temp_dir}")
     return unzip_temp_dir
 
-def __install_et_core(et_version, arch, sys_platform):
+def __install_et_core(task: InstallCoreTask, et_version, arch, sys_platform):
     url = f"https://github.com/easyTier/easytier/releases/download/{et_version}/easytier-{sys_platform}-{arch}-{et_version}.zip"
     versions = get_release_info({}).get('versions', [])
     for ver in versions:
@@ -182,10 +201,19 @@ def __install_et_core(et_version, arch, sys_platform):
     run_configs.data_dir()
     output_dir = os.path.join(run_configs.data_dir(), 'download')
     zip_file = f'{output_dir}/easytier-{sys_platform}-{arch}-{et_version}.zip'
-    github_util.download_release_file(url, zip_file)
+
+    task.update_progress(5, get_message('download.downloading_core'))
+
+    def on_download_progress(percent, desc):
+        mapped = 5 + int(percent * 0.75)
+        task.update_progress(mapped, get_message('download.downloading_core') + f' ({desc or f"{percent}%"})')
+
+    github_util.download_release_file(url, zip_file, progress_callback=on_download_progress)
+    task.update_progress(80, get_message('download.merging_package'))
     unzip_temp_dir = __unzip(zip_file, os.path.join(run_configs.data_dir(), 'download', 'temp'))
 
     stop_profiles = services.stop_all()
+    task.update_progress(90, get_message('download.merging_package'))
     for item in Path(os.path.join(unzip_temp_dir, f'easytier-{sys_platform}-{arch}')).iterdir():
         dst = os.path.join(core_dir, item.name)
         shutil.move(str(item), dst)
@@ -206,15 +234,18 @@ def __install_et_core(et_version, arch, sys_platform):
         logger.info(f'启动配置：{profile}')
         services.start({'profile': profile})
 
-def __install_ffi(et_version, arch, sys_platform):
+def __install_ffi(task: InstallCoreTask, et_version, arch, sys_platform):
     services.stop_all()
     logger.info(f"停止所有服务")
     ffi_dir = run_configs.core_dir()
     build_in_vers = ffi_adapter.get_built_in_version()
+    task.update_progress(5, get_message('download.downloading_core'))
     if f"v{build_in_vers}".startswith(et_version):
         shutil.rmtree(ffi_dir)
         get_facade().set_version(None)
+        task.update_progress(95, get_message('download.merging_package'))
         logger.info(f'选择内置FFI版本：{et_version}，无需下载，已删除旧FFI文件。重启后生效')
+        task.set_completed(get_message('download.install_completed'))
         return
     ffi_version = et_version
     if ffi_version == 'Nightly':
@@ -224,7 +255,12 @@ def __install_ffi(et_version, arch, sys_platform):
     download_file = os.path.join(run_configs.data_dir(), "download", f"easytier-ffi-{sys_platform}.tar.gz")
     if os.path.exists(download_file):
         os.remove(download_file)
-    github_util.download_release_file(ffi_url, download_file)
+
+    def on_download_progress(percent, desc):
+        mapped = 5 + int(percent * 0.75)
+        task.update_progress(mapped, get_message('download.downloading_core') + f' ({desc or f"{percent}%"})')
+
+    github_util.download_release_file(ffi_url, download_file, progress_callback=on_download_progress)
     if os.path.getsize(download_file) == 0:
         os.remove(download_file)
         raise HttpException(get_message('download.download_failed'))
@@ -234,6 +270,7 @@ def __install_ffi(et_version, arch, sys_platform):
     ffi_path = os.path.join(ffi_dir, ffi_lib_name)
     logger.info(f"FFI 保存路径: {ffi_path}")
 
+    task.update_progress(80, get_message('download.merging_package'))
     extract_dir = tempfile.mkdtemp(prefix="ffi_extract_")
     try:
         with tarfile.open(download_file, "r:gz") as tar:

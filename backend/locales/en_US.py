@@ -85,6 +85,7 @@ MESSAGES = {
         "arch_not_supported": "Architecture {arch} is not supported, only: {list_str}",
         "no_url": "No download URL available",
         "platform_arch_not_found": "Download link not found for {arch}-{type}",
+        "install_completed": "Kernel installation completed",
     },
     "peers": {
         "fetch_failed": "Failed to get public peers, check network: {error}",

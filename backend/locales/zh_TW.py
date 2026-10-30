@@ -83,6 +83,7 @@ MESSAGES = {
         "arch_not_supported": "當前不支援 {arch} 架構下載，僅支援 {list_str}",
         "no_url": "沒有可下載連結",
         "platform_arch_not_found": "未找到 {arch}-{type} 的下載連結",
+        "install_completed": "內核安裝完成",
     },
     "peers": {
         "fetch_failed": "獲取公共節點失敗, 請檢查網路連線： {error}",

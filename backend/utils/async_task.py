@@ -168,3 +168,18 @@ class UpdateTask(AsyncTask):
     @staticmethod
     def load(update_id: str) -> Optional[dict]:
         return AsyncTask.load(update_id, 'update')
+
+
+class InstallCoreTask(AsyncTask):
+    def __init__(self, params: dict, install_id: str = None):
+        super().__init__(params, 'install_core', get_message('download.preparing'), get_message('download.failed'), install_id)
+        self.install_id = self.task_id
+
+    def _build_save_data(self) -> dict:
+        data = super()._build_save_data()
+        data['install_id'] = self.install_id
+        return data
+
+    @staticmethod
+    def load(install_id: str) -> Optional[dict]:
+        return AsyncTask.load(install_id, 'install_core')
