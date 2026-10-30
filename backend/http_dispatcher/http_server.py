@@ -246,16 +246,16 @@ def start(host:str, port:int, base_uri: str) -> None:
     else:
         sys.exit(1)
 
-if __name__ == '__main__':
-    run_configs.setup_env()
-    run_mode = run_configs.get_run_mode()
-    log_util.setup_log(log_file=os.path.join(run_configs.log_dir(), 'app.log'),
-                       log_level=logging.INFO if run_mode > 0 else logging.DEBUG,
-                       enabled_console=run_mode == 0)
-    import argparse
-    parser = argparse.ArgumentParser(description='CGI Proxy HTTP Server')
-    parser.add_argument('--host', default='0.0.0.0', help='Host to bind to (default: 0.0.0.0)')
-    parser.add_argument('--port', type=int, default=5666, help='Port to bind to (default: 5666)')
-    parser.add_argument('--base_uri', default='', help='Base URI for virtual requests (default: empty)')
-    args = parser.parse_args()
-    start(args.host, args.port, args.base_uri)
+# if __name__ == '__main__':
+#     run_configs.setup_env()
+#     run_mode = run_configs.get_run_mode()
+#     log_util.setup_log(log_file=os.path.join(run_configs.log_dir(), 'app.log'),
+#                        log_level=logging.INFO if run_mode > 0 else logging.DEBUG,
+#                        enabled_console=run_mode == 0)
+#     import argparse
+#     parser = argparse.ArgumentParser(description='CGI Proxy HTTP Server')
+#     parser.add_argument('--host', default='0.0.0.0', help='Host to bind to (default: 0.0.0.0)')
+#     parser.add_argument('--port', type=int, default=5666, help='Port to bind to (default: 5666)')
+#     parser.add_argument('--base_uri', default='', help='Base URI for virtual requests (default: empty)')
+#     args = parser.parse_args()
+#     start(args.host, args.port, args.base_uri)

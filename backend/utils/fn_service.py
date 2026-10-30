@@ -112,7 +112,7 @@ def _fix_remove_sys_service():
 if __name__ == '__main__':
     try:
         run_configs.setup_env()
-        log_util.setup_log(log_file=os.path.join(run_configs.log_dir(), 'cmd.log'), log_level=logging.WARN, enabled_console=False)
+        log_util.setup_log(log_file=os.path.join(run_configs.log_dir(), 'cmd.log'), log_level=None, enabled_console=False)
         _fn_check_file = run_configs.fn_check_file()
         args = sys.argv
         if len(args) != 2:

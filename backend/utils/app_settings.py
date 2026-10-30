@@ -4,6 +4,7 @@
 应用配置
 """
 import json
+import logging
 import os
 from typing import Optional, Any
 
@@ -37,3 +38,7 @@ def save(key: str, value: str | dict | list | None) -> None:
     settings[key] = value
     with open(_setting_file(), "w", encoding="utf-8") as f:
         json.dump(settings, f, ensure_ascii=False, indent=4)
+
+def get_log_level() -> str:
+    default_level = 'off' if run_configs.IS_ANDROID else 'warn'
+    return get('log_level', default_level)

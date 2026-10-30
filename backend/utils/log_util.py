@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import json
 import logging
-import os.path
 import sys
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from typing import Optional, Union
 
-from utils import run_configs, app_settings
+from utils import app_settings
 
 # 全局标志，记录日志是否已配置
 _log_setup_done = False
@@ -27,9 +25,10 @@ def setup_log(log_file:Optional[str] = None, log_level:Union[int, str, None] = N
         return  # 已配置过，直接返回
 
     if log_level is None:
-        log_level = app_settings.get('log_level', 'WARN')
-    log_level = log_level.upper() if isinstance(log_level, str) else log_level
+        log_level = app_settings.get_log_level()
 
+    if isinstance(log_level, str):
+        log_level = 100 if log_level.lower() == 'off' else log_level
     if isinstance(log_level, str):
         log_level = getattr(logging, log_level.upper(), logging.INFO)
 
@@ -75,7 +74,10 @@ def set_log_level(level: Union[int, str], logger_name: Optional[str] = None, exc
     :param excluded_console: 是否排除控制台输出，默认 False
     """
     if isinstance(level, str):
-        level = getattr(logging, level.upper(), logging.INFO)
+        if level.lower() == 'off':
+            level = 100
+        else:
+            level = getattr(logging, level.upper(), logging.INFO)
 
     target = logging.getLogger(logger_name)
     target.setLevel(level)
