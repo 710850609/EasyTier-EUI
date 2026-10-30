@@ -89,19 +89,15 @@ class EasyTierManager(
         currentInstanceName = null
         val active = activeNetworkInstance
         activeNetworkInstance = null
-        if (stopPythonNetwork && instanceName != null) {
+        if (stopPythonNetwork) {
             try {
-                getFacade()?.callAttr("stop_network", instanceName)
-                AppLogger.info(TAG, "stopVpn: Python stop_network called for $instanceName")
+                val target = instanceName ?: active
+                if (target != null) {
+                    getFacade()?.callAttr("stop_network", target)
+                    AppLogger.info(TAG, "stopVpn: Python stop_network called for $target")
+                }
             } catch (e: Exception) {
                 AppLogger.error(TAG, "stopVpn: stop_network failed: ${e.message}")
-            }
-        } else if (stopPythonNetwork && active != null) {
-            try {
-                getFacade()?.callAttr("stop_network", active)
-                AppLogger.info(TAG, "stopVpn: Python stop_network called for active=$active")
-            } catch (e: Exception) {
-                AppLogger.error(TAG, "stopVpn: stop_network failed for active: ${e.message}")
             }
         }
     }
@@ -120,8 +116,8 @@ class EasyTierManager(
     }
 
     /**
-     * 统一的组网通知入口（方案2）：由 Py 层各入口调用。
-     * 若前台服务尚未创建则先创建（展示默认"启动配置中..."）；已创建则更新文案。
+     * 统一的组网通知入口：由 Py 层各入口调用。
+     * 若前台服务尚未创建则先创建（透传 title/text）；已创建则更新文案。
      * title/text 为 null 时使用默认的"启动配置中..."文案。
      */
     fun showNotification(instanceName: String, title: String? = null, text: String? = null) {
@@ -129,8 +125,7 @@ class EasyTierManager(
         activeNetworkInstance = instanceName
         val service = EasyTierVpnService.instance
         if (service == null) {
-            // 前台服务尚未建立（VPN 建立前 / 初始节点连接中），先创建并展示默认连接文案
-            EasyTierVpnService.postConnectingNotification(context)
+            EasyTierVpnService.postConnectingNotification(context, title, text)
         } else {
             service.updateNotification(title ?: EasyTierVpnService.defaultAppName(), text ?: EasyTierVpnService.defaultStartText())
         }
@@ -154,10 +149,6 @@ class EasyTierManager(
             AppLogger.error(TAG, "safeStatus failed for $instance: ${e.message}")
             false
         }
-    }
-
-    fun updateNotification(title: String, text: String) {
-        EasyTierVpnService.instance?.updateNotification(title, text)
     }
 
     // ── 授权回调 ─────────────────────────────────────────────

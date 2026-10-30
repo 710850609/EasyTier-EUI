@@ -14,7 +14,6 @@ import android.os.Looper
 import android.os.ParcelFileDescriptor
 import java.util.Locale
 import androidx.core.app.NotificationCompat
-import com.chaquo.python.Python
 import kotlin.concurrent.thread
 import java.io.PrintWriter
 import java.io.StringWriter
@@ -33,6 +32,11 @@ class EasyTierVpnService : VpnService() {
         private const val REVOKE_NOTIFICATION_ID = 2
         const val ACTION_CONNECTING = "com.github.u710850609.easytiereui.action.CONNECTING"
 
+        @Volatile
+        private var connectingTitle: String? = null
+        @Volatile
+        private var connectingText: String? = null
+
         fun defaultAppName(): String =
             if (Locale.getDefault().language == "zh") "易组网" else "EasyTier-EUI"
 
@@ -40,10 +44,12 @@ class EasyTierVpnService : VpnService() {
             if (Locale.getDefault().language == "zh") "启动配置中..." else "Starting configuration..."
 
         /**
-         * 以"连接中"模式启动前台服务，展示"配置启动中..."通知。
+         * 以"连接中"模式启动前台服务，展示 title/text 通知。
          * 由 Py 层在 start_network 时统一发起，保证磁贴/界面各入口通知一致。
          */
-        fun postConnectingNotification(context: Context) {
+        fun postConnectingNotification(context: Context, title: String? = null, text: String? = null) {
+            connectingTitle = title
+            connectingText = text
             val intent = Intent(context, EasyTierVpnService::class.java).apply {
                 action = ACTION_CONNECTING
             }
@@ -53,7 +59,7 @@ class EasyTierVpnService : VpnService() {
                 } else {
                     context.startService(intent)
                 }
-                AppLogger.info(TAG, "postConnectingNotification: started connecting service")
+                AppLogger.info(TAG, "postConnectingNotification: started connecting service, title=$title")
             } catch (e: Exception) {
                 AppLogger.error(TAG, "postConnectingNotification failed: ${e.message}")
             }
@@ -117,7 +123,7 @@ class EasyTierVpnService : VpnService() {
         super.onCreate()
         AppLogger.info(TAG, "VPN Service onCreate: start")
         try {
-            createNotificationChannel()
+            ensureNotificationChannel(this)
             AppLogger.info(TAG, "VPN Service notification channel created")
         } catch (e: Exception) {
             AppLogger.error(TAG, "Failed to create notification channel: ${e.message}")
@@ -125,7 +131,12 @@ class EasyTierVpnService : VpnService() {
         instance = this
         EasyTierVpnTileService.notifyVpnServiceCreated()
         EasyTierVpnTileService.requestStateUpdate(this)
-        startForeground(NOTIFICATION_ID, buildConnectingNotification())
+        startForeground(NOTIFICATION_ID, buildNotification(
+            connectingTitle ?: defaultAppName(),
+            connectingText ?: defaultStartText()
+        ))
+        connectingTitle = null
+        connectingText = null
         AppLogger.info(TAG, "VPN Service created")
     }
 
@@ -143,7 +154,6 @@ class EasyTierVpnService : VpnService() {
             // 连接中模式：vpn_params 尚未就绪（初始节点还在连接/重试），保持前台"启动配置中"状态
             if (intent?.action == ACTION_CONNECTING) {
                 AppLogger.info(TAG, "onStartCommand: connecting mode, staying foreground")
-                startForeground(NOTIFICATION_ID, buildConnectingNotification())
                 return START_STICKY
             }
             AppLogger.error(TAG, "Missing parameters: params=$params")
@@ -355,7 +365,7 @@ class EasyTierVpnService : VpnService() {
     }
 
     private fun buildNotification(title: String, text: String): Notification {
-        return try {
+        val builder = try {
             val intent = Intent(this, MainActivity::class.java).apply {
                 action = Intent.ACTION_MAIN
                 addCategory(Intent.CATEGORY_LAUNCHER)
@@ -374,44 +384,17 @@ class EasyTierVpnService : VpnService() {
                 .setOngoing(true)
                 .setForegroundServiceBehavior(android.app.Notification.FOREGROUND_SERVICE_IMMEDIATE)
                 .setPriority(NotificationCompat.PRIORITY_LOW)
-                .build()
         } catch (e: Exception) {
             AppLogger.error(TAG, "buildNotification failed: ${e.message}")
             NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle("EasyTier-EUI")
-                .setContentText("Service Is Running")
+                .setContentTitle(title)
+                .setContentText(text)
                 .setSmallIcon(R.drawable.ic_notification)
                 .setOngoing(true)
                 .setForegroundServiceBehavior(android.app.Notification.FOREGROUND_SERVICE_IMMEDIATE)
                 .setPriority(NotificationCompat.PRIORITY_LOW)
-                .build()
         }
-    }
-
-    private fun buildConnectingNotification(): Notification {
-        val intent = Intent(this, MainActivity::class.java).apply {
-            action = Intent.ACTION_MAIN
-            addCategory(Intent.CATEGORY_LAUNCHER)
-            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
-        }
-        val pendingIntent = PendingIntent.getActivity(
-            this, 0, intent,
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-        )
-        return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle(defaultAppName())
-            .setContentText(defaultStartText())
-            .setSmallIcon(R.drawable.ic_notification)
-            .setContentIntent(pendingIntent)
-            .setOngoing(true)
-            .setForegroundServiceBehavior(android.app.Notification.FOREGROUND_SERVICE_IMMEDIATE)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
-            .setProgress(0, 0, true)
-            .build()
-    }
-
-    private fun createNotificationChannel() {
-        ensureNotificationChannel(this)
+        return builder.build()
     }
 
     override fun onRevoke() {

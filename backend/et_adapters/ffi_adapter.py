@@ -424,6 +424,8 @@ class FfiAdapter(IEasyTierAdapter):
             self._mtu_config[instance_name] = mtu
             self._invalidate_ffi_cache()
             logger.info(f"Instance '{instance_name}' started via FFI")
+            # 配置已启动成功，通知 Android 侧展示"启动配置中..."前台服务（磁贴/界面各入口统一）
+            self._kotlin_notification(instance_name, {})
             time.sleep(2.0)
             self._start_monitor(instance_name)
         except Exception as e:
@@ -781,13 +783,13 @@ class FfiAdapter(IEasyTierAdapter):
                 if changed or not cached_state:
                     cached_state = {k: info.get(k) for k in compare_keys}
                     self._start_times[instance_name] = time.time()
-                    self._notify_kotlin_restart_vpn(instance_name, info)
+                    self._kotlin_restart_vpn(instance_name, info)
                     last_notify_time = 0.0
 
                 now = time.time()
                 if now - last_notify_time >= 60.0:
                     last_notify_time = now
-                    self._notify_kotlin_update_notification(instance_name, info)
+                    self._kotlin_notification(instance_name, info)
 
                 time.sleep(5.0)
 
@@ -796,7 +798,7 @@ class FfiAdapter(IEasyTierAdapter):
 
         logger.info(f"Monitor loop ended for {instance_name}")
 
-    def _notify_kotlin_restart_vpn(self, instance_name: str, info: Dict[str, Any]):
+    def _kotlin_restart_vpn(self, instance_name: str, info: Dict[str, Any]):
         try:
             if not run_configs.IS_ANDROID:
                 return
@@ -816,7 +818,7 @@ class FfiAdapter(IEasyTierAdapter):
         except Exception as e:
             logger.exception(f"Failed to notify Kotlin restartVpn: {e}")
 
-    def _notify_kotlin_update_notification(self, instance_name: str, info: Dict[str, Any]):
+    def _kotlin_notification(self, instance_name: str, info: Dict[str, Any]):
         try:
             if not run_configs.IS_ANDROID:
                 return
@@ -825,7 +827,7 @@ class FfiAdapter(IEasyTierAdapter):
             manager = MainActivity.getEasyTierManager()
             if manager is not None:
                 title, text = self._build_notification_text(instance_name, info)
-                manager.updateNotification(title, text)
+                manager.showNotification(instance_name, title, text)
         except Exception as e:
             logger.exception(f"Failed to update notification: {e}")
 
