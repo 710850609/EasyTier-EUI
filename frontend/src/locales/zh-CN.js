@@ -529,6 +529,7 @@ export default {
     serviceStarting: '服务启动中...',
     serviceRestarting: '服务重启中...',
     serviceStarted: '服务启动成功',
+    rollbackRestored: '新配置启动失败，已自动恢复备份配置',
     saveFailed: '保存配置失败: {error}',
     copied: '已复制配置到剪贴板',
     autostartSuccess: '设置服务开机启动成功',

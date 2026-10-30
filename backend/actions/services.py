@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import copy
 import logging
+import shutil
 import time
 from pathlib import Path
 from typing import List, Optional, Set
@@ -35,7 +36,8 @@ def start(params=None, *args, **kwargs):
 
 def restart(params=None, *args, **kwargs):
     logger.info(f"重启ET服务...")
-    if status(params):
+    is_running = status(params)
+    if is_running:
         stop(params)
         # 等待服务真正停止后再启动，避免系统服务模式下异步停止导致的冲突
         max_retries = 20
@@ -44,7 +46,45 @@ def restart(params=None, *args, **kwargs):
             max_retries -= 1
         if max_retries == 0:
             logger.warning(f"等待服务停止超时，仍尝试启动")
-    start(params)
+    return __start_with_rollback(params, is_running)
+
+
+def __start_with_rollback(params, rollback=False) -> dict:
+    """启动配置；失败则用备份回滚重启，返回结果供前端提示。
+
+    返回: {'success': bool, 'rollback': bool, 'error': str}
+       - success:  最终服务是否处于运行状态
+       - rollback: 是否执行了回滚
+       - error:    启动失败时的错误信息（回滚成功也会带上原错误，供排查）
+    """
+    profile, _ = Validator.not_empty(params, 'profile', 'validate.profile_required')
+
+    def try_start():
+        try:
+            start(params)
+            return status(params), ''
+        except Exception as e:
+            logger.warning(f"启动失败: {e}")
+            return False, str(e)
+
+    ok, error = try_start()
+    if ok:
+        return {'success': True, 'rollback': False, 'error': ''}
+
+    # 仅当原本处于运行状态时才允许回滚；否则如实上报失败
+    if not rollback:
+        return {'success': False, 'rollback': False, 'error': error or 'start_failed'}
+
+    config_file = run_configs.et_config_file(profile)
+    rollback_file = f'{config_file}.rollback'
+    if not Path(rollback_file).exists():
+        logger.warning(f"启动【{profile}】失败，且无备份配置可回滚")
+        return {'success': False, 'rollback': False, 'error': error or 'start_failed'}
+
+    logger.warning(f"启动【{profile}】失败，使用备份配置回滚重启...")
+    shutil.copy2(rollback_file, config_file)
+    ok, e = try_start()
+    return {'success': ok, 'rollback': True, 'error': e if not ok else error}
 
 def start_all(*args, **kwargs):
     config_file_list = run_configs.et_config_files()

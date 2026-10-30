@@ -69,6 +69,8 @@ def delete(params, *args, **kwargs):
         # 禁用自启，当删除最后一个配置时，触发卸载注册服务
         services.auto_start({'profile': profile, 'enabled': False})
     Path(run_configs.et_config_file(profile)).unlink(missing_ok=True)
+    # 删除配置的 rollback 备份，避免残留垃圾文件
+    Path(run_configs.et_config_file(profile) + '.rollback').unlink(missing_ok=True)
     et_run_info.remove(profile)
 
 
@@ -109,6 +111,12 @@ def save(data, *args, **kwargs):
             et_config_file = run_configs.et_config_file(profile)
             path_config_file = Path(et_config_file)
             logger.info(f"存在同名配置，尝试使用配置名称: {et_config_file}")
+
+    if not new_config:
+        # 仅当当前配置处于运行中（视为已知可用）时备份，供启动失败回滚
+        if services.status({'profile': profile}):
+            shutil.copy2(et_config_file, f'{et_config_file}.rollback')
+            logger.info(f"已备份配置: {et_config_file}.rollback")
 
     if not path_config_file.exists():
         path_config_file.parent.mkdir(parents=True, exist_ok=True)
@@ -160,6 +168,10 @@ def save_toml(data: str, *args, **kwargs):
         doc = tomlkit.parse(data['toml'])
         doc['instance_name'] = profile
         et_config_file = run_configs.et_config_file(profile)
+        # 仅当当前配置处于运行中（视为已知可用）时备份，供启动失败回滚
+        if services.status({'profile': profile}):
+            shutil.copy2(et_config_file, f'{et_config_file}.rollback')
+            logger.info(f"已备份配置: {et_config_file}.rollback")
         Path(et_config_file).parent.mkdir(parents=True, exist_ok=True)
         with open(et_config_file, "w", encoding="utf-8") as f:
             f.write(tomlkit.dumps(doc))

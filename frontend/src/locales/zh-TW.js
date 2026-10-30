@@ -523,6 +523,7 @@ export default {
     serviceStarting: '服務啟動中...',
     serviceRestarting: '服務重新啟動中...',
     serviceStarted: '服務啟動成功',
+    rollbackRestored: '新設定啟動失敗，已自動恢復備份設定',
     saveFailed: '儲存設定失敗: {error}',
     copied: '已複製設定到剪貼簿',
     autostartSuccess: '設定服務開機啟動成功',

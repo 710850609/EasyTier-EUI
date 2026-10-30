@@ -526,6 +526,7 @@ export default {
     serviceStarting: 'Service starting...',
     serviceRestarting: 'Service restarting...',
     serviceStarted: 'Service started successfully',
+    rollbackRestored: 'New config failed to start, restored from backup',
     saveFailed: 'Failed to save config: {error}',
     copied: 'Config copied to clipboard',
     autostartSuccess: 'Auto-start enabled successfully',

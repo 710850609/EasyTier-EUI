@@ -429,6 +429,7 @@ export default {
     serviceStarting: 'Démarrage du service...',
     serviceRestarting: 'Redémarrage du service...',
     serviceStarted: 'Service démarré',
+    rollbackRestored: 'La nouvelle configuration a échoué, restauration depuis la sauvegarde',
     saveFailed: 'Échec sauvegarde : {error}',
     copied: 'Configuration copiée',
     autostartSuccess: 'Démarrage auto activé',

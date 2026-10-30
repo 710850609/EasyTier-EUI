@@ -930,8 +930,15 @@ const openConfigView = (isFastConfig) => {
 const restartService = () => {
   return new Promise((resolve, reject) => {
     try {
-      api.services.restart(selectedConfig.value).then(() => {
-        toast.success(t('nodes.serviceRestartSuccess'))
+      api.services.restart(selectedConfig.value).then((resp) => {
+        const data = resp.data || {}
+        if (data.rollback) {
+          toast.warning(t('config.rollbackRestored') + (data.error ? `: ${data.error}` : ''))
+        } else if (!data.success) {
+          toast.error(data.error || t('nodes.serviceRestartFailed'))
+        } else {
+          toast.success(t('nodes.serviceRestartSuccess'))
+        }
         resolve()
       }).catch(e => reject(e))
     } catch (error) {

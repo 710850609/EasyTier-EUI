@@ -428,6 +428,7 @@ export default {
     serviceStarting: 'Dienst wird gestartet...',
     serviceRestarting: 'Dienst wird neu gestartet...',
     serviceStarted: 'Dienst erfolgreich gestartet',
+    rollbackRestored: 'Neue Konfiguration fehlgeschlagen, Sicherungskopie wiederhergestellt',
     saveFailed: 'Konfiguration konnte nicht gespeichert werden: {error}',
     copied: 'Konfiguration in Zwischenablage kopiert',
     autostartSuccess: 'Autostart erfolgreich aktiviert',

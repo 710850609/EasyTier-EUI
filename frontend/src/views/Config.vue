@@ -1418,8 +1418,15 @@ const saveConfig = () => {
       }
       if (fastSettingMode.value || await checkStatus()) {
         const restartLoading = toast.loading(fastSettingMode.value ? t('config.serviceStarting') : t('config.serviceRestarting'))
-            await api.services.restart(selectedConfig.value).then(() => {
-              toast.success(t('config.serviceStarted'))
+            await api.services.restart(selectedConfig.value).then((resp) => {
+              const data = resp.data || {}
+              if (data.rollback) {
+                toast.warning(t('config.rollbackRestored') + (data.error ? `: ${data.error}` : ''))
+              } else if (!data.success) {
+                toast.error(data.error || t('config.saveFailed'))
+              } else {
+                toast.success(t('config.serviceStarted'))
+              }
             }).finally(() => {
               restartLoading.clear()
             })
@@ -1472,8 +1479,15 @@ const saveToml = () => {
       api.services.status(selectedConfig.value).then(resp => {
         if (resp.data) {
           const restartLoading = toast.loading(t('config.serviceRestarting'))
-          api.services.restart(selectedConfig.value).then(() => {
-            toast.success(t('config.serviceStarted'))
+          api.services.restart(selectedConfig.value).then((resp) => {
+            const data = resp.data || {}
+            if (data.rollback) {
+              toast.warning(t('config.rollbackRestored') + (data.error ? `: ${data.error}` : ''))
+            } else if (!data.success) {
+              toast.error(data.error || t('config.saveFailed'))
+            } else {
+              toast.success(t('config.serviceStarted'))
+            }
             loadConfig(selectedConfig.value)
           }).finally(() => {
             restartLoading.clear()
