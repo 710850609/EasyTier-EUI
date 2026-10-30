@@ -495,7 +495,7 @@ def start_stun(params=None, *args, **kwargs):
         cmd_list.append(stun_config.get('checkCycle'))
 
     cmd_list.append('-k')
-    cmd_list.append(stun_config.get('keepaliveInterval') or "25")
+    cmd_list.append(stun_config.get('keepaliveInterval') or "20")
     if is_udp_mode:
         cmd_list.append('-c')
         cmd_list.append(stun_config.get('keepaliveInterval') or "2")
@@ -562,3 +562,6 @@ def stop_all(params=None, *args, **kwargs):
         if str(config.get('status', 0)) == '1':
             logger.info(f"停止 stun 配置: {config}")
             stop_stun({'id': config_id})
+            # 回写状态是开启，确保下次启动时 start_enable 能开启它
+            config['status'] = 1
+            _save_stun_configs(stun_configs)
