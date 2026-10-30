@@ -142,9 +142,13 @@ class EasyTierManager(
 
     private fun safeStatus(instance: String): Boolean {
         return try {
-            val st = getFacade()?.callAttr("status", instance)
-            val s = st?.toString()
-            if (s == null || s == "None") false else s.toBooleanStrictOrNull() ?: false
+            val st = getFacade()?.callAttr("status", instance) ?: return false
+            // Python bool 经 Chaquopy 转 String 为首字母大写 "True"/"False"，
+            // 需大小写不敏感判断并兼容 "1"/"0"。
+            when (st.toString().lowercase()) {
+                "true", "1" -> true
+                else -> false
+            }
         } catch (e: Exception) {
             AppLogger.error(TAG, "safeStatus failed for $instance: ${e.message}")
             false
