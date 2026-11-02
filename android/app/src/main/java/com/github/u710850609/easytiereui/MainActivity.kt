@@ -114,18 +114,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun applyConfig() {
-        AppLogger.minLevel = when (appConfig.logLevel) {
-            "debug" -> AppLogger.Level.DEBUG
-            "info" -> AppLogger.Level.INFO
-            "warn" -> AppLogger.Level.WARN
-            "error" -> AppLogger.Level.ERROR
-            "fatal" -> AppLogger.Level.FATAL
-            "off" -> AppLogger.Level.OFF
-            else -> {
-                AppLogger.warn(TAG, "applyConfig: unknown logLevel '${appConfig.logLevel}', using WARN")
-                AppLogger.Level.WARN
-            }
-        }
+        AppLogger.setLogLevel(appConfig.logLevel)
         AppLogger.info(TAG, "applyConfig: minLevel=${AppLogger.minLevel}, webviewDebug=${appConfig.webviewDebug}, ignoreSslErrors=${appConfig.ignoreSslErrors}")
     }
 
@@ -175,9 +164,6 @@ class MainActivity : AppCompatActivity() {
         }, 4000)
 
         super.onCreate(savedInstanceState)
-        AppLogger.logDir = File(getExternalFilesDir(null), "logs")
-        AppLogger.logDir?.mkdirs()
-
         loadAppConfig()
 
         Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->

@@ -61,6 +61,7 @@ def setup_env():
         for d in [CONFIG_DIR, DATA_DIR, LOG_DIR, CORE_DIR]:
             os.makedirs(d, exist_ok=True)
         _is_inited_evn = True
+        _run_mode = 1
         return
     # 是否在 PyInstaller 打包环境中
     WORK_DIR = None

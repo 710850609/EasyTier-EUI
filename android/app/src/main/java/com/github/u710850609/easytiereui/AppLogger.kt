@@ -1,5 +1,6 @@
 package com.github.u710850609.easytiereui
 
+import android.content.Context
 import android.util.Log
 import java.io.File
 import java.io.PrintWriter
@@ -22,6 +23,11 @@ object AppLogger {
     var logDir: File? = null
     var minLevel: Level = Level.WARN
 
+    /** 功能边界内的统一默认级别（文件缺失/读取失败时）。与后端 Android 默认一致，均为关闭日志。 */
+    private val DEFAULT_LEVEL: Level = Level.OFF
+
+    @Volatile private var initialized = false
+
     private const val LOG_FILE_NAME = "app_kt.log"
     private const val LOG_FILE_PREFIX = "app_kt_"
     // 每个文件最大大小，5MB
@@ -34,6 +40,58 @@ object AppLogger {
 
     @Volatile private var currentLogFile: File? = null
     private val lock = Any()
+
+    /** 将字符串日志级别映射为 Level；无法识别时返回 null。 */
+    private fun parseLevel(level: String): Level? = when (level.trim().lowercase()) {
+        "debug" -> Level.DEBUG
+        "info" -> Level.INFO
+        "warn" -> Level.WARN
+        "error" -> Level.ERROR
+        "fatal" -> Level.FATAL
+        "off" -> Level.OFF
+        else -> null
+    }
+
+    /** 运行中切换日志级别。级别非法时返回 false，minLevel 保持不变。 */
+    fun setLogLevel(level: String): Boolean {
+        val parsed = parseLevel(level) ?: return false
+        minLevel = parsed
+        return true
+    }
+
+    /**
+     * 显式初始化入口，须在首次输出日志前调用一次（Application.onCreate）。
+     * 线程安全、幂等：内部设置 logDir、读取 setting.json 并统一默认级别。
+     */
+    fun initialize(context: Context) {
+        if (initialized) return
+        synchronized(this) {
+            if (initialized) return
+            // 仅当外部存储可用时才启用日志落盘；否则 logDir 保持 null，文件日志不写入。
+            val external = context.getExternalFilesDir(null)
+            if (external != null) {
+                val dir = File(external, "logs")
+                dir.mkdirs()
+                logDir = dir
+            }
+            minLevel = loadLevelFromSetting(context)
+            initialized = true
+        }
+    }
+
+    /** 从 setting.json 读取 log_level；缺失/无法解析/读取失败时回退统一默认级别 DEFAULT_LEVEL。 */
+    private fun loadLevelFromSetting(context: Context): Level {
+        val settingFile = File(context.filesDir, "data/setting.json")
+        if (!settingFile.exists()) return DEFAULT_LEVEL
+        return try {
+            val level = org.json.JSONObject(settingFile.readText())
+                .optString("log_level", "off")
+                .lowercase()
+            parseLevel(level) ?: DEFAULT_LEVEL
+        } catch (_: Exception) {
+            DEFAULT_LEVEL
+        }
+    }
 
     fun debug(tag: String, msg: String) = log(Level.DEBUG, tag, msg)
     fun info(tag: String, msg: String) = log(Level.INFO, tag, msg)

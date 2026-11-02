@@ -220,19 +220,11 @@ class EasyTierManager(
     // ── 工具方法 ─────────────────────────────────────────────
 
     fun setLogLevel(level: String) {
-        AppLogger.minLevel = when (level.lowercase()) {
-            "debug" -> AppLogger.Level.DEBUG
-            "info" -> AppLogger.Level.INFO
-            "warn" -> AppLogger.Level.WARN
-            "error" -> AppLogger.Level.ERROR
-            "fatal" -> AppLogger.Level.FATAL
-            "off" -> AppLogger.Level.OFF
-            else -> {
-                AppLogger.warn(TAG, "setLogLevel: unknown level '$level'")
-                return
-            }
+        if (AppLogger.setLogLevel(level)) {
+            AppLogger.info(TAG, "setLogLevel: changed to ${AppLogger.minLevel}")
+        } else {
+            AppLogger.warn(TAG, "setLogLevel: unknown level '$level'")
         }
-        AppLogger.info(TAG, "setLogLevel: changed to ${AppLogger.minLevel}")
     }
 
     fun getDeviceName(): String {

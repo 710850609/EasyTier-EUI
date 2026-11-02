@@ -31,9 +31,7 @@ class App : Application() {
         super.onCreate()
         instance = this
 
-        AppLogger.logDir = File(getExternalFilesDir(null), "logs")
-        AppLogger.logDir?.mkdirs()
-        AppLogger.minLevel = AppLogger.Level.INFO
+        AppLogger.initialize(applicationContext)
         AppLogger.info(TAG, "App.onCreate: initializing")
 
         Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
