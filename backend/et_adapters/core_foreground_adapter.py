@@ -77,7 +77,7 @@ class CoreForegroundAdapter(IEasyTierAdapter):
             rpc_portal,
             f"--file-log-dir", f"{run_configs.log_dir()}",
             f"--file-log-level", f"{info.log_level or 'error'}",
-            f"--file-log-size", f"50"  # 单个文件日志大小，单位 MB，默认值为 100MB
+            f"--file-log-size", f"20"  # 单个文件日志大小，单位 MB，默认值为 100MB
         ]
         logging.info(f"启动ET命令: {cmd}")
         pm = _get_process_manager(instance_name)

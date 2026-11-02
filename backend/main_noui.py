@@ -80,6 +80,10 @@ def init_android_env(data_dir: str, external_dir: str = ""):
     os.environ['ANDROID_DATA_DIR'] = data_dir
     os.environ['ANDROID_EXTERNAL_DIR'] = external_dir or data_dir
     run_configs.setup_env()
+    run_mode = run_configs.get_run_mode()
+    log_util.setup_log(log_file=os.path.join(external_dir, 'logs', 'app.log'),
+                       log_level=logging.DEBUG if run_mode == 0 else None,
+                       enabled_console=run_mode == 0)
 
 def start_android_server(data_dir: str, external_dir: str = "", host: str = "127.0.0.1", port: int = 0) -> dict:
     """Android 入口：初始化环境 + 启动 HTTP 服务，返回 {'port': int, 'host': str}"""
@@ -125,10 +129,6 @@ def start_android_server(data_dir: str, external_dir: str = "", host: str = "127
             return self._fd.fileno()
 
     init_android_env(data_dir, external_dir)
-    run_mode = run_configs.get_run_mode()
-    log_util.setup_log(log_file=os.path.join(external_dir, 'logs', 'app.log'),
-                       log_level=logging.DEBUG if run_mode == 0 else None,
-                       enabled_console=run_mode == 0)
     log_file = os.path.join(external_dir, 'logs', 'easytier_py.log')
 
     def py_log(msg):
@@ -188,41 +188,6 @@ def start_android_server(data_dir: str, external_dir: str = "", host: str = "127
         py_log(f"EXCEPTION: {e}\n{traceback.format_exc()}")
         raise
 
-# def _android_async_start_hook():
-#     enabled_start_recovery = app_settings.get('enabled_start_recovery', True)
-#     if not enabled_start_recovery:
-#         logger.info("跳过启动应用恢复组网：禁用功能")
-#         return
-#     def _async_start_vpn():
-#         try:
-#             logger.info("async VPN startup begin")
-#             run_infos = et_run_info.get_all()
-#             for info in run_infos.values():
-#                 if info.running:
-#                     profile_filename = info.profile
-#                     toml_path = run_configs.et_config_file(profile_filename)
-#                     if not os.path.exists(toml_path):
-#                         logger.warning(f"跳过应用启动恢复上次未关闭的组网：{profile_filename} 配置不存在")
-#                         continue
-#                     logger.info(f"应用启动恢复上次未关闭的组网：{profile_filename}")
-#                     if facade.get_facade().status(profile_filename):
-#                         logger.info(f"应用启动恢复：{profile_filename} 已在运行中，跳过")
-#                         if run_configs.IS_ANDROID:
-#                             # 安卓环境下，仅启动单个组网配置
-#                             logger.info(f"安卓环境，仅启动单个组网配置")
-#                             break
-#                         else:
-#                             continue
-#                     facade.get_facade().start_network(toml_path, profile_filename)
-#                     if run_configs.IS_ANDROID:
-#                         # 安卓环境下，仅启动单个组网配置
-#                         logger.info(f"安卓环境，仅启动单个组网配置")
-#                         break
-#             logger.info("async VPN startup done")
-#         except Exception:
-#             logger.exception(f"async VPN startup failed")
-#     threading.Thread(target=_async_start_vpn, daemon=True, name='async-vpn-startup').start()
-
 
 def run():
     """main_noui 完整入口：启动服务 + 打开浏览器 + 等待 Ctrl+C 停止"""
@@ -235,15 +200,6 @@ def run():
                        log_level=logging.DEBUG if run_mode == 0 else None,
                        enabled_console=run_mode == 0 or run_configs.is_docker())
     # logger.info(f"前端路径: {os.path.join(sys._MEIPASS, 'frontend')}")
-
-    if sys.platform != 'win32':
-        # unzip 出来是 rw-r--r-- ，需要添加执行权限
-        import stat
-        dst = run_configs.core_dir()
-        exec_path = os.path.join(dst, 'easytier-core')
-        os.chmod(exec_path, os.stat(exec_path).st_mode | stat.S_IEXEC)
-        exec_path = os.path.join(dst, 'easytier-cli')
-        os.chmod(exec_path, os.stat(exec_path).st_mode | stat.S_IEXEC)
 
     global BASE_URI
     import argparse

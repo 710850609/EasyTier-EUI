@@ -30,7 +30,7 @@
 -keep class com.github.u710850609.easytiereui.EasyTierManager {
     public *** startVpn(...);
     public *** stopVpn(...);
-    public *** updateNotification(...);
+    public *** showNotification(...);
     public *** setLogLevel(...);
     public *** getDeviceName(...);
 }

@@ -87,7 +87,7 @@ class CoreBackgroundAdapter(CoreForegroundAdapter):
             '--rpc-portal', rpc_portal,
             '--file-log-dir', run_configs.log_dir(),
             '--file-log-level', log_level or 'error',
-            '--file-log-size', '50', # 单个文件日志大小，单位 MB，默认值为 100MB
+            '--file-log-size', '20', # 单个文件日志大小，单位 MB，默认值为 100MB
         ])
         cmd.extend(cmd_config_file_parts)
 

@@ -24,6 +24,11 @@ class CoreAdapter(IEasyTierAdapter):
         for path in [self._cli_path, self._core_path]:
             if not os.path.exists(path):
                 raise RuntimeError(f"Path not found: {path}")
+        if sys.platform != 'win32':
+            # unzip 出来是 rw-r--r-- ，需要添加执行权限
+            import stat
+            os.chmod(self._cli_path, os.stat(self._cli_path).st_mode | stat.S_IEXEC)
+            os.chmod(self._core_path, os.stat(self._core_path).st_mode | stat.S_IEXEC)
         self._background = CoreBackgroundAdapter(self._cli_path, self._core_path)
         self._foreground = CoreForegroundAdapter(self._cli_path, self._core_path)
 
