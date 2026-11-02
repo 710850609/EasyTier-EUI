@@ -40,5 +40,4 @@ def save(key: str, value: str | dict | list | None) -> None:
         json.dump(settings, f, ensure_ascii=False, indent=4)
 
 def get_log_level() -> str:
-    default_level = 'off' if run_configs.IS_ANDROID else 'warn'
-    return get('log_level', default_level)
+    return get('log_level', 'warn')

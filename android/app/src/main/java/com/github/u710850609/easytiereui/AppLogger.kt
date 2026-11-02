@@ -23,8 +23,8 @@ object AppLogger {
     var logDir: File? = null
     var minLevel: Level = Level.WARN
 
-    /** 功能边界内的统一默认级别（文件缺失/读取失败时）。与后端 Android 默认一致，均为关闭日志。 */
-    private val DEFAULT_LEVEL: Level = Level.OFF
+    /** 功能边界内的统一默认级别（文件缺失/读取失败时）。与后端 Android 默认一致。 */
+    private val DEFAULT_LEVEL: Level = Level.WARN
 
     @Volatile private var initialized = false
 
