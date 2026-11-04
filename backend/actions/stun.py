@@ -256,7 +256,8 @@ def _build_callback_script(config: dict) -> str:
     mapping_file = os.path.join(running_dir, 'mapping.json')
     error_file = os.path.join(running_dir, 'error.txt')
     callback_log = os.path.join(run_configs.log_dir(), 'stun', f'stun-{config_id}.log')
-    os.makedirs(os.path.dirname(callback_log), exist_ok=True)
+    callback_log_dir = os.path.dirname(callback_log)
+    os.makedirs(callback_log_dir, exist_ok=True)
     listen_protocol = config.get('stunConfig', {}).get('listenProtocol', '')
     if not listen_protocol:
         raise HttpException(get_message('stun.listenProtocolRequired'))
@@ -305,6 +306,7 @@ def _build_callback_script(config: dict) -> str:
             f'@echo off\r\n'
             f'chcp 65001 >nul\r\n'
             f'setlocal enabledelayedexpansion\r\n'
+            f'if not exist "{callback_log_dir}" mkdir "{callback_log_dir}"\r\n'
             f'for /f "usebackq delims=" %%I in (`powershell -NoProfile -Command "(Get-Date).ToString(\'yyyy-MM-dd HH:mm:ss\')"`) do set "TS=%%I"\r\n'
             f'set CHANGED=1\r\n'
             f'if exist "{mapping_file}" (\r\n'
@@ -354,12 +356,13 @@ f'        call {callback_cmd} > "!DNS_RESULT_FILE!" 2>> "{callback_log}"\r\n'
         script_path = os.path.join(running_dir, 'callback.sh')
         script_content = (
             '#!/bin/sh\n'
+            f'mkdir -p "$(dirname "{callback_log}")"\n'
             f'ts() {{ date \'+%Y-%m-%d %H:%M:%S\'; }}\n'
             f'>> "{callback_log}" echo "$(ts) [natmap-callback] started: public_addr=$1 public_port=$2 ip4p=$3 private_port=$4 protocol=$5 private_addr=$6"\n'
             f'CHANGED=1\n'
             f'if [ -f "{mapping_file}" ]; then\n'
-            f'    OLD_ADDR=$(sed -n \'s/.*"public_addr":"\\([^"]*\\)".*/\\1/p\' "{mapping_file}")\n'
-            f'    OLD_PORT=$(sed -n \'s/.*"public_port":"\\([^"]*\\)".*/\\1/p\' "{mapping_file}")\n'
+            f'    OLD_ADDR=$(sed -n \'s/.*"public_addr":"\\([^"]*\\)".*/\\1/p\' "{mapping_file}" 2>/dev/null)\n'
+            f'    OLD_PORT=$(sed -n \'s/.*"public_port":"\\([^"]*\\)".*/\\1/p\' "{mapping_file}" 2>/dev/null)\n'
             f'    if [ "$OLD_ADDR" = "$1" ] && [ "$OLD_PORT" = "$2" ]; then\n'
             f'        CHANGED=0\n'
             f'    fi\n'
