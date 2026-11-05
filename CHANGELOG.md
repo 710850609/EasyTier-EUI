@@ -8,6 +8,10 @@
 - 优化：安装内核显示进度
 - 优化：保存配置时，如果是运行中配置，且保存的配置没启动成功，则回滚到上一个配置
 - 修复：修复启动应用时 stun 没自动恢复启动（仅 FnOS / FygoOS / Docker 版本支持开机运行）
+----
+- 优化：【配置】页面，新增 DeepWiKi AI 问答入口 
+- 优化：减少STUN日志生成量
+- 修复：清理日志后，stun 报错找不到日志目录
 
 ----
 - Optimization: Enable auto-reconnect by default for the first configuration on Android
@@ -19,6 +23,10 @@
 - Optimization: Show installation progress for the core
 - Optimization: When saving a config, if the running config fails to start after saving, it now rolls back to the previous config
 - Fix: Fixed STUN not auto-restarting when the app starts (only FnOS / FygoOS / Docker versions support running at boot)
+----
+- Improvement: Added DeepWiki AI Q&A entry on the [Config] page
+- Improvement: Reduced STUN log generation volume
+- Fix: STUN reported log directory not found error after clearing logs
 
 ## 2.6
 *鉴于EasyTier2.7.0版本存在已知问题较多，此版本默认内核仍为2.6.4，想尝鲜的可到【配置】页面自行切换内核*
