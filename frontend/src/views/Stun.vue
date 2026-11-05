@@ -762,6 +762,7 @@ onUnmounted(() => {
 
 .setting-link:hover {
   text-decoration: underline;
+  color: var(--color-primary);
 }
 
 .setting-row {

@@ -489,7 +489,7 @@ export default {
   stun: {
     tipTitle: 'STUN NAT Traversal',
     tipContent: 'Mappen Sie den EasyTier-Listening-Port ins Internet und registrieren Sie ihn in einem festen DNS-TXT-Eintrag, um einen selbst gehosteten Anfangsknoten über Heim-Breitband zu erreichen.',
-    tipNotice: 'Benötigt eine öffentliche IP oder NAT1-Netzwerktyp.\nAktivieren Sie DMZ oder UPnP auf dem Einwahl-Router. Überprüfen Sie die Konnektivität von externen Netzwerkgeräten.\nFalls der Port bereits belegt ist, verwenden Sie [Forward Bind Port].',
+    tipNotice: 'Benötigt eine öffentliche IP oder NAT1-Netzwerktyp.\nAktivieren Sie DMZ oder UPnP auf dem Einwahl-Router. Überprüfen Sie die Konnektivität von externen Netzwerkgeräten.\nFalls der Port bereits belegt ist, verwenden Sie [Forward Bind Port].\nDie Firewall muss den entsprechenden Port freigeben.',
     tipItem1: '1️⃣ Neue benutzerdefinierte Peer-Konfiguration mit leeren Initial-Peers erstellen, Listening-Protokoll aktivieren, speichern und starten.',
     tipItem2: '2️⃣ STUN-Traversal hinzufügen, Listening-Protokoll und Port aus dem vorherigen Schritt auswählen, speichern und starten. Nach erfolgreichem STUN und DNS-TXT-Registrierung die TXT-Protokolladresse kopieren (Anzeige voraussichtlich nach 12 Sekunden).',
     tipItem3: '3️⃣ Wählen Sie das Listening-Protokoll aus dem vorherigen Schritt in der lokalen Konfiguration, speichern und starten.',

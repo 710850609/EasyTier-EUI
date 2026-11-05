@@ -175,9 +175,13 @@
                 <var-button type="primary" size="small" @click="saveConfig" auto-loading>{{ $t('config.saveAndStart') }}</var-button>
               </div>
               <div v-if="!fastSettingMode" class="section-header-doc">
-                <a href="https://easytier.cn/guide/network/configurations.html" target="_blank" style="text-decoration: none; display: flex; align-items: center; gap: 4px;">
-                  <span style="font-size: 13px; color: var(--color-primary);">{{ $t('settings.easytierDoc') }}</span>
+                <a href="https://easytier.cn/guide/network/configurations.html" target="_blank">
+                  <span>文档</span>
                   <var-icon name="share" color="var(--color-primary)" />
+                </a>
+                <a href="https://deepwiki.com/EasyTier/EasyTier" target="_blank">
+                  <span>DeepWiki</span>
+                  <svg-icon type="mdi" :path="mdiHeadDotsHorizontalOutline" color="var(--color-primary)" size="20"></svg-icon>
                 </a>
               </div>
             </div>
@@ -1037,7 +1041,7 @@ import toast from '../components/toast.js'
 import { api } from '../utils/api.js'
 import CodeEditor from '../components/CodeEditor.vue'
 import SvgIcon from '@jamescoyle/vue-icon'
-import { mdiEye, mdiEyeOff, mdiHomeEdit, mdiRouterNetwork, mdiMonitor, mdiLanConnect, mdiTuneVariant, mdiPlus, mdiDrawPen, mdiShareOutline, mdiSquareEditOutline, mdiTrashCanOutline, mdiDraw, mdiShapeSquareRoundedPlus, mdiClipboardTextMultipleOutline, mdiLineScan, mdiRotateRight, mdiFlashlight, mdiFlashlightOff } from '@mdi/js'
+import { mdiEye, mdiEyeOff, mdiHomeEdit, mdiRouterNetwork, mdiMonitor, mdiLanConnect, mdiTuneVariant, mdiPlus, mdiDrawPen, mdiShareOutline, mdiSquareEditOutline, mdiTrashCanOutline, mdiDraw, mdiShapeSquareRoundedPlus, mdiClipboardTextMultipleOutline, mdiLineScan, mdiRotateRight, mdiFlashlight, mdiFlashlightOff, mdiHeadDotsHorizontalOutline } from '@mdi/js'
 import { mdilAccount, mdilLock } from '@mdi/light-js'
 import QrScanner from 'qr-scanner'
 import QRCode from 'qrcode'
@@ -2555,6 +2559,24 @@ html.dark .sk-breathe {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+.section-header-doc {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-header-doc a {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  text-decoration: none;
+}
+
+.section-header-doc a span {
+  font-size: 13px;
+  color: var(--color-primary);
 }
 
 .section-title {

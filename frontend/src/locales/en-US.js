@@ -688,7 +688,7 @@ export default {
   stun: {
     tipTitle: 'STUN NAT Traversal',
     tipContent: 'Map EasyTier listening port to the public internet and register it to a fixed DNS TXT record to achieve a self-hosted initial node on home broadband.',
-    tipNotice: 'Requires a public IP or NAT1 network type.\nEnable DMZ or UPnP on the dial-up router. Verify connectivity from external network devices.\nIf the port is already in use, use [Forward Bind Port].',
+    tipNotice: 'Requires a public IP or NAT1 network type.\nEnable DMZ or UPnP on the dial-up router. Verify connectivity from external network devices.\nIf the port is already in use, use [Forward Bind Port].\nFirewall needs to allow the corresponding port.',
     tipItem1: '1️⃣ Create a new custom peer config with empty initial peers, enable listening protocol, save and start.',
     tipItem2: '2️⃣ Add STUN traversal, select the listening protocol and port from the previous step, save and start. After STUN succeeds and DNS TXT record is registered, copy the TXT protocol address (expected to display after 12 seconds).',
     tipItem3: '3️⃣ Select the listening protocol from the previous step in local configuration, save and start.',

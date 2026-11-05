@@ -490,7 +490,7 @@ export default {
   stun: {
     tipTitle: 'Traversée STUN NAT',
     tipContent: 'Mappez le port d\'écoute EasyTier vers Internet et enregistrez-le dans un enregistrement DNS TXT fixe pour créer un nœud initial auto-hébergé sur une connexion domestique.',
-    tipNotice: 'Nécessite une IP publique ou un réseau de type NAT1.\nActivez DMZ ou UPnP sur le routeur d\'accès. Vérifiez la connectivité depuis des appareils réseau externes.\nSi le port est déjà utilisé, utilisez [Forward Bind Port].',
+    tipNotice: 'Nécessite une IP publique ou un réseau de type NAT1.\nActivez DMZ ou UPnP sur le routeur d\'accès. Vérifiez la connectivité depuis des appareils réseau externes.\nSi le port est déjà utilisé, utilisez [Forward Bind Port].\nLe pare-feu doit autoriser le port correspondant.',
     tipItem1: '1️⃣ Créez une nouvelle configuration de nœud personnalisé avec des pairs initiaux vides, activez le protocole d\'écoute, enregistrez et démarrez.',
     tipItem2: '2️⃣ Ajoutez une traversée STUN, sélectionnez le protocole et le port d\'écoute de l\'étape précédente, enregistrez et démarrez. Après le succès STUN et l\'enregistrement DNS TXT, copiez l\'adresse du protocole TXT (affichage prévu après 12 secondes).',
     tipItem3: '3️⃣ Sélectionnez le protocole d\'écoute de l\'étape précédente dans la configuration locale, enregistrez et démarrez.',

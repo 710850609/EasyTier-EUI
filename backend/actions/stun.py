@@ -351,6 +351,7 @@ f'        call {callback_cmd} > "!DNS_RESULT_FILE!" 2>> "{callback_log}"\r\n'
         script_content += (
             f'>> "{callback_log}" 2>&1 echo !TS! [natmap-callback] completed\r\n'
             f'powershell -NoProfile -Command "Get-Content \'{callback_log}\' | Select-Object -Last 1000 | Set-Content \'{callback_log}\'"\r\n'
+            f'if exist "{error_file}" powershell -NoProfile -Command "Get-Content \'{error_file}\' | Select-Object -Last 10 | Set-Content \'{error_file}\'"\r\n'
         )
     else:
         script_path = os.path.join(running_dir, 'callback.sh')
@@ -401,6 +402,7 @@ f'        call {callback_cmd} > "!DNS_RESULT_FILE!" 2>> "{callback_log}"\r\n'
         script_content += (
             f'>> "{callback_log}" echo "$(ts) [natmap-callback] completed"\n'
             f'tail -n 1000 "{callback_log}" > "{callback_log}.tmp" && mv "{callback_log}.tmp" "{callback_log}"\n'
+            f'[ -f "{error_file}" ] && tail -n 10 "{error_file}" > "{error_file}.tmp" && mv "{error_file}.tmp" "{error_file}"\n'
         )
 
     encoding = 'utf-8-sig' if sys.platform == 'win32' else 'utf-8'
@@ -417,8 +419,6 @@ def _build_launcher_script(config_id: str, natmap_cmd: list[str]) -> str:
     os.makedirs(running_dir, exist_ok=True)
     error_file = os.path.join(running_dir, 'error.txt')
     mapping_file = os.path.join(running_dir, 'mapping.json')
-    app_log = os.path.join(run_configs.log_dir(), 'stun', f'stun-{config_id}.log')
-    os.makedirs(os.path.dirname(app_log), exist_ok=True)
     natmap_cmd_str = ' '.join(f'"{x}"' if ' ' in x else x for x in natmap_cmd)
 
     interval = 60
