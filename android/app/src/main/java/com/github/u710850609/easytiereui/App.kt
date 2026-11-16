@@ -71,9 +71,8 @@ class App : Application() {
             val py = Python.getInstance()
             val dataDir = filesDir.absolutePath
             val externalDir = getExternalFilesDir(null)?.absolutePath ?: dataDir
-            val env = py.getModule("os").get("environ")!!
-            env.put("ANDROID_DATA_DIR", dataDir)
-            env.put("ANDROID_EXTERNAL_DIR", externalDir)
+            AppLogger.info(TAG, "initPython: injecting paths via setup_env...")
+            py.getModule("utils.run_configs").callAttr("setup_env", dataDir, externalDir)
             AppLogger.info(TAG, "initPython: calling main_noui.init_env...")
             py.getModule("main_noui").callAttr("init_env")
             AppLogger.info(TAG, "initPython: init_env done, dataDir=$dataDir, externalDir=$externalDir")

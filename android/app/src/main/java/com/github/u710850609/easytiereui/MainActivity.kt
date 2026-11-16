@@ -493,13 +493,11 @@ class MainActivity : AppCompatActivity() {
         val python = Python.getInstance()
         AppLogger.info(TAG, "Python instance obtained")
 
-        AppLogger.info(TAG, "Injecting Android environment variables...")
+        AppLogger.info(TAG, "Injecting paths via setup_env...")
         val dataDir = filesDir.absolutePath
         val externalDir = getExternalFilesDir(null)?.absolutePath ?: dataDir
-        val env = python.getModule("os").get("environ")!!
-        env.put("ANDROID_DATA_DIR", dataDir)
-        env.put("ANDROID_EXTERNAL_DIR", externalDir)
-        AppLogger.info(TAG, "Env injected: ANDROID_DATA_DIR=$dataDir, ANDROID_EXTERNAL_DIR=$externalDir")
+        python.getModule("utils.run_configs").callAttr("setup_env", dataDir, externalDir)
+        AppLogger.info(TAG, "Paths injected: dataDir=$dataDir, externalDir=$externalDir")
 
         AppLogger.info(TAG, "Importing main_noui module...")
         val module = python.getModule("main_noui")

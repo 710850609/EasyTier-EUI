@@ -32,19 +32,20 @@ _run_mode = 0
 
 logger = logging.getLogger(__name__)
 
-def setup_env():
+def setup_env(data_dir: str = None, external_dir: str = None):
     global _is_inited_evn
     if _is_inited_evn:
         return
     global FRONTEND_PATH, CONFIG_DIR, CORE_DIR, DATA_DIR, LOG_DIR, UPGRADE_SCRIPT_PATH, _run_mode, DEFAULT_TRIM_APPNAME, \
         EUI_RUN_HOST, EUI_RUN_PORT, EUI_CONFIG_FILE, IS_ANDROID
     # Android 平台检测
-    # 平台路径由环境变量注入（Android 端 ANDROID_DATA_DIR / ANDROID_EXTERNAL_DIR 由 Kotlin 注入）。
+    # 平台路径由入参优先注入（Android 端 Kotlin 调用 setup_env(data_dir, external_dir)），
+    # 未传参时回退到 ANDROID_DATA_DIR / ANDROID_EXTERNAL_DIR 环境变量。
     IS_ANDROID = 'ANDROID_ARGUMENT' in os.environ or 'ANDROID_ROOT' in os.environ
     if IS_ANDROID:
-        data_dir = os.environ.get('ANDROID_DATA_DIR')
+        data_dir = data_dir or os.environ.get('ANDROID_DATA_DIR')
         # 使用外部目录
-        external_dir = os.environ.get('ANDROID_EXTERNAL_DIR')
+        external_dir = external_dir or os.environ.get('ANDROID_EXTERNAL_DIR')
         if not data_dir:
             raise Exception('environment variable not set: ANDROID_DATA_DIR')
         if not external_dir:
