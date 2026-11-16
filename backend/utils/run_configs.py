@@ -3,7 +3,6 @@
 """
 运行配置
 """
-import json
 import logging
 import os
 import platform
@@ -40,6 +39,7 @@ def setup_env():
     global FRONTEND_PATH, CONFIG_DIR, CORE_DIR, DATA_DIR, LOG_DIR, UPGRADE_SCRIPT_PATH, _run_mode, DEFAULT_TRIM_APPNAME, \
         EUI_RUN_HOST, EUI_RUN_PORT, EUI_CONFIG_FILE, IS_ANDROID
     # Android 平台检测
+    # 平台路径由环境变量注入（Android 端 ANDROID_DATA_DIR / ANDROID_EXTERNAL_DIR 由 Kotlin 注入）。
     IS_ANDROID = 'ANDROID_ARGUMENT' in os.environ or 'ANDROID_ROOT' in os.environ
     if IS_ANDROID:
         data_dir = os.environ.get('ANDROID_DATA_DIR')
@@ -56,7 +56,7 @@ def setup_env():
         FRONTEND_PATH = os.path.join(data_dir, 'frontend')
         UPGRADE_SCRIPT_PATH = ''
         EUI_CONFIG_FILE = os.path.join(external_dir, EUI_CONFIG_FILE)
-        EUI_RUN_HOST = '127.0.0.1'
+        EUI_RUN_HOST = '0.0.0.0'
         EUI_RUN_PORT = 15666
         for d in [CONFIG_DIR, DATA_DIR, LOG_DIR, CORE_DIR]:
             os.makedirs(d, exist_ok=True)

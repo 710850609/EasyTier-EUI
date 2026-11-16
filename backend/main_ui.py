@@ -22,10 +22,9 @@ class WebWin:
         self.host = host
         self.port = port
         self.is_window_visible = False
-        self.http_server = main_noui.start_server(host, port)
-        if self.http_server is None:
-            logger.error("已运行实例")
-            sys.exit(1)
+        result = main_noui.start_server(host, port)
+        self.http_server = result["handle"]
+        self.port = result["port"]
 
         webview.settings['OPEN_EXTERNAL_LINKS_IN_BROWSER'] = True
 
@@ -70,10 +69,7 @@ class WebWin:
 
 if __name__ == '__main__':
     run_configs.setup_env()
-    run_mode = run_configs.get_run_mode()
-    log_util.setup_log(log_file=os.path.join(run_configs.log_dir(), 'app.log'),
-                       log_level=logging.DEBUG if run_mode == 0 else None,
-                       enabled_console=run_mode == 0)
+
     import argparse
     parser = argparse.ArgumentParser(description='CGI Proxy HTTP Server')
     parser.add_argument('--host', help='Host to bind to')
@@ -82,10 +78,8 @@ if __name__ == '__main__':
     ver = run_configs.build_version()
     win = None
     try:
-        host = args.host or run_configs.EUI_RUN_HOST or '127.0.0.1'
-        if host == '0.0.0.0':
-            host = '127.0.0.1'
-        port = args.port or run_configs.EUI_RUN_PORT or 5666
+        host = args.host
+        port = args.port
         win = WebWin(host, port, f'易组网 {ver}')
     except BaseException:
         logger.exception("程序异常退出")

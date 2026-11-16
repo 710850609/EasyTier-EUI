@@ -215,8 +215,9 @@ def build(host:str, port:int=5666, base_uri: str = '') -> Optional[ThreadedHTTPS
         logging.info(f"运行的构建版本：{run_configs.build_version()}")
         if not host:
             host = '0.0.0.0'
-        if host == '0.0.0.0' and run_configs.get_run_mode() == 0:
+        if host == '0.0.0.0' and sys.platform == 'win32' and run_configs.get_run_mode() == 0:
             # win本地开发模式下，默认绑定到 127.0.0.1，优化启动速度
+            logging.info(f"本地Windows系统开发模式下，默认绑定到 127.0.0.1，优化启动速度")
             host = '127.0.0.1'
         logging.info(f"HTTP服务[{port}]启动中 ....")
         CGIProxyHandler.base_uri = base_uri

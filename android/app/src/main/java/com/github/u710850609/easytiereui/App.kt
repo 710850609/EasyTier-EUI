@@ -69,11 +69,14 @@ class App : Application() {
             }
 
             val py = Python.getInstance()
-            AppLogger.info(TAG, "initPython: calling main_noui.init_android_env...")
             val dataDir = filesDir.absolutePath
             val externalDir = getExternalFilesDir(null)?.absolutePath ?: dataDir
-            py.getModule("main_noui").callAttr("init_android_env", dataDir, externalDir)
-            AppLogger.info(TAG, "initPython: init_android_env done, dataDir=$dataDir, externalDir=$externalDir")
+            val env = py.getModule("os").get("environ")
+            env.put("ANDROID_DATA_DIR", dataDir)
+            env.put("ANDROID_EXTERNAL_DIR", externalDir)
+            AppLogger.info(TAG, "initPython: calling main_noui.init_env...")
+            py.getModule("main_noui").callAttr("init_env")
+            AppLogger.info(TAG, "initPython: init_env done, dataDir=$dataDir, externalDir=$externalDir")
 
             AppLogger.info(TAG, "initPython: setup complete, pythonReady=true")
 

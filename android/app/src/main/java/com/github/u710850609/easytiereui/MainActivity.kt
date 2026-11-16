@@ -497,11 +497,9 @@ class MainActivity : AppCompatActivity() {
         val module = python.getModule("main_noui")
         AppLogger.info(TAG, "main_noui module imported successfully")
 
-        AppLogger.info(TAG, "Calling start_android_server with data_dir=${filesDir.absolutePath}...")
-        val externalDir = getExternalFilesDir(null)?.absolutePath ?: ""
-        AppLogger.info(TAG, "start_android_server: externalDir=$externalDir")
-        val result = module.callAttr("start_android_server", filesDir.absolutePath, externalDir)
-        AppLogger.info(TAG, "start_android_server returned: $result, type=${result::class.java.simpleName}")
+        AppLogger.info(TAG, "Calling start_server...")
+        val result = module.callAttr("start_server", null, 0)
+        AppLogger.info(TAG, "start_server returned: $result, type=${result::class.java.simpleName}")
 
         val portPyObj = result.callAttr("get", "port")
         httpServerPort = portPyObj.toJava(Int::class.java) as Int
