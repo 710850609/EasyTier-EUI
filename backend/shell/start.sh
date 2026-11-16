@@ -6,6 +6,7 @@ EXECUTABLE="$SCRIPT_DIR/EasyTier-EUI"
 PID_FILE="$SCRIPT_DIR/data/server.pid"
 LOG_FILE="$SCRIPT_DIR/logs/app.log"
 SCRIPT_NAME="start.sh"
+APP_NAME="EasyTier-EUI"
 
 # 创建日志目录
 mkdir -p "$SCRIPT_DIR/logs"
@@ -58,6 +59,10 @@ while [ $WAIT_SEC -lt 30 ]; do
     if [ -f "$PID_FILE" ]; then
         break
     fi
+    # 若启动进程提前退出，说明启动失败（如端口被占用）
+    if ! kill -0 "$LAUNCH_PID" 2>/dev/null; then
+        break
+    fi
     sleep 1
     WAIT_SEC=$((WAIT_SEC + 1))
     log "等待 EasyTier-EUI 启动 (已等待 $WAIT_SEC 秒)"
@@ -71,7 +76,21 @@ if [ -f "$PID_FILE" ]; then
         log "警告：程序可能启动失败"
     fi
 else
-    log "错误：未能获取进程 PID"
+    # 提取启动失败原因（端口占用等）
+    FAIL_REASON=$(grep -E "HTTP 服务启动失败|Address already in use|程序异常退出" "$LOG_FILE" 2>/dev/null | tail -1 || true)
+    if [ -n "$FAIL_REASON" ]; then
+        log "错误：程序启动失败：$FAIL_REASON"
+    else
+        log "错误：未能获取进程 PID，程序可能启动失败"
+    fi
+    if [ -t 0 ]; then
+        echo ""
+        echo "--- 启动日志 ---"
+        tail -25 "$LOG_FILE" 2>/dev/null
+        echo ""
+        read -p "按 Enter 键关闭窗口..."
+    fi
+    exit 1
 fi
 
 # 显示日志（只在交互终端）

@@ -120,7 +120,7 @@ def _do_update(task: UpdateTask, ver_tag: str):
         import threading
         def _delayed_shutdown():
             _time.sleep(1)
-            logger.shutdown()
+            logging.shutdown()
             os._exit(0)
         threading.Thread(target=_delayed_shutdown, daemon=True).start()
 

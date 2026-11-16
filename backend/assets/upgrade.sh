@@ -30,10 +30,21 @@ log "执行"
 # 等待旧进程完全退出（最多等 10 秒）
 WAIT_SEC=0
 while pgrep -x "$APP_NAME" > /dev/null 2>&1; do
-    if [ $WAIT_SEC -ge 10 ]; then
+    if [ $WAIT_SEC -ge 5 ]; then
         log "等待超时，强制终止旧进程"
-        killall -9 "$APP_NAME" > /dev/null 2>&1 || true
-        sleep 2
+        # 使用 pkill（与 pgrep 同属 procps 包，比 killall 更可靠）
+        pkill -9 -x "$APP_NAME" 2>/dev/null || true
+        # 二次确认：等待进程真正退出，未退出前不得继续替换文件
+        KILL_WAIT=0
+        while pgrep -x "$APP_NAME" > /dev/null 2>&1; do
+            if [ $KILL_WAIT -ge 5 ]; then
+                log "[错误] 强制终止后旧进程仍未退出，无法替换文件"
+                exit 1
+            fi
+            log "等待旧进程退出... (强制终止后 $KILL_WAIT 秒)"
+            sleep 1
+            KILL_WAIT=$((KILL_WAIT + 1))
+        done
         break
     fi
     log "等待旧进程退出... ($WAIT_SEC 秒)"

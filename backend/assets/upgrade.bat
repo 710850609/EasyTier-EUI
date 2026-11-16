@@ -39,16 +39,29 @@ set WAIT_SEC=0
 :wait_exit
 tasklist /fi "imagename eq EasyTier-EUI.exe" 2>nul | find /i "EasyTier-EUI.exe" >nul
 if errorlevel 1 goto proc_exited
-if !WAIT_SEC! geq 10 (
+if !WAIT_SEC! geq 5 (
     call :log "等待超时，强制终止旧进程"
     taskkill /f /im "EasyTier-EUI.exe" >nul 2>&1
-    call :sleep 2
-    goto proc_exited
+    set KILL_WAIT=0
+    goto wait_kill_exit
 )
 call :log "等待旧进程退出... (!WAIT_SEC! 秒)"
 call :sleep 1
 set /a WAIT_SEC+=1
 goto wait_exit
+
+:: 二次确认：等待进程真正退出，未退出前不得继续替换文件
+:wait_kill_exit
+tasklist /fi "imagename eq EasyTier-EUI.exe" 2>nul | find /i "EasyTier-EUI.exe" >nul
+if errorlevel 1 goto proc_exited
+if !KILL_WAIT! geq 5 (
+    call :log "[错误] 强制终止后旧进程仍未退出，无法替换文件"
+    exit /b 1
+)
+call :log "等待旧进程退出... (强制终止后 !KILL_WAIT! 秒)"
+call :sleep 1
+set /a KILL_WAIT+=1
+goto wait_kill_exit
 
 :proc_exited
 call :log "旧进程已退出，开始替换文件"
