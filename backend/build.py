@@ -62,8 +62,9 @@ def install_deps(pip_cache_dir:str = "", pypi_mirror:str = ""):
     if in_venv or in_ci:
 
         print(f"  检测到已在 {'虚拟' if in_venv else 'CI' } 环境中，直接安装")
-        pip_cmd = "pip"
-        python_path = "python" if sys.platform == 'win32' else 'python3'
+        # 使用当前解释器，避免裸 python/pip 命令解析到系统 PATH 上的其它 Python
+        python_path = sys.executable
+        pip_cmd = f'"{python_path}" -m pip'
     else:
         print(f"  检测到不在虚拟环境中，创建Python虚拟环境")
         project_dir = os.path.dirname(os.path.abspath(__file__))
@@ -89,7 +90,7 @@ def install_deps(pip_cache_dir:str = "", pypi_mirror:str = ""):
     break_system = "--break-system-packages" if is_alpine else ""
 
     print("  更新 pip")
-    run_command(f'{python_path} -m pip install {pip_cache} {break_system} --upgrade pip')
+    run_command(f'"{python_path}" -m pip install {pip_cache} {break_system} --upgrade pip')
 
     # 安装依赖（带清华镜像）
     mirror = f"-i {pypi_mirror}" if pypi_mirror else ""

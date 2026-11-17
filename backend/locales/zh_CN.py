@@ -168,4 +168,8 @@ MESSAGES = {
         "duplicateBindPort": "转发绑定端口已被其他配置使用，请使用不同的端口",
         "listenProtocolRequired": "请选择监听协议",
     },
+    "tray": {
+        "show_window": "显示窗口",
+        "quit": "退出",
+    },
 }

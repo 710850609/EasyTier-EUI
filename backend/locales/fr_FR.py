@@ -167,4 +167,8 @@ MESSAGES = {
         "duplicateBindPort": "Le port de liaison de transfert est déjà utilisé par une autre configuration, veuillez utiliser un port différent",
         "listenProtocolRequired": "Veuillez sélectionner le protocole d'écoute",
     },
+    "tray": {
+        "show_window": "Afficher la fenêtre",
+        "quit": "Quitter",
+    },
 }

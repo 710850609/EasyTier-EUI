@@ -167,4 +167,8 @@ MESSAGES = {
         "duplicateBindPort": "轉發綁定埠已被其他設定使用，請使用不同的埠",
         "listenProtocolRequired": "請選擇監聽協定",
     },
+    "tray": {
+        "show_window": "顯示視窗",
+        "quit": "退出",
+    },
 }

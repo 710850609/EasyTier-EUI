@@ -168,4 +168,8 @@ MESSAGES = {
         "duplicateBindPort": "Forward bind port is already in use by another configuration, please use a different port",
         "listenProtocolRequired": "Please select listen protocol",
     },
+    "tray": {
+        "show_window": "Show Window",
+        "quit": "Quit",
+    },
 }

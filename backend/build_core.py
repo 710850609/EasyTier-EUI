@@ -214,11 +214,20 @@ def build_executable(build_ver:str = None, one_file:bool = True):
             print(f"  警告: 图标文件不存在: {str(icon_path)}")
 
         webview_logo_path = os.path.join(PROJECT_DIR, 'assets', 'icon.ico')
+        tray_icon_path = PROJECT_DIR.joinpath('assets', 'icon.png')
         cmd.extend([
             "--hidden-import", "webview",
+            "--hidden-import", "pystray",
+            "--hidden-import", "PIL.Image",
             "--add-data", f"{webview_logo_path}{separator}assets",
-            str(PROJECT_DIR / "main_ui.py"),
         ])
+        if sys.platform == "win32":
+            cmd.extend(["--hidden-import", "pystray._win32"])
+        elif sys.platform == "darwin":
+            cmd.extend(["--hidden-import", "pystray._darwin"])
+        if tray_icon_path.exists():
+            cmd.extend(["--add-data", f"{tray_icon_path}{separator}assets"])
+        cmd.append(str(PROJECT_DIR / "main_desktop.py"))
     
     result = run_command(" ".join(cmd), cwd=str(PROJECT_DIR))
     return result, output_name

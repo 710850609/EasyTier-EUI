@@ -167,4 +167,8 @@ MESSAGES = {
         "duplicateBindPort": "Weiterleitungs-Bind-Port wird bereits von einer anderen Konfiguration verwendet, bitte anderen Port verwenden",
         "listenProtocolRequired": "Bitte Horchprotokoll auswählen",
     },
+    "tray": {
+        "show_window": "Fenster anzeigen",
+        "quit": "Beenden",
+    },
 }
