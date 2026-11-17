@@ -30,7 +30,7 @@
             <div class="step-content">
               <p class="step-title">{{ $t('software.dockerStep1Title') }}</p>
               <p class="step-desc">{{ $t('software.dockerStep1Desc') }}</p>
-              <code class="step-code">wget https://raw.githubusercontent.com/710850609/EasyTier-EUI/main/docker-compose.yml && docker compose up -d --pull always</code>
+              <code class="step-code">wget https://raw.githubusercontent.com/710850609/EasyTier-EUI/main/docker-compose.yml && mkdir -p ./config ./logs && docker compose up -d --pull always</code>
             </div>
           </var-paper>
           <var-paper class="step-item" :elevation="0">
