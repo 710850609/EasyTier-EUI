@@ -389,13 +389,18 @@ class FfiAdapter(IEasyTierAdapter):
         version = self.get_version() or ""
         if version.lower().startswith("nightly"):
             # Nightly 为最新构建，视为支持
-            return True
-        m = re.match(r"(\d+)\.(\d+)\.(\d+)", version)
-        if not m:
-            logger.warning(f"无法解析内核版本号 '{version}'，按不支持共享虚拟网卡处理（单实例）")
-            return False
-        major, minor, patch = int(m.group(1)), int(m.group(2)), int(m.group(3))
-        return (major, minor, patch) >= (2, 7, 1)
+            supported = True
+        else:
+            # 兼容 "v2.7.1" 前缀及 "-8428a89d" 等构建后缀，用 search 而非 match
+            m = re.search(r"(\d+)\.(\d+)\.(\d+)", version)
+            if not m:
+                logger.warning(f"无法解析内核版本号 '{version}'，按不支持共享虚拟网卡处理（单实例）")
+                supported = False
+            else:
+                major, minor, patch = int(m.group(1)), int(m.group(2)), int(m.group(3))
+                supported = (major, minor, patch) >= (2, 7, 1)
+        logger.info(f"FFI 内核版本 '{version}'，共享虚拟网卡支持: {supported}")
+        return supported
 
     def start_network(self, toml_path: str, instance_name: str) -> None:
         logger.info(f"start_network {instance_name}")
@@ -403,7 +408,7 @@ class FfiAdapter(IEasyTierAdapter):
         if run_configs.IS_ANDROID and not self._supports_shared_vnic:
             while len(self._instance_set) > 0:
                 existing = next(iter(self._instance_set))
-                logger.info(f"当前内核不支持共享虚拟网卡，停止已运行实例 {existing} 以保持单实例")
+                logger.info(f"当前内核不支持共享虚拟网卡（版本: {self.get_version() or 'unknown'}），停止已运行实例 {existing} 以保持单实例")
                 self.stop_network(existing)
         try:
             with open(toml_path, 'r', encoding='utf-8') as f:
