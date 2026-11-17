@@ -250,6 +250,12 @@
         >
         </var-select>
       </div>
+      <div class="setting-row" v-if="platform === 'win32' || platform === 'darwin'">
+        <span class="setting-label">
+          {{ $t('settings.systemTray') }}
+        </span>
+        <var-switch variant size="20" v-model="systemTrayEnabled" @change="toggleSystemTray" />
+      </div>
 <!--      <div class="setting-row" v-if="platform === 'android'">-->
 <!--        <span class="setting-label">-->
 <!--          {{ $t('settings.startRecovery') }}-->
@@ -470,6 +476,7 @@ const showDevContent = ref(false)
 const vConsoleEnabled = ref(false)
 const webviewDebugEnabled = ref(false)
 const ignoreSslErrors = ref(false)
+const systemTrayEnabled = ref(true)
 const changingPeerSource = ref(false)
 const testPeerSourceEnabled = ref(false)
 const vConsoleInstance = ref(null)
@@ -610,6 +617,16 @@ const toggleIgnoreSslErrors = async (val) => {
   } catch (e) {
     ignoreSslErrors.value = !val
     console.error('toggleIgnoreSslErrors failed:', e)
+  }
+}
+
+const toggleSystemTray = async (val) => {
+  try {
+    await api.settings.setSystemTrayEnabled({ enabled: val })
+    toast.success(t(val ? 'settings.toast.systemTrayEnabled' : 'settings.toast.systemTrayDisabled'))
+  } catch (e) {
+    systemTrayEnabled.value = !val
+    console.error('toggleSystemTray failed:', e)
   }
 }
 
@@ -790,6 +807,7 @@ const getEuiInfo = async () => {
     // enabledStartRecovery.value = data.enabled_start_recovery || false
     webviewDebugEnabled.value = data.webview_debug || false
     ignoreSslErrors.value = data.ignore_ssl_errors || false
+    systemTrayEnabled.value = data.system_tray_enabled !== undefined ? data.system_tray_enabled : true
     if (euiReleaseInfo.value) {
       euiReleaseInfo.value = data.release_info
     }

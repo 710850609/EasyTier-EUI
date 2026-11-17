@@ -34,6 +34,7 @@ def eui_info(*args, **kwargs):
         # 'enabled_start_recovery': app_settings.get('enabled_start_recovery', True),
         'webview_debug': app_settings.get('webview_debug', False),
         'ignore_ssl_errors': app_settings.get('ignore_ssl_errors', False),
+        'system_tray_enabled': app_settings.get('system_tray_enabled', True),
         'release_info': release_info,
     }
 
@@ -175,6 +176,11 @@ def set_ignore_ssl_errors(params=None, *args, **kwargs):
             MainActivity.setIgnoreSslErrors(enabled)
     except Exception as e:
         logger.exception(f"fail to set android ignore ssl errors: {e}")
+
+def set_system_tray_enabled(params=None, *args, **kwargs):
+    params = params or {}
+    enabled = params.get('enabled', True)
+    app_settings.save('system_tray_enabled', enabled)
 
 # def enabled_start_recovery(params=None, *args, **kwargs):
 #     params = params or {}

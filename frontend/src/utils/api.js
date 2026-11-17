@@ -321,6 +321,7 @@ export const api = {
     // setEnabledStartRecovery: (params = {}) => post('/settings/enabled_start_recovery', params),
     setWebviewDebug: (params = {}) => post('/settings/set_webview_debug', params),
     setIgnoreSslErrors: (params = {}) => post('/settings/set_ignore_ssl_errors', params),
+    setSystemTrayEnabled: (params = {}) => post('/settings/set_system_tray_enabled', params),
   },
   // et app
   etApp: {

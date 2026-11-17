@@ -61,6 +61,7 @@ export default {
     stable: 'Rel',
     prerelease: 'Pre',
     others: 'Autres',
+    systemTray: 'Entrée barre système',
     githubDownload: 'Aide au téléchargement GitHub',
     githubDownloadTitle: 'Téléchargement accéléré GitHub',
     githubDownloadDesc: 'Sélectionne le miroir GitHub optimal selon le réseau local,\nutilise le miroir le plus rapide pour maximiser la vitesse de téléchargement',
@@ -124,7 +125,9 @@ export default {
       updateRequestFailed: 'Échec de la requête de mise à jour',
       restarting: 'Application de la mise à jour, redémarrage...',
       updateCompleted: 'Mise à jour terminée, actualisation...',
-      restartToApply: 'Redémarrez l\'application pour appliquer'
+      restartToApply: 'Redémarrez l\'application pour appliquer',
+      systemTrayEnabled: 'Barre système activée, redémarrez pour appliquer',
+      systemTrayDisabled: 'Barre système désactivée, redémarrez pour appliquer'
     }
   },
   logs: { title: 'Affichage des logs', continue: 'Continuer', pause: 'Pause', clear: 'Effacer', all: 'Tous', info: 'Info', warning: 'Avertissement', error: 'Erreur', total: '{count} logs au total' },

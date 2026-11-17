@@ -22,7 +22,7 @@ class EasyTierVpnService : VpnService() {
 
     private var vpnInterface: ParcelFileDescriptor? = null
     private var isRunning = false
-    private var instanceName: String? = null
+    private var instanceNames: List<String> = emptyList()
     private val handler = Handler(Looper.getMainLooper())
 
     companion object {
@@ -102,6 +102,7 @@ class EasyTierVpnService : VpnService() {
             instance?.let { service ->
                 AppLogger.info(TAG, "requestStop: cleaning up and stopping")
                 service.isRunning = false
+                service.detachTunFdAll()
                 try {
                     service.vpnInterface?.close()
                 } catch (e: Exception) {
@@ -161,11 +162,11 @@ class EasyTierVpnService : VpnService() {
             return START_NOT_STICKY
         }
 
-        instanceName = params.instanceName
-        AppLogger.info(TAG, "Starting VPN - IPv4: ${params.ipv4}, IPv6: ${params.ipv6}, Proxy CIDRs: ${params.proxyCidrs}, DNS: ${params.dnsServers}, MTU: ${params.mtu}, Instance: ${params.instanceName}")
+        instanceNames = params.instanceNames
+        AppLogger.info(TAG, "Starting VPN - IPv4s: ${params.ipv4s}, IPv6s: ${params.ipv6s}, Proxy CIDRs: ${params.proxyCidrs}, DNS: ${params.dnsServers}, MTU: ${params.mtu}, Instances: ${params.instanceNames}")
 
         try {
-            val pfd = createVpnInterface(params.ipv4, params.ipv6, params.proxyCidrs, params.dnsServers, params.mtu)
+            val pfd = createVpnInterface(params.ipv4s, params.ipv6s, params.proxyCidrs, params.dnsServers, params.mtu)
             if (pfd == null) {
                 AppLogger.error(TAG, "Failed to create VPN interface (pfd is null)")
                 stopSelf()
@@ -176,12 +177,12 @@ class EasyTierVpnService : VpnService() {
             startForeground(NOTIFICATION_ID, buildNotification(params.notificationTitle, params.notificationText))
             AppLogger.info(TAG, "VPN interface created, fd=${pfd.fd}")
 
-            val name = instanceName!!
+            val names = instanceNames
             val fd = pfd.fd
             thread {
                 try {
-                    AppLogger.info(TAG, "Background thread: setting TUN fd=$fd for instance=$name")
-                    setTunFd(name, fd)
+                    AppLogger.info(TAG, "Background thread: setting TUN fd=$fd for instances=$names")
+                    setTunFdAll(fd)
                     AppLogger.info(TAG, "Background thread: entering keepalive loop")
                     runKeepAliveLoop()
                 } catch (t: Throwable) {
@@ -216,26 +217,35 @@ class EasyTierVpnService : VpnService() {
         return START_STICKY
     }
 
-    private fun createVpnInterface(ipv4Address: String, ipv6Address: String, proxyCidrs: List<String>, dnsServers: List<String>, mtu: Int): ParcelFileDescriptor? {
-        AppLogger.info(TAG, "createVpnInterface: ipv4=$ipv4Address, ipv6=$ipv6Address, cidrs=${proxyCidrs.size}, dns=${dnsServers.size}, mtu=$mtu")
-        val (ip, networkLength) = parseIpv4Address(ipv4Address)
-        AppLogger.debug(TAG, "createVpnInterface: parsed ip=$ip, prefix=$networkLength")
+    private fun createVpnInterface(ipv4s: List<String>, ipv6s: List<String>, proxyCidrs: List<String>, dnsServers: List<String>, mtu: Int): ParcelFileDescriptor? {
+        AppLogger.info(TAG, "createVpnInterface: ipv4s=$ipv4s, ipv6s=$ipv6s, cidrs=${proxyCidrs.size}, dns=${dnsServers.size}, mtu=$mtu")
 
         val builder = Builder()
         builder.setSession("EasyTier-EUI VPN")
-            .addAddress(ip, networkLength)
-            .also {
-                if (ipv6Address.isNotEmpty()) {
-                    try {
-                        val (ipv6, ipv6Prefix) = parseCidr(ipv6Address)
-                        it.addAddress(ipv6, ipv6Prefix)
-                        AppLogger.info(TAG, "createVpnInterface: added IPv6 address $ipv6/$ipv6Prefix")
-                    } catch (e: Exception) {
-                        AppLogger.warn(TAG, "createVpnInterface: failed to parse IPv6 '$ipv6Address': ${e.message}")
-                    }
-                }
+
+        ipv4s.forEach { ipv4Address ->
+            if (ipv4Address.isEmpty()) return@forEach
+            try {
+                val (ip, networkLength) = parseIpv4Address(ipv4Address)
+                builder.addAddress(ip, networkLength)
+                AppLogger.debug(TAG, "createVpnInterface: added IPv4 address $ip/$networkLength")
+            } catch (e: Exception) {
+                AppLogger.warn(TAG, "createVpnInterface: failed to parse IPv4 '$ipv4Address': ${e.message}")
             }
-            .addDisallowedApplication(packageName)
+        }
+
+        ipv6s.forEach { ipv6Address ->
+            if (ipv6Address.isEmpty()) return@forEach
+            try {
+                val (ipv6, ipv6Prefix) = parseCidr(ipv6Address)
+                builder.addAddress(ipv6, ipv6Prefix)
+                AppLogger.info(TAG, "createVpnInterface: added IPv6 address $ipv6/$ipv6Prefix")
+            } catch (e: Exception) {
+                AppLogger.warn(TAG, "createVpnInterface: failed to parse IPv6 '$ipv6Address': ${e.message}")
+            }
+        }
+
+        builder.addDisallowedApplication(packageName)
             .also {
                 DISALLOWED_APPS.forEach { app -> it.addDisallowedApplication(app) }
             }
@@ -279,23 +289,39 @@ class EasyTierVpnService : VpnService() {
         }
     }
 
-    private fun setTunFd(instanceName: String, fd: Int) {
+    private fun setTunFdAll(fd: Int) {
         try {
             val facade = EasyTierManager.getFacade()
             if (facade == null) {
-                AppLogger.error(TAG, "TUN fd set: facade is null")
+                AppLogger.error(TAG, "TUN fd set all: facade is null")
                 return
             }
-            val result = facade.callAttr("set_tun_fd", instanceName, fd).toInt()
+            val result = facade.callAttr("set_tun_fd_all", fd).toInt()
             if (result == 0) {
-                AppLogger.info(TAG, "TUN fd set successfully: $fd")
+                AppLogger.info(TAG, "TUN fd set all successfully: $fd")
             } else {
-                AppLogger.error(TAG, "TUN fd set failed: $result")
+                AppLogger.error(TAG, "TUN fd set all failed: $result")
             }
         } catch (t: Throwable) {
             val sw = StringWriter()
             t.printStackTrace(PrintWriter(sw))
-            AppLogger.error(TAG, "TUN fd set error: ${sw}")
+            AppLogger.error(TAG, "TUN fd set all error: ${sw}")
+        }
+    }
+
+    private fun detachTunFdAll() {
+        try {
+            val facade = EasyTierManager.getFacade()
+            if (facade == null) {
+                AppLogger.warn(TAG, "TUN fd detach all: facade is null")
+                return
+            }
+            facade.callAttr("detach_tun_fd_all")
+            AppLogger.info(TAG, "TUN fd detached for all instances")
+        } catch (t: Throwable) {
+            val sw = StringWriter()
+            t.printStackTrace(PrintWriter(sw))
+            AppLogger.error(TAG, "TUN fd detach all error: ${sw}")
         }
     }
 
@@ -346,6 +372,7 @@ class EasyTierVpnService : VpnService() {
 
     private fun cleanup() {
         isRunning = false
+        detachTunFdAll()
         try {
             vpnInterface?.close()
         } catch (e: Exception) {

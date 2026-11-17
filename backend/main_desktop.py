@@ -11,7 +11,7 @@ import webbrowser
 
 import main_noui
 from locales import get_message, get_last_lang
-from utils import run_configs, permissions_util
+from utils import run_configs, permissions_util, app_settings
 
 logger = logging.getLogger(__name__)
 
@@ -145,18 +145,28 @@ class DesktopController:
         self.icon = None
         self._proc_lock = threading.Lock()
         self._stopped = False
+        self._stop_network_quitting = False
 
     def start(self):
         result = main_noui.start_server(self.host, self.port)
         self.http_handle = result['handle']
         self.host = result['host']
         self.port = result['port']
-        self._create_tray()
-        self._open_window()
-        try:
-            self.icon.run()
-        finally:
-            self.stop_all()
+        if app_settings.get('system_tray_enabled', True):
+            self._create_tray()
+            self._open_window()
+            try:
+                self.icon.run()
+            finally:
+                self.stop_all()
+        else:
+            # 关闭系统托盘：窗口关闭即退出整个应用
+            self._open_window()
+            try:
+                if self.webview_proc is not None:
+                    self.webview_proc.wait()
+            finally:
+                self.stop_all()
 
     def _create_tray(self):
         import pystray
@@ -168,10 +178,12 @@ class DesktopController:
             image = image.convert('RGBA').resize((22, 22), Image.LANCZOS)
 
         show_label = get_message('tray.show_window', lang=get_last_lang())
+        stop_network_quit_label = get_message('tray.stop_network_quit', lang=get_last_lang())
         quit_label = get_message('tray.quit', lang=get_last_lang())
         menu = pystray.Menu(
             pystray.MenuItem(show_label, self._on_show_window, default=True),
             pystray.Menu.SEPARATOR,
+            pystray.MenuItem(stop_network_quit_label, self._on_stop_network_and_quit),
             pystray.MenuItem(quit_label, self._on_quit),
         )
         self.icon = pystray.Icon(APP_NAME, image, APP_NAME, menu)
@@ -213,6 +225,18 @@ class DesktopController:
 
     def _on_show_window(self, icon, item):
         self._open_window()
+
+    def _on_stop_network_and_quit(self, icon, item):
+        if self._stop_network_quitting:
+            return
+        self._stop_network_quitting = True
+        try:
+            from actions import services
+            services.stop_all()
+        except Exception:
+            logger.exception('停组网并退出UI：停止组网失败')
+        finally:
+            self._on_quit(icon, item)
 
     def _on_quit(self, icon, item):
         self.stop_all()

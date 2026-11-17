@@ -1,9 +1,9 @@
 package com.github.u710850609.easytiereui
 
 data class VpnParams(
-    val instanceName: String,
-    val ipv4: String,
-    val ipv6: String,
+    val instanceNames: List<String>,
+    val ipv4s: List<String>,
+    val ipv6s: List<String>,
     val proxyCidrs: List<String>,
     val dnsServers: List<String>,
     val notificationTitle: String,

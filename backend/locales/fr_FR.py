@@ -169,6 +169,7 @@ MESSAGES = {
     },
     "tray": {
         "show_window": "Afficher la fenêtre",
-        "quit": "Quitter",
+        "stop_network_quit": "Arrêter le réseau & quitter l'UI",
+        "quit": "Quitter l'UI",
     },
 }

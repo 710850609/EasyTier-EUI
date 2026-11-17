@@ -109,6 +109,7 @@ export default {
     stable: '穩定',
     prerelease: '預發',
     others: '其他',
+    systemTray: '系統托盤入口',
     githubDownload: '輔助GitHub下載',
     githubDownloadTitle: 'GitHub加速下載',
     githubDownloadDesc: '基於本地網路優選GitHub加速地址，\n用優選後的加速地址下載，盡量提高下載速度',
@@ -184,7 +185,9 @@ export default {
       updateRequestFailed: '更新請求失敗',
       restarting: '正在更新軟體套件，服務重新啟動中，請稍後...',
       updateCompleted: '更新完成，即將重新整理頁面',
-      restartToApply: '重啟應用後生效'
+      restartToApply: '重啟應用後生效',
+      systemTrayEnabled: '已開啟系統托盤，重新啟動後生效',
+      systemTrayDisabled: '已關閉系統托盤，重新啟動後生效'
     }
   },
   logs: {

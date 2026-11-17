@@ -169,6 +169,7 @@ MESSAGES = {
     },
     "tray": {
         "show_window": "顯示視窗",
-        "quit": "退出",
+        "stop_network_quit": "停組網並退出UI",
+        "quit": "退出UI",
     },
 }

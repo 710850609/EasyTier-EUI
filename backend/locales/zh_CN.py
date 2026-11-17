@@ -170,6 +170,7 @@ MESSAGES = {
     },
     "tray": {
         "show_window": "显示窗口",
-        "quit": "退出",
+        "stop_network_quit": "停组网并退出UI",
+        "quit": "退出UI",
     },
 }

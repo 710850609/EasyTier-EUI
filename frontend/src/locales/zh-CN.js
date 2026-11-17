@@ -113,6 +113,7 @@ export default {
     stable: '稳定',
     prerelease: '预发',
     others: '其他',
+    systemTray: '系统托盘入口',
     githubDownload: '辅助GitHub下载',
     githubDownloadTitle: 'GitHub加速下载',
     githubDownloadDesc: '基于本地网络优选GitHub加速地址，\n用优选后的加速地址下载，尽量提高下载速度',
@@ -188,7 +189,9 @@ export default {
       updateRequestFailed: '更新请求失败',
       restarting: '正在更新软件包，服务重启中，请稍后...',
       updateCompleted: '更新完成，即将刷新页面',
-      restartToApply: '重启应用后生效'
+      restartToApply: '重启应用后生效',
+      systemTrayEnabled: '已开启系统托盘，重启后生效',
+      systemTrayDisabled: '已关闭系统托盘，重启后生效'
     }
   },
   logs: {

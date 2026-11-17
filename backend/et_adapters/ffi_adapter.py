@@ -2,9 +2,11 @@
 # -*- coding: utf-8 -*-
 """FfiAdapter — current default FFI adapter for v2.4.5/v2.6.4/v2.7.0"""
 import ctypes
+import ipaddress
 import json
 import logging
 import os
+import re
 import sys
 import threading
 import time
@@ -73,6 +75,11 @@ class FfiAdapter(IEasyTierAdapter):
         self._enable_cache = run_configs.IS_ANDROID
         self._monitor_threads: Dict[str, threading.Thread] = {}
         self._monitor_states: Dict[str, bool] = {}
+        # 安卓多实例共享虚拟网卡：VPN 聚合同步状态
+        self._vpn_sync_lock = threading.Lock()
+        self._last_vpn_signature: Optional[str] = None
+        # 当前内核是否支持共享虚拟网卡（>= 2.7.1），用于决定安卓是否允许多实例并存
+        self._supports_shared_vnic: bool = self._check_shared_vnic_support()
 
     def _invalidate_ffi_cache(self):
         self._ffi_cache = {}
@@ -221,6 +228,36 @@ class FfiAdapter(IEasyTierAdapter):
         except Exception as e:
             raise RuntimeError(f"set_tun_fd failed: {e}") from e
 
+    def set_tun_fd_all(self, fd: int) -> int:
+        """将同一 TUN fd 绑定到所有运行中实例（安卓共享虚拟网卡多实例）。
+
+        第一个实例负责打开 fd，后续实例复用同一 fd；网段冲突由 Rust 核心
+        ensure_disjoint 裁决，此处捕获 set_tun_fd 返回错误并友好提示。
+        """
+        with self._lock:
+            instances = sorted(self._instance_set)
+        errors: List[str] = []
+        for name in instances:
+            try:
+                self.set_tun_fd(name, fd)
+            except Exception as e:
+                errors.append(f"{name}: {e}")
+                logger.exception(f"set_tun_fd_all failed for {name}")
+        if errors:
+            raise RuntimeError("failed to bind shared TUN fd: " + "; ".join(errors))
+        return 0
+
+    def detach_tun_fd_all(self) -> int:
+        """将所有运行中实例从共享 TUN fd 解绑（关闭 VPN 前调用）。"""
+        with self._lock:
+            instances = sorted(self._instance_set)
+        for name in instances:
+            try:
+                self.set_tun_fd(name, 0)
+            except Exception as e:
+                logger.warning(f"detach_tun_fd_all failed for {name}: {e}")
+        return 0
+
     def _call_json_rpc(self, service_name: str, method_name: str, domain_name: str, payload_json: str) -> str:
         """调用 EasyTier 暴露的 RPC 服务（protobuf JSON 格式）。
 
@@ -343,8 +380,31 @@ class FfiAdapter(IEasyTierAdapter):
             return mark_version
         return _FFI_LIB_VERSION
 
+    def _check_shared_vnic_support(self) -> bool:
+        """判断当前 FFI 内核是否支持安卓共享虚拟网卡（>= 2.7.1）。
+
+        < 2.7.1 的内核不支持共享虚拟网卡，多实例绑定同一 TUN fd 会互相抢占，
+        因此仅当版本 >= 2.7.1 时才允许安卓多实例并存。
+        """
+        version = self.get_version() or ""
+        if version.lower().startswith("nightly"):
+            # Nightly 为最新构建，视为支持
+            return True
+        m = re.match(r"(\d+)\.(\d+)\.(\d+)", version)
+        if not m:
+            logger.warning(f"无法解析内核版本号 '{version}'，按不支持共享虚拟网卡处理（单实例）")
+            return False
+        major, minor, patch = int(m.group(1)), int(m.group(2)), int(m.group(3))
+        return (major, minor, patch) >= (2, 7, 1)
+
     def start_network(self, toml_path: str, instance_name: str) -> None:
         logger.info(f"start_network {instance_name}")
+        # 门控：不支持共享虚拟网卡的旧内核（< 2.7.1），安卓下恢复单实例限制
+        if run_configs.IS_ANDROID and not self._supports_shared_vnic:
+            while len(self._instance_set) > 0:
+                existing = next(iter(self._instance_set))
+                logger.info(f"当前内核不支持共享虚拟网卡，停止已运行实例 {existing} 以保持单实例")
+                self.stop_network(existing)
         try:
             with open(toml_path, 'r', encoding='utf-8') as f:
                 toml_config = f.read()
@@ -397,12 +457,6 @@ class FfiAdapter(IEasyTierAdapter):
             ret = self._parse_config(toml_config)
             if ret != 0:
                 raise RuntimeError(f"Config parse failed: {self._get_last_error()}")
-            if run_configs.IS_ANDROID:
-                while len(self._instance_set) > 0:
-                    # 安卓环境下，确保所有实例都停止，再启动新实例
-                    self.stop_network(self._instance_set.pop())
-                    # 记录配置已停止，避免启动重连时，启动冲突
-                    # et_run_info.set_running(instance_name, False)
             with self._lock:
                 toml_bytes = toml_config.encode('utf-8')
                 c_config = ctypes.c_char_p(toml_bytes)
@@ -459,7 +513,12 @@ class FfiAdapter(IEasyTierAdapter):
                 MainActivity = jclass(run_configs.ANDROID_MAIN_ACTIVITY)
                 manager = MainActivity.getEasyTierManager()
                 if manager is not None:
-                    manager.stopVpn(False)
+                    if self._instance_set:
+                        # 仍有其它实例运行，重新聚合并重建 VPN，而非整体关闭
+                        self._kotlin_sync_vpn()
+                    else:
+                        # 最后一个实例停止，关闭共享虚拟网卡
+                        manager.stopVpn(False)
         except Exception as e:
             logger.exception(f"fail to stop vpn manager monitor: {e}")
 
@@ -783,7 +842,7 @@ class FfiAdapter(IEasyTierAdapter):
                 if changed or not cached_state:
                     cached_state = {k: info.get(k) for k in compare_keys}
                     self._start_times[instance_name] = time.time()
-                    self._kotlin_restart_vpn(instance_name, info)
+                    self._kotlin_sync_vpn()
                     last_notify_time = 0.0
 
                 now = time.time()
@@ -798,36 +857,166 @@ class FfiAdapter(IEasyTierAdapter):
 
         logger.info(f"Monitor loop ended for {instance_name}")
 
-    def _kotlin_restart_vpn(self, instance_name: str, info: Dict[str, Any]):
+    def _get_android_manager(self):
+        """获取安卓 EasyTierManager，供组网/通知回调使用。"""
         try:
             if not run_configs.IS_ANDROID:
-                return
+                return None
             from java import jclass
             MainActivity = jclass(run_configs.ANDROID_MAIN_ACTIVITY)
-            manager = MainActivity.getEasyTierManager()
-            if manager is not None:
-                ipv4 = info.get('virtual_ipv4', '')
-                ipv6 = info.get('virtual_ipv6', '')
-                cidrs = info.get('routes', [])
-                dns = info.get('dns_servers', [])
-                title, text = self._build_notification_text(instance_name, info)
-                mtu = info.get('mtu') or 1400
-                manager.stopVpn(False)
-                manager.startVpn(ipv4, ipv6, cidrs, dns, title, text, mtu, instance_name)
-                logger.info(f"Notified Kotlin: startVpn for {instance_name} ipv4={ipv4} ipv6={ipv6}")
+            return MainActivity.getEasyTierManager()
         except Exception as e:
-            logger.exception(f"Failed to notify Kotlin restartVpn: {e}")
+            logger.warning(f"failed to get Android EasyTierManager: {e}")
+            return None
+
+    def _aggregate_vpn_info(self, instance_names: List[str]) -> Dict[str, Any]:
+        """聚合多个实例的虚拟地址/路由/DNS，生成共享虚拟网卡配置。
+
+        网段冲突由 Rust 核心层 ensure_disjoint 最终裁决，这里仅做去重合并，
+        并做一次轻量重叠检测用于日志/通知友好提示（不替代核心层裁决）。
+        """
+        ipv4_list: List[str] = []
+        ipv6_list: List[str] = []
+        routes: List[str] = []
+        dns_servers: List[str] = []
+        mtus: List[int] = []
+        for name in instance_names:
+            info = self._get_route_info_dict(name)
+            ipv4 = info.get('virtual_ipv4', '')
+            if ipv4 and ipv4 not in ipv4_list:
+                ipv4_list.append(ipv4)
+            ipv6 = info.get('virtual_ipv6', '')
+            if ipv6 and ipv6 not in ipv6_list:
+                ipv6_list.append(ipv6)
+            for r in info.get('routes', []):
+                if r not in routes:
+                    routes.append(r)
+            for d in info.get('dns_servers', []):
+                if d not in dns_servers:
+                    dns_servers.append(d)
+            mtu = info.get('mtu')
+            if mtu:
+                mtus.append(mtu)
+        conflicts = self._detect_subnet_conflicts(ipv4_list, routes)
+        if conflicts:
+            logger.warning(f"detected subnet overlaps across instances: {conflicts}")
+        return {
+            'ipv4_list': ipv4_list,
+            'ipv6_list': ipv6_list,
+            'routes': routes,
+            'dns_servers': dns_servers,
+            'mtu': min(mtus) if mtus else 1400,
+            'conflicts': conflicts,
+        }
+
+    def _detect_subnet_conflicts(self, ipv4_list, routes):
+        """轻量检测实例间网段重叠（魔法 DNS 豁免），返回 [(a, b), ...]。
+
+        仅用于日志与通知友好提示；最终裁决由 Rust 核心 ensure_disjoint 完成。
+        """
+        magic_dns = ipaddress.ip_network("100.100.100.101/32", strict=False)
+        parsed = []  # (desc, net, is_magic_dns_route)
+        for cidr in ipv4_list:
+            try:
+                parsed.append((cidr, ipaddress.ip_network(cidr, strict=False), False))
+            except ValueError:
+                continue
+        for r in routes:
+            try:
+                net = ipaddress.ip_network(r, strict=False)
+                parsed.append((r, net, net == magic_dns))
+            except ValueError:
+                continue
+        conflicts = []
+        for i in range(len(parsed)):
+            for j in range(i + 1, len(parsed)):
+                a, na, a_magic = parsed[i]
+                b, nb, b_magic = parsed[j]
+                if not na.overlaps(nb):
+                    continue
+                if a_magic and b_magic:
+                    # 魔法 DNS 路由重叠豁免（官方多实例兼容规则）
+                    continue
+                conflicts.append((a, b))
+        return conflicts
+
+    def _build_aggregate_notification(self, instance_names: List[str], agg: Dict[str, Any]) -> tuple:
+        i18n = get_last_lang()
+        is_chinese = i18n.startswith('zh')
+        count = len(instance_names)
+        if count == 1:
+            name = instance_names[0].replace('.toml', '')
+            title = f"易组网 - {name} 运行中" if is_chinese else f"EasyTier-EUI - {name} Running"
+        else:
+            title = f"易组网 - {count} 个网络运行中" if is_chinese else f"EasyTier-EUI - {count} networks running"
+        text = "运行中" if is_chinese else "Running"
+        return title, text
+
+    def _kotlin_sync_vpn(self):
+        """聚合所有运行中实例，通知安卓侧重建共享虚拟网卡（多实例）。"""
+        if not run_configs.IS_ANDROID:
+            return
+        try:
+            with self._vpn_sync_lock:
+                instances = sorted(self._instance_set)
+                manager = self._get_android_manager()
+                if not instances:
+                    self._last_vpn_signature = None
+                    if manager is not None:
+                        manager.stopVpn(False)
+                    return
+                agg = self._aggregate_vpn_info(instances)
+                if not agg['ipv4_list']:
+                    # 地址尚未就绪，等待监控线程下次触发
+                    logger.debug(f"vpn sync skipped: no ipv4 ready for {instances}")
+                    return
+                signature = json.dumps({
+                    'ipv4': agg['ipv4_list'],
+                    'ipv6': agg['ipv6_list'],
+                    'routes': agg['routes'],
+                    'dns': agg['dns_servers'],
+                    'mtu': agg['mtu'],
+                    'instances': instances,
+                }, sort_keys=True, ensure_ascii=False)
+                if signature == self._last_vpn_signature:
+                    return
+                self._last_vpn_signature = signature
+                if manager is None:
+                    return
+                title, text = self._build_aggregate_notification(instances, agg)
+                if agg.get('conflicts'):
+                    conflict_text = "网段冲突: " + ", ".join(f"{a}~{b}" for a, b in agg['conflicts'])
+                    text = f"{text} | {conflict_text}" if text else conflict_text
+                    logger.warning(f"vpn sync with subnet conflicts: {agg['conflicts']}")
+                manager.startVpn(
+                    agg['ipv4_list'],
+                    agg['ipv6_list'],
+                    agg['routes'],
+                    agg['dns_servers'],
+                    title,
+                    text,
+                    agg['mtu'],
+                    instances,
+                )
+                logger.info(f"synced Android VPN for {len(instances)} instances: ipv4={agg['ipv4_list']}")
+        except Exception as e:
+            logger.exception(f"failed to sync Android VPN: {e}")
 
     def _kotlin_notification(self, instance_name: str, info: Dict[str, Any]):
         try:
             if not run_configs.IS_ANDROID:
                 return
-            from java import jclass
-            MainActivity = jclass(run_configs.ANDROID_MAIN_ACTIVITY)
-            manager = MainActivity.getEasyTierManager()
-            if manager is not None:
+            manager = self._get_android_manager()
+            if manager is None:
+                return
+            if len(self._instance_set) > 1:
+                # 多实例：通知展示聚合状态，避免各实例互相覆盖
+                instances = sorted(self._instance_set)
+                agg = self._aggregate_vpn_info(instances)
+                title, text = self._build_aggregate_notification(instances, agg)
+            else:
                 title, text = self._build_notification_text(instance_name, info)
-                manager.showNotification(instance_name, title, text)
+            manager.showNotification(instance_name, title, text)
         except Exception as e:
             logger.exception(f"Failed to update notification: {e}")
 

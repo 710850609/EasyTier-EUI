@@ -169,6 +169,7 @@ MESSAGES = {
     },
     "tray": {
         "show_window": "Fenster anzeigen",
-        "quit": "Beenden",
+        "stop_network_quit": "Netzwerk stoppen & UI beenden",
+        "quit": "UI beenden",
     },
 }

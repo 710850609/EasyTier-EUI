@@ -61,6 +61,7 @@ export default {
     stable: 'Rel',
     prerelease: 'Pre',
     others: 'Andere',
+    systemTray: 'System-Tray-Eintrag',
     githubDownload: 'GitHub Beschleunigungs-Download',
     githubDownloadTitle: 'GitHub Beschleunigungs-Download',
     githubDownloadDesc: 'Wählt den optimalen GitHub-Spiegel basierend auf dem lokalen Netzwerk,\nverwendet den schnellsten Spiegel für maximale Download-Geschwindigkeit',
@@ -124,7 +125,9 @@ export default {
       updateRequestFailed: 'Update-Anfrage fehlgeschlagen',
       restarting: 'Update wird angewendet, Dienst startet neu...',
       updateCompleted: 'Update abgeschlossen, Seite wird aktualisiert...',
-      restartToApply: 'App neu starten, um zu übernehmen'
+      restartToApply: 'App neu starten, um zu übernehmen',
+      systemTrayEnabled: 'System-Tray aktiviert, Neustart erforderlich',
+      systemTrayDisabled: 'System-Tray deaktiviert, Neustart erforderlich'
     }
   },
   logs: { title: 'Log-Anzeige', continue: 'Fortsetzen', pause: 'Pause', clear: 'Löschen', all: 'Alle', info: 'Info', warning: 'Warnung', error: 'Fehler', total: '{count} Logs insgesamt' },

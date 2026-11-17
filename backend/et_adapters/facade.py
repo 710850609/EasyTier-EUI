@@ -59,11 +59,27 @@ class EasyTierFacade(IEasyTierAdapter):
             return self._adapter.get_service_adapter()
         return None
 
+    # 已不再使用：多实例共享虚拟网卡改造后，Kotlin 侧改为调用 set_tun_fd_all
+    # 批量绑定，该单实例透传方法已无调用方，仅保留以防外部仍有旧调用。
     def set_tun_fd(self, instance_name: str, fd: int) -> int:
         if isinstance(self._adapter, FfiAdapter):
             return self._adapter.set_tun_fd(instance_name, fd)
         else:
             logger.warning(f"current adapter is not FfiAdapter, cannot set_tun_fd")
+            return -1
+
+    def set_tun_fd_all(self, fd: int) -> int:
+        if isinstance(self._adapter, FfiAdapter):
+            return self._adapter.set_tun_fd_all(fd)
+        else:
+            logger.warning("current adapter is not FfiAdapter, cannot set_tun_fd_all")
+            return -1
+
+    def detach_tun_fd_all(self) -> int:
+        if isinstance(self._adapter, FfiAdapter):
+            return self._adapter.detach_tun_fd_all()
+        else:
+            logger.warning("current adapter is not FfiAdapter, cannot detach_tun_fd_all")
             return -1
 
     def start_last_network(self) -> Optional[str]:

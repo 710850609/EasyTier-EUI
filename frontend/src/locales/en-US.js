@@ -113,6 +113,7 @@ export default {
     stable: 'Rel',
     prerelease: 'Pre',
     others: 'Others',
+    systemTray: 'System Tray Entry',
     githubDownload: 'GitHub Acceleration Download',
     githubDownloadTitle: 'GitHub Acceleration Download',
     githubDownloadDesc: 'Selects the optimal GitHub mirror based on local network,\nusing the fastest mirror to maximize download speed',
@@ -188,7 +189,9 @@ export default {
       updateRequestFailed: 'Update request failed',
       restarting: 'Applying update, service restarting, please wait...',
       updateCompleted: 'Update completed, refreshing page...',
-      restartToApply: 'Restart app to take effect'
+      restartToApply: 'Restart app to take effect',
+      systemTrayEnabled: 'System tray enabled, restart to take effect',
+      systemTrayDisabled: 'System tray disabled, restart to take effect'
     }
   },
   logs: {

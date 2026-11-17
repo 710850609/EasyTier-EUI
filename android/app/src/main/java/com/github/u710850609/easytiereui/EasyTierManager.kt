@@ -37,7 +37,7 @@ class EasyTierManager(
         }
     }
 
-    private var currentInstanceName: String? = null
+    private var currentInstanceNames: MutableList<String> = mutableListOf()
     private var pendingVpnParams: VpnParams? = null
 
     @Volatile
@@ -61,12 +61,13 @@ class EasyTierManager(
 
     // ── Python 回调 ──────────────────────────────────────────
 
-    fun startVpn(ipv4: String, ipv6: String, proxyCidrs: Array<String>, dnsServers: Array<String>, notificationTitle: String, notificationText: String, mtu: Int, instanceName: String) {
-        AppLogger.info(TAG, "startVpn: ipv4=$ipv4, ipv6=$ipv6, cidrs=${proxyCidrs.size}, dns=${dnsServers.size}, mtu=$mtu, instanceName=$instanceName")
-        currentInstanceName = instanceName
-        activeNetworkInstance = instanceName
+    fun startVpn(ipv4s: Array<String>, ipv6s: Array<String>, proxyCidrs: Array<String>, dnsServers: Array<String>, notificationTitle: String, notificationText: String, mtu: Int, instanceNames: Array<String>) {
+        AppLogger.info(TAG, "startVpn: ipv4s=${ipv4s.contentToString()}, ipv6s=${ipv6s.contentToString()}, cidrs=${proxyCidrs.size}, dns=${dnsServers.size}, mtu=$mtu, instanceNames=${instanceNames.contentToString()}")
+        val names = instanceNames.toList()
+        currentInstanceNames = names.toMutableList()
+        activeNetworkInstance = names.firstOrNull()
         stopVpnService()
-        val params = VpnParams(instanceName, ipv4, ipv6, proxyCidrs.toList(), dnsServers.toList(), notificationTitle, notificationText, mtu)
+        val params = VpnParams(names, ipv4s.toList(), ipv6s.toList(), proxyCidrs.toList(), dnsServers.toList(), notificationTitle, notificationText, mtu)
         val prepareIntent = VpnService.prepare(activity ?: context)
         if (prepareIntent != null) {
             val act = activity
@@ -83,21 +84,21 @@ class EasyTierManager(
     }
 
     fun stopVpn(stopPythonNetwork: Boolean = false) {
-        AppLogger.info(TAG, "stopVpn: stopPythonNetwork=$stopPythonNetwork, instance=$currentInstanceName, active=$activeNetworkInstance")
-        val instanceName = currentInstanceName
+        AppLogger.info(TAG, "stopVpn: stopPythonNetwork=$stopPythonNetwork, instances=$currentInstanceNames, active=$activeNetworkInstance")
+        val instances = currentInstanceNames.toList()
         stopVpnService()
-        currentInstanceName = null
+        currentInstanceNames.clear()
         val active = activeNetworkInstance
         activeNetworkInstance = null
         if (stopPythonNetwork) {
-            try {
-                val target = instanceName ?: active
-                if (target != null) {
+            val targets = if (instances.isNotEmpty()) instances else listOfNotNull(active)
+            for (target in targets) {
+                try {
                     getFacade()?.callAttr("stop_network", target)
                     AppLogger.info(TAG, "stopVpn: Python stop_network called for $target")
+                } catch (e: Exception) {
+                    AppLogger.error(TAG, "stopVpn: stop_network failed for $target: ${e.message}")
                 }
-            } catch (e: Exception) {
-                AppLogger.error(TAG, "stopVpn: stop_network failed: ${e.message}")
             }
         }
     }
@@ -136,7 +137,9 @@ class EasyTierManager(
      * 初始节点连不上时配置仍在运行（一直等待重试），磁贴也应显示为已开启。
      */
     fun isNetworkRunning(): Boolean {
-        val instance = activeNetworkInstance ?: currentInstanceName ?: return false
+        val names = currentInstanceNames.toList()
+        if (names.isNotEmpty()) return names.any { safeStatus(it) }
+        val instance = activeNetworkInstance ?: return false
         return safeStatus(instance)
     }
 
@@ -188,14 +191,14 @@ class EasyTierManager(
             val intent = Intent(context, EasyTierVpnService::class.java)
             intent.putExtra("vpn_params", params)
 
-            AppLogger.info(TAG, "startVpnService: calling startService, instanceName=${params.instanceName}")
+            AppLogger.info(TAG, "startVpnService: calling startService, instanceNames=${params.instanceNames}")
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 context.startForegroundService(intent)
             } else {
                 context.startService(intent)
             }
 
-            AppLogger.info(TAG, "VPN started: ${params.ipv4}, CIDRs=${params.proxyCidrs.size}, DNS=${params.dnsServers.size}")
+            AppLogger.info(TAG, "VPN started: ${params.ipv4s}, CIDRs=${params.proxyCidrs.size}, DNS=${params.dnsServers.size}")
         } catch (e: Exception) {
             val sw = StringWriter()
             e.printStackTrace(PrintWriter(sw))
@@ -292,19 +295,21 @@ class EasyTierManager(
 
     private fun onVpnRevoked() {
         AppLogger.info(TAG, "onVpnRevoked: VPN was revoked by another app")
-        val instanceName = currentInstanceName
-        currentInstanceName = null
-        if (instanceName != null) {
+        val instances = currentInstanceNames.toList()
+        currentInstanceNames.clear()
+        if (instances.isNotEmpty()) {
             Thread {
-                try {
-                    AppLogger.info(TAG, "onVpnRevoked: stopping Python network instance $instanceName")
-                    val facade = getFacade()
-                    if (facade != null) {
-                        facade.callAttr("stop_network", instanceName)
-                        AppLogger.info(TAG, "onVpnRevoked: Python network instance stopped")
+                for (instanceName in instances) {
+                    try {
+                        AppLogger.info(TAG, "onVpnRevoked: stopping Python network instance $instanceName")
+                        val facade = getFacade()
+                        if (facade != null) {
+                            facade.callAttr("stop_network", instanceName)
+                            AppLogger.info(TAG, "onVpnRevoked: Python network instance stopped")
+                        }
+                    } catch (e: Exception) {
+                        AppLogger.error(TAG, "onVpnRevoked: stop_network failed for $instanceName: ${e.message}")
                     }
-                } catch (e: Exception) {
-                    AppLogger.error(TAG, "onVpnRevoked: stop_network failed: ${e.message}")
                 }
             }.start()
         }
