@@ -33,7 +33,7 @@ def save(profile:Optional[str], rpc_portal:Optional[str], autostart:Optional[boo
         raise HttpException("profile cannot be None for save")
     data = __load_data() or {}
     if not data or not data.get(profile):
-        info = EtRunInfo(profile, rpc_portal, False, False, log_level)
+        info = EtRunInfo(profile, rpc_portal, autostart or False, use_system_service or False, log_level)
     else:
         info = data[profile]
         info.rpc_portal = rpc_portal if rpc_portal is not None else info.rpc_portal
