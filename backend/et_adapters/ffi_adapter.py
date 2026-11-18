@@ -402,6 +402,10 @@ class FfiAdapter(IEasyTierAdapter):
         logger.info(f"FFI 内核版本 '{version}'，共享虚拟网卡支持: {supported}")
         return supported
 
+    def supports_multi_instance(self) -> bool:
+        """当前 FFI 内核是否支持安卓多实例并存（共享虚拟网卡，>= 2.7.1）。"""
+        return self._supports_shared_vnic
+
     def start_network(self, toml_path: str, instance_name: str) -> None:
         logger.info(f"start_network {instance_name}")
         # 门控：不支持共享虚拟网卡的旧内核（< 2.7.1），安卓下恢复单实例限制
@@ -972,6 +976,12 @@ class FfiAdapter(IEasyTierAdapter):
             parts.append(f"↑{upload}")
         if download:
             parts.append(f"↓{download}")
+        start_times = [self._start_times.get(n) for n in instance_names]
+        start_times = [t for t in start_times if t]
+        if start_times:
+            uptime_seconds = int(time.time() - min(start_times))
+            parts.append("🕓")
+            parts.append(self._format_uptime(uptime_seconds, is_chinese))
         text = "  ".join(parts)
         return title, text
 

@@ -151,8 +151,8 @@ def auto_start(params: Optional[dict]=None, keep_run_status:bool=True, *args, **
         # 不支持系统服务，仅修改配置
         info.use_system_service = False
         et_run_info.save(*info.__dict__.values())
-        # 安卓系统仅支持单个自启配置
-        if run_configs.IS_ANDROID:
+        # 安卓下仅当内核不支持多实例（共享虚拟网卡，< 2.7.1）时才限制单个自启配置
+        if not facade.supports_multi_instance():
             for _, info in et_run_info.get_all().items():
                 if info.autostart and info.profile != profile:
                     info.autostart = False

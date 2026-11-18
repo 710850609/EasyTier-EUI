@@ -31,6 +31,11 @@ class EasyTierFacade(IEasyTierAdapter):
     def get_version(self) -> str:
         return self._adapter.get_version()
 
+    def supports_multi_instance(self) -> bool:
+        if isinstance(self._adapter, FfiAdapter):
+            return self._adapter.supports_multi_instance()
+        return True
+
     def start_network(self, toml_path: str, instance_name: str) -> None:
         self._adapter.start_network(toml_path, instance_name)
         # et_run_info.set_running(instance_name, True)
