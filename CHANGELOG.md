@@ -12,6 +12,11 @@
 - 优化：【配置】页面，新增 DeepWiKi AI 问答入口 
 - 优化：减少STUN日志生成量
 - 修复：清理日志后，stun 报错找不到日志目录
+----
+- 修复：部分场景下，自更新失败
+- 修复：重命名后，自启被关闭
+- 新增：Windows、MacOS 版本支持系统托盘开关([Issues #11](https://github.com/710850609/EasyTier-EUI/issues/11))
+- 新增：安卓版本支持多配置同时运行（需要 EasyTier 2.7.1及其以上版本）
 
 ----
 - Optimization: Enable auto-reconnect by default for the first configuration on Android
@@ -27,6 +32,11 @@
 - Improvement: Added DeepWiki AI Q&A entry on the [Config] page
 - Improvement: Reduced STUN log generation volume
 - Fix: STUN reported log directory not found error after clearing logs
+----
+- Fix: Self-update failed in some scenarios
+- Fix: Auto-start was disabled after renaming
+- New: Windows and macOS versions now support system tray toggle ([Issues #11](https://github.com/710850609/EasyTier-EUI/issues/11))
+- New: Android version now supports running multiple configs simultaneously (requires EasyTier 2.7.1 or above)
 
 ## 2.6
 *鉴于EasyTier2.7.0版本存在已知问题较多，此版本默认内核仍为2.6.4，想尝鲜的可到【配置】页面自行切换内核*
