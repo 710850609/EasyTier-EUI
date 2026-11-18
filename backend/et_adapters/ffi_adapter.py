@@ -75,6 +75,7 @@ class FfiAdapter(IEasyTierAdapter):
         self._enable_cache = run_configs.IS_ANDROID
         self._monitor_threads: Dict[str, threading.Thread] = {}
         self._monitor_states: Dict[str, bool] = {}
+        self._monitor_events: Dict[str, threading.Event] = {}
         # 安卓多实例共享虚拟网卡：VPN 聚合同步状态
         self._vpn_sync_lock = threading.Lock()
         self._last_vpn_signature: Optional[str] = None
@@ -220,7 +221,12 @@ class FfiAdapter(IEasyTierAdapter):
                 c_name = ctypes.c_char_p(name_bytes)
                 ret = self._lib.set_tun_fd(c_name, fd)
                 if ret != 0:
-                    raise RuntimeError(f"set_tun_fd failed: {self._get_last_error()}")
+                    err = self._get_last_error()
+                    if 'instance not found' in err or 'not found' in err:
+                        # 实例已被停止（stop_network 与 VPN 线程存在竞态），无需再绑定/解绑
+                        logger.warning(f"set_tun_fd skipped for {instance_name}: {err}")
+                        return 0
+                    raise RuntimeError(f"set_tun_fd failed: {err}")
                 return 0
         except RuntimeError as e:
             logger.exception(f"set_tun_fd runtime error: {e}")
@@ -234,15 +240,15 @@ class FfiAdapter(IEasyTierAdapter):
         第一个实例负责打开 fd，后续实例复用同一 fd；网段冲突由 Rust 核心
         ensure_disjoint 裁决，此处捕获 set_tun_fd 返回错误并友好提示。
         """
+        errors: List[str] = []
         with self._lock:
             instances = sorted(self._instance_set)
-        errors: List[str] = []
-        for name in instances:
-            try:
-                self.set_tun_fd(name, fd)
-            except Exception as e:
-                errors.append(f"{name}: {e}")
-                logger.exception(f"set_tun_fd_all failed for {name}")
+            for name in instances:
+                try:
+                    self.set_tun_fd(name, fd)
+                except Exception as e:
+                    errors.append(f"{name}: {e}")
+                    logger.warning(f"set_tun_fd_all failed for {name}: {e}")
         if errors:
             raise RuntimeError("failed to bind shared TUN fd: " + "; ".join(errors))
         return 0
@@ -387,12 +393,13 @@ class FfiAdapter(IEasyTierAdapter):
         因此仅当版本 >= 2.7.1 时才允许安卓多实例并存。
         """
         version = self.get_version() or ""
-        if version.lower().startswith("nightly"):
+        norm = et_util.normalize_version(version)
+        if norm == 'nightly':
             # Nightly 为最新构建，视为支持
             supported = True
         else:
-            # 兼容 "v2.7.1" 前缀及 "-8428a89d" 等构建后缀，用 search 而非 match
-            m = re.search(r"(\d+)\.(\d+)\.(\d+)", version)
+            # norm 已统一去除 v 前缀与构建后缀（如 2.7.1-8428a89d → 2.7.1）
+            m = re.search(r"(\d+)\.(\d+)\.(\d+)", norm)
             if not m:
                 logger.warning(f"无法解析内核版本号 '{version}'，按不支持共享虚拟网卡处理（单实例）")
                 supported = False
@@ -816,9 +823,11 @@ class FfiAdapter(IEasyTierAdapter):
             logger.warning(f"Monitor already running for {instance_name}")
             return
         self._monitor_states[instance_name] = True
+        stop_event = threading.Event()
+        self._monitor_events[instance_name] = stop_event
         t = threading.Thread(
             target=self._monitor_loop,
-            args=(instance_name,),
+            args=(instance_name, stop_event),
             name=f"EasyTierMonitor-{instance_name}",
             daemon=True,
         )
@@ -830,24 +839,27 @@ class FfiAdapter(IEasyTierAdapter):
         if not self._monitor_states.get(instance_name):
             return
         logger.info(f"Stopping monitor for {instance_name}")
-        self._monitor_states[instance_name] = False
+        self._monitor_states.pop(instance_name, None)
+        stop_event = self._monitor_events.pop(instance_name, None)
+        if stop_event is not None:
+            stop_event.set()
         t = self._monitor_threads.pop(instance_name, None)
         if t and t.is_alive():
             t.join(timeout=2.0)
             if t.is_alive():
                 logger.warning(f"Monitor thread for {instance_name} did not stop in time")
 
-    def _monitor_loop(self, instance_name: str):
+    def _monitor_loop(self, instance_name: str, stop_event: threading.Event):
         logger.info(f"Monitor loop started for {instance_name}")
         cached_state: Dict[str, Any] = {}
         last_notify_time = 0.0
         compare_keys = ['virtual_ipv4', 'virtual_ipv6', 'routes', 'dns_servers']
 
-        while self._monitor_states.get(instance_name, False):
+        while not stop_event.is_set() and self._monitor_states.get(instance_name, False):
             try:
                 info = self._get_route_info_dict(instance_name)
                 if not info or not info.get('virtual_ipv4'):
-                    time.sleep(2.5)
+                    stop_event.wait(2.5)
                     continue
 
                 changed = any(info.get(k) != cached_state.get(k) for k in compare_keys)
@@ -863,7 +875,7 @@ class FfiAdapter(IEasyTierAdapter):
                     last_notify_time = now
                     self._kotlin_notification(instance_name, info)
 
-                time.sleep(5.0)
+                stop_event.wait(5.0)
 
             except Exception as e:
                 logger.exception(f"Monitor loop error for {instance_name}: {e}")

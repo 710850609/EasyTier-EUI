@@ -14,7 +14,7 @@ from pathlib import Path
 
 import utils.github_util as github_util
 from actions import services
-from et_adapters import get_facade, ffi_adapter
+from et_adapters import get_facade, ffi_adapter, et_util
 from http_dispatcher.dispatcher import HttpException, HttpResponse
 from locales import get_message
 from utils import run_configs, et_run_info
@@ -240,7 +240,7 @@ def __install_ffi(task: InstallCoreTask, et_version, arch, sys_platform):
     ffi_dir = run_configs.core_dir()
     build_in_vers = ffi_adapter.get_built_in_version()
     task.update_progress(5, get_message('download.downloading_core'))
-    if f"v{build_in_vers}".startswith(et_version):
+    if et_util.normalize_version(build_in_vers) == et_util.normalize_version(et_version):
         shutil.rmtree(ffi_dir)
         get_facade().set_version(None)
         task.update_progress(95, get_message('download.merging_package'))
@@ -274,7 +274,7 @@ def __install_ffi(task: InstallCoreTask, et_version, arch, sys_platform):
     extract_dir = tempfile.mkdtemp(prefix="ffi_extract_")
     try:
         with tarfile.open(download_file, "r:gz") as tar:
-            tar.extractall(extract_dir)
+            tar.extractall(extract_dir, filter='data')
         extracted_so = None
         for root, dirs, files in os.walk(extract_dir):
             for f in files:

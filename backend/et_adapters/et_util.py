@@ -51,6 +51,17 @@ def random_string(length: int = 16) -> str:
     return ''.join(random.choices(_string.ascii_letters + _string.digits, k=length))
 
 
+def normalize_version(v: str) -> str:
+    """规范化版本号：忽略 v 前缀与构建哈希后缀，nightly 统一为小写。
+
+    例：'v2.7.1'、'2.7.1-8428a89d'、'2.7.1' 均归一为 '2.7.1'；'Nightly' 归一为 'nightly'。
+    """
+    v = (v or '').strip()
+    if v.lower() == 'nightly':
+        return 'nightly'
+    return v.lstrip('v').split('-')[0]
+
+
 # ============================================================
 # 地址 / 网络相关
 # ============================================================

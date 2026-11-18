@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+import atexit
 import faulthandler
 import logging
 import os
@@ -117,6 +118,9 @@ def _close_guards():
                 pass
     _faulthandler_file = None
     _stderr_file = None
+
+
+atexit.register(_close_guards)
 
 
 def _rotate_file(filepath, max_size=5 * 1024 * 1024, backups=1):
