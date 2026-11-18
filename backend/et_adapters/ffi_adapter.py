@@ -759,6 +759,8 @@ class FfiAdapter(IEasyTierAdapter):
             'routes': [],
             'total_upload': '',
             'total_download': '',
+            'total_upload_bytes': 0,
+            'total_download_bytes': 0,
             'mtu': self._mtu_config.get(instance_name),
         }
         total_upload = 0
@@ -793,6 +795,8 @@ class FfiAdapter(IEasyTierAdapter):
                 stats = conn.get('stats') or {}
                 total_download += float(stats.get('rx_bytes', 0))
                 total_upload += float(stats.get('tx_bytes', 0))
+        info['total_upload_bytes'] = total_upload
+        info['total_download_bytes'] = total_download
         info['total_upload'] = et_util.humanize_bytes(total_upload, for_short=True)
         info['total_download'] = et_util.humanize_bytes(total_download, for_short=True)
         return info
@@ -885,8 +889,12 @@ class FfiAdapter(IEasyTierAdapter):
         routes: List[str] = []
         dns_servers: List[str] = []
         mtus: List[int] = []
+        total_upload = 0.0
+        total_download = 0.0
         for name in instance_names:
             info = self._get_route_info_dict(name)
+            total_upload += float(info.get('total_upload_bytes', 0) or 0)
+            total_download += float(info.get('total_download_bytes', 0) or 0)
             ipv4 = info.get('virtual_ipv4', '')
             if ipv4 and ipv4 not in ipv4_list:
                 ipv4_list.append(ipv4)
@@ -910,6 +918,8 @@ class FfiAdapter(IEasyTierAdapter):
             'ipv6_list': ipv6_list,
             'routes': routes,
             'dns_servers': dns_servers,
+            'total_upload': et_util.humanize_bytes(total_upload, for_short=True),
+            'total_download': et_util.humanize_bytes(total_download, for_short=True),
             'mtu': min(mtus) if mtus else 1400,
             'conflicts': conflicts,
         }
@@ -955,6 +965,14 @@ class FfiAdapter(IEasyTierAdapter):
         else:
             title = f"易组网 - {count} 个网络运行中" if is_chinese else f"EasyTier-EUI - {count} networks running"
         text = "运行中" if is_chinese else "Running"
+        parts = [text]
+        upload = agg.get('total_upload', '')
+        download = agg.get('total_download', '')
+        if upload:
+            parts.append(f"↑{upload}")
+        if download:
+            parts.append(f"↓{download}")
+        text = "  ".join(parts)
         return title, text
 
     def _kotlin_sync_vpn(self):
@@ -1031,14 +1049,15 @@ class FfiAdapter(IEasyTierAdapter):
         name = instance_name.replace('.toml', '')
         title = f"易组网 - {name} 运行中" if is_chinese else f"EasyTier-EUI - {name} Running"
 
-        upload = info.get('total_upload', '')
-        download = info.get('total_download', '')
-
-        if not upload and not download:
+        virtual_ip = info.get('virtual_ipv4', '')
+        if not virtual_ip:
             text = "连接中..." if is_chinese else "Connecting..."
             return title, text
 
-        parts = []
+        upload = info.get('total_upload', '')
+        download = info.get('total_download', '')
+
+        parts = ["运行中" if is_chinese else "Running"]
         if upload:
             parts.append(f"↑{upload}")
         if download:
