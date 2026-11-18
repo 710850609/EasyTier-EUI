@@ -147,6 +147,7 @@ class _RotatingFile:
         self.max_size = max_size
         self.backups = backups
         self._fd = open(filepath, 'a', buffering=1)
+        self._at_line_start = True
 
     def write(self, data):
         if not data:
@@ -155,9 +156,10 @@ class _RotatingFile:
             self._fd.close()
             _rotate_file(self.filepath, self.max_size, self.backups)
             self._fd = open(self.filepath, 'a', buffering=1)
-        ts = time.strftime('%Y-%m-%d %H:%M:%S')
-        for line in data.splitlines(True):
-            self._fd.write(f'[{ts}] {line}')
+        if self._at_line_start:
+            self._fd.write(f'[{time.strftime("%Y-%m-%d %H:%M:%S")}] ')
+        self._fd.write(data)
+        self._at_line_start = data.endswith('\n') or data.endswith('\r')
         self._fd.flush()
 
     def flush(self):
