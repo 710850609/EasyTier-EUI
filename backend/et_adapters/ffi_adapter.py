@@ -929,7 +929,7 @@ class FfiAdapter(IEasyTierAdapter):
         }
 
     def _detect_subnet_conflicts(self, ipv4_list, routes):
-        """轻量检测实例间网段重叠（魔法 DNS 豁免），返回 [(a, b), ...]。
+        """轻量检测实例间网段重叠（魔法 DNS、全流量代理路由豁免），返回 [(a, b), ...]。
 
         仅用于日志与通知友好提示；最终裁决由 Rust 核心 ensure_disjoint 完成。
         """
@@ -943,6 +943,10 @@ class FfiAdapter(IEasyTierAdapter):
         for r in routes:
             try:
                 net = ipaddress.ip_network(r, strict=False)
+                if net.prefixlen == 0:
+                    # 全流量代理兜底路由（0.0.0.0/0、::/0）天然与所有网段重叠，
+                    # 属于刻意配置的兜底路由而非实例间冲突，跳过判定。
+                    continue
                 parsed.append((r, net, net == magic_dns))
             except ValueError:
                 continue

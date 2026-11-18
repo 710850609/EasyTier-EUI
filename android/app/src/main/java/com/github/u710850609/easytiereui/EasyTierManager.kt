@@ -43,6 +43,10 @@ class EasyTierManager(
     @Volatile
     private var activeNetworkInstance: String? = null
 
+    /** 停止所有网络期间为 true，用于拦截 Python 层逐实例 stop 时触发的中间态 VPN 重建。 */
+    @Volatile
+    private var stoppingAll = false
+
     init {
         EasyTierVpnService.onRevokeCallback = {
             onVpnRevoked()
@@ -63,6 +67,10 @@ class EasyTierManager(
 
     fun startVpn(ipv4s: Array<String>, ipv6s: Array<String>, proxyCidrs: Array<String>, dnsServers: Array<String>, notificationTitle: String, notificationText: String, mtu: Int, instanceNames: Array<String>) {
         AppLogger.info(TAG, "startVpn: ipv4s=${ipv4s.contentToString()}, ipv6s=${ipv6s.contentToString()}, cidrs=${proxyCidrs.size}, dns=${dnsServers.size}, mtu=$mtu, instanceNames=${instanceNames.contentToString()}")
+        if (stoppingAll) {
+            AppLogger.info(TAG, "startVpn: ignored during stop-all, instanceNames=${instanceNames.contentToString()}")
+            return
+        }
         val names = instanceNames.toList()
         currentInstanceNames = names.toMutableList()
         activeNetworkInstance = names.firstOrNull()
@@ -92,13 +100,18 @@ class EasyTierManager(
         activeNetworkInstance = null
         if (stopPythonNetwork) {
             val targets = if (instances.isNotEmpty()) instances else listOfNotNull(active)
-            for (target in targets) {
-                try {
-                    getFacade()?.callAttr("stop_network", target)
-                    AppLogger.info(TAG, "stopVpn: Python stop_network called for $target")
-                } catch (e: Exception) {
-                    AppLogger.error(TAG, "stopVpn: stop_network failed for $target: ${e.message}")
+            stoppingAll = true
+            try {
+                for (target in targets) {
+                    try {
+                        getFacade()?.callAttr("stop_network", target)
+                        AppLogger.info(TAG, "stopVpn: Python stop_network called for $target")
+                    } catch (e: Exception) {
+                        AppLogger.error(TAG, "stopVpn: stop_network failed for $target: ${e.message}")
+                    }
                 }
+            } finally {
+                stoppingAll = false
             }
         }
     }
