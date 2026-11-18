@@ -86,31 +86,39 @@ def __start_with_rollback(params, rollback=False) -> dict:
     ok, e = try_start()
     return {'success': ok, 'rollback': True, 'error': e if not ok else error}
 
-def start_all(*args, **kwargs):
+def start_all(*args, **kwargs) -> List[str]:
     config_file_list = run_configs.et_config_files()
     if len(config_file_list) == 0:
         logger.info("暂无配置文件，跳过启动服务")
-        return
+        return []
     infos = et_run_info.get_all()
     system_service_profiles = []
-    start_count = 0
+    started: List[str] = []
+    multi = get_facade().supports_multi_instance()
     for _, info in infos.items():
         if info.use_system_service:
             system_service_profiles.append(info.profile)
         elif info.autostart:
-            if start_count < 1 or not run_configs.IS_ANDROID:
+            if status({'profile': info.profile}):
+                logger.info(f"配置已在运行，跳过：{info.profile}")
+                started.append(info.profile)
+                continue
+            # 支持多实例则全部启动；否则仅启动第一个（内核 < 2.7.1）
+            if multi or not started:
                 logger.info(f"启动 EasyTier 配置：{info.profile}")
                 try:
                     start({'profile': info.profile})
-                    start_count += 1
                 except Exception as e:
                     logger.exception(f"启动【{info.profile}】失败")
+                    continue
+                started.append(info.profile)
     if len(system_service_profiles) > 0:
         logger.info(f"启动 EasyTier 系统注册服务：{system_service_profiles}")
         try:
             start({'profile': system_service_profiles[0]})
         except Exception as e:
             logger.exception(f"启动系统服务失败")
+    return started
 
 def stop_all(*args, **kwargs) -> List[str]:
     stop_profiles = []

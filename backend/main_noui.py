@@ -9,7 +9,6 @@ import time
 from typing import Optional
 
 from actions import services
-from et_adapters import facade
 from http_dispatcher import http_server
 from utils import run_configs, log_util, permissions_util, ip_util, qrcode_util
 from utils.permissions_util import ServerHandle
@@ -62,7 +61,7 @@ def init_env() -> None:
 def _post_setup():
     """后置处理：Android 恢复最近网络；桌面 docker 启动核心服务 + stun 自启。"""
     if run_configs.IS_ANDROID:
-        threading.Thread(target=facade.get_facade().start_last_network, daemon=True, name='async-vpn-startup').start()
+        threading.Thread(target=services.start_all, daemon=True, name='async-vpn-startup').start()
     elif run_configs.is_docker():
         services.start_all()
     from actions import stun

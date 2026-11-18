@@ -3,12 +3,11 @@
 """EasyTierFacade — unified entry point with adapter auto-selection"""
 
 import logging
-import os
 import threading
 from typing import Optional
 
 from et_adapters.core_background_adapter import CoreBackgroundAdapter
-from utils import run_configs, et_run_info, app_settings
+from utils import run_configs, app_settings
 from .core_adapter import CoreAdapter
 from .ffi_adapter import FfiAdapter
 from .interface import IEasyTierAdapter
@@ -86,35 +85,6 @@ class EasyTierFacade(IEasyTierAdapter):
         else:
             logger.warning("current adapter is not FfiAdapter, cannot detach_tun_fd_all")
             return -1
-
-    def start_last_network(self) -> Optional[str]:
-        run_infos = et_run_info.get_all()
-        if not run_infos:
-            logger.info("start_last_network: no profiles found")
-            return None
-        profiles = []
-        for name, info in run_infos.items():
-            toml_path = run_configs.et_config_file(name)
-            if not os.path.exists(toml_path):
-                logger.warning(f"start_last_network: skip {name}, config not found")
-                continue
-            # if info.running:
-            if info.autostart:
-                profiles.insert(0, (toml_path, name))
-            # else:
-            #     profiles.append((toml_path, name))
-        if len(profiles) > 0:
-            toml_path, profile = profiles[0]
-            if self.status(profile):
-                logger.info(f"start_last_network: {profile} already running, skip")
-                return profile
-            logger.info(f"start_last_network: starting {profile}")
-            self.start_network(toml_path, profile)
-            return profile
-        else:
-            logger.info("start_last_network: no profiles found")
-        return None
-
 
 
 _facade_instance: Optional[EasyTierFacade] = None

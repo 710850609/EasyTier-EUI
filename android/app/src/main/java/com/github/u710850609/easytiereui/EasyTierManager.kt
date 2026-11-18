@@ -106,8 +106,9 @@ class EasyTierManager(
     fun triggerAutoStart(): Boolean {
         AppLogger.info(TAG, "triggerAutoStart")
         try {
-            val result = getFacade()?.callAttr("start_last_network")
-            val started = result != null && result.toString() != "None"
+            val mod = Python.getInstance().getModule("actions.services")
+            val result = mod.callAttr("start_all")
+            val started = result != null && result.asList().isNotEmpty()
             AppLogger.info(TAG, "triggerAutoStart: result=$result, started=$started")
             return started
         } catch (e: Exception) {
