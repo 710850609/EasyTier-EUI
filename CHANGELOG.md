@@ -15,7 +15,7 @@
 ----
 - 修复：部分场景下，自更新失败
 - 修复：重命名后，自启被关闭
-- 新增：Windows、MacOS 版本支持系统托盘开关([Issues #11](https://github.com/710850609/EasyTier-EUI/issues/11))
+- 新增：Windows、MacOS 版本支持系统托盘开关，可选在【设置】页面关闭([Issues #11](https://github.com/710850609/EasyTier-EUI/issues/11))
 - 新增：安卓版本支持多配置同时运行（需要 EasyTier 2.7.1及其以上版本）
 
 ----
