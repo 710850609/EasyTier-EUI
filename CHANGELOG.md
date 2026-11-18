@@ -35,7 +35,7 @@
 ----
 - Fix: Self-update failed in some scenarios
 - Fix: Auto-start was disabled after renaming
-- New: Windows and macOS versions now support system tray toggle ([Issues #11](https://github.com/710850609/EasyTier-EUI/issues/11))
+- New: Windows and macOS versions now support system tray toggle, with an option to disable it on the [Settings] page ([Issues #11](https://github.com/710850609/EasyTier-EUI/issues/11))
 - New: Android version now supports running multiple configs simultaneously (requires EasyTier 2.7.1 or above)
 
 ## 2.6
