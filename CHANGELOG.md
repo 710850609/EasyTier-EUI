@@ -1,4 +1,4 @@
-##  
+##  2.7
 - 优化：安卓首个配置，默认开启启动重连功能
 - 优化：安卓快捷设置磁贴启动VPN，默认不打开WebView界面，静默后台运行，仅显示系统通知，减少运存使用（参考值：90-60MB）
 - 修复：安卓快捷设置磁贴启动VPN，默认当前设备显示localhost，而不是设备名称
@@ -17,6 +17,9 @@
 - 修复：重命名后，自启被关闭
 - 新增：Windows、MacOS 版本支持系统托盘开关，可选在【设置】页面关闭([Issues #11](https://github.com/710850609/EasyTier-EUI/issues/11))
 - 新增：安卓版本支持多配置同时运行（需要 EasyTier 2.7.1及其以上版本）
+---
+- 优化：Linux版本stun keep live期间断网处理（飞牛系统自更新的，需要重启stun才生效）
+- 优化：飞牛版本兼容云电脑环境状态识别
 
 ----
 - Optimization: Enable auto-reconnect by default for the first configuration on Android
@@ -37,6 +40,9 @@
 - Fix: Auto-start was disabled after renaming
 - New: Windows and macOS versions now support system tray toggle, with an option to disable it on the [Settings] page ([Issues #11](https://github.com/710850609/EasyTier-EUI/issues/11))
 - New: Android version now supports running multiple configs simultaneously (requires EasyTier 2.7.1 or above)
+----
+- Optimization: On Linux, handle network disconnection during STUN keep-alive (for FeiNiu system self-updates; requires restarting STUN to take effect)
+- Optimization: FeiNiu version now supports state detection in cloud computer (desktop) environments, accommodating suspend/wake behavior
 
 ## 2.6
 *鉴于EasyTier2.7.0版本存在已知问题较多，此版本默认内核仍为2.6.4，想尝鲜的可到【配置】页面自行切换内核*
