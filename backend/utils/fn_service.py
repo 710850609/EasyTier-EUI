@@ -25,33 +25,68 @@ from utils import run_configs, log_util, et_run_info, common_util
 logger = logging.getLogger(__name__)
 _fn_check_file :str=''
 
+def _boot_identity() -> str:
+    """
+    获取「开机身份标识」，用于判断系统是否真实重启过。
+    Linux 下使用 /proc/sys/kernel/random/boot_id：每次真实重启都会重新生成，
+    而休眠/唤醒、时钟调整、NTP 同步均不影响它，是区分「重启」与「休眠唤醒」的稳定指纹。
+    非 Linux 环境回退到 psutil.boot_time()。
+    """
+    try:
+        with open('/proc/sys/kernel/random/boot_id', 'r') as f:
+            boot_id = f.read().strip()
+            if boot_id:
+                return boot_id
+    except (OSError, IOError):
+        pass
+    return str(psutil.boot_time())
+
+def _is_legacy_boot_time(value: str) -> bool:
+    """
+    判断文件内容是否为旧版本的「开机时间」数字格式。
+    旧版本 start() 写入的是 psutil.boot_time() 的数字字符串；
+    新版本写入的是 boot_id（UUID）字符串。用于兼容自升级后文件内容未更新的场景。
+    """
+    try:
+        float(value)
+        return True
+    except (ValueError, TypeError):
+        return False
+
 def status():
     """
     应用启动前检查一次
     应用运行期间定期轮询检查
-    检查文件的开机时间是否为当前开机时间
+    检查文件的开机标识是否为当前开机标识
     0 表示应用正在运行
     3 表示应用未运行
     """
     if not os.path.exists(_fn_check_file):
         logger.info(f"文件 {_fn_check_file} 不存在，应用未运行")
         return 3
-    boot_time_timestamp = psutil.boot_time()
+    current = _boot_identity()
     with open(_fn_check_file, 'r') as f:
-        data = f.readline()
-        if data == str(boot_time_timestamp):
+        recorded = f.read().strip()
+    if recorded == current:
+        return 0
+    # 兼容自升级：旧版本写入的是「开机时间」数字，自升级未停用再启用，文件内容仍是旧值
+    if _is_legacy_boot_time(recorded):
+        legacy_boot_time = float(recorded)
+        if abs(legacy_boot_time - psutil.boot_time()) < 2:
+            with open(_fn_check_file, 'w') as f:
+                f.write(current)
+            logger.info(f"检测到旧版开机时间记录 {recorded}，自升级后迁移为开机标识 {current}，判定应用运行中")
             return 0
-        if abs(float(data) - boot_time_timestamp) < 2:
-            logger.warning(f"文件 {_fn_check_file} 内容是 {data}，与当前开机时间 {boot_time_timestamp} 不一致，但误差在2秒内，应用正在运行")
-            return 0
-        logger.error(f"当次获取开机时间和上次记录开机时间差超过2秒，判定应用未运行")
+        logger.error(f"旧版开机时间记录 {recorded} 与当前开机时间差超过2秒，判定应用未运行")
         return 3
+    logger.error(f"开机标识不一致（记录 {recorded}，当前 {current}），系统已重启，应用未运行")
+    return 3
 
 
 def start():
     """
     先调用 status(), 未执行时才调用 start()
-    启动成功后，把 开机时间 写入 文件
+    启动成功后，把 开机标识 写入 文件
     """
     logger.info("开始启动应用...")
     Path(run_configs.config_dir()).mkdir(parents=True, exist_ok=True)
@@ -62,9 +97,9 @@ def start():
     if not check_file.exists():
         check_file.touch()
     with open(_fn_check_file, 'w') as f:
-        boot_time_timestamp = str(psutil.boot_time())
-        f.write(boot_time_timestamp)
-        logger.info(f"文件 {_fn_check_file} 内容写入 {boot_time_timestamp} 成功，应用启动成功")
+        boot_id = _boot_identity()
+        f.write(boot_id)
+        logger.info(f"文件 {_fn_check_file} 内容写入 {boot_id} 成功，应用启动成功")
 
 def stop():
     """

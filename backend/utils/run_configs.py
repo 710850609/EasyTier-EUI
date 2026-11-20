@@ -124,7 +124,7 @@ def setup_env(data_dir: str = None, external_dir: str = None):
     _is_inited_evn = True
 
 
-BUILD_VERSION = "2.4.020604-20260915140508"
+BUILD_VERSION = "2.6.020604-20261120160215"
 
 
 def is_musl_sys():

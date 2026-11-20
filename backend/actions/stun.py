@@ -418,7 +418,6 @@ def _build_launcher_script(config_id: str, natmap_cmd: list[str]) -> str:
     running_dir = _get_running_dir(config_id)
     os.makedirs(running_dir, exist_ok=True)
     error_file = os.path.join(running_dir, 'error.txt')
-    mapping_file = os.path.join(running_dir, 'mapping.json')
     natmap_cmd_str = ' '.join(f'"{x}"' if ' ' in x else x for x in natmap_cmd)
 
     interval = 60
@@ -440,7 +439,6 @@ def _build_launcher_script(config_id: str, natmap_cmd: list[str]) -> str:
             '#!/bin/sh\n'
             f'> "{error_file}"\n'
             f'{natmap_cmd_str} 2>&1 >/dev/null | while IFS= read -r line; do\n'
-            f'    rm -f "{mapping_file}"\n'
             f'    echo "$(date \'+%Y-%m-%d %H:%M:%S\') $line" >> "{error_file}"\n'
             f'    tail -n 4 "{error_file}" > "{error_file}.tmp" && mv "{error_file}.tmp" "{error_file}"\n'
             f'done\n'
