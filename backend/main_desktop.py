@@ -7,7 +7,9 @@ import os
 import subprocess
 import sys
 import threading
+import uuid
 import webbrowser
+from ctypes import wintypes
 
 import main_noui
 from locales import get_message, get_last_lang
@@ -18,6 +20,52 @@ logger = logging.getLogger(__name__)
 ROLE_CONTROLLER = 'controller'
 ROLE_WEBVIEW = 'webview'
 APP_NAME = 'EasyTier-EUI'
+
+
+class WindowsTrayWindow:
+    """Find the WebView window from the controller, including one-file builds."""
+
+    def __init__(self, token):
+        self.property_name = f'{APP_NAME}.TrayWindow.{token}'
+        self.user32 = ctypes.WinDLL('user32', use_last_error=True)
+        self.enum_callback = ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPARAM)
+        self.user32.EnumWindows.argtypes = [self.enum_callback, wintypes.LPARAM]
+        self.user32.SetPropW.argtypes = [wintypes.HWND, wintypes.LPCWSTR, wintypes.HANDLE]
+        self.user32.GetPropW.argtypes = [wintypes.HWND, wintypes.LPCWSTR]
+        self.user32.GetPropW.restype = wintypes.HANDLE
+        self.user32.RemovePropW.argtypes = [wintypes.HWND, wintypes.LPCWSTR]
+        self.user32.RemovePropW.restype = wintypes.HANDLE
+        self.user32.IsIconic.argtypes = [wintypes.HWND]
+        self.user32.ShowWindowAsync.argtypes = [wintypes.HWND, ctypes.c_int]
+        self.user32.SetForegroundWindow.argtypes = [wintypes.HWND]
+
+    def attach(self, window):
+        hwnd = window.native.Handle.ToInt64()
+        if not self.user32.SetPropW(hwnd, self.property_name, 1):
+            logger.warning('无法注册托盘窗口: %s', ctypes.WinError(ctypes.get_last_error()))
+            return
+
+        def hide_minimized():
+            if self.user32.IsIconic(hwnd):
+                self.user32.ShowWindowAsync(hwnd, 0)  # SW_HIDE
+
+        def detach():
+            self.user32.RemovePropW(hwnd, self.property_name)
+
+        window.events.minimized += hide_minimized
+        window.events.closing += detach
+
+    def show(self):
+        @self.enum_callback
+        def show_matching_window(hwnd, _):
+            if not self.user32.GetPropW(hwnd, self.property_name):
+                return True
+            if self.user32.IsIconic(hwnd):
+                self.user32.ShowWindowAsync(hwnd, 9)  # SW_RESTORE
+            self.user32.SetForegroundWindow(hwnd)
+            return False
+
+        self.user32.EnumWindows(show_matching_window, 0)
 
 
 def _is_frozen():
@@ -96,7 +144,7 @@ def _configure_macos_accessory():
         logger.debug('macOS 隐藏 Dock 图标失败: %s', e)
 
 
-def run_webview_role(host, port):
+def run_webview_role(host, port, tray_token=None):
     main_noui.init_env()
 
     connect_host = _connect_host(host)
@@ -120,7 +168,7 @@ def run_webview_role(host, port):
     webview_data_dir = os.path.join(run_configs.data_dir(), 'webview')
     os.makedirs(webview_data_dir, exist_ok=True)
 
-    webview.create_window(
+    window = webview.create_window(
         title,
         f'http://{connect_host}:{port}',
         width=1200,
@@ -128,6 +176,8 @@ def run_webview_role(host, port):
         text_select=True,
         js_api=Api(),
     )
+    if sys.platform == 'win32' and tray_token:
+        window.events.before_show += WindowsTrayWindow(tray_token).attach
     webview.start(
         private_mode=False,
         storage_path=webview_data_dir,
@@ -143,6 +193,8 @@ class DesktopController:
         self.http_handle = None
         self.webview_proc = None
         self.icon = None
+        self.tray_window_token = None
+        self.tray_window = None
         self._proc_lock = threading.Lock()
         self._stopped = False
         self._stop_network_quitting = False
@@ -187,10 +239,15 @@ class DesktopController:
             pystray.MenuItem(quit_label, self._on_quit),
         )
         self.icon = pystray.Icon(APP_NAME, image, APP_NAME, menu)
+        if sys.platform == 'win32':
+            self.tray_window_token = uuid.uuid4().hex
+            self.tray_window = WindowsTrayWindow(self.tray_window_token)
         _configure_macos_accessory()
 
     def _webview_cmd(self):
         args = ['--webview-role', ROLE_WEBVIEW, '--host', str(self.host), '--port', str(self.port)]
+        if self.tray_window_token:
+            args.extend(['--tray-window-token', self.tray_window_token])
         if _is_frozen():
             return [sys.executable] + args
         return [sys.executable, os.path.abspath(__file__)] + args
@@ -198,7 +255,8 @@ class DesktopController:
     def _open_window(self):
         with self._proc_lock:
             if self.webview_proc is not None and self.webview_proc.poll() is None:
-                logger.debug('webview 子进程已在运行，跳过启动')
+                if self.tray_window is not None:
+                    self.tray_window.show()
                 return
             cmd = self._webview_cmd()
             creationflags = subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
@@ -263,10 +321,11 @@ def main():
     parser.add_argument('--host', default=None)
     # --port: HTTP 服务监听端口；不传时自动分配或使用默认端口（run_configs.EUI_RUN_PORT / 5666）
     parser.add_argument('--port', type=int, default=None)
+    parser.add_argument('--tray-window-token', help=argparse.SUPPRESS)
     args = parser.parse_args()
 
     if args.webview_role == ROLE_WEBVIEW:
-        run_webview_role(args.host, args.port)
+        run_webview_role(args.host, args.port, args.tray_window_token)
         return
 
     _enable_dark_mode()
