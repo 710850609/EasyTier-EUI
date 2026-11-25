@@ -238,27 +238,27 @@ def copy(profile:str):
         if doc_flags.get("encryption_algorithm"):
             share_flags["encryption_algorithm"] = doc_flags.get("encryption_algorithm")
     # 如果是本地STUN，则自动加入初始节点信息
-    if not share_doc["peer"]:
-        stun_map = {}
-        for stun_data in stun.list_stun() or []:
-            map_value = stun_data.get('mapping', {}).get('dns_record', '')
-            if not stun_data.get('running') or not map_value:
-                continue
-            stun_cfg = stun_data.get('stunConfig') or {}
-            map_key = stun_cfg.get('listenProtocol', '') + ':' + stun_cfg.get('listenPort', '')
-            stun_map[map_key] = map_value
-        if stun_map:
-            listeners = []
-            for listener in doc["listeners"] or []:
-                listener_parts = listener.split(':')
-                map_key = listener_parts[0] + ':' + listener_parts[-1]
-                if map_key in stun_map and stun_map[map_key] not in listeners:
-                    listeners.append(stun_map[map_key])
-            if listeners:
-                peers = []
-                for listener in listeners:
-                    peers.append({'uri': listener})
-                share_doc["peer"] = peers
+    peers = share_doc["peer"] or []
+    stun_map = {}
+    for stun_data in stun.list_stun() or []:
+        map_value = stun_data.get('mapping', {}).get('dns_record', '')
+        if not stun_data.get('running') or not map_value:
+            continue
+        stun_cfg = stun_data.get('stunConfig') or {}
+        map_key = stun_cfg.get('listenProtocol', '') + ':' + stun_cfg.get('listenPort', '')
+        stun_map[map_key] = map_value
+    if stun_map:
+        listeners = []
+        for listener in doc["listeners"] or []:
+            listener_parts = listener.split(':')
+            map_key = listener_parts[0] + ':' + listener_parts[-1]
+            if map_key in stun_map and stun_map[map_key] not in listeners:
+                listeners.append(stun_map[map_key])
+        if listeners:
+            for listener in listeners:
+                peers.append({'uri': listener})
+    if peers:
+        share_doc["peer"] = peers
 
     with open(tmp_file, "w", encoding="utf-8") as f:
         f.write(tomlkit.dumps(share_doc))
