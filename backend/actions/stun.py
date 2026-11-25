@@ -31,14 +31,17 @@ def _get_stun_dir() -> str:
 def _get_running_dir(config_id: str) -> str:
     return os.path.join(_get_stun_dir(), 'running', config_id)
 
-
-def _get_natmap_binary() -> str | None:
+def _get_natmap_binary_path() -> str:
     # 为防止飞牛系统升级导致 natmap 不存在，存储到 data_dir
     install_dir = run_configs.data_dir()
     if sys.platform == 'win32':
         bin_path = os.path.join(install_dir, 'natmap', 'natmap.exe')
     else:
         bin_path = os.path.join(install_dir, 'natmap', 'natmap')
+    return bin_path
+
+def _get_natmap_binary() -> str | None:
+    bin_path = _get_natmap_binary_path()
     if os.path.exists(bin_path):
         return bin_path
     return None
@@ -73,24 +76,32 @@ def natmap_install(params=None, *args, **kwargs):
     if not _natmap_install_lock.acquire(blocking=False):
         raise HttpException(get_message('stun.natmapInstallInProgress'))
     try:
-        system = sys.platform
-        if system == 'win32':
-            platform_name = 'win64'
-        elif system == 'darwin':
-            platform_name = 'darwin'
-        else:
-            platform_name = 'linux'
-
         machine = platform.machine().lower()
         arch_map = {
             'x86_64': 'x86_64',
+            'amd64': 'x86_64',
             'arm64': 'arm64',
             'aarch64': 'arm64',
             'armv7l': 'arm32',
         }
         arch = arch_map.get(machine, machine)
-        arch_name = '.zip' if platform_name == 'win64' else f'-{arch}'
-        filename = f'natmap-{platform_name}{arch_name}'
+        system = sys.platform
+        if system == 'win32':
+            # natmap-win-x64.exe
+            platform_name = 'win'
+            arch = {
+                'x86_64': 'x64',
+                'amd64': 'x64',
+                'arm64': 'arm64',
+                'aarch64': 'arm64',
+            }.get(machine, 'x86')
+        elif system == 'darwin':
+            platform_name = 'darwin'
+        else:
+            platform_name = 'linux'
+
+        file_type = '.exe' if system == 'win32' else ''
+        filename = f'natmap-{platform_name}-{arch}{file_type}'
         download_url = f'https://github.com/heiher/natmap/releases/latest/download/{filename}'
 
         try:
@@ -106,15 +117,9 @@ def natmap_install(params=None, *args, **kwargs):
             download_path = os.path.join(tmp_dir, filename)
             github_util.download_release_file(download_url, download_path, desc=filename)
 
-            if filename.endswith('.zip'):
-                logger.info(f'解压 natmap: {download_path}')
-                with zipfile.ZipFile(download_path, 'r') as zf:
-                    zf.extractall(tmp_dir)
-                shutil.move(os.path.join(tmp_dir, 'natmap'), run_configs.data_dir())
-            else:
-                natmap_dir = os.path.join(run_configs.data_dir(), 'natmap')
-                Path(natmap_dir).mkdir(parents=True, exist_ok=True)
-                shutil.move(download_path, os.path.join(natmap_dir, 'natmap'))
+            binary_path = _get_natmap_binary_path()
+            Path(binary_path).parent.mkdir(parents=True, exist_ok=True)
+            shutil.move(download_path, binary_path)
 
             target_path = _get_natmap_binary()
             if not target_path:
