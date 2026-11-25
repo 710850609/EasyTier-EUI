@@ -19,6 +19,7 @@
 - [UI界面说明](#UI界面说明)
 - [Android 版本说明](#android-版本说明)
 - [技术栈](#技术栈)
+- [开发运行](#开发运行)
 - [其他链接](#其他链接)
 - [贡献](#贡献)
 - [支持项目](#支持项目)
@@ -213,6 +214,100 @@ Android 版本与桌面版采用不同的技术方案，但共享同一套 Pytho
 | 后端   | [Python3](https://www.python.org/)                                   | Python 3.12 (Chaquopy) |
 | 组网内核 | [EasyTier](https://github.com/EasyTier/EasyTier)                     | EasyTier FFI (`libeasytier_ffi.so`) |
 | 原生层  | -                                                                    | Kotlin 2.0.0 + Android VPN Service |
+
+## 开发运行
+
+### 环境要求
+
+| 组件 | 版本 | 用途 |
+|------|------|------|
+| Python | 3.12+ | 后端运行环境 |
+| Node.js | 20+（CI 使用 24 构建） | 前端构建 |
+| JDK | 17 | Android 构建 |
+| Android SDK + NDK | API 35 / NDK 26 | Android 构建 |
+
+### 准备 EasyTier 核心
+
+后端运行依赖 EasyTier 核心，首次使用需先安装内核。可通过界面「设置」中的内核安装功能下载（会自动适配当前平台），也可手动下载对应平台的 `easytier` 可执行文件放入如下目录：
+
+```
+temp/EasyTier-EUI/core/
+```
+
+### 后端（Python）
+
+```bash
+# 进入后端目录
+cd backend
+
+# 创建并激活虚拟环境（Windows）
+python -m venv .venv
+.venv\Scripts\activate
+
+# 安装依赖
+pip install -r requirements-base.txt
+pip install -r requirements-gui.txt   # 仅桌面 GUI 需要
+
+# 启动后端服务（默认端口 5666）
+python main_noui.py
+```
+
+启动后访问 `http://127.0.0.1:5666`，可指定端口：
+
+```bash
+python main_noui.py --port 5666 --host 0.0.0.0
+```
+
+桌面 GUI 模式（pywebview 窗口 + 系统托盘）：
+
+```bash
+python main_ui.py
+```
+
+### 前端（Vue 3 + Varlet UI）
+
+```bash
+cd frontend
+
+# 安装依赖
+npm install
+
+# 开发模式（Vite 热更新，端口 5173）
+npm run dev
+
+# 生产构建（输出到 frontend/dist，由后端直接托管）
+npm run build
+```
+
+开发模式下 Vite 会将 `/cgi` 前缀的接口请求代理到 `http://localhost:5666`（见 `frontend/vite.config.js`），因此只需同时启动后端（`python main_noui.py`）和前端（`npm run dev`），即可在 `http://localhost:5173` 上热更新调试前端。
+
+### Android
+
+Android 端复用同一套 Python 后端和 Vue 前端代码，构建流程：
+
+```bash
+# 1. 构建前端产物
+cd frontend
+npm install
+npm run build
+
+# 2. 复制前端产物到 Android assets
+mkdir -p ../android/app/src/main/assets/frontend
+cp -r dist/* ../android/app/src/main/assets/frontend/
+
+# 3. 放置 FFI 动态库（libeasytier_ffi.so）到对应 ABI 目录
+#    APP_DIR/android/app/src/main/jniLibs/arm64-v8a/
+
+# 4. 用 Android Studio 打开 android 目录构建，或命令行构建
+cd android
+./gradlew assembleDebug
+```
+
+Android 构建需注意：
+
+- Chaquopy 嵌入的是 Python 3.12，本机需安装 Python 3.12 并可在 PATH 中找到（`python3.12`）
+- FFI 动态库 `libeasytier_ffi.so` 由 EasyTier 源码编译产出，需按 ABI（arm64-v8a / armeabi-v7a）分别放置，见 `.github/workflows/build-android.yml`
+- 内核版本支持在 Android 端「设置」页面在线选择安装
 
 ## 其他链接
 
