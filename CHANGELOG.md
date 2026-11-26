@@ -5,6 +5,13 @@
 - 修复：安卓非aarch64版本、部分安卓系统加载内置内核失败问题
 - 变动：不再提供 armv7 和 x86 架构安卓版本
 
+----
+- New: Added config options: auto-acquire public IPv6, share public IPv6 subnet, and public IPv6 subnet prefix
+- Improved: Shared network config now supports identifying mixed self-hosted STUN nodes or community nodes
+- Fixed: Windows now supports downloading natmap version 20261109
+- Fixed: Android non-aarch64 versions and some Android systems failing to load the built-in core
+- Changed: No longer providing armv7 and x86 architecture Android versions
+
 ##  2.7
 - 优化：安卓首个配置，默认开启启动重连功能
 - 优化：安卓快捷设置磁贴启动VPN，默认不打开WebView界面，静默后台运行，仅显示系统通知，减少运存使用（参考值：90-60MB）
