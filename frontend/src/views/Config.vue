@@ -351,6 +351,32 @@
                           </template>
                         </var-tooltip>
                       </div>
+                      <div class="feature-item">
+                        <var-checkbox v-model="config.ipv6_public_addr_provider">
+                          {{ $t('config.flags.ipv6_public_addr_provider.label') }}
+                        </var-checkbox>
+                        <var-tooltip teleport="body">
+                          <var-icon name="help-circle-outline" size="16" class="help-icon" />
+                          <template #content>
+                            <div class="tooltip-multiline">
+                              {{ $t('config.flags.ipv6_public_addr_provider.tooltip') }}
+                            </div>
+                          </template>
+                        </var-tooltip>
+                      </div>
+                      <div class="feature-item">
+                        <var-checkbox v-model="config.ipv6_public_addr_auto">
+                          {{ $t('config.flags.ipv6_public_addr_auto.label') }}
+                        </var-checkbox>
+                        <var-tooltip teleport="body">
+                          <var-icon name="help-circle-outline" size="16" class="help-icon" />
+                          <template #content>
+                            <div class="tooltip-multiline">
+                              {{ $t('config.flags.ipv6_public_addr_auto.tooltip') }}
+                            </div>
+                          </template>
+                        </var-tooltip>
+                      </div>
                     </div>
                   </div>
                   <var-divider />
@@ -411,6 +437,20 @@
                         </template>
                       </var-tooltip>
                       <var-input v-model="config.flags.tld_dns_zone" :placeholder="$t('config.tldDnsZonePlaceholder')" :rules="(v) => (v == null || v === '' || v.endsWith('.')) || $t('config.tldDnsZoneError')" variant="outlined" size="small" />
+                    </div>
+                  </div>
+
+                  <div class="input-row">
+                    <div class="input-section">
+                      <var-tooltip trigger="click">
+                        <div class="section-subtitle">{{ $t('config.ipv6PublicAddrPrefix') }}
+                          <var-icon name="help-circle-outline" size="16" class="help-icon" />
+                        </div>
+                        <template #content>
+                          <div class="tooltip-multiline">{{ $t('config.ipv6PublicAddrPrefixHint') }}</div>
+                        </template>
+                      </var-tooltip>
+                      <var-input v-model="config.ipv6_public_addr_prefix" :placeholder="$t('config.ipv6PublicAddrPrefixPlaceholder')" variant="outlined" size="small" />
                     </div>
                   </div>
               </div>
@@ -1034,7 +1074,7 @@
 <script setup>
 import { copyToClipboard, readFromClipboard } from '../utils/clipboard.js'
 import { openDownloadUrl } from '../utils/download.js'
-import { validateIP, validateIPPort } from '../utils/validate.js'
+import { validateIP, validateIPPort, isValidIpv6Cidr } from '../utils/validate.js'
 import { ref, computed, inject, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import toast from '../components/toast.js'
@@ -1134,6 +1174,9 @@ const config = ref({
   routes: [],
   socks5_proxy: null,
   port_forward: [],
+  ipv6_public_addr_provider: false,
+  ipv6_public_addr_auto: false,
+  ipv6_public_addr_prefix: '',
   flags: {
     bind_device: true,
     enable_ipv6: true,
@@ -1344,6 +1387,12 @@ const saveConfig = () => {
       reject();
       toast.error(rtError)
       return
+    }
+    const ipv6Prefix = config.value.ipv6_public_addr_prefix
+    if (ipv6Prefix && ipv6Prefix.trim() && !isValidIpv6Cidr(ipv6Prefix)) {
+      reject();
+      toast.error(t('config.ipv6PublicAddrPrefixInvalid'))
+      return
     }      
 
     const checkStatus = async () => {
@@ -1402,7 +1451,7 @@ const saveConfig = () => {
       }
     });
     // 删除config一级属性， 空值 字段
-    ['hostname', 'ipv4', 'rpc_portal'].forEach(key => {
+    ['hostname', 'ipv4', 'rpc_portal', 'ipv6_public_addr_prefix'].forEach(key => {
       if (config.value[key] == null || config.value[key].trim() === '') {
         data[key] = null
       }
@@ -1589,6 +1638,9 @@ const formatBackendConfigToConfig = (json) => {
     port_forward: json.port_forward || [],
     peer: json.peer || [],
     socks5_proxy: json.socks5_proxy ?? null,
+    ipv6_public_addr_provider: json.ipv6_public_addr_provider ?? false,
+    ipv6_public_addr_auto: json.ipv6_public_addr_auto ?? false,
+    ipv6_public_addr_prefix: json.ipv6_public_addr_prefix ?? '',
     flags: {
       ...json.flags,
       mtu: json.flags?.mtu ?? undefined,
@@ -1907,6 +1959,9 @@ const confirmCreateConfig = () => {
   config.value.peer = [],
   config.value.proxy_network = [],
   config.value.network_identity = { network_name: '', network_secret: '' },
+  config.value.ipv6_public_addr_provider = false,
+  config.value.ipv6_public_addr_auto = false,
+  config.value.ipv6_public_addr_prefix = '',
   config.value.flags = {
     bind_device: true,
     enable_ipv6: true,

@@ -64,3 +64,34 @@ export function validateIPPort(addr, label = t('validate.address')) {
   }
   return null
 }
+
+/**
+ * IPv6 地址正则（RFC 4291，支持 :: 压缩形式）
+ */
+const IPV6_REGEX = /^(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:))$/
+
+/**
+ * 验证是否为合法的 IPv6 地址
+ * @param {string} addr - IPv6 地址
+ * @returns {boolean}
+ */
+export function isValidIPv6(addr) {
+  if (!addr || typeof addr !== 'string') return false
+  return IPV6_REGEX.test(addr.trim())
+}
+
+/**
+ * 验证是否为合法的 IPv6 CIDR 格式（如 2001:db8::/64）
+ * @param {string} cidr - IPv6 CIDR 地址
+ * @returns {boolean}
+ */
+export function isValidIpv6Cidr(cidr) {
+  if (!cidr || typeof cidr !== 'string') return false
+  const parts = cidr.trim().split('/')
+  if (parts.length !== 2) return false
+  const [addr, prefixStr] = parts
+  if (!isValidIPv6(addr)) return false
+  if (!/^\d{1,3}$/.test(prefixStr)) return false
+  const prefix = parseInt(prefixStr, 10)
+  return prefix >= 0 && prefix <= 128
+}
