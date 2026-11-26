@@ -438,9 +438,6 @@
                       </var-tooltip>
                       <var-input v-model="config.flags.tld_dns_zone" :placeholder="$t('config.tldDnsZonePlaceholder')" :rules="(v) => (v == null || v === '' || v.endsWith('.')) || $t('config.tldDnsZoneError')" variant="outlined" size="small" />
                     </div>
-                  </div>
-
-                  <div class="input-row">
                     <div class="input-section">
                       <var-tooltip trigger="click">
                         <div class="section-subtitle">{{ $t('config.ipv6PublicAddrPrefix') }}
