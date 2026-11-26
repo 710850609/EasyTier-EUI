@@ -53,12 +53,13 @@ jobs:
           - arch: aarch64
             rust_target: aarch64-linux-android
             ndk_target: arm64-v8a
-          - arch: armv7
-            rust_target: armv7-linux-androideabi
-            ndk_target: armeabi-v7a
-          - arch: x86
-            rust_target: i686-linux-android
-            ndk_target: x86
+# Chaquopy 17.0.0 不支持 armv7 和 x86 架构，降低版本又不支持 python3.12
+#          - arch: armv7
+#            rust_target: armv7-linux-androideabi
+#            ndk_target: armeabi-v7a
+#          - arch: x86
+#            rust_target: i686-linux-android
+#            ndk_target: x86
           - arch: x86_64
             rust_target: x86_64-linux-android
             ndk_target: x86_64
