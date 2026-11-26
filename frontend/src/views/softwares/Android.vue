@@ -37,22 +37,22 @@
             </var-button>
           </div>
         </var-paper>
-        <var-paper class="download-item" :elevation="0">
-          <div class="item-header">
-            <var-icon name="package" size="24" />
-            <span class="item-title">arm
-            <var-badge type="primary">
-               <template #value>{{ $t('software.oldModel') }}</template>
-            </var-badge>
-            </span>
-          </div>
-          <div class="item-actions">
-            <var-button type="primary" size="normal" @click="downloadEui('armv7')" :loading="downloadingKey === 'android-armv7'" auto-loading>
-              <var-icon name="download"/>
-              {{ $t('software.stable') }}
-            </var-button>
-          </div>
-        </var-paper>
+<!--        <var-paper class="download-item" :elevation="0">-->
+<!--          <div class="item-header">-->
+<!--            <var-icon name="package" size="24" />-->
+<!--            <span class="item-title">arm-->
+<!--            <var-badge type="primary">-->
+<!--               <template #value>{{ $t('software.oldModel') }}</template>-->
+<!--            </var-badge>-->
+<!--            </span>-->
+<!--          </div>-->
+<!--          <div class="item-actions">-->
+<!--            <var-button type="primary" size="normal" @click="downloadEui('armv7')" :loading="downloadingKey === 'android-armv7'" auto-loading>-->
+<!--              <var-icon name="download"/>-->
+<!--              {{ $t('software.stable') }}-->
+<!--            </var-button>-->
+<!--          </div>-->
+<!--        </var-paper>-->
         <var-paper class="download-item" :elevation="0">
           <div class="item-header">
             <var-icon name="package" size="24" />
@@ -65,18 +65,18 @@
             </var-button>
           </div>
         </var-paper>
-        <var-paper class="download-item" :elevation="0">
-          <div class="item-header">
-            <var-icon name="package" size="24" />
-            <span class="item-title">x86</span>
-          </div>
-          <div class="item-actions">
-            <var-button type="primary" size="normal" @click="downloadEui('x86')" :loading="downloadingKey === 'android-x86'" auto-loading>
-              <var-icon name="download"/>
-              {{ $t('software.stable') }}
-            </var-button>
-          </div>
-        </var-paper>
+<!--        <var-paper class="download-item" :elevation="0">-->
+<!--          <div class="item-header">-->
+<!--            <var-icon name="package" size="24" />-->
+<!--            <span class="item-title">x86</span>-->
+<!--          </div>-->
+<!--          <div class="item-actions">-->
+<!--            <var-button type="primary" size="normal" @click="downloadEui('x86')" :loading="downloadingKey === 'android-x86'" auto-loading>-->
+<!--              <var-icon name="download"/>-->
+<!--              {{ $t('software.stable') }}-->
+<!--            </var-button>-->
+<!--          </div>-->
+<!--        </var-paper>-->
       </div>
       <div v-if="progress" class="download-progress">
         <var-progress :value="progress.current_progress" :track="true" />
