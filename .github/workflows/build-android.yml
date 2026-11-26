@@ -223,6 +223,11 @@ jobs:
           sed -i "s/versionName '.*'/versionName '$BUILD_VER'/" android/app/build.gradle
           echo "Android versionName: $BUILD_VER"
 
+      - name: Write abiFilters  # 动态设置 ABI 过滤，只打包当前架构的 native 库，避免其它架构 APK 缺失 FFI so
+        run: |
+          sed -i "s/abiFilters '.*'/abiFilters '${{ matrix.ndk_target }}'/" android/app/build.gradle
+          echo "abiFilters set to: ${{ matrix.ndk_target }}"
+
       - name: Write FFI version  # 将 EasyTier 版本号注入 ffi_adapter.py
         run: |
           FFI_VER="v${{ steps.easytier-info.outputs.version }}-${{ steps.easytier-info.outputs.commit_short }}"
