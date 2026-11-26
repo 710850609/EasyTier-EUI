@@ -56,8 +56,8 @@ class FfiAdapter(IEasyTierAdapter):
 
     def __init__(self):
         lib_name = get_ffi_lib_name()
-        lib_path = os.path.join(run_configs.core_dir(), lib_name)
-        if os.path.exists(lib_path) and os.path.getsize(lib_path) > 0:
+        lib_path = self._resolve_lib_path(lib_name)
+        if lib_path:
             logger.info(f"Using FFI By Path: {lib_path}")
             lib_name = lib_path
         self._lib = ctypes.CDLL(lib_name)
@@ -81,6 +81,18 @@ class FfiAdapter(IEasyTierAdapter):
         self._last_vpn_signature: Optional[str] = None
         # 当前内核是否支持共享虚拟网卡（>= 2.7.1），用于决定安卓是否允许多实例并存
         self._supports_shared_vnic: bool = self._check_shared_vnic_support()
+
+    def _resolve_lib_path(self, lib_name: str) -> Optional[str]:
+        """按「手动安装目录 → Android nativeLibraryDir」顺序解析库文件绝对路径，找不到返回 None。"""
+        candidates = [os.path.join(run_configs.core_dir(), lib_name)]
+        if run_configs.IS_ANDROID:
+            native_dir = run_configs.native_lib_dir()
+            if native_dir:
+                candidates.append(os.path.join(native_dir, lib_name))
+        for path in candidates:
+            if os.path.exists(path) and os.path.getsize(path) > 0:
+                return path
+        return None
 
     def _invalidate_ffi_cache(self):
         self._ffi_cache = {}

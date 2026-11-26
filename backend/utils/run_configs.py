@@ -18,6 +18,7 @@ IS_ANDROID = False
 FRONTEND_PATH:str = None
 CONFIG_DIR:str = None
 CORE_DIR:str = None
+NATIVE_LIB_DIR:str = None
 DATA_DIR:str = None
 LOG_DIR:str = None
 UPGRADE_SCRIPT_PATH:str = None
@@ -32,11 +33,11 @@ _run_mode = 0
 
 logger = logging.getLogger(__name__)
 
-def setup_env(data_dir: str = None, external_dir: str = None):
+def setup_env(data_dir: str = None, external_dir: str = None, native_lib_dir: str = None):
     global _is_inited_evn
     if _is_inited_evn:
         return
-    global FRONTEND_PATH, CONFIG_DIR, CORE_DIR, DATA_DIR, LOG_DIR, UPGRADE_SCRIPT_PATH, _run_mode, DEFAULT_TRIM_APPNAME, \
+    global FRONTEND_PATH, CONFIG_DIR, CORE_DIR, NATIVE_LIB_DIR, DATA_DIR, LOG_DIR, UPGRADE_SCRIPT_PATH, _run_mode, DEFAULT_TRIM_APPNAME, \
         EUI_RUN_HOST, EUI_RUN_PORT, EUI_CONFIG_FILE, IS_ANDROID
     # Android 平台检测
     # 平台路径由入参优先注入（Android 端 Kotlin 调用 setup_env(data_dir, external_dir)），
@@ -53,6 +54,7 @@ def setup_env(data_dir: str = None, external_dir: str = None):
         CONFIG_DIR = os.path.join(external_dir, 'config')
         DATA_DIR = os.path.join(data_dir, 'data')
         CORE_DIR = os.path.join(data_dir, 'libs')
+        NATIVE_LIB_DIR = native_lib_dir
         LOG_DIR = os.path.join(external_dir, 'logs')
         FRONTEND_PATH = os.path.join(data_dir, 'frontend')
         UPGRADE_SCRIPT_PATH = ''
@@ -166,6 +168,9 @@ def config_dir() -> str:
 
 def core_dir() -> str:
     return CORE_DIR
+
+def native_lib_dir() -> str:
+    return NATIVE_LIB_DIR
 
 def data_dir() -> str:
     return DATA_DIR

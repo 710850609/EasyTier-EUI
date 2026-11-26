@@ -71,11 +71,12 @@ class App : Application() {
             val py = Python.getInstance()
             val dataDir = filesDir.absolutePath
             val externalDir = getExternalFilesDir(null)?.absolutePath ?: dataDir
-            AppLogger.info(TAG, "initPython: injecting paths via setup_env...")
-            py.getModule("utils.run_configs").callAttr("setup_env", dataDir, externalDir)
+            val nativeLibDir = applicationInfo.nativeLibraryDir
+            AppLogger.info(TAG, "initPython: injecting paths via setup_env: dataDir=$dataDir, externalDir=$externalDir, nativeLibDir=$nativeLibDir ")
+            py.getModule("utils.run_configs").callAttr("setup_env", dataDir, externalDir, nativeLibDir)
             AppLogger.info(TAG, "initPython: calling main_noui.init_env...")
             py.getModule("main_noui").callAttr("init_env")
-            AppLogger.info(TAG, "initPython: init_env done, dataDir=$dataDir, externalDir=$externalDir")
+            AppLogger.info(TAG, "initPython: init_env done")
 
             AppLogger.info(TAG, "initPython: setup complete, pythonReady=true")
 
